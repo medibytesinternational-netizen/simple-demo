@@ -11,14 +11,13 @@ from ..db import utcnow
 from ..models import (
     Draft,
     Encounter,
-    InvestigationRequest,
     LLMCall,
     Patient,
-    Referral,
     Task,
     TimelineEvent,
 )
 from ..schemas import FEATURE_MODELS
+from .approval import AFTER_COMMIT, AFTER_EVENT, PAYLOAD_BUILDERS, VALIDATORS, ApprovalContext
 from .timeline import LOCKED_FEATURES, add_audit, add_event, new_id, require_open_encounter
 
 FEATURE_EVENT_TYPES = {
@@ -274,48 +273,13 @@ def approve_draft(
         draft.content = content
     payload = draft.content or {}
     _validate_citations(db, payload)
-    if draft.feature == "F4":
-        exam = (payload.get("exam") or {}).get("general") or {}
-        plan = payload.get("plan") or {}
-        if not str(exam.get("text", "")).strip() or not str(plan.get("text", "")).strip():
-            raise ValueError(
-                "F4 cannot be approved: the examination and plan are required. "
-                "Edit the draft to document them first."
-            )
-    if draft.feature == "F2":
-        allergies = payload.get("allergies_to_verify") or []
-        unverified = [
-            item.get("substance", "unknown")
-            for item in allergies
-            if isinstance(item, dict) and not item.get("verified")
-        ]
-        if unverified:
-            raise ValueError(
-                "F2 cannot be approved: verify the documented allergy record first "
-                f"({', '.join(unverified)}). The model may not mark an allergy as verified."
-            )
-    if draft.feature == "F1":
-        consent_events = db.scalars(
-            select(TimelineEvent).where(
-                TimelineEvent.patient_id == draft.patient_id,
-                TimelineEvent.encounter_id == draft.encounter_id,
-                TimelineEvent.type == "consent",
-                TimelineEvent.status == "approved",
-            )
-        ).all()
-        granted = any(
-            (event.payload or {}).get("granted") is True for event in consent_events
-        )
-        if not granted:
-            raise ValueError(
-                "F1 cannot be approved: record the patient's consent for consultation "
-                "capture before signing the note."
-            )
-
     patient = db.get(Patient, draft.patient_id)
     encounter = db.get(Encounter, draft.encounter_id) if draft.encounter_id else None
     if not patient or not encounter:
         raise ValueError("Patient or encounter missing")
+    ctx = ApprovalContext(db=db, draft=draft, payload=payload, patient=patient, encounter=encounter, approver=approver)
+    for validate in VALIDATORS.get(draft.feature, []):
+        validate(ctx)
 
     event_type = FEATURE_EVENT_TYPES.get(draft.feature, "note")
     title = FEATURE_TITLES.get(draft.feature, "Clinical note")
@@ -323,49 +287,8 @@ def approve_draft(
     event_payload = dict(payload)
     event_payload["draft_id"] = draft.id
 
-    if draft.feature == "F10":
-        indication = payload.get("indication") or {}
-        request = InvestigationRequest(
-            id=new_id("inv"),
-            patient_id=patient.id,
-            encounter_id=encounter.id,
-            request_type=payload.get("request_type", "laboratory"),
-            study=payload.get("study", "Investigation"),
-            indication=indication.get("text", "") if isinstance(indication, dict) else str(indication),
-            diagnosis=payload.get("diagnosis", ""),
-            allergies_to_verify=payload.get("allergies_to_verify", []),
-            priority=payload.get("priority", "routine"),
-            instructions=payload.get("instructions", ""),
-            status="approved",
-            draft_id=draft.id,
-            approved_by=approver,
-            created_at=utcnow(),
-        )
-        db.add(request)
-        db.flush()
-        event_payload["request_id"] = request.id
-
-    if draft.feature == "F11":
-        question = payload.get("question") or {}
-        history = payload.get("history") or {}
-        referral = Referral(
-            id=new_id("ref"),
-            patient_id=patient.id,
-            encounter_id=encounter.id,
-            specialty=payload.get("specialty", "Specialist service"),
-            specialist=payload.get("specialist", ""),
-            question=question.get("text", "") if isinstance(question, dict) else str(question),
-            history=history.get("text", "") if isinstance(history, dict) else str(history),
-            urgency=payload.get("urgency", "routine"),
-            status="sent",
-            draft_id=draft.id,
-            approved_by=approver,
-            sent_at=utcnow(),
-            created_at=utcnow(),
-        )
-        db.add(referral)
-        db.flush()
-        event_payload["referral_id"] = referral.id
+    for build in PAYLOAD_BUILDERS.get(draft.feature, []):
+        build(ctx, event_payload)
 
     supersedes = None
     if event_type in SUPERSEDING_TYPES:
@@ -401,46 +324,16 @@ def approve_draft(
         approved_by=approver,
         supersedes_event_id=supersedes,
     )
-    if draft.feature == "F3":
-        nursing_entries = payload.get("nursing_entries", [])
-        if nursing_entries:
-            nursing_event = add_event(
-                db,
-                patient_id=patient.id,
-                encounter_id=encounter.id,
-                type="nursing_chart",
-                subtype="f3",
-                title="Nursing chart — round instructions",
-                body_text="\n".join(
-                    str(entry.get("text", "")) for entry in nursing_entries if isinstance(entry, dict)
-                ),
-                payload={
-                    "round_event_id": event.id,
-                    "entries": nursing_entries,
-                },
-                source="F3",
-                author_type="model",
-                author_name=approver,
-                status="approved",
-                approved_by=approver,
-            )
-            add_audit(
-                db,
-                "nursing_chart_committed",
-                "timeline_event",
-                nursing_event.id,
-                patient.id,
-                after={"round_event_id": event.id, "entries": len(nursing_entries)},
-            )
+    for hook in AFTER_EVENT.get(draft.feature, []):
+        hook(ctx, event)
 
     draft.status = "approved"
     draft.approved_by = approver
     draft.committed_event_id = event.id
     draft.updated_at = utcnow()
 
-    if draft.feature == "F9":
-        encounter.status = "discharged"
-        encounter.discharged_at = utcnow()
+    for hook in AFTER_COMMIT.get(draft.feature, []):
+        hook(ctx, event)
 
     add_audit(
         db,

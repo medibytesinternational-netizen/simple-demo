@@ -24,6 +24,8 @@ from .models import (
     Task,
     TimelineEvent,
 )
+from .models_ext import RESETTABLE
+from .seeds import run_hooks
 from .services.ocr import seed_extraction
 from .services.rules import evaluate_rules
 from .services.timeline import add_audit, get_state
@@ -49,6 +51,8 @@ def _clear(db: Session) -> None:
         Encounter,
         Patient,
     ):
+        db.execute(delete(model))
+    for model in RESETTABLE:
         db.execute(delete(model))
     db.commit()
 
@@ -866,6 +870,8 @@ def reset_demo(db: Session, mode: str = "rehearsal") -> None:
         seed_start(db)
     else:
         seed_rehearsal(db)
+    run_hooks(db, mode)
+    db.commit()
 
 
 def ensure_seed(db: Session) -> None:

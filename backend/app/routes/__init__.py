@@ -1,34 +1,16 @@
+"""All routes. Every module in this package that defines ``router`` is included automatically,
+so a feature can add a route file without editing this one."""
+
+import importlib
+import pkgutil
+
 from fastapi import APIRouter
 
-from . import meta
-from . import platform
-from . import drafts
-from . import notes
-from . import icu_labs
-from . import alerts
-from . import medications
-from . import tasks
-from . import documents
-from . import investigations
-from . import referrals
-from . import document_requests
-from . import discharge
-from . import revenue
-from . import hospital
-
 router = APIRouter(prefix="/api")
-router.include_router(meta.router)
-router.include_router(platform.router)
-router.include_router(drafts.router)
-router.include_router(notes.router)
-router.include_router(icu_labs.router)
-router.include_router(alerts.router)
-router.include_router(medications.router)
-router.include_router(tasks.router)
-router.include_router(documents.router)
-router.include_router(investigations.router)
-router.include_router(referrals.router)
-router.include_router(document_requests.router)
-router.include_router(discharge.router)
-router.include_router(revenue.router)
-router.include_router(hospital.router)
+
+for _info in sorted(pkgutil.iter_modules(__path__), key=lambda info: info.name):
+    if _info.name == "common":
+        continue
+    _module = importlib.import_module(f"{__name__}.{_info.name}")
+    if hasattr(_module, "router"):
+        router.include_router(_module.router)

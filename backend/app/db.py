@@ -32,6 +32,14 @@ def get_db():
         db.close()
 
 
+EXTRA_COLUMNS: dict[str, dict[str, str]] = {}
+
+
+def register_columns(table: str, columns: dict[str, str]) -> None:
+    """Ask for columns to be added to an existing table when the database is opened."""
+    EXTRA_COLUMNS.setdefault(table, {}).update(columns)
+
+
 def _ensure_sqlite_columns() -> None:
     """Apply the small additive migrations needed by the demo database.
 
@@ -59,6 +67,8 @@ def _ensure_sqlite_columns() -> None:
             "resolution": "TEXT",
         },
     }
+    for table, columns in EXTRA_COLUMNS.items():
+        additions.setdefault(table, {}).update(columns)
     with engine.begin() as connection:
         for table, columns in additions.items():
             rows = connection.exec_driver_sql(f"PRAGMA table_info({table})").fetchall()
@@ -69,7 +79,7 @@ def _ensure_sqlite_columns() -> None:
 
 
 def init_db() -> None:
-    from . import models  # noqa: F401
+    from . import models, models_ext  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     _ensure_sqlite_columns()
