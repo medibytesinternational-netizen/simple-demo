@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..db import utcnow
 from ..models import (
-    DocumentRequest,
     Draft,
     Encounter,
     InvestigationRequest,

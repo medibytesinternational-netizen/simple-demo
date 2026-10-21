@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 
 from . import clock
 from .config import settings
-from .db import utcnow
 from .models import (
     Alert,
     AuditEntry,

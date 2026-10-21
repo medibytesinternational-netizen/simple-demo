@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from ..models import Encounter, Patient, TimelineEvent
-from .timeline import add_event, event_to_dict, list_events, new_id
+from .timeline import add_event, event_to_dict, list_events
 
 
 def segments_from_transcript(text: str) -> list[dict[str, Any]]:
