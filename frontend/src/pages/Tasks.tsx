@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, patch, post } from "../api";
-import type { AppTask } from "../types";
+import type { AppTask, Meta } from "../types";
 import { useEvidence } from "../components/Evidence";
+import { ReasonForm } from "../features/f15/ReasonForm";
+import { canAcknowledge, escalationKind, isClosed } from "../features/f15/rules";
+import type { ReasonTarget } from "../features/f15/types";
 
 const FILTERS = ["all", "open", "overdue", "completed"] as const;
 
@@ -26,11 +29,15 @@ export function TasksPage() {
   const [dueHours, setDueHours] = useState(24);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [reasonFor, setReasonFor] = useState<ReasonTarget | null>(null);
 
   const tasks = useQuery<{ tasks: AppTask[] }>({ queryKey: ["tasks"], queryFn: () => get("/tasks") });
+  const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
+  const userName = meta.data?.user?.name;
 
   const update = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => patch(`/tasks/${id}`, { status }),
+    onMutate: () => setError(""),
     onSuccess: () => queryClient.invalidateQueries(),
     onError: (err: any) => setError(String(err?.message || err)),
   });
@@ -44,6 +51,7 @@ export function TasksPage() {
   });
   const acknowledge = useMutation({
     mutationFn: (id: string) => post(`/tasks/${id}/acknowledge`, {}),
+    onMutate: () => setError(""),
     onSuccess: () => {
       setNotice("Task acknowledged by the assigned owner.");
       queryClient.invalidateQueries();
@@ -51,9 +59,21 @@ export function TasksPage() {
     onError: (err: any) => setError(String(err?.message || err)),
   });
   const escalate = useMutation({
-    mutationFn: (id: string) => post(`/tasks/${id}/escalate`, { reason: "Manual escalation from the task board" }),
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => post(`/tasks/${id}/escalate`, { reason }),
+    onMutate: () => setError(""),
     onSuccess: () => {
-      setNotice("Escalation recorded.");
+      setNotice("Escalation recorded with your reason.");
+      setReasonFor(null);
+      queryClient.invalidateQueries();
+    },
+    onError: (err: any) => setError(String(err?.message || err)),
+  });
+  const reopen = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => post(`/tasks/${id}/reopen`, { reason }),
+    onMutate: () => setError(""),
+    onSuccess: () => {
+      setNotice("Task reopened. It needs to be acknowledged again.");
+      setReasonFor(null);
       queryClient.invalidateQueries();
     },
     onError: (err: any) => setError(String(err?.message || err)),
@@ -131,7 +151,8 @@ export function TasksPage() {
           <thead><tr><th>Task</th><th>Priority</th><th>Status</th><th>Due</th><th>Owner</th><th className="right">Actions</th></tr></thead>
           <tbody>
             {filtered.map((task) => (
-              <tr key={task.id}>
+              <Fragment key={task.id}>
+              <tr>
                 <td>
                   <div style={{ fontWeight: 550 }}>{task.title}</div>
                   <div className="small muted">
@@ -148,8 +169,12 @@ export function TasksPage() {
                   <span className={`badge ${statusBadge[task.status] || "badge-neutral"}`}>{task.status.replaceAll("_", " ")}</span>
                   {task.is_overdue ? <span className="badge badge-warning" style={{ marginLeft: 4 }}>overdue</span> : null}
                   {task.escalation_level ? (
-                    <span className="badge badge-critical" style={{ marginLeft: 4 }} title={task.escalation_reason || ""}>L{task.escalation_level}</span>
+                    <>
+                      <span className="badge badge-critical" style={{ marginLeft: 4 }} title={task.escalation_reason || ""}>L{task.escalation_level}</span>
+                      <span className="badge badge-neutral" style={{ marginLeft: 4 }}>{escalationKind(task)}</span>
+                    </>
                   ) : null}
+                  {task.escalation_level && task.escalation_reason ? <div className="small muted">{task.escalation_reason}</div> : null}
                   {task.acknowledged_at ? <div className="small muted">ack by {task.acknowledged_by}</div> : null}
                 </td>
                 <td className="mono small">{task.due_at ? new Date(task.due_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</td>
@@ -168,16 +193,39 @@ export function TasksPage() {
                 <td className="right">
                   <div className="button-row" style={{ justifyContent: "flex-end" }}>
                     {task.status === "proposed" ? <button className="btn btn-sm" onClick={() => update.mutate({ id: task.id, status: "accepted" })}>Accept</button> : null}
-                    {task.status === "accepted" ? <button className="btn btn-sm" onClick={() => acknowledge.mutate(task.id)}>Acknowledge</button> : null}
+                    {task.status === "accepted" ? <button
+                      className="btn btn-sm"
+                      disabled={!canAcknowledge(task, userName)}
+                      title={canAcknowledge(task, userName) ? "" : task.assigned_to ? `Only ${task.assigned_to} can acknowledge this task` : "Assign the task first"}
+                      onClick={() => acknowledge.mutate(task.id)}
+                    >
+                      Acknowledge
+                    </button> : null}
                     {task.status === "acknowledged" ? <button className="btn btn-sm" onClick={() => update.mutate({ id: task.id, status: "in_progress" })}>Start</button> : null}
                     {["acknowledged", "in_progress"].includes(task.status) ? <button className="btn btn-sm btn-primary" onClick={() => update.mutate({ id: task.id, status: "completed" })}>Complete</button> : null}
-                    {!["completed", "cancelled"].includes(task.status) && (task.escalation_level || 0) < 2 ? (
-                      <button className="btn btn-ghost btn-sm" onClick={() => escalate.mutate(task.id)}>Escalate</button>
+                    {!isClosed(task) && (task.escalation_level || 0) < 2 ? (
+                      <button className="btn btn-ghost btn-sm" onClick={() => setReasonFor({ id: task.id, mode: "escalate" })}>Escalate</button>
+                    ) : null}
+                    {isClosed(task) ? (
+                      <button className="btn btn-ghost btn-sm" onClick={() => setReasonFor({ id: task.id, mode: "reopen" })}>Reopen</button>
                     ) : null}
                     {!["completed", "cancelled"].includes(task.status) ? <button className="btn btn-ghost btn-sm" onClick={() => update.mutate({ id: task.id, status: "cancelled" })}>Cancel</button> : null}
                   </div>
                 </td>
               </tr>
+              {reasonFor?.id === task.id ? (
+                <tr key={`${task.id}-reason`}>
+                  <td colSpan={6}>
+                    <ReasonForm
+                      mode={reasonFor.mode}
+                      busy={escalate.isPending || reopen.isPending}
+                      onCancel={() => setReasonFor(null)}
+                      onConfirm={(reason) => (reasonFor.mode === "escalate" ? escalate : reopen).mutate({ id: task.id, reason })}
+                    />
+                  </td>
+                </tr>
+              ) : null}
+              </Fragment>
             ))}
             {!filtered.length ? <tr><td colSpan={6}><div className="empty">No tasks in this filter.</div></td></tr> : null}
           </tbody>

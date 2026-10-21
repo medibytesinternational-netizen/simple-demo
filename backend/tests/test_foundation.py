@@ -141,7 +141,7 @@ def test_registered_jobs_run_on_demand():
 # ---------- encounter lock ----------
 
 def test_clinical_writes_stop_after_discharge_but_claim_work_continues(client):
-    assert discharge(client).status_code == 200
+    assert discharge(client, override={"reason": "Test discharge with open alerts"}).status_code == 200
     assert client.post("/api/notes/generate", json={"feature": "F4", "transcript": SHORT_VISIT}).status_code == 409
     assert client.post("/api/tasks", json={"title": "Too late"}).status_code == 409
     assert client.post("/api/revenue/claim-prep/explain").status_code == 200

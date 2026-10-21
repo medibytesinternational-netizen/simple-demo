@@ -5,7 +5,18 @@ from typing import Any
 from ...db import utcnow
 from ...models import InvestigationRequest
 from ..timeline import new_id
-from . import ApprovalContext, payload_builder
+from . import ApprovalContext, payload_builder, validator
+from .f02_allergy import unverified_allergies
+
+
+@validator("F10")
+def require_verified_allergies_f10(ctx: ApprovalContext) -> None:
+    unverified = unverified_allergies(ctx.payload)
+    if unverified:
+        raise ValueError(
+            "F10 cannot be approved: verify the documented allergies first "
+            f"({', '.join(unverified)})."
+        )
 
 
 @payload_builder("F10")

@@ -5,6 +5,7 @@ import re
 import time
 from typing import Any
 
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from ..config import settings
@@ -20,6 +21,22 @@ NUMBER_UNIT_RE = re.compile(
     r"(\d+(?:\.\d+)?)\s*(mg|g|mcg|ml|dL|mmol|mEq|%|bpm|°C|cm|kg)",
     re.IGNORECASE,
 )
+
+
+# A live attempt that ended in the rules generator is recorded in the call's validation_errors under
+# this prefix, so a route can tell the page why (the call table has no column for it).
+FALLBACK_PREFIX = "Fallback: "
+# Features whose empty live output is treated as a failure. Other features' schemas have no
+# claim-shaped output, so "no claims" would be true of them even when the model did its job.
+EMPTY_CHECK_FEATURES = {"F1"}
+
+
+def fallback_reason(call: LLMCall | None) -> str | None:
+    """Why a live call ended in the rules generator, or None when it did not."""
+    for entry in (call.validation_errors if call else None) or []:
+        if isinstance(entry, str) and entry.startswith(FALLBACK_PREFIX):
+            return entry[len(FALLBACK_PREFIX):]
+    return None
 
 
 class DraftGenerationError(Exception):
@@ -54,6 +71,17 @@ def _walk_source_ids(value: Any):
     elif isinstance(value, list):
         for item in value:
             yield from _walk_source_ids(item)
+
+
+def is_empty_output(feature: str, content: dict[str, Any]) -> bool:
+    """A draft that is valid but says nothing: no claims, no medicines and no gaps listed."""
+    if feature not in EMPTY_CHECK_FEATURES:
+        return False
+    return (
+        not any(True for _ in _walk_claims(content))
+        and not content.get("medication_mentions")
+        and not content.get("not_documented")
+    )
 
 
 def validate_evidence(content: dict[str, Any], context: dict[str, Any]) -> list[str]:
@@ -156,6 +184,37 @@ def _repair_call(
     return parsed, usage
 
 
+def _stopped_by_decision(db: Session, context: dict[str, Any]) -> set[str]:
+    """Drugs a clinician decided to stop in medicine reconciliation (read-only).
+
+    A decision counts only while it matches the record it was made on, which the reconciliation
+    module reports as status "resolved".
+    """
+    from ..models import Encounter, Patient
+    from . import medicines
+    from .timeline import get_state
+
+    patient = db.get(Patient, (context.get("patient") or {}).get("id", ""))
+    encounter = db.get(Encounter, (context.get("encounter") or {}).get("id", ""))
+    if not patient or not encounter:
+        return set()
+    state = get_state(db, patient, encounter)
+    result = medicines.reconciliation_with_decisions(db, patient, encounter, state)
+    return {
+        str(item["drug"]).lower()
+        for item in result["discrepancies"]
+        if item.get("status") == "resolved" and item.get("decision") == "stop"
+    }
+
+
+def _still_active(context: dict[str, Any], stopped: set[str]) -> list[dict[str, Any]]:
+    return [
+        med
+        for med in context.get("active_medications", [])
+        if med.get("status", "active") == "active" and str(med.get("drug", "")).lower() not in stopped
+    ]
+
+
 def _deterministic_medications(context: dict[str, Any]) -> list[dict[str, Any]]:
     open_alerts = [
         alert for alert in context.get("alerts", []) if alert.get("status") == "open"
@@ -207,6 +266,10 @@ def generate_draft(
     prompt = load_prompt(feature)
     mode = settings.effective_llm_mode
     content: dict[str, Any]
+    if feature == "F9":
+        # A medicine that is no longer active (stopped by order or by a reconciliation decision)
+        # is neither listed nor offered to the model as current.
+        context = {**context, "active_medications": _still_active(context, _stopped_by_decision(db, context))}
     usage: dict[str, Any] = {
         "latency_ms": 0,
         "input_tokens": 0,
@@ -215,16 +278,21 @@ def generate_draft(
     }
     errors: list[str] = []
 
+    reason: str | None = None
+
     if mode == "live":
         try:
             raw, usage = _live_call(feature, prompt, context, model_cls)
             parsed = model_cls.model_validate(raw)
             content = parsed.model_dump(mode="json")
-            evidence_errors = validate_evidence(content, context)
-            number_errors = validate_numbers(content, context)
-            if evidence_errors or number_errors:
+            if is_empty_output(feature, content):
+                errors = ["The model returned an empty note"]
+            else:
+                evidence_errors = validate_evidence(content, context)
+                number_errors = validate_numbers(content, context)
                 errors = [f"Unknown source id: {item}" for item in evidence_errors[:8]]
                 errors += [f"Unsupported value: {item}" for item in number_errors[:8]]
+            if errors:
                 try:
                     raw, repair_usage = _repair_call(feature, prompt, context, model_cls, errors)
                     usage["latency_ms"] += repair_usage["latency_ms"]
@@ -232,14 +300,30 @@ def generate_draft(
                     usage["output_tokens"] += repair_usage["output_tokens"]
                     parsed = model_cls.model_validate(raw)
                     content = parsed.model_dump(mode="json")
-                except Exception:
+                    if is_empty_output(feature, content):
+                        raise ValueError("empty after repair")
+                except Exception as repair_exc:
                     mode = "cached"
+                    if errors == ["The model returned an empty note"]:
+                        reason = "The AI model returned an empty note, so the note was written by rules from the transcript."
+                    else:
+                        reason = (
+                            "The AI model's note could not be checked against its sources, "
+                            "so the note was written by rules from the transcript."
+                        )
+                    errors.append(f"Repair failed: {type(repair_exc).__name__}")
                     content = cached_draft(feature, context)
         except Exception as exc:
             # Stage safety: never leave the demo with an empty screen.
             mode = "cached"
             errors.append(f"Live call failed: {type(exc).__name__}")
+            if isinstance(exc, ValidationError):
+                reason = "The AI model returned a note in the wrong format, so the note was written by rules from the transcript."
+            else:
+                reason = f"The AI model call failed ({type(exc).__name__}), so the note was written by rules from the transcript."
             content = cached_draft(feature, context)
+        if reason:
+            errors.append(FALLBACK_PREFIX + reason)
     else:
         content = cached_draft(feature, context)
 
@@ -267,23 +351,10 @@ def generate_draft(
     # F3 demo guarantee: if the model drops an explicit nurse action, derive a
     # draft nursing entry from the transcript instead of silently losing it.
     if feature == "F3" and not content.get("nursing_entries"):
-        transcript = context.get("transcript") or {}
-        transcript_id = transcript.get("event_id", "")
-        nurse_segments = [
-            segment
-            for segment in transcript.get("segments", [])
-            if str(segment.get("speaker", "")).lower() in {"nurse", "nursing"}
-            and str(segment.get("text", "")).strip()
-        ]
-        content["nursing_entries"] = [
-            {
-                "text": str(segment["text"]).strip(),
-                "source_event_ids": [transcript_id] if transcript_id else [],
-                "source_segment_ids": [segment["segment_id"]],
-                "confidence": 0.9,
-            }
-            for segment in nurse_segments
-        ]
+        # Only the nurse's own acknowledgements: questions and observations are not instructions.
+        from .cached.f03_round import nurse_acknowledgement_entries
+
+        content["nursing_entries"] = nurse_acknowledgement_entries(context)
 
     # Final validation on whatever we are about to show.
     try:
@@ -294,7 +365,7 @@ def generate_draft(
             id=new_id("llm"),
             feature=feature,
             prompt_version=VERSIONS.get(feature, "v1"),
-            model=settings.openai_model,
+            model=settings.openai_model if mode == "live" else "cached",
             mode=mode,
             status="schema_error",
             validation_errors=[str(exc)],
@@ -312,7 +383,7 @@ def generate_draft(
         feature=feature,
         prompt_version=VERSIONS.get(feature, "v1"),
         prompt_hash=context_hash(context),
-        model=settings.openai_model,
+        model=settings.openai_model if mode == "live" else "cached",
         temperature=0.1,
         context_hash=context_hash(context),
         request_json={

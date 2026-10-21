@@ -17,8 +17,9 @@ from ..services.timeline import (
     add_audit,
     new_id,
 )
+from ..services import tasks as engine
+from ..services.tasks import EscalateRequest, ReopenRequest, run_escalations
 from .common import (
-    TaskActionRequest,
     TaskAssignRequest,
     TaskCreateRequest,
     TaskUpdateRequest,
@@ -38,6 +39,9 @@ def tasks_list(
     status: str | None = None,
     db: Session = Depends(get_db),
 ):
+    # Overdue work escalates on its own; reading the board is enough to bring it up to date.
+    run_escalations(db)
+    db.commit()
     stmt = select(Task).order_by(Task.created_at.desc())
     if encounter_id:
         stmt = stmt.where(Task.encounter_id == encounter_id)
@@ -111,92 +115,40 @@ def task_assign(task_id: str, body: TaskAssignRequest, db: Session = Depends(get
 
 
 @router.post("/tasks/{task_id}/acknowledge", dependencies=[Depends(require("work_task"))])
-def task_acknowledge(task_id: str, body: TaskActionRequest, db: Session = Depends(get_db)):
+def task_acknowledge(task_id: str, db: Session = Depends(get_db)):
     task = db.get(Task, task_id)
     if not task:
         raise HTTPException(404, "Task not found")
-    if not task.assigned_to:
-        raise HTTPException(400, "Assign the task before it can be acknowledged")
-    if task.status not in {"proposed", "accepted", "in_progress"}:
-        raise HTTPException(400, f"Task is {task.status} and cannot be acknowledged")
-    task.status = "acknowledged"
-    task.acknowledged_at = utcnow()
-    task.acknowledged_by = acting_name()
-    add_audit(
-        db,
-        "task_acknowledged",
-        "task",
-        task.id,
-        task.patient_id,
-        actor_name=task.acknowledged_by,
-        after={"status": task.status, "title": task.title},
-    )
+    engine.acknowledge(db, task)
     db.commit()
     return _task_dict(task)
 
 
 @router.post("/tasks/{task_id}/escalate", dependencies=[Depends(require("manage_task"))])
-def task_escalate(task_id: str, body: TaskActionRequest, db: Session = Depends(get_db)):
+def task_escalate(task_id: str, body: EscalateRequest, db: Session = Depends(get_db)):
     task = db.get(Task, task_id)
     if not task:
         raise HTTPException(404, "Task not found")
-    task.escalation_level = min((task.escalation_level or 0) + 1, 2)
-    task.escalated_at = utcnow()
-    task.escalation_reason = body.reason or "Manual escalation from the task board"
-    add_audit(
-        db,
-        "task_escalated",
-        "task",
-        task.id,
-        task.patient_id,
-        actor_name=acting_name(),
-        after={
-            "escalation_level": task.escalation_level,
-            "escalation_reason": task.escalation_reason,
-        },
-    )
+    engine.escalate(db, task, body.reason)
     db.commit()
     return _task_dict(task)
 
 
 @router.post("/tasks/escalations/run", dependencies=[Depends(require("manage_task"))])
-def run_task_escalations(body: TaskActionRequest, db: Session = Depends(get_db)):
-    now = utcnow()
-    tasks = list(
-        db.scalars(
-            select(Task).where(Task.status.notin_(["completed", "cancelled"]))
-        )
-    )
-    escalated = []
-    for task in tasks:
-        if not task.due_at:
-            continue
-        overdue_hours = (now - task.due_at).total_seconds() / 3600
-        level = 2 if overdue_hours >= 8 else 1 if overdue_hours >= 2 else 0
-        if level <= (task.escalation_level or 0):
-            continue
-        task.escalation_level = level
-        task.escalated_at = now
-        task.escalation_reason = (
-            f"Automatically escalated after {overdue_hours:.1f} hours overdue"
-        )
-        escalated.append(task)
-        add_audit(
-            db,
-            "task_escalated",
-            "task",
-            task.id,
-            task.patient_id,
-            actor_type="system",
-            actor_name="Escalation engine",
-            after={
-                "escalation_level": level,
-                "overdue_hours": round(overdue_hours, 1),
-                "owner": task.owner,
-            },
-        )
+def run_task_escalations(db: Session = Depends(get_db)):
+    escalated = run_escalations(db)
     db.commit()
     return {"escalated": [_task_dict(task) for task in escalated], "count": len(escalated)}
+
+
+@router.post("/tasks/{task_id}/reopen", dependencies=[Depends(require("work_task"))])
+def task_reopen(task_id: str, body: ReopenRequest, db: Session = Depends(get_db)):
+    task = db.get(Task, task_id)
+    if not task:
+        raise HTTPException(404, "Task not found")
+    engine.reopen(db, task, body.reason)
+    db.commit()
+    return _task_dict(task)
 
 
 @router.patch("/tasks/{task_id}", dependencies=[Depends(require("work_task"))])
@@ -204,22 +156,6 @@ def task_update(task_id: str, body: TaskUpdateRequest, db: Session = Depends(get
     task = db.get(Task, task_id)
     if not task:
         raise HTTPException(404, "Task not found")
-    before = {"status": task.status}
-    task.status = body.status
-    if body.status == "completed":
-        task.completed_at = utcnow()
-    if body.status == "acknowledged":
-        task.acknowledged_at = utcnow()
-        task.acknowledged_by = acting_name()
-    add_audit(
-        db,
-        "task_status_changed",
-        "task",
-        task.id,
-        task.patient_id,
-        actor_name=acting_name(),
-        before=before,
-        after={"status": task.status, "title": task.title},
-    )
+    engine.change_status(db, task, body.status)
     db.commit()
     return _task_dict(task)

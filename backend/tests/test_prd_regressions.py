@@ -202,9 +202,10 @@ def test_only_the_assignee_can_acknowledge(client):
 # ---------- Shared record (PRD page 3) and write path (rules 1 and 4) ----------
 
 def test_new_result_reaches_every_consumer(client):  # guard
-    inject_lab("eGFR", "18", "mL/min/1.73m²", "> 90", "low", datetime(2026, 10, 20, 10, 0))
+    egfr_id = inject_lab("eGFR", "18", "mL/min/1.73m²", "> 90", "low", datetime(2026, 10, 20, 10, 0))
     referral = client.post("/api/referrals/generate", json={}).json()["draft"]["content"]
-    assert "18" in referral["question"]["text"]
+    cited = referral["relevant_results"] + [referral["history"]]
+    assert any(egfr_id in c["source_event_ids"] and "18" in c["text"] for c in cited)
     summary = client.post("/api/discharge/generate").json()["draft"]["content"]
     assert "egfr 18" in joined(summary)
     assert any(e["title"].startswith("eGFR — 18") for e in client.get("/api/patients/pat_ravi/timeline").json()["events"])

@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -70,6 +71,101 @@ def create_transcript_event(
     )
 
 
+_NOTE_TYPES = {"consult_note", "admission_note", "round_note", "progress_note"}
+_CHANGE_TYPES = {
+    "lab_result",
+    "vitals",
+    "device_reading",
+    "med_order",
+    "medication_administration",
+    "nursing_chart",
+    "referral_consult",
+}
+
+
+def _parse_time(value: Any) -> datetime | None:
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", ""))
+    except ValueError:
+        return None
+
+
+def _progress_context(events: list[TimelineEvent], state: dict[str, Any]) -> dict[str, Any]:
+    """What F4 needs: the latest approved note and everything that changed after it."""
+    live = [event for event in events if event.status == "approved"]
+    notes = [event for event in live if event.type in _NOTE_TYPES]
+    previous = max(notes, key=lambda event: event.occurred_at) if notes else None
+    since = previous.occurred_at if previous else None
+
+    changed = []
+    for event in sorted(live, key=lambda e: e.occurred_at):
+        if event.type not in _CHANGE_TYPES:
+            continue
+        if since is not None and event.occurred_at <= since:
+            continue
+        payload = event.payload or {}
+        if event.type == "med_order" and payload.get("kind", "inpatient") == "home":
+            continue
+        changed.append(
+            {
+                "event_id": event.id,
+                "type": event.type,
+                "title": event.title,
+                "occurred_at": event.occurred_at.isoformat(),
+                "payload": payload,
+            }
+        )
+    new_alerts = []
+    for alert in state.get("alerts", []):
+        created = _parse_time(alert.get("created_at"))
+        if since is not None and created is not None and created <= since:
+            continue
+        new_alerts.append(
+            {
+                "alert_id": alert["id"],
+                "rule_id": alert.get("rule_id"),
+                "severity": alert.get("severity"),
+                "status": alert.get("status"),
+                "title": alert.get("title"),
+                "evidence_event_ids": alert.get("evidence_event_ids", []),
+                "created_at": alert.get("created_at"),
+            }
+        )
+    return {
+        "previous_note": {
+            "event_id": previous.id,
+            "type": previous.type,
+            "title": previous.title,
+            "occurred_at": previous.occurred_at.isoformat(),
+        }
+        if previous
+        else None,
+        "since_last": {"events": changed, "alerts": new_alerts},
+    }
+
+
+def _allergy_entry(allergy: Any, allergy_records: list[Any]) -> dict[str, Any]:
+    """One patient allergy with the allergy record event that documents it.
+
+    The patient row holds strings such as "Penicillin — rash"; the record event holds the
+    substance alone. Match the whole string first, then the substance part, ignoring case.
+    """
+    text = str(allergy).strip().lower()
+    base = text.split(" — ")[0].strip()
+
+    def substance(event: Any) -> str:
+        return str((event.payload or {}).get("substance", "")).strip().lower()
+
+    match = next((e for e in allergy_records if substance(e) == text), None)
+    if match is None and base:
+        match = next((e for e in allergy_records if substance(e) == base), None)
+    return {
+        "substance": allergy,
+        "event_id": match.id if match else "",
+        "reaction": (match.payload or {}).get("reaction", "") if match else "",
+    }
+
+
 def build_context(
     db: Session,
     patient: Patient,
@@ -104,30 +200,11 @@ def build_context(
     }
     selected = [event for event in events if event.type in priority_types or event.type in {"lab_result", "med_order"}]
     selected = selected[:120]
-    allergy_events = {
-        str((event.payload or {}).get("substance", "")).lower(): event.id
-        for event in events
-        if event.type == "allergy_record"
-    }
+    allergy_records = [event for event in events if event.type == "allergy_record"]
     context: dict[str, Any] = {
         "patient": {
             **state["patient"],
-            "allergies": [
-                {
-                    "substance": allergy,
-                    "event_id": allergy_events.get(str(allergy).lower(), ""),
-                    "reaction": next(
-                        (
-                            (event.payload or {}).get("reaction", "")
-                            for event in events
-                            if event.type == "allergy_record"
-                            and str((event.payload or {}).get("substance", "")).lower() == str(allergy).lower()
-                        ),
-                        "",
-                    ),
-                }
-                for allergy in state["patient"]["allergies"]
-            ],
+            "allergies": [_allergy_entry(allergy, allergy_records) for allergy in state["patient"]["allergies"]],
         },
         "encounter": state["encounter"],
         "evidence_events": [event_to_dict(event) for event in selected],
@@ -143,6 +220,8 @@ def build_context(
         "documents": state["documents"],
         "feature": feature,
     }
+    if feature == "F4":
+        context.update(_progress_context(events, state))
     if transcript_event:
         context["transcript"] = {
             "event_id": transcript_event.id,

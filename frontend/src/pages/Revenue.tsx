@@ -4,6 +4,10 @@ import { get, post } from "../api";
 import type { ClaimPrep, Draft, Leakage } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { EvidenceChip } from "../components/Evidence";
+import { useCan } from "../session";
+import { ContradictionList } from "../features/f12/ContradictionList";
+import { TpaState } from "../features/f12/TpaState";
+import type { F12Contradiction } from "../features/f12/types";
 
 function inr(value: number) {
   return `INR ${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -13,6 +17,7 @@ export function RevenuePage() {
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") || "claim";
   const queryClient = useQueryClient();
+  const canWork = useCan("revenue_work");
 
   const claim = useQuery<ClaimPrep>({ queryKey: ["claim-prep"], queryFn: () => get("/revenue/claim-prep") });
   const leakage = useQuery<Leakage>({
@@ -133,23 +138,7 @@ export function RevenuePage() {
                   </span>
                 </div>
                 <div className="card-pad">
-                  {claim.data?.contradictions.map((item) => (
-                    <div className="alert-card critical mb-2" key={item.id}>
-                      <div className="flex items-center gap-2">
-                        <span className="badge badge-critical">{item.kind.replaceAll("_", " ")}</span>
-                        <strong className="fs-13">{item.title}</strong>
-                      </div>
-                      <div className="alert-explanation">{item.explanation}</div>
-                      <EvidenceChip eventIds={item.evidence_event_ids} />
-                    </div>
-                  ))}
-                  {!claim.data?.contradictions.length ? (
-                    <div className="small muted">No contradictions detected. TPA review can proceed to human review.</div>
-                  ) : (
-                    <div className="banner warning">
-                      TPA review is blocked. A human must resolve every contradiction before this pack is review-ready.
-                    </div>
-                  )}
+                  <ContradictionList items={(claim.data?.contradictions || []) as F12Contradiction[]} />
                 </div>
               </div>
 
@@ -234,16 +223,23 @@ export function RevenuePage() {
                 <div className="card-head"><div><div className="card-title">Review actions</div><div className="card-sub">Human-only queue</div></div></div>
                 <div className="card-pad">
                   <div className="button-row">
-                    <button className="btn btn-primary" onClick={() => prepare.mutate()} disabled={prepare.isPending}>
-                      {prepare.isPending ? <><span className="spinner" /> Preparing…</> : "Prepare review pack"}
-                    </button>
+                    {canWork ? (
+                      <button className="btn btn-primary" onClick={() => prepare.mutate()} disabled={prepare.isPending}>
+                        {prepare.isPending ? <><span className="spinner" /> Preparing…</> : "Prepare review pack"}
+                      </button>
+                    ) : null}
                     <button className="btn" onClick={() => window.open("/api/revenue/claim-prep/pack.html", "_blank")}>
                       Open review copy
                     </button>
-                    <button className="btn" onClick={() => explain.mutate()} disabled={explain.isPending}>
-                      {explain.isPending ? <><span className="spinner" /> Drafting…</> : "Explain gaps"}
-                    </button>
+                    {canWork ? (
+                      <button className="btn" onClick={() => explain.mutate()} disabled={explain.isPending}>
+                        {explain.isPending ? <><span className="spinner" /> Drafting…</> : "Explain gaps"}
+                      </button>
+                    ) : null}
                   </div>
+                  {!canWork ? (
+                    <div className="small muted mt-2">Read only for your role. Billing and doctors prepare and explain the pack.</div>
+                  ) : null}
                   {prepare.isSuccess ? (
                     <div className="success-box mt-3">
                       Review {prepare.data.review.id} is {prepare.data.review.status}. Pack assembled; nothing was submitted.
@@ -276,6 +272,8 @@ export function RevenuePage() {
                 </div>
               </div>
 
+              <TpaState claim={claim.data} />
+
               <div className="card">
                 <div className="card-head"><div className="card-title">Documented procedures</div><span className="badge badge-neutral">{claim.data?.documented_procedures.length || 0}</span></div>
                 <div className="card-pad">
@@ -302,9 +300,11 @@ export function RevenuePage() {
             <div className="card">
               <div className="card-head">
                 <div><div className="card-title">Documentation-to-billing gaps</div><div className="card-sub">{leakage.data?.summary || "Comparing documented care with the seeded bill"}</div></div>
-                <button className="btn btn-primary btn-sm" onClick={() => explain.mutate()} disabled={explain.isPending}>
-                  {explain.isPending ? <><span className="spinner" /> Drafting…</> : "Explain findings"}
-                </button>
+                {canWork ? (
+                  <button className="btn btn-primary btn-sm" onClick={() => explain.mutate()} disabled={explain.isPending}>
+                    {explain.isPending ? <><span className="spinner" /> Drafting…</> : "Explain findings"}
+                  </button>
+                ) : null}
               </div>
               <div className="card-pad">
                 {leakage.data?.findings.map((finding) => (

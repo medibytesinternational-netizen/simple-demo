@@ -1,47 +1,112 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from .common import (
     _claim,
-    _first,
     _lab,
     _patient,
 )
 
-def f10_investigation_request(context: dict[str, Any]) -> dict[str, Any]:
-    patient = _patient(context)
-    admission = _first(context, "admission_note")
-    labs = context.get("latest_labs", [])
-    lab_ids = [lab["event_id"] for lab in labs]
+NORMAL_FLAGS = {"", "normal", "unknown"}
+IMAGING_RE = re.compile(
+    r"ultrasound|x-?ray|radiograph|\bct\b|\bmri\b|\bscan|echo|doppler|imaging|mammogra|fluoroscop|\bpet\b",
+    re.IGNORECASE,
+)
+
+
+def abnormal_results(context: dict[str, Any]) -> list[dict[str, Any]]:
+    """Latest results the record flags as abnormal, renal ones first."""
+    found = [
+        lab
+        for lab in context.get("latest_labs", [])
+        if str(lab.get("flag", "")).strip().lower() not in NORMAL_FLAGS and lab.get("event_id")
+    ]
+    renal = {"egfr", "creatinine"}
+    return sorted(found, key=lambda lab: (str(lab.get("name", "")).lower() not in renal, str(lab.get("name", "")).lower()))
+
+
+def _renal_abnormal(context: dict[str, Any]) -> bool:
     egfr = _lab(context, "eGFR")
     creatinine = _lab(context, "Creatinine")
-    evidence = [item for item in [admission["id"] if admission else "", *lab_ids] if item]
-    indication_text = "CKD stage 3b with eGFR 22 and creatinine 2.9 mg/dL; assess renal parenchyma and obstruction."
-    if egfr and creatinine:
-        indication_text = (
-            f"CKD stage 3b with eGFR {egfr.get('value')} mL/min/1.73m² and creatinine "
-            f"{creatinine.get('value')} {creatinine.get('unit', '')}; assess renal parenchyma and obstruction."
+    return bool(
+        (egfr and str(egfr.get("flag", "")).lower() == "low")
+        or (creatinine and str(creatinine.get("flag", "")).lower() == "high")
+    )
+
+
+def _infer_type(study: str) -> str:
+    return "imaging" if IMAGING_RE.search(study) else "laboratory"
+
+
+def resolve_study(
+    context: dict[str, Any], study: str | None = None, request_type: str | None = None
+) -> tuple[str, str]:
+    """Pick the study and its type. Raises ValueError when nothing supports a choice."""
+    study = (study or "").strip()
+    if study:
+        return study, request_type or _infer_type(study)
+    if _renal_abnormal(context):
+        return "Renal ultrasound", request_type or "imaging"
+    abnormal = abnormal_results(context)
+    if abnormal:
+        names = ", ".join(str(lab.get("name", "")) for lab in abnormal)
+        return f"Repeat {names}", request_type or "laboratory"
+    raise ValueError("Choose the study to request")
+
+
+def _result_text(lab: dict[str, Any]) -> str:
+    value = f"{lab.get('value', '')} {lab.get('unit', '')}".strip()
+    return f"{lab.get('name', '')} {value} ({str(lab.get('flag', '')).lower()})"
+
+
+def _allergies_to_verify(patient: dict[str, Any]) -> list[dict[str, Any]]:
+    """Substance and reaction split, each citing its allergy record event (as the F2 form does)."""
+    out = []
+    for item in patient.get("allergies", []):
+        if isinstance(item, dict):
+            raw, reaction, event_id = str(item.get("substance", "")), str(item.get("reaction", "") or ""), str(item.get("event_id", "") or "")
+        else:
+            raw, reaction, event_id = str(item), "", ""
+        substance, _, tail = raw.partition(" — ")
+        substance = substance.strip()
+        if not substance:
+            continue
+        out.append(
+            {
+                "substance": substance,
+                "reaction": reaction or tail.strip(),
+                "source_event_id": event_id,
+                "verified": False,
+            }
         )
-    allergies = [
-        {
-            "substance": allergy,
-            "reaction": "Documented reaction — verify before contrast or procedure",
-            "source_event_id": "",
-            "verified": False,
-        }
-        for allergy in patient.get("allergies", [])
-    ]
+    return out
+
+
+def f10_investigation_request(context: dict[str, Any]) -> dict[str, Any]:
+    patient = _patient(context)
+    if context.get("requested_study"):
+        study, request_type = resolve_study(context, context["requested_study"], context.get("requested_type"))
+    else:
+        study, request_type = resolve_study(context, None, context.get("requested_type"))
+    abnormal = abnormal_results(context)
+    result_ids = [lab["event_id"] for lab in abnormal]
+    if abnormal:
+        indication = _claim("Abnormal results: " + ", ".join(_result_text(lab) for lab in abnormal), result_ids)
+    else:
+        indication = _claim("", [], confidence=0.0)
+    allergies = _allergies_to_verify(patient)
     return {
-        "request_type": "imaging",
-        "study": "Renal ultrasound with Doppler",
-        "indication": _claim(indication_text, evidence),
-        "diagnosis": ", ".join(patient.get("problems", [])[:3]) or "Documented inpatient diagnosis",
+        "request_type": request_type,
+        "study": study,
+        "indication": indication,
+        "diagnosis": ", ".join(patient.get("problems", [])),
         "allergies_to_verify": allergies,
         "priority": "routine",
-        "instructions": "Assess renal size, echogenicity, hydronephrosis and renal artery flow. No contrast unless reviewed.",
-        "recipient": "Radiology department",
-        "source_event_ids": evidence,
+        "instructions": "",
+        "recipient": "Radiology department" if request_type == "imaging" else "Laboratory",
+        "source_event_ids": result_ids,
     }
 
 

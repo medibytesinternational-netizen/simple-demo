@@ -22,9 +22,11 @@ from ..models import (
     Task,
 )
 from ..seed import reset_demo
-from ..services import credits
+from ..services import credits, identity
+from ..services.medicines import unresolved_discrepancies
 from ..services.revenue import claim_prep, leakage
 from ..services.timeline import (
+    get_state,
     list_events,
 )
 from .common import (
@@ -68,7 +70,13 @@ def hospital_dashboard(db: Session = Depends(get_db)):
             default=None,
         )
 
-    primary = dashboard(None, db)
+    # The claim block is about the demo patient, not whoever X-Patient-Id names: this view is
+    # hospital-wide. Pin the patient (keeping the acting user) while it is computed.
+    tokens = identity.set_context(identity.acting_user().id, identity.DEFAULT_PATIENT_ID)
+    try:
+        primary = dashboard(None, db)
+    finally:
+        identity.reset_context(tokens)
     rows = []
     ward_counts: dict[str, int] = {}
     active_encounters = [item for item in encounters if item.status == "active"]
@@ -96,13 +104,25 @@ def hospital_dashboard(db: Session = Depends(get_db)):
             and item.ocr_status in {"needs_confirmation", "pending"}
         ]
         patient_referrals = [
-            item for item in referrals if item.patient_id == patient.id and item.status in {"sent", "acknowledged"}
+            item for item in referrals if item.patient_id == patient.id and item.status in {"queued", "sent", "acknowledged"}
         ]
         patient_investigations = [
             item for item in investigations if item.patient_id == patient.id and item.status == "approved"
         ]
+        patient_draft_discharges = [
+            item
+            for item in drafts
+            if item.patient_id == patient.id
+            and item.feature == "F9"
+            and item.status in {"draft_ready", "human_edited"}
+        ]
+        discrepancies = 0
+        if encounter:
+            discrepancies = len(
+                unresolved_discrepancies(db, patient, encounter, get_state(db, patient, encounter))
+            )
         claim_gaps = 0
-        if patient.id == "pat_ravi":
+        if patient.id == identity.DEFAULT_PATIENT_ID:
             claim_gaps = primary["operational"]["claim_gaps"]
         flags = []
         if any(item.severity == "critical" for item in patient_alerts):
@@ -115,6 +135,10 @@ def hospital_dashboard(db: Session = Depends(get_db)):
             flags.append("draft review")
         if patient_referrals:
             flags.append("referral open")
+        if patient_draft_discharges:
+            flags.append("discharge draft")
+        if discrepancies:
+            flags.append("medicine discrepancy")
         rows.append(
             {
                 "patient_id": patient.id,
@@ -131,7 +155,10 @@ def hospital_dashboard(db: Session = Depends(get_db)):
                 "critical_alerts": sum(1 for item in patient_alerts if item.severity == "critical"),
                 "overdue_tasks": len(patient_overdue),
                 "escalated_tasks": len(patient_escalated),
+                "pending_tasks": len(patient_tasks),
                 "pending_drafts": len(patient_drafts),
+                "draft_discharges": len(patient_draft_discharges),
+                "medicine_discrepancies": discrepancies,
                 "pending_documents": len(patient_docs),
                 "open_referrals": len(patient_referrals),
                 "pending_investigations": len(patient_investigations),
@@ -152,7 +179,7 @@ def hospital_dashboard(db: Session = Depends(get_db)):
         1 for item in drafts if item.status in {"draft_ready", "human_edited", "model_unavailable"}
     )
     pending_document_total = sum(1 for item in documents if item.ocr_status in {"needs_confirmation", "pending"})
-    pending_referral_total = sum(1 for item in referrals if item.status in {"sent", "acknowledged"})
+    pending_referral_total = sum(1 for item in referrals if item.status in {"queued", "sent", "acknowledged"})
     pending_investigation_total = sum(1 for item in investigations if item.status == "approved")
     recent_audit = list(
         db.scalars(select(AuditEntry).order_by(AuditEntry.created_at.desc()).limit(12))
@@ -164,6 +191,9 @@ def hospital_dashboard(db: Session = Depends(get_db)):
             "patients": len(patients),
             "wards": ward_counts,
             "pending_drafts": pending_draft_total,
+            "pending_tasks": sum(row["pending_tasks"] for row in rows),
+            "draft_discharges": sum(row["draft_discharges"] for row in rows),
+            "medicine_discrepancies": sum(row["medicine_discrepancies"] for row in rows),
             "overdue_tasks": overdue_total,
             "escalated_tasks": escalated_total,
             "open_alerts": open_alert_total,

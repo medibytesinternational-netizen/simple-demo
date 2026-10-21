@@ -2,13 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, post } from "../api";
 import type { Draft } from "../types";
 import { DraftReview } from "../components/DraftReview";
-
-type Readiness = {
-  items: { key: string; label: string; present: boolean; source: string }[];
-  ready: boolean;
-  already_signed: boolean;
-  encounter_status: string;
-};
+import { ReadinessPanel } from "../features/f09/ReadinessPanel";
+import { SignPanel } from "../features/f09/SignPanel";
+import type { Readiness } from "../features/f09/types";
 
 export function DischargePage() {
   const queryClient = useQueryClient();
@@ -59,27 +55,14 @@ export function DischargePage() {
               </span>
             </div>
             <div className="card-pad">
-              <div className="checklist">
-                {readiness.data?.items.map((item) => (
-                  <div className="check-row" key={item.key}>
-                    <span className={`check-mark ${item.present ? "ok" : "bad"}`}>{item.present ? "✓" : "!"}</span>
-                    <span style={{ flex: 1 }}>{item.label}</span>
-                    <span className="small muted">{item.source}</span>
-                  </div>
-                ))}
-              </div>
-              {!readiness.data?.ready ? (
-                <div className="banner warning mt-3">
-                  Missing sections block generation. Complete the notes and lab review first — the demo refuses to fabricate a discharge summary.
-                </div>
-              ) : null}
+              <ReadinessPanel readiness={readiness.data} />
             </div>
           </div>
 
           <div className="card">
             <div className="card-head"><div className="card-title">What signing does</div></div>
             <div className="card-pad small muted" style={{ lineHeight: 1.7 }}>
-              One click writes a discharge summary event, marks the encounter discharged, and records an audit entry with the model, prompt version, and evidence count.
+              Approving writes a discharge summary event, marks the encounter discharged, escalates tasks that are still open, and records an audit entry with the model, prompt version, and evidence count. Open critical alerts, open tasks or undecided medicine differences need a written reason.
               The medication table comes from current active orders; the model never invents a discharge prescription.
             </div>
           </div>
@@ -87,7 +70,12 @@ export function DischargePage() {
 
         <div>
           {draft ? (
-            <DraftReview draft={draft} />
+            <>
+              {/* The Approve button here cannot send a reason; SignPanel does. */}
+              <style>{`.f09-review .draft-actions { display: none; }`}</style>
+              <div className="f09-review"><DraftReview draft={draft} /></div>
+              <SignPanel draft={draft} readiness={readiness.data} />
+            </>
           ) : (
             <div className="card empty">
               <div className="empty-title">No discharge draft yet.</div>

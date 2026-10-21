@@ -1,87 +1,56 @@
+"""Consultation note written from the conversation only, by quoting it.
+
+Used when there is no AI key and as the fallback when a live model call fails or returns nothing.
+Every claim is a verbatim sentence from the transcript and cites the segment it came from. A section
+nobody spoke about stays empty and is listed under ``not_documented``. Nothing is taken from the
+patient record: a consultation note comes from the consultation.
+"""
+
 from __future__ import annotations
 
 from typing import Any
 
-from .common import (
-    _claim,
-    _seg,
-    _transcript_event,
-    _lab_ids,
-    _patient,
-)
+from ..extract import analyse, claim, joined_claim
+
 
 def f1_consult_note(context: dict[str, Any]) -> dict[str, Any]:
-    patient = _patient(context)
-    transcript_id = _transcript_event(context)
-    labs = _lab_ids(context, ["Creatinine", "eGFR", "Potassium"])
-    age = patient.get("age", "")
-    sex = patient.get("sex", "")
+    transcript = context.get("transcript") or {}
+    transcript_id = transcript.get("event_id", "")
+    analysis = analyse(transcript.get("segments", []))
+
+    # The complaint is already its own claim, so the history does not repeat it.
+    history = [sentence for sentence in analysis.history if sentence is not analysis.complaint]
+    # An instruction or a review date is not an examination finding.
+    instructions = set(analysis.plan) | set(analysis.follow_up)
+    exam = [sentence for sentence in analysis.exam if sentence not in instructions]
+
+    hpi = joined_claim(history, transcript_id)
+    general = joined_claim(exam, transcript_id)
+
+    not_documented = analysis.missing()
+    if hpi is None and "History" not in not_documented:
+        not_documented.append("History")
+    if general is None and "Examination" not in not_documented:
+        not_documented.append("Examination")
+
     return {
-        "chief_complaint": _claim(
-            "Right leg swelling, redness and pain for four days.",
-            [transcript_id],
-            [_seg(context, 2)],
-        ),
-        "hpi": _claim(
-            f"{age}-year-old {str(sex).lower()} with type 2 diabetes, hypertension and CKD stage 3b "
-            "reports progressive right lower leg swelling and redness since Tuesday, with warmth, "
-            "pain on walking and fever last night. Denies chest pain and breathlessness.",
-            [transcript_id, *labs],
-            [_seg(context, 2), _seg(context, 3)],
-        ),
-        "exam": {
-            "general": _claim(
-                "Temperature 38.1°C, pulse 96, BP 138/86, SpO2 96% on room air. "
-                "Right lower leg is erythematous, warm and tender with a clear demarcation; no ulcer.",
-                [transcript_id],
-                [_seg(context, 5)],
-            ),
-            "systemic": None,
-        },
-        "assessment": [
-            _claim(
-                "Cellulitis of the right lower leg.",
-                [transcript_id, *labs],
-                [_seg(context, 6)],
-            ),
-            _claim(
-                "Type 2 diabetes and CKD stage 3b increase the risk of complicated infection and renal injury.",
-                [transcript_id, *labs],
-                [_seg(context, 6)],
-            ),
-        ],
-        "plan": [
-            _claim(
-                "Admit for intravenous antibiotics and renal monitoring.",
-                [transcript_id],
-                [_seg(context, 6)],
-            ),
-            _claim(
-                "Hold metformin pending review of renal function.",
-                [transcript_id, *labs],
-                [_seg(context, 6)],
-            ),
-            _claim(
-                "Check potassium and creatinine today.",
-                [transcript_id, *labs],
-                [_seg(context, 6)],
-            ),
-        ],
+        "chief_complaint": claim(analysis.complaint, transcript_id) if analysis.complaint else None,
+        "hpi": hpi,
+        "exam": {"general": general, "systemic": None},
+        "assessment": [claim(sentence, transcript_id) for sentence in analysis.assessment],
+        "plan": [claim(sentence, transcript_id) for sentence in analysis.plan],
         "medication_mentions": [
             {
-                "drug": "Metformin",
-                "dose": "1 g",
-                "frequency": "BD",
-                "source_event_ids": [transcript_id],
-                "source_segment_ids": [_seg(context, 6)],
+                "drug": mention.drug,
+                "dose": mention.dose,
+                "frequency": mention.frequency,
+                "source_event_ids": [transcript_id] if transcript_id else [],
+                "source_segment_ids": [mention.sentence.segment_id],
             }
+            for mention in analysis.medicines
         ],
-        "follow_up": _claim(
-            "Review creatinine and potassium on the ward before the next dose of metformin.",
-            [transcript_id, *labs],
-            [_seg(context, 6), _seg(context, 7)],
-        ),
-        "not_documented": [],
+        "follow_up": joined_claim(analysis.follow_up, transcript_id),
+        "not_documented": not_documented,
     }
 
 

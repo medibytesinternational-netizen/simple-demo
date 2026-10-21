@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { get } from "../api";
-import type { AppState, TimelineEvent } from "../types";
+import type { AppState } from "../types";
 import { useEvidence } from "../components/Evidence";
 import { usePatientId } from "../session";
+import { buildTimelineQuery, hasFilters } from "../features/f16/filters";
+import { ProvenanceFacts } from "../features/f16/Provenance";
+import { NO_FILTERS, type TimelineFilters, type TimelineResponse } from "../features/f16/types";
 
 function eventTone(type: string) {
   if (type === "lab_result") return "lab";
@@ -26,11 +30,19 @@ export function TimelinePage() {
     queryFn: () => get<AppState>(`/patients/${patientId}/state`),
     enabled: !!patientId,
   });
-  const timeline = useQuery<{ events: TimelineEvent[]; count: number }>({
-    queryKey: ["timeline", patientId],
-    queryFn: () => get<{ events: TimelineEvent[]; count: number }>(`/patients/${patientId}/timeline?limit=250`),
+  const [filters, setFilters] = useState<TimelineFilters>(NO_FILTERS);
+  const timeline = useQuery<TimelineResponse>({
+    queryKey: ["timeline", patientId, filters],
+    queryFn: () => get<TimelineResponse>(`/patients/${patientId}/timeline?${buildTimelineQuery(filters)}`),
     enabled: !!patientId,
+    placeholderData: (previous) => previous,
   });
+  const facets = timeline.data?.facets;
+  const toggleType = (type: string) =>
+    setFilters((current) => ({
+      ...current,
+      types: current.types.includes(type) ? current.types.filter((item) => item !== type) : [...current.types, type],
+    }));
 
   const data = state.data;
   const events = (timeline.data?.events || []).filter((event) => event.type !== "transcript");
@@ -85,9 +97,54 @@ export function TimelinePage() {
             </div>
             <span className="badge badge-neutral">append-only</span>
           </div>
+          <div className="card-pad" style={{ borderBottom: "1px solid var(--border, #e5e7eb)" }} data-testid="timeline-filters">
+            <div className="pill-row">
+              {(facets?.types || []).filter((type) => type !== "transcript").map((type) => (
+                <button
+                  key={type}
+                  className={`btn btn-sm ${filters.types.includes(type) ? "btn-primary" : ""}`}
+                  aria-pressed={filters.types.includes(type)}
+                  onClick={() => toggleType(type)}
+                >
+                  {type.replaceAll("_", " ")}
+                </button>
+              ))}
+            </div>
+            <div className="button-row mt-3">
+              <label className="small">
+                Source{" "}
+                <select
+                  className="select"
+                  value={filters.source}
+                  onChange={(event) => setFilters({ ...filters, source: event.target.value })}
+                >
+                  <option value="">All sources</option>
+                  {(facets?.sources || []).map((item) => (
+                    <option key={item.source} value={item.source}>{item.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="small">
+                From{" "}
+                <input className="input" type="date" value={filters.after} onChange={(event) => setFilters({ ...filters, after: event.target.value })} />
+              </label>
+              <label className="small">
+                Before{" "}
+                <input className="input" type="date" value={filters.before} onChange={(event) => setFilters({ ...filters, before: event.target.value })} />
+              </label>
+              {hasFilters(filters) ? (
+                <button className="btn btn-ghost btn-sm" onClick={() => setFilters(NO_FILTERS)}>Clear filters</button>
+              ) : null}
+            </div>
+          </div>
           <div className="card-pad" style={{ maxHeight: 760, overflowY: "auto" }}>
             {timeline.isLoading ? <div className="loading">Loading timeline…</div> : null}
-            {!timeline.isLoading && !events.length ? (
+            {!timeline.isLoading && !events.length && hasFilters(filters) ? (
+              <div className="empty">
+                <div className="empty-title">No events match these filters.</div>
+              </div>
+            ) : null}
+            {!timeline.isLoading && !events.length && !hasFilters(filters) ? (
               <div className="empty">
                 <div className="empty-title">The timeline is empty.</div>
                 <div>Use the Demo menu to load rehearsal data, or start with a consultation.</div>
@@ -103,13 +160,26 @@ export function TimelinePage() {
                     <div className="timeline-card-head">
                       <span className="timeline-title">{event.title}</span>
                       <span className="badge badge-neutral">{event.type.replaceAll("_", " ")}</span>
-                      {event.status === "superseded" ? <span className="badge badge-warning">superseded</span> : null}
-                      {event.author_type === "model" ? <span className="badge badge-ai">AI-assisted</span> : null}
+                      {event.status === "superseded" ? (
+                        event.superseded_by ? (
+                          <button
+                            className="badge badge-warning"
+                            title="Open the version that replaced this one"
+                            onClick={(click) => {
+                              click.stopPropagation();
+                              showEvent(event.superseded_by!);
+                            }}
+                          >
+                            superseded by {event.superseded_by}
+                          </button>
+                        ) : (
+                          <span className="badge badge-warning">superseded</span>
+                        )
+                      ) : null}
                     </div>
                     {event.body_text ? <div className="timeline-body">{event.body_text}</div> : null}
+                    <ProvenanceFacts event={event} />
                     <div className="timeline-meta">
-                      <span>{event.author_name}</span>
-                      <span>source {event.source}</span>
                       <span className="mono">{event.id}</span>
                     </div>
                   </div>

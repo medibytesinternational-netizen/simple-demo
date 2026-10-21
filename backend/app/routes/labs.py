@@ -51,12 +51,15 @@ def review_lab(event_id: str, db: Session = Depends(get_db)):
         before=before,
         after=event.payload,
     )
+    # Only this lab's alert: key rule:R3:<lab name> (or its per-patient variant) with this result as evidence.
+    r3_key = f"rule:R3:{str(before.get('name', '')).lower()}"
     alerts = list(
         db.scalars(
             select(Alert).where(
                 Alert.status == "open",
                 Alert.rule_id == "R3",
                 Alert.patient_id == event.patient_id,
+                Alert.dedupe_key.in_([r3_key, f"{r3_key}@{event.patient_id}"]),
             )
         )
     )

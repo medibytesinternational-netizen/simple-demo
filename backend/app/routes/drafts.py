@@ -80,8 +80,8 @@ def draft_verify_allergy(draft_id: str, body: VerifyAllergyRequest, db: Session 
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
-    if draft.feature != "F2":
-        raise HTTPException(400, "Allergy verification applies to the F2 admission assessment")
+    if draft.feature not in {"F2", "F10"}:
+        raise HTTPException(400, "Allergy verification applies to the F2 admission assessment and F10 requests")
     if draft.status in {"approved", "rejected"}:
         raise HTTPException(400, "This draft is no longer open for verification")
     content = dict(draft.content or {})

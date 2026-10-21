@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from html import escape
 from typing import Any
 
@@ -9,6 +10,44 @@ from sqlalchemy.orm import Session
 from ..models import BillLineItem, Document, DocumentRequest, Encounter, Patient
 from .timeline import list_events
 
+# Note types that can assert "no known allergies" (any approved note, not one seeded shape).
+ALLERGY_NOTE_TYPES = {
+    "admission_note",
+    "progress_note",
+    "round_note",
+    "consult_note",
+    "nursing_note",
+    "nursing_summary",
+}
+NO_ALLERGY_RE = re.compile(r"no known (drug )?allergies", re.IGNORECASE)
+HOLD_VERBS = r"(?:stop|hold|withhold|discontinue)"
+NEGATION_BEFORE_RE = re.compile(r"(?:\bnot|n't|\bnever|\bno)\s+(?:to\s+|be\s+)?$", re.IGNORECASE)
+
+
+def _claim_texts(payload: dict[str, Any]) -> list[str]:
+    """Plain claim texts a drafted note carries (strings or {"text": ...})."""
+    out: list[str] = []
+    claims = payload.get("note_claims") or []
+    if isinstance(claims, list):
+        for claim in claims:
+            if isinstance(claim, str):
+                out.append(claim)
+            elif isinstance(claim, dict) and isinstance(claim.get("text"), str):
+                out.append(claim["text"])
+    return out
+
+
+def _sentences(event: Any) -> list[str]:
+    """Verbatim sentences of an approved note: its body text, then its claim texts."""
+    out: list[str] = []
+    for text in [event.body_text or "", *_claim_texts(event.payload or {})]:
+        out.extend(part.strip() for part in re.split(r"(?<=[.!?])\s+|\n+", text) if part.strip())
+    return out
+
+
+def _evidence(event: Any, quote: str | None) -> dict[str, Any]:
+    return {"event_id": event.id, "type": event.type, "title": event.title, "quote": quote or ""}
+
 
 def claim_prep(
     db: Session,
@@ -16,7 +55,9 @@ def claim_prep(
     encounter: Encounter,
     state: dict[str, Any],
 ) -> dict[str, Any]:
-    events = list_events(db, patient.id, encounter.id, approved_only=True, limit=1000)
+    all_events = list_events(db, patient.id, encounter.id, approved_only=True, limit=1000)
+    # A superseded note no longer speaks for the record, so it cannot raise a contradiction.
+    events = [event for event in all_events if event.status == "approved"]
     bill = list(
         db.scalars(
             select(BillLineItem)
@@ -40,9 +81,19 @@ def claim_prep(
     discharge_event = next((event for event in events if event.type == "discharge_summary"), None)
     request_event = next((event for event in events if event.type == "document_request"), None)
 
-    pre_auth_present = any(
-        doc.doc_type == "pre_auth" and doc.ocr_status in {"confirmed", "reviewed"} for doc in documents
-    ) or any(request.status == "matched" and request.request_type == "pre_auth" for request in requests)
+    pre_auth_doc_ids = {
+        doc.id for doc in documents if doc.doc_type == "pre_auth" and doc.ocr_status in {"confirmed", "reviewed"}
+    }
+    # A matched request counts only when its document is a pre-authorisation of this patient.
+    for request in requests:
+        if request.status == "matched" and request.request_type == "pre_auth" and request.matched_document_id:
+            matched = db.get(Document, request.matched_document_id)
+            if matched and matched.patient_id == patient.id and matched.doc_type == "pre_auth":
+                pre_auth_doc_ids.add(matched.id)
+    pre_auth_present = bool(pre_auth_doc_ids)
+    pre_auth_evidence = [event.id for event in events if event.document_id and event.document_id in pre_auth_doc_ids]
+    if request_event and request_event.id not in pre_auth_evidence:
+        pre_auth_evidence.append(request_event.id)
     lab_docs_present = any(lab["event_id"] for lab in state.get("latest_labs", []))
     bill_present = bool(bill)
 
@@ -63,7 +114,7 @@ def claim_prep(
             "key": "pre_auth",
             "label": "Pre-authorization approval",
             "present": pre_auth_present,
-            "evidence_event_ids": [request_event.id] if request_event else [],
+            "evidence_event_ids": pre_auth_evidence,
         },
         {
             "key": "lab_reports",
@@ -120,7 +171,7 @@ def claim_prep(
         if item.expected_amount is not None and item.expected_amount > item.amount
     ]
 
-    event_by_id = {event.id: event for event in events}
+    event_by_id = {event.id: event for event in all_events}
     supporting_types = {
         "procedure",
         "medication_administration",
@@ -131,49 +182,90 @@ def claim_prep(
     contradictions: list[dict[str, Any]] = []
 
     allergy_events = [event for event in events if event.type == "allergy_record"]
-    allergy_contradictions = [
-        event
-        for event in events
-        if event.type == "nursing_note"
-        and (
-            "no known drug allergies" in (event.body_text or "").lower()
-            or (event.payload or {}).get("assertion") == "no_known_allergies"
-        )
-    ]
-    if allergy_events and allergy_contradictions:
+    asserting_notes: list[tuple[Any, str]] = []
+    for event in events:
+        if event.type not in ALLERGY_NOTE_TYPES:
+            continue
+        quote = next((s for s in _sentences(event) if NO_ALLERGY_RE.search(s)), None)
+        if quote is None and (event.payload or {}).get("assertion") == "no_known_allergies":
+            quote = (_sentences(event) or [event.title])[0]
+        if quote is not None:
+            asserting_notes.append((event, quote))
+    if allergy_events:
+        allergy = allergy_events[0]
+        substance = str((allergy.payload or {}).get("substance") or allergy.title)
+        for number, (note, quote) in enumerate(asserting_notes):
+            contradictions.append(
+                {
+                    "id": "contradiction_allergy" if number == 0 else f"contradiction_allergy_{note.id}",
+                    "kind": "clinical_record",
+                    "title": f"Allergy record contradicts a {note.type.replace('_', ' ')}",
+                    "explanation": (
+                        f"An allergy to {substance} is documented in the record, while the "
+                        f"{note.type.replace('_', ' ')} \"{note.title}\" states no known allergies. "
+                        "The claim pack must not present these as compatible."
+                    ),
+                    "evidence_event_ids": [allergy.id, note.id],
+                    "evidence": [_evidence(allergy, allergy.body_text or allergy.title), _evidence(note, quote)],
+                }
+            )
+
+    active_meds = {str(item.get("drug", "")).lower(): item for item in state.get("active_meds", [])}
+    seen_hold: set[str] = set()
+
+    def add_hold(drug: str, note: Any, quote: str | None, via: str) -> None:
+        med = active_meds[drug]
+        med_event = event_by_id.get(med.get("event_id"))
         contradictions.append(
             {
-                "id": "contradiction_allergy",
-                "kind": "clinical_record",
-                "title": "Allergy record contradicts a nursing note",
+                "id": f"contradiction_plan_{drug}",
+                "kind": "medication",
+                "title": f"Open plan action conflicts with the active {med.get('drug')} order"
+                if via == "plan_action"
+                else f"A note says to stop {med.get('drug')}, but the order is still active",
                 "explanation": (
-                    "A penicillin allergy is documented in the record, while a nursing admission note "
-                    "asserts no known drug allergies. The claim pack must not present these as compatible."
+                    f"The documented plan says hold {med.get('drug')}, but it remains active "
+                    "in the inpatient medication list with no documented resolution."
                 ),
-                "evidence_event_ids": [allergy_events[0].id, allergy_contradictions[0].id],
+                "evidence_event_ids": [note.id, med.get("event_id")],
+                "evidence": [
+                    _evidence(note, quote),
+                    _evidence(med_event, med_event.body_text or med_event.title)
+                    if med_event
+                    else {"event_id": med.get("event_id"), "type": "med_order", "title": str(med.get("drug")), "quote": ""},
+                ],
             }
         )
 
-    active_meds = {str(item.get("drug", "")).lower(): item for item in state.get("active_meds", [])}
     for event in events:
+        plan_drugs: set[str] = set()
         for action in (event.payload or {}).get("plan_actions", []) or []:
-            if not isinstance(action, dict) or action.get("status") != "open":
+            if not isinstance(action, dict):
                 continue
             drug = str(action.get("drug", "")).lower()
-            if action.get("action") == "hold" and drug in active_meds:
-                contradictions.append(
-                    {
-                        "id": f"contradiction_plan_{drug}",
-                        "kind": "medication",
-                        "title": f"Open plan action conflicts with the active {action.get('drug')} order",
-                        "explanation": (
-                            f"The documented plan says hold {action.get('drug')}, but it remains active "
-                            "in the inpatient medication list with no documented resolution."
-                        ),
-                        "evidence_event_ids": [event.id, active_meds[drug].get("event_id")],
-                    }
-                )
-                break
+            plan_drugs.add(drug)
+            if (
+                action.get("status") == "open"
+                and action.get("action") == "hold"
+                and drug in active_meds
+                and drug not in seen_hold
+            ):
+                seen_hold.add(drug)
+                quote = next((s for s in _sentences(event) if drug in s.lower()), None)
+                add_hold(drug, event, quote or f"Plan action: hold {action.get('drug')}", "plan_action")
+        if event.type != "round_note":
+            continue
+        for drug in active_meds:
+            # A plan action for this drug on this note is authoritative: resolving it clears the gap.
+            if not drug or drug in seen_hold or drug in plan_drugs:
+                continue
+            pattern = re.compile(rf"\b{HOLD_VERBS}\s+(?:the\s+)?{re.escape(drug)}\b", re.IGNORECASE)
+            for sentence in _sentences(event):
+                match = pattern.search(sentence)
+                if match and not NEGATION_BEFORE_RE.search(sentence[: match.start()]):
+                    seen_hold.add(drug)
+                    add_hold(drug, event, sentence, "note_text")
+                    break
 
     for item in bill:
         supporting_events = [
@@ -192,6 +284,7 @@ def claim_prep(
                         "procedure, nursing or discharge record to support the charge."
                     ),
                     "evidence_event_ids": [event.id for event in supporting_events],
+                    "evidence": [_evidence(event, (_sentences(event) or [event.title])[0]) for event in supporting_events],
                 }
             )
 
@@ -241,6 +334,33 @@ def claim_prep(
     }
 
 
+def _gap_rows(prep: dict[str, Any]) -> list[tuple[str, str, str, list[str]]]:
+    """Every gap in the pack as (kind, item, what is wrong, evidence event ids)."""
+    gaps: list[tuple[str, str, str, list[str]]] = []
+    for item in prep.get("missing_documents", []):
+        gaps.append(("Missing document", str(item.get("label", "")), "Required before review", list(item.get("evidence_event_ids", []))))
+    for item in prep.get("contradictions", []):
+        gaps.append(
+            ("Contradiction", str(item.get("title", "")), str(item.get("explanation", "")), list(item.get("evidence_event_ids", [])))
+        )
+    for item in prep.get("unbilled_procedures", []):
+        gaps.append(("Unbilled", str(item.get("procedure", "")), "Documented, not billed", list(item.get("evidence_event_ids", []))))
+    for item in prep.get("unsupported_items", []):
+        gaps.append(
+            ("Unsupported", str(item.get("description", "")), "Billed, no supporting documentation", list(item.get("evidence_event_ids", [])))
+        )
+    for item in prep.get("underbilled_items", []):
+        gaps.append(
+            (
+                "Underbilled",
+                str(item.get("description", "")),
+                f"Underbilled: {item.get('variance', 0):,.0f} below expected",
+                list(item.get("evidence_event_ids", [])),
+            )
+        )
+    return gaps
+
+
 def claim_pack_html(patient: Patient, encounter: Encounter, prep: dict[str, Any]) -> str:
     def rows(items: list[dict[str, Any]], label_key: str, value_key: str) -> str:
         if not items:
@@ -251,22 +371,37 @@ def claim_pack_html(patient: Patient, encounter: Encounter, prep: dict[str, Any]
             for item in items
         )
 
+    def ids(values: list[str]) -> str:
+        clean = [str(value) for value in values if value]
+        return escape(", ".join(clean)) if clean else '<span class="muted">no source</span>'
+
     doc_rows = "".join(
-        f"<tr><td>{escape(item['label'])}</td>"
-        f"<td class='{ 'ok' if item['present'] else 'bad' }'>"
-        f"{'Present' if item['present'] else 'MISSING'}</td></tr>"
+        f"<tr><td>{escape(str(item['label']))}</td>"
+        f"<td class='{'ok' if item['present'] else 'bad'}'>"
+        f"{'Present' if item['present'] else 'MISSING'}</td>"
+        f"<td>{ids(item.get('evidence_event_ids', []))}</td></tr>"
         for item in prep["required_documents"]
     )
     contradiction_rows = "".join(
         f"<tr><td>{escape(str(item.get('title', '')))}</td>"
-        f"<td class='bad'>{escape(str(item.get('explanation', '')))}</td></tr>"
+        f"<td class='bad'>{escape(str(item.get('explanation', '')))}"
+        + "".join(
+            f"<div class='meta'>{escape(str(ev.get('event_id', '')))}: &ldquo;{escape(str(ev.get('quote', '')))}&rdquo;</div>"
+            for ev in item.get("evidence", [])
+        )
+        + f"</td><td>{ids(item.get('evidence_event_ids', []))}</td></tr>"
         for item in prep.get("contradictions", [])
-    ) or '<tr><td colspan="2" class="muted">No contradictions found</td></tr>'
+    ) or '<tr><td colspan="3" class="muted">No contradictions found</td></tr>'
     underbilled_rows = "".join(
         f"<tr><td>{escape(str(item['description']))}</td>"
         f"<td>{item['billed_amount']:,.0f}</td><td>{item['expected_amount']:,.0f}</td></tr>"
         for item in prep.get("underbilled_items", [])
     ) or '<tr><td colspan="3" class="muted">No underbilled items</td></tr>'
+    gap_rows = "".join(
+        f"<tr><td>{escape(kind)}</td><td>{escape(item)}</td><td class='bad'>{escape(what)}</td><td>{ids(evidence)}</td></tr>"
+        for kind, item, what, evidence in _gap_rows(prep)
+    ) or '<tr><td colspan="4" class="muted">No documentation gaps</td></tr>'
+    status = escape(str(prep.get("status", "unknown")).replace("_", " "))
     return f"""<!doctype html>
 <html><head><meta charset="utf-8"><title>Claim pack — {escape(patient.name)}</title>
 <style>
@@ -286,11 +421,14 @@ def claim_pack_html(patient: Patient, encounter: Encounter, prep: dict[str, Any]
   <h1>Claim pack — clinical review copy</h1>
   <div class="meta">{escape(patient.name)} · {escape(patient.mrn)} · {escape(encounter.ward or '')} {escape(encounter.bed or '')}</div>
   <div class="watermark">REVIEW ONLY · NOT SUBMITTED</div>
-  <div class="meta">TPA review status: {escape(str(prep.get('tpa_review', {}).get('status', 'unknown')))} · contradictions: {len(prep.get('contradictions', []))}</div>
+  <p><strong>Review only: nothing is submitted.</strong></p>
+  <div class="meta">Status: {status} · TPA review status: {escape(str(prep.get('tpa_review', {}).get('status', 'unknown')))} · contradictions: {len(prep.get('contradictions', []))}</div>
+  <h2>Documentation gaps</h2>
+  <table><thead><tr><th>Kind</th><th>Item</th><th>Gap</th><th>Evidence</th></tr></thead><tbody>{gap_rows}</tbody></table>
   <h2>Contradictions before submission</h2>
-  <table><thead><tr><th>Issue</th><th>Explanation</th></tr></thead><tbody>{contradiction_rows}</tbody></table>
+  <table><thead><tr><th>Issue</th><th>Explanation</th><th>Evidence</th></tr></thead><tbody>{contradiction_rows}</tbody></table>
   <h2>Required documents</h2>
-  <table><thead><tr><th>Document</th><th>Status</th></tr></thead><tbody>{doc_rows}</tbody></table>
+  <table><thead><tr><th>Document</th><th>Status</th><th>Evidence</th></tr></thead><tbody>{doc_rows}</tbody></table>
   <h2>Billed items</h2>
   <table><thead><tr><th>Description</th><th>Amount</th></tr></thead><tbody>
     {rows(prep['billed_items'], 'description', 'amount')}
@@ -301,21 +439,6 @@ def claim_pack_html(patient: Patient, encounter: Encounter, prep: dict[str, Any]
   <h2>Documented procedures</h2>
   <table><thead><tr><th>Procedure</th><th>Code</th></tr></thead><tbody>
     {rows(prep['documented_procedures'], 'procedure', 'code')}
-  </tbody></table>
-  <h2>Documentation gaps</h2>
-  <table><thead><tr><th>Item</th><th>Gap</th></tr></thead><tbody>
-    {''.join(
-        f"<tr><td>{escape(str(item['procedure']))}</td><td class='bad'>Documented, not billed</td></tr>"
-        for item in prep['unbilled_procedures']
-    ) or '<tr><td colspan="2" class="muted">No unbilled procedures</td></tr>'}
-    {''.join(
-        f"<tr><td>{escape(str(item['description']))}</td><td class='bad'>Billed, no supporting documentation</td></tr>"
-        for item in prep['unsupported_items']
-    )}
-    {''.join(
-        f"<tr><td>{escape(str(item['description']))}</td><td class='bad'>Underbilled: {item['variance']:,.0f} below expected</td></tr>"
-        for item in prep.get('underbilled_items', [])
-    )}
   </tbody></table>
   <p class="muted">Generated by the MediBytes ARD demo. Synthetic data. No claim was submitted.</p>
 </body></html>"""

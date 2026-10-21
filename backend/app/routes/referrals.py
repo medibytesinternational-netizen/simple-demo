@@ -11,6 +11,11 @@ from ..db import get_db, utcnow
 from ..models import (
     Referral,
 )
+from typing import Literal
+
+from pydantic import BaseModel
+
+from ..services.cached.f11_referral import apply_request, infer_specialty
 from ..services.context import build_context
 from ..services.drafts import (
     create_draft,
@@ -23,13 +28,18 @@ from ..services.timeline import (
 )
 from .common import (
     ReferralCompleteRequest,
-    ReferralGenerateRequest,
     TaskActionRequest,
     _referral_dict,
     _state,
 )
 
 router = APIRouter()
+
+
+class ReferralGenerateBody(BaseModel):
+    specialty: str | None = None
+    urgency: Literal["routine", "urgent", "emergency"] | None = None
+    question: str | None = None
 
 
 @router.get("/referrals")
@@ -45,14 +55,19 @@ def referrals(encounter_id: str | None = None, db: Session = Depends(get_db)):
 
 
 @router.post("/referrals/generate", dependencies=[Depends(require("clinical_draft"))])
-def generate_referral(body: ReferralGenerateRequest | None = None, db: Session = Depends(get_db)):
+def generate_referral(body: ReferralGenerateBody | None = None, db: Session = Depends(get_db)):
     patient, encounter, state = _state(db)
     context = build_context(db, patient, encounter, state, "F11")
+    request = {
+        "specialty": ((body.specialty or "").strip() if body else "") or infer_specialty(context),
+        "urgency": body.urgency if body else None,
+        "question": ((body.question or "").strip() if body else ""),
+    }
+    if not request["specialty"]:
+        raise HTTPException(422, "Choose a specialty")
+    context["referral_request"] = request
     content, llm_call = generate_draft(db, "F11", context)
-    if body and body.specialty:
-        content["specialty"] = body.specialty
-    if body and body.urgency:
-        content["urgency"] = body.urgency
+    content = apply_request(content, request)
     draft = create_draft(db, feature="F11", patient=patient, encounter=encounter, content=content, llm_call=llm_call)
     db.commit()
     return {"draft": draft_to_dict(draft), "llm": {"mode": llm_call.mode, "latency_ms": llm_call.latency_ms}}
@@ -63,8 +78,8 @@ def acknowledge_referral(referral_id: str, body: TaskActionRequest, db: Session 
     referral = db.get(Referral, referral_id)
     if not referral:
         raise HTTPException(404, "Referral not found")
-    if referral.status != "sent":
-        raise HTTPException(400, f"Referral is {referral.status}; only a sent referral can be acknowledged")
+    if referral.status not in {"queued", "sent"}:
+        raise HTTPException(400, f"Referral is {referral.status}; only a queued or sent referral can be acknowledged")
     referral.status = "acknowledged"
     referral.acknowledged_at = utcnow()
     update_event = add_event(
@@ -98,7 +113,7 @@ def complete_referral(referral_id: str, body: ReferralCompleteRequest, db: Sessi
     referral = db.get(Referral, referral_id)
     if not referral:
         raise HTTPException(404, "Referral not found")
-    if referral.status not in {"sent", "acknowledged"}:
+    if referral.status not in {"queued", "sent", "acknowledged"}:
         raise HTTPException(400, f"Referral is {referral.status}; it cannot be completed")
     referral.status = "completed"
     referral.completed_at = utcnow()

@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { get, post, uploadDocument } from "../api";
-import type { DocumentDetail, DocumentRequest, DocumentSummary, Draft, InvestigationRequest } from "../types";
+import { get, post } from "../api";
+import type { DocumentRequest, DocumentSummary, Draft, InvestigationRequest } from "../types";
 import { DraftReview } from "../components/DraftReview";
+import { useCan } from "../session";
+import { DocTypeSelect } from "../features/f08/DocTypeSelect";
+import { ManualEntryForm } from "../features/f08/ManualEntryForm";
+import { uploadReport } from "../features/f08/upload";
+import { commitSummary, docTypeLabel, type CommitResult, type DocType, type F08Document } from "../features/f08/types";
 
 export function DocumentsPage() {
   const [params, setParams] = useSearchParams();
@@ -13,12 +18,15 @@ export function DocumentsPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [matchChoice, setMatchChoice] = useState<Record<string, string>>({});
+  const [docType, setDocType] = useState<DocType>("lab_report");
+  const canUpload = useCan("upload_document");
+  const canConfirm = useCan("confirm_document");
 
   const documents = useQuery<{ documents: DocumentSummary[] }>({
     queryKey: ["documents"],
     queryFn: () => get("/documents"),
   });
-  const document = useQuery<DocumentDetail>({
+  const document = useQuery<F08Document>({
     queryKey: ["document", selectedId],
     queryFn: () => get(`/documents/${selectedId}`),
     enabled: Boolean(selectedId),
@@ -46,11 +54,15 @@ export function DocumentsPage() {
   }, [documents.data, selectedId]);
 
   const upload = useMutation({
-    mutationFn: (file: File) => uploadDocument(file),
+    mutationFn: (file: File) => uploadReport(file, docType),
     onSuccess: (result: any) => {
       setSelectedId(result.id);
       setError("");
-      setSuccess("Upload complete. Extraction is ready for review.");
+      setSuccess(
+        result.ocr_status === "needs_manual_entry"
+          ? "Upload complete. No text could be read from this file. Type the values from the original."
+          : "Upload complete. Check the values against the original before saving.",
+      );
       queryClient.invalidateQueries();
     },
     onError: (err: any) => setError(String(err?.message || err)),
@@ -65,10 +77,10 @@ export function DocumentsPage() {
     onError: (err: any) => setError(String(err?.message || err)),
   });
   const commit = useMutation({
-    mutationFn: () => post<any>(`/documents/${selectedId}/commit`),
-    onSuccess: (result: any) => {
+    mutationFn: () => post<CommitResult>(`/documents/${selectedId}/commit`),
+    onSuccess: (result) => {
       setError("");
-      setSuccess(`${result.labs.length} result${result.labs.length === 1 ? "" : "s"} written to the timeline with source ${result.document.id}.`);
+      setSuccess(`${commitSummary(result.document.doc_type, result.events.length)}, with source ${result.document.id}.`);
       queryClient.invalidateQueries();
     },
     onError: (err: any) => setError(String(err?.message || err)),
@@ -140,18 +152,23 @@ export function DocumentsPage() {
             <div className="card">
               <div className="card-head">
                 <div><div className="card-title">Document queue</div><div className="card-sub">{documents.data?.documents.length || 0} documents</div></div>
-                <label className="btn btn-primary btn-sm">
-                  Upload scan
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    style={{ display: "none" }}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) upload.mutate(file);
-                    }}
-                  />
-                </label>
+                <div className="flex items-center gap-2">
+                  <DocTypeSelect value={docType} onChange={setDocType} />
+                  <label className="btn btn-primary btn-sm" style={canUpload ? undefined : { opacity: 0.5, pointerEvents: "none" }}>
+                    Upload report
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      style={{ display: "none" }}
+                      disabled={!canUpload}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) upload.mutate(file);
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
               {upload.isPending ? <div className="banner"><span className="spinner" /> Running extraction…</div> : null}
               <div className="list">
@@ -164,14 +181,14 @@ export function DocumentsPage() {
                   >
                     <div style={{ flex: 1 }}>
                       <div className="fs-13" style={{ fontWeight: 600 }}>{item.filename}</div>
-                      <div className="small muted">{new Date(item.uploaded_at).toLocaleString()} · {item.field_count} fields</div>
+                      <div className="small muted">{new Date(item.uploaded_at).toLocaleString()} · {docTypeLabel(item.doc_type)} · {item.field_count} fields</div>
                     </div>
                     <span className={`badge ${item.ocr_status === "needs_confirmation" ? "badge-warning" : item.ocr_status === "confirmed" ? "badge-success" : "badge-neutral"}`}>
                       {item.ocr_status.replaceAll("_", " ")}
                     </span>
                   </button>
                 ))}
-                {!documents.data?.documents.length ? <div className="empty">No documents. Upload a synthetic scan to run OCR.</div> : null}
+                {!documents.data?.documents.length ? <div className="empty">No documents yet. Upload a report to read it.</div> : null}
               </div>
             </div>
 
@@ -179,7 +196,7 @@ export function DocumentsPage() {
               <div className="card">
                 <div className="card-head">
                   <div><div className="card-title">Original scan</div><div className="card-sub">{document.data.filename}</div></div>
-                  <span className="badge badge-neutral">{document.data.mime}</span>
+                  <span className="badge badge-neutral">{docTypeLabel(document.data.doc_type)} · {document.data.mime}</span>
                 </div>
                 <div className="scan-frame">
                   {document.data.mime === "application/pdf" ? (
@@ -208,6 +225,11 @@ export function DocumentsPage() {
                   </span>
                 </div>
                 <div className="card-pad">
+                  {document.data.ocr_status === "needs_manual_entry" ? (
+                    <div className="banner warning">
+                      No text could be read from this file. Nothing was filled in. Read the original beside this panel and type the values below.
+                    </div>
+                  ) : null}
                   {document.data.extracted?.fields?.map((field, index) => (
                     <div className="field-row" key={`${field.name}-${index}`}>
                       <div className="flex items-center justify-between">
@@ -216,11 +238,16 @@ export function DocumentsPage() {
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="field-value">{field.value} {field.unit}</span>
-                        <span className="small muted">ref {field.reference_range || "—"}</span>
+                        {document.data.doc_type === "lab_report" ? (
+                          <span className="small muted">ref {field.reference_range || "—"}</span>
+                        ) : document.data.doc_type === "prescription" ? (
+                          <span className="small muted">{field.reference_range || "no frequency read"}</span>
+                        ) : null}
+                        {field.manual ? <span className="badge badge-neutral">typed by hand</span> : null}
                       </div>
                       {field.confidence < 0.8 ? (
                         <div className="button-row mt-1">
-                          <button className="btn btn-sm" onClick={() => confirmField.mutate({ index })} disabled={confirmField.isPending}>
+                          <button className="btn btn-sm" onClick={() => confirmField.mutate({ index })} disabled={confirmField.isPending || !canConfirm}>
                             Confirm value
                           </button>
                           <span className="small muted">Low confidence — click to confirm the parsed text.</span>
@@ -228,14 +255,37 @@ export function DocumentsPage() {
                       ) : null}
                     </div>
                   ))}
+                  {document.data.ocr_status !== "confirmed" ? (
+                    <ManualEntryForm
+                      documentId={document.data.id}
+                      docType={document.data.doc_type}
+                      allowed={canConfirm}
+                      onError={setError}
+                    />
+                  ) : null}
                   <div className="button-row mt-3">
-                    <button className="btn btn-primary" onClick={() => commit.mutate()} disabled={commit.isPending || document.data.ocr_status === "confirmed"}>
-                      {commit.isPending ? <><span className="spinner" /> Committing…</> : "Commit results to timeline"}
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => commit.mutate()}
+                      disabled={
+                        commit.isPending ||
+                        !canConfirm ||
+                        document.data.ocr_status === "confirmed" ||
+                        !document.data.extracted?.fields?.length
+                      }
+                    >
+                      {commit.isPending ? <><span className="spinner" /> Saving…</> : "Save to timeline"}
                     </button>
-                    <span className="small muted">Writes one sourced lab event per confirmed field.</span>
+                    <span className="small muted">
+                      {document.data.doc_type === "prescription"
+                        ? "Adds each confirmed medicine to the home medicines."
+                        : document.data.doc_type === "radiology_report" || document.data.doc_type === "discharge_summary"
+                          ? "Adds one review note holding the confirmed lines."
+                          : "Adds one sourced result per confirmed field."}
+                    </span>
                   </div>
                   {document.data.ocr_status === "confirmed" ? (
-                    <div className="banner success mt-2">Confirmed. The parsed values are on the timeline with this document as their source.</div>
+                    <div className="banner success mt-2">Saved. The values are on the timeline with this document as their source.</div>
                   ) : null}
                 </div>
               </div>
@@ -246,7 +296,7 @@ export function DocumentsPage() {
             <div className="card">
               <div className="card-head"><div className="card-title">What OCR does not decide</div></div>
               <div className="card-pad small muted" style={{ lineHeight: 1.7 }}>
-                The model extracts text and a confidence. It does not write the value to the record. A human confirms low-confidence fields and commits; only then does the lab event exist.
+                The reader copies text from the file and gives a confidence. It does not write to the record. A person confirms uncertain values and saves; only then does anything reach the timeline. If no text can be read, nothing is filled in and you type the values.
               </div>
             </div>
           </div>

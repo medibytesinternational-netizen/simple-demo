@@ -88,7 +88,9 @@ class ShiftSummary(BaseModel):
 
 
 class ICUEntry(BaseModel):
-    category: Literal["vitals", "ventilator", "infusion", "intake_output", "neuro", "lines", "skin", "other"] = "other"
+    category: Literal[
+        "vitals", "ventilator", "infusion", "intake_output", "neuro", "lines", "skin", "medication", "other"
+    ] = "other"
     label: str
     value: str
     unit: str = ""
@@ -96,6 +98,7 @@ class ICUEntry(BaseModel):
     device: str = ""
     source_event_id: str = ""
     confidence: float = 0.95
+    chart: Literal["icu", "ward"] = "icu"
 
 
 class ICUFlowSheet(BaseModel):

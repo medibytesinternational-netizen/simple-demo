@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..services.identity import require
-from ..services.identity import acting_name, acting_user
+from ..services.identity import acting_name, acting_user, current_patient_id
 from .platform import allowed_actions, user_dict
 from .. import clock
 from ..config import settings
@@ -24,7 +26,6 @@ from ..services.timeline import (
     get_event,
     get_patient,
     get_state,
-    list_events,
 )
 from .common import (
     ConsentRequest,
@@ -159,18 +160,171 @@ def record_consent(patient_id: str, body: ConsentRequest, encounter_id: str | No
     }
 
 
+# --------------------------------------------------------------------------
+# F16 Unified patient timeline: who recorded it, when, from which source
+# --------------------------------------------------------------------------
+SOURCE_LABELS = {
+    "F1": "Consultation note draft",
+    "F2": "Admission note draft",
+    "F3": "Round note draft",
+    "F4": "Progress note draft",
+    "F6": "Medicine reconciliation draft",
+    "F7": "ICU flow sheet draft",
+    "F9": "Discharge summary draft",
+    "F10": "Investigation request draft",
+    "F11": "Referral draft",
+    "F12": "Claim review draft",
+    "F13": "Revenue review draft",
+    "consent": "Consent record",
+    "lab": "Lab report scan",
+    "device": "Bedside device reading",
+    "seed": "Demo seed data",
+    "human": "Typed by a person",
+}
+
+
+def source_label(source: str | None) -> str:
+    """A readable name for where an event came from; hospital feeds (fhir:<system>) are shown as is."""
+    raw = (source or "").strip()
+    if not raw:
+        return "Unknown source"
+    if raw.lower().startswith("fhir:"):
+        return raw
+    if raw in SOURCE_LABELS:
+        return SOURCE_LABELS[raw]
+    text = raw.replace("_", " ").strip()
+    return text[:1].upper() + text[1:]
+
+
+def enrich_event(event: TimelineEvent, superseded_by: str | None = None) -> dict:
+    """The stored event plus who drafted it, who recorded or approved it, and where it came from."""
+    out = event_to_dict(event)
+    is_model = event.author_type == "model"
+    author = event.author_name or "Unknown"
+    approver = event.approved_by
+    if is_model:
+        out["drafted_by"] = author
+        out["recorded_by"] = approver or author
+        out["authorship"] = (
+            f"Drafted by {author}, approved by {approver}" if approver else f"Drafted by {author}, not yet approved"
+        )
+    else:
+        out["drafted_by"] = None
+        out["recorded_by"] = author
+        out["authorship"] = f"Recorded by {author}"
+    out["approved_by"] = approver
+    out["ai_drafted"] = is_model
+    out["source_label"] = source_label(event.source)
+    out["superseded_by"] = superseded_by
+    return out
+
+
+def _replacements(db: Session, ids: list[str]) -> dict[str, str]:
+    """Map event id to the id of the event that replaced it (the latest replacer wins)."""
+    if not ids:
+        return {}
+    rows = db.execute(
+        select(TimelineEvent.id, TimelineEvent.supersedes_event_id)
+        .where(TimelineEvent.supersedes_event_id.in_(ids))
+        .order_by(TimelineEvent.created_at.asc(), TimelineEvent.id.asc())
+    ).all()
+    return {old: new for new, old in rows}
+
+
+def supersedes_chain(db: Session, event: TimelineEvent) -> list[dict]:
+    """Every earlier version this event replaced, nearest first."""
+    chain: list[dict] = []
+    seen = {event.id}
+    current = event
+    while current.supersedes_event_id and current.supersedes_event_id not in seen:
+        previous = db.get(TimelineEvent, current.supersedes_event_id)
+        if not previous:
+            break
+        seen.add(previous.id)
+        item = enrich_event(previous, current.id)
+        chain.append(
+            {
+                "id": previous.id,
+                "title": previous.title,
+                "status": previous.status,
+                "occurred_at": item["occurred_at"],
+                "recorded_by": item["recorded_by"],
+                "source_label": item["source_label"],
+            }
+        )
+        current = previous
+    return chain
+
+
+def _parse_when(value: str | None, name: str) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        raise ValueError(f"{name} must be a date or an ISO date and time, for example 2026-05-01 or 2026-05-01T08:30") from None
+    if parsed.tzinfo is not None:
+        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
+    return parsed
+
+
+VISIBLE_STATUSES = ["approved", "superseded"]
+
+
 @router.get("/patients/{patient_id}/timeline")
 def patient_timeline(
     patient_id: str,
     encounter_id: str | None = None,
     limit: int = Query(200, ge=1, le=500),
+    types: str | None = None,
+    source: str | None = None,
+    before: str | None = None,
+    after: str | None = None,
     db: Session = Depends(get_db),
 ):
-    get_patient(db, patient_id)
-    events = list_events(db, patient_id, encounter_id, approved_only=True, limit=limit)
-    return {"events": [event_to_dict(event) for event in events], "count": len(events)}
+    patient = get_patient(db, patient_id)
+    wanted_types = [item.strip() for item in (types or "").split(",") if item.strip()]
+    before_at = _parse_when(before, "before")
+    after_at = _parse_when(after, "after")
+
+    scope = [TimelineEvent.patient_id == patient.id, TimelineEvent.status.in_(VISIBLE_STATUSES)]
+    if encounter_id:
+        scope.append(TimelineEvent.encounter_id == encounter_id)
+
+    stmt = select(TimelineEvent).where(*scope)
+    if wanted_types:
+        stmt = stmt.where(TimelineEvent.type.in_(wanted_types))
+    if source:
+        stmt = stmt.where(func.lower(TimelineEvent.source) == source.strip().lower())
+    if before_at:
+        stmt = stmt.where(TimelineEvent.occurred_at < before_at)
+    if after_at:
+        stmt = stmt.where(TimelineEvent.occurred_at >= after_at)
+    stmt = stmt.order_by(
+        TimelineEvent.occurred_at.desc(), TimelineEvent.created_at.desc(), TimelineEvent.id.desc()
+    ).limit(limit)
+    events = list(db.scalars(stmt))
+    replaced = _replacements(db, [event.id for event in events])
+
+    # Filter choices come from the whole visible record, so they do not shrink while filtering.
+    facet_rows = db.execute(select(TimelineEvent.type, TimelineEvent.source).where(*scope).distinct()).all()
+    facet_sources = sorted({row[1] for row in facet_rows if row[1]})
+    return {
+        "events": [enrich_event(event, replaced.get(event.id)) for event in events],
+        "count": len(events),
+        "facets": {
+            "types": sorted({row[0] for row in facet_rows if row[0]}),
+            "sources": [{"source": item, "label": source_label(item)} for item in facet_sources],
+        },
+        "filters": {"types": wanted_types, "source": source, "before": before, "after": after},
+    }
 
 
 @router.get("/events/{event_id}")
 def event_detail(event_id: str, db: Session = Depends(get_db)):
-    return event_to_dict(get_event(db, event_id))
+    event = get_event(db, event_id)
+    if event.patient_id != current_patient_id():
+        raise ValueError("Event belongs to another patient")
+    out = enrich_event(event, _replacements(db, [event.id]).get(event.id))
+    out["supersedes"] = supersedes_chain(db, event)
+    return out

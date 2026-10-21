@@ -2,7 +2,12 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { get, post } from "../api";
-import type { Alert, Draft, Reconciliation } from "../types";
+import type { Draft, Reconciliation } from "../types";
+import { DismissFields, dismissReady } from "../features/f05/DismissFields";
+import { CATEGORY_LABEL } from "../features/f05/types";
+import type { AlertRow, DismissCategory } from "../features/f05/types";
+import ReconciliationQueue from "../features/f06/ReconciliationQueue";
+import MedicineOrders from "../features/f06/MedicineOrders";
 import { DraftReview } from "../components/DraftReview";
 import { EvidenceChip } from "../components/Evidence";
 import { Modal } from "../components/Modal";
@@ -11,11 +16,12 @@ export function SafetyPage() {
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") === "meds" ? "meds" : "alerts";
   const queryClient = useQueryClient();
-  const [dismissing, setDismissing] = useState<Alert | null>(null);
+  const [dismissing, setDismissing] = useState<AlertRow | null>(null);
   const [reason, setReason] = useState("");
+  const [category, setCategory] = useState<DismissCategory | "">("");
   const [error, setError] = useState("");
 
-  const alerts = useQuery<{ alerts: Alert[]; open_count: number }>({
+  const alerts = useQuery<{ alerts: AlertRow[]; open_count: number }>({
     queryKey: ["alerts"],
     queryFn: () => get("/alerts"),
   });
@@ -36,10 +42,12 @@ export function SafetyPage() {
     onError: (err: any) => setError(String(err?.message || err)),
   });
   const dismiss = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) => post(`/alerts/${id}/dismiss`, { reason }),
+    mutationFn: ({ id, reason, category }: { id: string; reason: string; category: DismissCategory }) =>
+      post(`/alerts/${id}/dismiss`, { reason, category }),
     onSuccess: () => {
       setDismissing(null);
       setReason("");
+      setCategory("");
       setError("");
       queryClient.invalidateQueries();
     },
@@ -66,7 +74,7 @@ export function SafetyPage() {
         <div>
           <h1 className="page-title">Safety</h1>
           <div className="page-sub">
-            Deterministic rules decide whether something is wrong. GPT-4o only writes the sentence explaining it. Dismissing an alert always demands a reason.
+            Deterministic rules decide whether something is wrong. GPT-4o only writes the sentence explaining it. Dismissing an alert always asks for a category and a reason. An alert closes by itself when the problem is no longer true.
           </div>
         </div>
         <div className="page-actions">
@@ -118,7 +126,7 @@ export function SafetyPage() {
                   <button className="btn btn-sm" onClick={() => acknowledge.mutate(alert.id)} disabled={acknowledge.isPending}>
                     Acknowledge
                   </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => { setDismissing(alert); setReason(""); }}>
+                  <button className="btn btn-danger btn-sm" onClick={() => { setDismissing(alert); setReason(""); setCategory(""); }}>
                     Dismiss with reason
                   </button>
                 </div>
@@ -132,12 +140,16 @@ export function SafetyPage() {
                   <div className={`alert-card ${alert.status} m-0`} key={alert.id} style={{ border: 0, borderBottom: "1px solid var(--border)", borderRadius: 0 }}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className={`badge ${alert.status === "dismissed" ? "badge-warning" : "badge-success"}`}>{alert.status}</span>
+                        <span className={`badge ${alert.status === "dismissed" ? "badge-warning" : "badge-success"}`}>
+                          {alert.status === "resolved" ? "closed automatically" : alert.status}
+                        </span>
                         <span className="alert-rule">{alert.rule_id}</span>
                       </div>
-                      <span className="small muted">{alert.dismissed_by || alert.acknowledged_by}</span>
+                      <span className="small muted">{alert.dismissed_by || alert.acknowledged_by || (alert.status === "resolved" ? "Rules engine" : "")}</span>
                     </div>
                     <div className="alert-title mt-1">{alert.title}</div>
+                    {alert.status === "resolved" && alert.resolution ? <div className="small muted mt-1">{alert.resolution}</div> : null}
+                    {alert.dismissal_category ? <div className="small muted mt-1">Category: {CATEGORY_LABEL[alert.dismissal_category]}</div> : null}
                     {alert.dismissal_reason ? <div className="small muted mt-1">Reason: {alert.dismissal_reason}</div> : null}
                   </div>
                 ))}
@@ -216,26 +228,10 @@ export function SafetyPage() {
                 {explain.isPending ? <><span className="spinner" /> Drafting…</> : "Generate explanation"}
               </button>
             </div>
-            <div className="card-pad">
-              {reconciliation.data?.discrepancies.map((item) => (
-                <div className="alert-card mb-2" key={item.id} style={{ borderLeftColor: ["interaction", "contraindicated"].includes(item.kind) ? "var(--critical)" : "var(--warning)" }}>
-                  <div className="flex items-center gap-2">
-                    <span className={`badge ${["interaction", "contraindicated"].includes(item.kind) ? "badge-critical" : "badge-warning"}`}>{item.kind}</span>
-                    <strong className="fs-13">{item.home_med}</strong>
-                    <span className="small muted">→ {item.current_order || "not ordered"}</span>
-                  </div>
-                  <div className="alert-explanation">{item.explanation}</div>
-                  {item.field ? (
-                    <div className="small muted">
-                      <span className="mono">{item.field}</span>: home “{item.home_value || "—"}” → inpatient “{item.current_value || "—"}”
-                    </div>
-                  ) : null}
-                  {item.recommended_action ? <div className="small"><strong>Recommended:</strong> {item.recommended_action}</div> : null}
-                  <EvidenceChip eventIds={item.evidence_event_ids} />
-                </div>
-              ))}
-            </div>
           </div>
+
+          <ReconciliationQueue />
+          <MedicineOrders />
 
           {latestRecon ? <DraftReview draft={latestRecon} /> : null}
         </div>
@@ -250,8 +246,8 @@ export function SafetyPage() {
               <button className="btn" onClick={() => setDismissing(null)}>Cancel</button>
               <button
                 className="btn btn-danger"
-                disabled={reason.trim().length < 10 || dismiss.isPending}
-                onClick={() => dismiss.mutate({ id: dismissing.id, reason })}
+                disabled={!dismissReady(category, reason) || dismiss.isPending}
+                onClick={() => category && dismiss.mutate({ id: dismissing.id, reason, category })}
               >
                 {dismiss.isPending ? "Dismissing…" : "Dismiss alert"}
               </button>
@@ -259,9 +255,7 @@ export function SafetyPage() {
           }
         >
           <div className="small muted mb-2">{dismissing.title}</div>
-          <label className="field-label">Reason (required, audited)</label>
-          <textarea className="textarea small" value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Why is this alert being dismissed?" />
-          {reason && reason.trim().length < 10 ? <div className="small muted mt-1">{10 - reason.trim().length} more characters required.</div> : null}
+          <DismissFields category={category} reason={reason} onCategory={setCategory} onReason={setReason} />
         </Modal>
       ) : null}
     </>

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import base64
 import json
+import re
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from .identity import acting_name
 from ..config import settings
+from ..db import utcnow
 from ..models import Document
 from .cached import f11_investigation  # noqa: F401  (kept for context parity)
 from .timeline import add_audit, new_id
@@ -128,80 +131,226 @@ def cached_extraction() -> dict[str, Any]:
     return seed_extraction()
 
 
-def _pdf_text(path: Path) -> str:
-    """Best-effort text-layer extraction from a text PDF.
+DOC_TYPES = ("lab_report", "discharge_summary", "prescription", "radiology_report")
+LABELS = ("Impression", "Findings", "Diagnosis", "Conclusion")
 
-    Scanned PDFs have no text layer; those deliberately fall back to the cached
-    demo extraction rather than pretending an absent layer was read.
-    """
+_MONTHS = {m: i for i, m in enumerate(
+    ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
+_SKIP_NAMES = {
+    "page", "mrn", "age", "sex", "phone", "tel", "fax", "date", "time", "ref", "no", "id", "uhid",
+    "bed", "ward", "room", "report", "sample", "pin", "dob", "visit", "bill", "invoice",
+}
+_NUM = r"[<>]?\s?\d+(?:\.\d+)?"
+_LAB_LINE = re.compile(
+    rf"""^\s*
+    (?P<name>[A-Za-z][A-Za-z0-9 ()\-/.,%]*?)            # test name, no colon
+    \s+(?P<value>[<>]?\d+(?:\.\d+)?)                    # result
+    (?:\s*(?P<unit>[^\s()\d][^\s()]*|\d[^\s()]*[/^%][^\s()]*|%))?   # unit token
+    \s*(?:\((?P<range1>[^)]*)\)|(?P<range2>{_NUM}\s*-\s*\d+(?:\.\d+)?|[<>]\s?\d+(?:\.\d+)?))?
+    \s*$""",
+    re.X,
+)
+_RX_LINE = re.compile(
+    r"""^\s*(?P<drug>[A-Za-z][A-Za-z\-]*(?:\s+[A-Za-z][A-Za-z\-]*){0,2}?)\s+
+    (?P<dose>\d+(?:\.\d+)?\s*(?:mg|mcg|µg|ug|g|ml|units?|iu|%)(?:/\w+)?)
+    (?:\s+(?P<freq>\S.*?))?\s*$""",
+    re.X | re.I,
+)
+_LABEL_LINE = re.compile(r"^\s*(" + "|".join(LABELS) + r")\s*:\s*(.*)$", re.I)
+
+
+def _pdf_pages(path: Path) -> list[str]:
     try:
         from pypdf import PdfReader
 
         reader = PdfReader(str(path))
-        pages = [page.extract_text() or "" for page in reader.pages[:3]]
-        return "\n".join(pages).strip()
+        return [page.extract_text() or "" for page in reader.pages[:10]]
     except Exception:
-        return ""
+        return []
+
+
+def _pdf_text(path: Path) -> str:
+    """Best-effort text-layer extraction from a text PDF.
+
+    Scanned PDFs have no text layer; they return "" and the document goes to manual entry.
+    """
+    return "\n".join(_pdf_pages(path)).strip()
+
+
+def collected_date(text: str, fallback: str) -> str:
+    """ISO date from a 'Collected: 12 Oct 2026' line, else the fallback (the upload date)."""
+    match = re.search(r"Collected\s*(?:on|date)?\s*[:\-]?\s*(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})", text, re.I)
+    if match:
+        month = _MONTHS.get(match.group(2)[:3].lower())
+        if month:
+            try:
+                return date(int(match.group(3)), month, int(match.group(1))).isoformat()
+            except ValueError:
+                pass
+    return fallback
+
+
+def _lines(pages: list[str]):
+    for number, page in enumerate(pages, 1):
+        for line in page.splitlines():
+            line = line.strip()
+            if line:
+                yield number, line
+
+
+def parse_lab_lines(pages: list[str], collected_at: str) -> list[dict[str, Any]]:
+    fields = []
+    for page, line in _lines(pages):
+        match = _LAB_LINE.match(line)
+        if not match:
+            continue
+        name = match.group("name").strip(" .,-")
+        if not name or name.split()[0].lower() in _SKIP_NAMES:
+            continue
+        unit = (match.group("unit") or "").strip()
+        reference = (match.group("range1") or match.group("range2") or "").strip()
+        complete = bool(unit and reference)
+        fields.append({
+            "name": name,
+            "value": match.group("value"),
+            "unit": unit,
+            "reference_range": reference,
+            "collected_at": collected_at,
+            "confidence": 0.92 if complete else 0.7,
+            "page": page,
+        })
+    return fields
+
+
+def parse_prescription_lines(pages: list[str], collected_at: str) -> list[dict[str, Any]]:
+    fields = []
+    for page, line in _lines(pages):
+        match = _RX_LINE.match(line)
+        if not match:
+            continue
+        frequency = (match.group("freq") or "").strip()
+        fields.append({
+            "name": match.group("drug").strip(),
+            "value": re.sub(r"\s+", " ", match.group("dose").strip()),
+            "unit": "",
+            "reference_range": frequency,
+            "collected_at": collected_at,
+            "confidence": 0.92 if frequency else 0.7,
+            "page": page,
+        })
+    return fields
+
+
+def parse_labelled_lines(pages: list[str], collected_at: str) -> list[dict[str, Any]]:
+    """Impression/Findings/Diagnosis/Conclusion lines; a wrapped sentence continues on the next lines."""
+    fields: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+    continued = 0
+    for page, line in _lines(pages):
+        match = _LABEL_LINE.match(line)
+        if match:
+            current = {
+                "name": match.group(1).capitalize(),
+                "value": match.group(2).strip(),
+                "unit": "",
+                "reference_range": "",
+                "collected_at": collected_at,
+                "confidence": 0.8,
+                "page": page,
+            }
+            fields.append(current)
+            continued = 0
+        elif current is not None and continued < 4:
+            current["value"] = f"{current['value']} {line}".strip()
+            continued += 1
+    return [field for field in fields if field["value"]]
+
+
+def parse_report(doc_type: str, pages: list[str], fallback_date: str) -> dict[str, Any]:
+    """Read fields from a text layer. Nothing here is invented: unread lines give no field."""
+    text = "\n".join(pages)
+    collected = collected_date(text, fallback_date)
+    if doc_type == "prescription":
+        fields = parse_prescription_lines(pages, collected)
+    elif doc_type in ("radiology_report", "discharge_summary"):
+        fields = parse_labelled_lines(pages, collected)
+    else:
+        fields = parse_lab_lines(pages, collected)
+    return {"document_type": doc_type, "fields": fields, "raw_text": text.strip()}
+
+
+def _live_extract(document: Document, path: Path, is_image: bool) -> dict[str, Any] | None:
+    from openai import OpenAI
+
+    doc_type = document.doc_type or "lab_report"
+    label = doc_type.replace("_", " ")
+    client = OpenAI(api_key=settings.openai_api_key)
+    user_content: str | list[dict[str, Any]]
+    if is_image:
+        encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+        user_content = [
+            {"type": "text", "text": f"Extract this scanned {label}."},
+            {"type": "image_url", "image_url": {"url": f"data:{document.mime};base64,{encoded}"}},
+        ]
+    else:
+        pdf_text = _pdf_text(path)
+        if not pdf_text:
+            raise ValueError("PDF has no extractable text layer")
+        user_content = f"Extract the fields of this {label} from this PDF text. Treat the supplied text as the only source.\n\n" + pdf_text[:20000]
+    shape = {
+        "prescription": "one field per drug: name = drug, value = dose, reference_range = frequency",
+        "radiology_report": "one field per Impression/Findings/Conclusion statement: name = the label, value = the text",
+        "discharge_summary": "one field per Diagnosis/Conclusion statement: name = the label, value = the text",
+    }.get(doc_type, "one field per laboratory result")
+    response = client.chat.completions.create(
+        model=settings.openai_model,
+        temperature=0,
+        response_format={"type": "json_object"},
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    f"Extract fields from a {label}: {shape}. Return JSON with keys "
+                    "document_type, fields (name, value, unit, reference_range, collected_at, "
+                    "confidence 0-1, page, bbox normalized [x0,y0,x1,y1]), raw_text. "
+                    "Do not invent values; use lower confidence when unclear."
+                ),
+            },
+            {"role": "user", "content": user_content},
+        ],
+        timeout=60,
+    )
+    data = json.loads(response.choices[0].message.content or "{}")
+    return data if data.get("fields") else None
 
 
 def run_ocr(db: Session, document: Document) -> dict[str, Any]:
     mode = settings.effective_llm_mode
+    doc_type = document.doc_type or "lab_report"
     extracted: dict[str, Any] | None = None
     path = Path(document.path or "")
     is_image = bool(document.mime and document.mime.startswith("image/"))
     is_pdf = document.mime == "application/pdf" or (document.filename or "").lower().endswith(".pdf")
+    used_model = False
     if mode == "live" and document.image_kind == "file" and (is_image or is_pdf):
         try:
-            from openai import OpenAI
-
-            client = OpenAI(api_key=settings.openai_api_key)
-            user_content: str | list[dict[str, Any]]
-            if is_image:
-                encoded = base64.b64encode(path.read_bytes()).decode("ascii")
-                user_content = [
-                    {"type": "text", "text": "Extract this scanned lab report for a clinical demo."},
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:{document.mime};base64,{encoded}"},
-                    },
-                ]
-            else:
-                pdf_text = _pdf_text(path)
-                if not pdf_text:
-                    raise ValueError("PDF has no extractable text layer")
-                user_content = (
-                    "Extract laboratory fields from this PDF text. Treat the supplied text as the "
-                    "only source.\n\n" + pdf_text[:20000]
-                )
-            response = client.chat.completions.create(
-                model=settings.openai_model,
-                temperature=0,
-                response_format={"type": "json_object"},
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "Extract laboratory fields from the source. Return JSON with keys "
-                            "document_type, fields (name, value, unit, reference_range, collected_at, "
-                            "confidence 0-1, page, bbox normalized [x0,y0,x1,y1]), raw_text. "
-                            "Do not invent values; use lower confidence when unclear."
-                        ),
-                    },
-                    {
-                        "role": "user",
-                        "content": user_content,
-                    },
-                ],
-                timeout=60,
-            )
-            extracted = json.loads(response.choices[0].message.content or "{}")
+            extracted = _live_extract(document, path, is_image)
+            used_model = extracted is not None
         except Exception:
             extracted = None
     if extracted is None:
-        extracted = cached_extraction()
+        # No key (or the model failed): read the PDF text layer. A scan or image has none, so no fields.
+        fallback_date = (document.uploaded_at or utcnow()).date().isoformat()
+        pages = _pdf_pages(path) if (is_pdf and document.image_kind == "file") else []
+        extracted = parse_report(doc_type, pages, fallback_date)
+    extracted.setdefault("document_type", doc_type)
     document.extracted = extracted
-    low_confidence = any(float(field.get("confidence", 1)) < 0.8 for field in extracted.get("fields", []))
-    document.ocr_status = "needs_confirmation" if low_confidence else "reviewed"
+    fields = extracted.get("fields", [])
+    low_confidence = any(float(field.get("confidence", 1)) < 0.8 for field in fields)
+    if not fields:
+        document.ocr_status = "needs_manual_entry"
+    else:
+        document.ocr_status = "needs_confirmation" if low_confidence else "reviewed"
     document.raw_text = extracted.get("raw_text", "")
     add_audit(
         db,
@@ -209,10 +358,10 @@ def run_ocr(db: Session, document: Document) -> dict[str, Any]:
         "document",
         document.id,
         document.patient_id,
-        actor_type="model",
-        actor_name=settings.openai_model if mode == "live" else "Cached demo OCR",
-        after={"fields": len(extracted.get("fields", [])), "needs_confirmation": low_confidence},
-        meta={"mode": mode},
+        actor_type="model" if used_model else "system",
+        actor_name=settings.openai_model if used_model else "Text-layer reader",
+        after={"fields": len(fields), "needs_confirmation": low_confidence, "needs_manual_entry": not fields},
+        meta={"mode": mode, "doc_type": doc_type},
     )
     return extracted
 

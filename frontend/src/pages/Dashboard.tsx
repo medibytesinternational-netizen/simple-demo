@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { get } from "../api";
-import type { HospitalDashboard } from "../types";
+import { AlertQualityTable } from "../features/f14/AlertQualityTable";
+import { OpenRecordButton } from "../features/f14/OpenRecordButton";
+import type { F14Dashboard } from "../features/f14/types";
 
 function fmt(value: number) {
   return Number(value || 0).toLocaleString();
@@ -15,7 +17,7 @@ function actionBadge(action: string) {
 }
 
 export function DashboardPage() {
-  const dashboard = useQuery<HospitalDashboard>({
+  const dashboard = useQuery<F14Dashboard>({
     queryKey: ["hospital-dashboard"],
     queryFn: () => get("/hospital/dashboard"),
   });
@@ -63,6 +65,24 @@ export function DashboardPage() {
 
       <div className="grid-4 mb-3">
         <div className="card stat">
+          <div className="stat-label">Pending tasks</div>
+          <div className="stat-value">{fmt(summary?.pending_tasks ?? 0)}</div>
+          <div className="stat-note">Not yet completed or cancelled</div>
+        </div>
+        <div className="card stat">
+          <div className="stat-label">Draft discharges</div>
+          <div className="stat-value">{fmt(summary?.draft_discharges ?? 0)}</div>
+          <div className="stat-note">Waiting for a clinician to review</div>
+        </div>
+        <div className="card stat">
+          <div className="stat-label">Medicine discrepancies</div>
+          <div className="stat-value" style={{ color: summary?.medicine_discrepancies ? "var(--warning)" : undefined }}>{fmt(summary?.medicine_discrepancies ?? 0)}</div>
+          <div className="stat-note">Home list against current orders</div>
+        </div>
+      </div>
+
+      <div className="grid-4 mb-3">
+        <div className="card stat">
           <div className="stat-label">Documents pending</div>
           <div className="stat-value">{fmt(summary?.pending_documents ?? 0)}</div>
           <div className="stat-note">OCR needs human confirmation</div>
@@ -92,7 +112,7 @@ export function DashboardPage() {
               <span className="badge badge-neutral">{data?.patients.length || 0} patients</span>
             </div>
             <table className="table">
-              <thead><tr><th>Patient</th><th>Location</th><th>Open work</th><th>Flags</th><th className="right">Open</th></tr></thead>
+              <thead><tr><th>Patient</th><th>Location</th><th>Open work</th><th>Discharge and medicines</th><th>Flags</th><th className="right">Open</th></tr></thead>
               <tbody>
                 {data?.patients.map((patient) => (
                   <tr key={patient.patient_id}>
@@ -104,8 +124,12 @@ export function DashboardPage() {
                       {patient.ward || "—"}<div className="small muted">{patient.bed || ""} {patient.kind || ""}</div>
                     </td>
                     <td className="small">
-                      <div>{patient.pending_drafts} drafts · {patient.overdue_tasks} overdue</div>
-                      <div className="small muted">{patient.open_alerts} alerts · {patient.open_referrals} referrals</div>
+                      <div>{patient.pending_tasks} pending tasks · {patient.overdue_tasks} overdue</div>
+                      <div className="small muted">{patient.open_alerts} alerts · {patient.open_referrals} referrals · {patient.claim_gaps} claim gaps</div>
+                    </td>
+                    <td className="small">
+                      <div>{patient.draft_discharges} draft discharges</div>
+                      <div className="small muted">{patient.medicine_discrepancies} medicine discrepancies</div>
                     </td>
                     <td>
                       <div className="pill-row">
@@ -116,13 +140,15 @@ export function DashboardPage() {
                       </div>
                     </td>
                     <td className="right">
-                      {patient.patient_id === "pat_ravi" ? <Link className="btn btn-sm" to="/notes">Open record</Link> : <span className="small muted">queue row</span>}
+                      <OpenRecordButton patientId={patient.patient_id} />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          <AlertQualityTable />
 
           <div className="card">
             <div className="card-head">

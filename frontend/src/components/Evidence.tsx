@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../api";
-import type { TimelineEvent } from "../types";
+import type { EventDetail } from "../features/f16/types";
+import { ProvenanceFacts } from "../features/f16/Provenance";
 
 type EvidenceCtx = {
   selectedEventId: string | null;
@@ -67,10 +68,10 @@ export function EvidenceChip({
 }
 
 export function EvidenceDrawer() {
-  const { selectedEventId, close } = useEvidence();
+  const { selectedEventId, showEvent, close } = useEvidence();
   const query = useQuery({
     queryKey: ["event", selectedEventId],
-    queryFn: () => get<TimelineEvent>(`/events/${selectedEventId}`),
+    queryFn: () => get<EventDetail>(`/events/${selectedEventId}`),
     enabled: Boolean(selectedEventId),
   });
   if (!selectedEventId) return null;
@@ -97,14 +98,14 @@ export function EvidenceDrawer() {
                 <span className={`badge ${event.status === "approved" ? "badge-success" : "badge-neutral"}`}>
                   {event.status}
                 </span>
-                <span className="badge badge-ai">{event.source}</span>
+                <span className="badge badge-ai" title={event.source}>{event.source_label}</span>
                 <span className="badge badge-neutral">{event.type}</span>
               </div>
               <div className="fs-20" style={{ fontWeight: 650, marginBottom: 4 }}>
                 {event.title}
               </div>
-              <div className="small muted mb-3">
-                {new Date(event.occurred_at).toLocaleString()} · {event.author_name}
+              <div className="mb-3">
+                <ProvenanceFacts event={event} />
               </div>
               {event.body_text ? <p className="fs-13" style={{ lineHeight: 1.6 }}>{event.body_text}</p> : null}
               <div className="section-label">Raw payload</div>
@@ -115,16 +116,41 @@ export function EvidenceDrawer() {
               <dl className="kv">
                 <dt>Author type</dt>
                 <dd>{event.author_type}</dd>
+                <dt>Recorded by</dt>
+                <dd>{event.recorded_by}</dd>
+                <dt>Drafted by</dt>
+                <dd>{event.drafted_by || "—"}</dd>
                 <dt>Approved by</dt>
                 <dd>{event.approved_by || "—"}</dd>
+                <dt>Source</dt>
+                <dd>{event.source_label} <span className="mono small">({event.source})</span></dd>
                 <dt>Event id</dt>
                 <dd className="mono">{event.id}</dd>
                 <dt>Encounter</dt>
                 <dd className="mono">{event.encounter_id || "—"}</dd>
-                {event.supersedes_event_id ? (
+                {event.superseded_by ? (
+                  <>
+                    <dt>Superseded by</dt>
+                    <dd>
+                      <button className="btn btn-ghost btn-sm mono" onClick={() => showEvent(event.superseded_by!)}>
+                        {event.superseded_by}
+                      </button>
+                    </dd>
+                  </>
+                ) : null}
+                {event.supersedes?.length ? (
                   <>
                     <dt>Supersedes</dt>
-                    <dd className="mono">{event.supersedes_event_id}</dd>
+                    <dd>
+                      {event.supersedes.map((version) => (
+                        <div key={version.id}>
+                          <button className="btn btn-ghost btn-sm mono" onClick={() => showEvent(version.id)}>
+                            {version.id}
+                          </button>
+                          <span className="small muted"> {new Date(version.occurred_at).toLocaleString()} · {version.recorded_by}</span>
+                        </div>
+                      ))}
+                    </dd>
                   </>
                 ) : null}
               </dl>

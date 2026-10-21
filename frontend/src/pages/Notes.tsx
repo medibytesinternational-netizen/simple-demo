@@ -2,9 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { get, post, transcribeAudio } from "../api";
-import type { Draft, Lab } from "../types";
+import type { Draft, Lab, Meta } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { usePatientId } from "../session";
+import IcuReadingForm from "../features/f07/IcuReadingForm";
+import ReferralRequestForm from "../features/f11/ReferralRequestForm";
+import { canAcknowledge, referralStatusLabel } from "../features/f11/rules";
+import { ConsultNoteStatus, type ConsultGenerateResult } from "../features/f01/ConsultNoteStatus";
 
 const CONSULT_TRANSCRIPT = `Doctor: Mr Menon, what brings you in today?
 Ravi: My right leg has been swollen and red since Tuesday. It is warm and painful when I walk.
@@ -83,6 +87,7 @@ export function NotesPage() {
   const queryClient = useQueryClient();
   const [transcript, setTranscript] = useState<string>(tab.transcript);
   const [error, setError] = useState("");
+  const [consultResult, setConsultResult] = useState<ConsultGenerateResult | null>(null);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -91,6 +96,7 @@ export function NotesPage() {
   useEffect(() => {
     setTranscript(tab.transcript);
     setError("");
+    setConsultResult(null);
   }, [tab.key]);
 
   const hasDraft = tab.kind !== "labs";
@@ -104,10 +110,13 @@ export function NotesPage() {
     queryFn: () => get("/investigations"),
     enabled: tab.kind === "labs",
   });
-  const icu = useQuery<{ entries: ICUEntry[]; shift_window: { start?: string; end?: string } }>({
-    queryKey: ["icu-flow-sheet"],
-    queryFn: () => get("/icu/flow-sheet"),
-    enabled: tab.kind === "icu",
+  const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
+  // New readings go to the active encounter, so the sheet is read for that encounter too.
+  const activeEncounterId = meta.data?.encounter.id ?? "";
+  const icu = useQuery<{ entries: ICUEntry[]; shift_window: { start?: string; end?: string }; not_documented?: string[] }>({
+    queryKey: ["icu-flow-sheet", activeEncounterId],
+    queryFn: () => get(`/icu/flow-sheet?encounter_id=${encodeURIComponent(activeEncounterId)}`),
+    enabled: tab.kind === "icu" && !!activeEncounterId,
   });
   const referrals = useQuery<{ referrals: Referral[] }>({
     queryKey: ["referrals"],
@@ -187,15 +196,13 @@ export function NotesPage() {
         });
       }
       if (tab.kind === "icu") {
-        return post<any>("/icu/flow-sheet/generate");
-      }
-      if (tab.kind === "referral") {
-        return post<any>("/referrals/generate", {});
+        return post<any>(`/icu/flow-sheet/generate?encounter_id=${encodeURIComponent(activeEncounterId)}`);
       }
       return null;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       setError("");
+      setConsultResult(tab.feature === "F1" ? (result as ConsultGenerateResult | null) : null);
       queryClient.invalidateQueries();
     },
     onError: (err: any) => setError(String(err?.message || err)),
@@ -302,6 +309,7 @@ export function NotesPage() {
                   <button className="btn" onClick={() => setTranscript(tab.transcript)}>Load seeded transcript</button>
                   <span className="small muted">Paste text in the demo; audio upload uses Whisper in production.</span>
                 </div>
+                {tab.feature === "F1" ? <ConsultNoteStatus result={consultResult} /> : null}
                 {tab.feature === "F1" || tab.feature === "F2" ? (
                   <div className="banner mt-3">
                     Consent and allergy verification are captured separately below the draft. The model cannot mark either as complete.
@@ -312,8 +320,9 @@ export function NotesPage() {
 
             {tab.kind === "icu" ? (
               <>
+                <IcuReadingForm encounterId={activeEncounterId || undefined} />
                 <div className="banner mb-3">
-                  Source: device feed for the seeded ICU encounter (18–19 Oct). {icu.data?.entries.length ?? 0} structured readings available.
+                  Source: device readings and entries recorded on this chart. {icu.data?.entries.length ?? 0} entries on the sheet.
                 </div>
                 <button className="btn btn-primary" onClick={() => generate.mutate()} disabled={generate.isPending}>
                   {generate.isPending ? <><span className="spinner" /> Assembling flow sheet…</> : "Assemble ICU flow sheet"}
@@ -332,6 +341,9 @@ export function NotesPage() {
                     ))}
                   </tbody>
                 </table>
+                {icu.data?.not_documented?.length ? (
+                  <div className="small muted mt-2">Not documented: {icu.data.not_documented.join(", ")}</div>
+                ) : null}
               </>
             ) : null}
 
@@ -339,10 +351,8 @@ export function NotesPage() {
               <>
                 <div className="flex items-center justify-between mb-2">
                   <div className="card-sub">Referral queue · {referrals.data?.referrals.length ?? 0}</div>
-                  <button className="btn btn-primary btn-sm" onClick={() => generate.mutate()} disabled={generate.isPending}>
-                    {generate.isPending ? <><span className="spinner" /> Drafting…</> : "Draft nephrology referral"}
-                  </button>
                 </div>
+                <ReferralRequestForm />
                 <div className="stack">
                   {referrals.data?.referrals.map((referral) => (
                     <div key={referral.id} className="list-card">
@@ -351,11 +361,11 @@ export function NotesPage() {
                           <div className="strong">{referral.specialty}</div>
                           <div className="small muted">{referral.specialist || "Specialist service"} · {referral.urgency}</div>
                         </div>
-                        <span className={`badge ${referral.status === "completed" ? "badge-success" : referral.status === "acknowledged" ? "badge-ai" : "badge-warning"}`}>{referral.status}</span>
+                        <span className={`badge ${referral.status === "completed" ? "badge-success" : referral.status === "acknowledged" ? "badge-ai" : "badge-warning"}`}>{referralStatusLabel(referral.status)}</span>
                       </div>
                       <div className="small mt-2">{referral.question}</div>
                       <div className="button-row mt-2">
-                        {referral.status === "sent" ? (
+                        {canAcknowledge(referral.status) ? (
                           <button className="btn btn-sm" onClick={() => acknowledgeReferral.mutate(referral.id)} disabled={acknowledgeReferral.isPending}>Mark acknowledged</button>
                         ) : null}
                         {referral.status === "acknowledged" ? (

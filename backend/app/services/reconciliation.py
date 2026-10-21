@@ -1,8 +1,28 @@
-"""Medication reconciliation (F6): home list against the current plan, deterministic."""
+"""Medication reconciliation (F6): home list against the current plan, deterministic.
+
+Every value in a discrepancy is computed from the record. Decisions made by clinicians
+(see ``services/medicines.py``) are merged in as ``status`` open or resolved.
+"""
 
 from __future__ import annotations
 
+import hashlib
+import json
 from typing import Any
+
+# The same two pairs the safety rules use. Kept here as a fallback so this module still works
+# if the rules module renames its list; a test checks the two lists agree.
+LOCAL_INTERACTION_PAIRS = (
+    (("warfarin",), ("ibuprofen", "naproxen", "diclofenac", "aspirin")),
+    (("simvastatin",), ("clarithromycin", "erythromycin")),
+)
+try:
+    from .rules import INTERACTION_PAIRS
+except ImportError:  # pragma: no cover
+    INTERACTION_PAIRS = LOCAL_INTERACTION_PAIRS
+
+# The safety rule for metformin (R1) uses the same threshold.
+METFORMIN_EGFR_LIMIT = 30
 
 
 def _lab(state: dict[str, Any], name: str) -> dict[str, Any] | None:
@@ -20,7 +40,52 @@ def _med_label(med: dict[str, Any]) -> str:
     )
 
 
-def reconciliation(state: dict[str, Any]) -> dict[str, Any]:
+def _same(left: str, right: str) -> bool:
+    """Case and spacing do not make two values different ("1 g" and "1g")."""
+    return "".join(left.lower().split()) == "".join(right.lower().split())
+
+
+def fingerprint(item: dict[str, Any]) -> str:
+    """What a decision was made on: the same kind, values and evidence."""
+    basis = [
+        item.get("kind", ""),
+        item.get("home_value", ""),
+        item.get("current_value", ""),
+        sorted(item.get("evidence_event_ids", [])),
+    ]
+    return hashlib.sha1(json.dumps(basis, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def _slug(text: str) -> str:
+    return "_".join(str(text).lower().split())
+
+
+def _merge_decision(item: dict[str, Any], decisions: dict[str, dict[str, Any]]) -> None:
+    latest = decisions.get(item["id"])
+    item["status"] = "open"
+    item["decision"] = None
+    item["note"] = None
+    item["decided_by"] = None
+    item["decided_at"] = None
+    item["earlier_decision"] = None
+    if not latest:
+        return
+    if latest.get("fingerprint") == item["fingerprint"]:
+        item["status"] = "resolved"
+        item["decision"] = latest["decision"]
+        item["note"] = latest.get("note")
+        item["decided_by"] = latest.get("decided_by")
+        item["decided_at"] = latest.get("decided_at")
+    else:
+        # The record changed after the decision, so a clinician must look again.
+        item["earlier_decision"] = {
+            "decision": latest["decision"],
+            "decided_by": latest.get("decided_by"),
+            "decided_at": latest.get("decided_at"),
+        }
+
+
+def reconciliation(state: dict[str, Any], decisions: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     home = state.get("home_meds", [])
     current = state.get("active_meds", [])
     current_by_drug: dict[str, dict[str, Any]] = {}
@@ -29,11 +94,15 @@ def reconciliation(state: dict[str, Any]) -> dict[str, Any]:
     home_by_drug = {str(med["drug"]).lower(): med for med in home}
     discrepancies: list[dict[str, Any]] = []
     egfr = _lab(state, "eGFR")
+    latest_decisions: dict[str, dict[str, Any]] = {}
+    for decision in decisions or []:  # oldest first, so the newest wins
+        latest_decisions[decision["discrepancy_id"]] = decision
 
     def add(
         *,
         ident: str,
         kind: str,
+        drug: str,
         home_med: str,
         current_order: str | None,
         explanation: str,
@@ -43,20 +112,22 @@ def reconciliation(state: dict[str, Any]) -> dict[str, Any]:
         current_value: str = "",
         recommended_action: str = "Review and document the reconciliation decision.",
     ) -> None:
-        discrepancies.append(
-            {
-                "id": ident,
-                "kind": kind,
-                "home_med": home_med,
-                "current_order": current_order,
-                "field": field,
-                "home_value": home_value,
-                "current_value": current_value,
-                "explanation": explanation,
-                "recommended_action": recommended_action,
-                "evidence_event_ids": evidence,
-            }
-        )
+        item = {
+            "id": ident,
+            "kind": kind,
+            "drug": drug,
+            "home_med": home_med,
+            "current_order": current_order,
+            "field": field,
+            "home_value": home_value,
+            "current_value": current_value,
+            "explanation": explanation,
+            "recommended_action": recommended_action,
+            "evidence_event_ids": [event_id for event_id in evidence if event_id],
+        }
+        item["fingerprint"] = fingerprint(item)
+        _merge_decision(item, latest_decisions)
+        discrepancies.append(item)
 
     metformin = current_by_drug.get("metformin")
     if metformin and egfr:
@@ -64,29 +135,34 @@ def reconciliation(state: dict[str, Any]) -> dict[str, Any]:
             egfr_value = float(egfr["value"])
         except (TypeError, ValueError):
             egfr_value = None
-        if egfr_value is not None and egfr_value < 30:
+        if egfr_value is not None and egfr_value < METFORMIN_EGFR_LIMIT:
+            home_metformin = home_by_drug.get("metformin")
+            unit = str(egfr.get("unit", "") or "").strip()
+            egfr_text = f"eGFR {egfr_value:g}" + (f" {unit}" if unit else "")
             add(
                 ident="disc_metformin",
                 kind="contraindicated",
-                home_med="Metformin 1 g BD",
-                current_order=f"{metformin.get('dose', '')} {metformin.get('frequency', '')}".strip(),
+                drug=metformin["drug"],
+                home_med=_med_label(home_metformin) if home_metformin else "Not on the home list",
+                current_order=_med_label(metformin),
                 explanation=(
-                    f"Metformin remains active while eGFR is {egfr_value:g}. "
-                    "It should be reviewed and stopped in severe renal impairment."
+                    f"{metformin['drug']} is active while {egfr_text}, below the safety limit of "
+                    f"{METFORMIN_EGFR_LIMIT}. A prescriber should review it."
                 ),
                 evidence=[metformin["event_id"], egfr["event_id"]],
                 field="renal safety",
-                home_value="eGFR 22 mL/min/1.73m²",
-                current_value="Metformin active",
-                recommended_action="Stop metformin and document the rationale; consider an alternative agent.",
+                home_value=egfr_text,
+                current_value=f"{metformin['drug']} active",
+                recommended_action=f"Review whether {metformin['drug']} should continue and document the reason.",
             )
 
     for drug, med in home_by_drug.items():
         current_med = current_by_drug.get(drug)
         if not current_med:
             add(
-                ident=f"disc_omitted_{drug.replace(' ', '_')}",
+                ident=f"disc_omitted_{_slug(drug)}",
                 kind="omitted",
+                drug=med["drug"],
                 home_med=_med_label(med),
                 current_order=None,
                 explanation="Home medication is not present on the current inpatient order list.",
@@ -98,11 +174,11 @@ def reconciliation(state: dict[str, Any]) -> dict[str, Any]:
             )
             continue
 
-        for field, kind, label in (
-            ("dose", "dose_changed", "dose"),
-            ("route", "route_changed", "route"),
-            ("frequency", "frequency_changed", "frequency"),
-            ("indication", "indication_missing", "indication"),
+        for field, kind in (
+            ("dose", "dose_changed"),
+            ("route", "route_changed"),
+            ("frequency", "frequency_changed"),
+            ("indication", "indication_missing"),
         ):
             home_value = str(med.get(field, "") or "").strip()
             current_value = str(current_med.get(field, "") or "").strip()
@@ -110,53 +186,69 @@ def reconciliation(state: dict[str, Any]) -> dict[str, Any]:
                 continue
             if field == "indication" and not current_value:
                 add(
-                    ident=f"disc_indication_{drug.replace(' ', '_')}",
+                    ident=f"disc_indication_{_slug(drug)}",
                     kind=kind,
+                    drug=med["drug"],
                     home_med=_med_label(med),
                     current_order=_med_label(current_med),
                     explanation="The current inpatient order has no documented indication.",
                     evidence=[med["event_id"], current_med["event_id"]],
-                    field=label,
+                    field=field,
                     home_value=home_value,
                     current_value="Not documented",
                     recommended_action="Document the indication for the current order.",
                 )
-            elif current_value and home_value.lower() != current_value.lower():
+            elif current_value and not _same(home_value, current_value):
                 add(
-                    ident=f"disc_{field}_{drug.replace(' ', '_')}",
+                    ident=f"disc_{field}_{_slug(drug)}",
                     kind=kind,
+                    drug=med["drug"],
                     home_med=_med_label(med),
                     current_order=_med_label(current_med),
-                    explanation=f"{label.title()} differs between the home list and the current inpatient order.",
+                    explanation=f"The {field} differs between the home list and the current inpatient order.",
                     evidence=[med["event_id"], current_med["event_id"]],
-                    field=label,
+                    field=field,
                     home_value=home_value,
                     current_value=current_value,
-                    recommended_action=f"Confirm the intended {label} with the prescriber.",
+                    recommended_action=f"Confirm the intended {field} with the prescriber.",
                 )
 
-    warfarin = current_by_drug.get("warfarin") or home_by_drug.get("warfarin")
-    ibuprofen = current_by_drug.get("ibuprofen") or home_by_drug.get("ibuprofen")
-    if warfarin and ibuprofen:
+    # Interacting pairs: drugs on the current order list, or on the home list when not ordered.
+    on_list: dict[str, dict[str, Any]] = {}
+    for med in home:
+        on_list.setdefault(str(med["drug"]).lower(), med)
+    on_list.update(current_by_drug)
+    for left, right in INTERACTION_PAIRS:
+        left_name = next((name for name in left if name in on_list), None)
+        right_name = next((name for name in right if name in on_list), None)
+        if not left_name or not right_name:
+            continue
+        left_med, right_med = on_list[left_name], on_list[right_name]
         add(
-            ident="disc_warfarin_ibuprofen",
+            ident=f"disc_{_slug(left_name)}_{_slug(right_name)}",
             kind="interaction",
-            home_med="Warfarin + Ibuprofen",
-            current_order="Both active",
+            drug=right_med["drug"],
+            home_med=f"{left_med['drug']} + {right_med['drug']}",
+            current_order="; ".join(_med_label(m) for m in (left_med, right_med)),
             explanation=(
-                "Concurrent warfarin and ibuprofen increases bleeding risk, especially with CKD. "
-                "Review and stop the NSAID unless there is a documented reason."
+                f"{left_med['drug']} and {right_med['drug']} are both on the medication list. "
+                "The safety rules flag this pair as an interaction."
             ),
-            evidence=[warfarin["event_id"], ibuprofen["event_id"]],
+            evidence=[left_med["event_id"], right_med["event_id"]],
             field="interaction",
-            home_value="Warfarin active",
-            current_value="Ibuprofen active",
-            recommended_action="Review the pair, stop the NSAID where possible, and document the decision.",
+            home_value=f"{left_med['drug']} active",
+            current_value=f"{right_med['drug']} active",
+            recommended_action=f"Review the pair and document the decision for {right_med['drug']}.",
         )
 
+    open_items = [item for item in discrepancies if item["status"] == "open"]
     return {
         "discrepancies": discrepancies,
         "home_medications": home,
         "current_medications": current,
-        "summary": f"{len(discrepancies)} discrepancies found by deterministic comparison.",
+        "unresolved_count": len(open_items),
+        "summary": (
+            f"{len(discrepancies)} discrepancies found by deterministic comparison; "
+            f"{len(open_items)} still open."
+        ),
     }

@@ -237,16 +237,48 @@ def reject_draft(db: Session, draft: Draft, reason: str, actor: str | None = Non
     return draft
 
 
-def _validate_citations(db: Session, content: dict[str, Any]) -> None:
+def _collect_segment_ids(value: Any) -> list[str]:
+    found: list[str] = []
+
+    def walk(item: Any) -> None:
+        if isinstance(item, dict):
+            for key, sub in item.items():
+                if key == "source_segment_ids" and isinstance(sub, list):
+                    found.extend(str(entry) for entry in sub if entry)
+                else:
+                    walk(sub)
+        elif isinstance(item, list):
+            for sub in item:
+                walk(sub)
+
+    walk(value)
+    return list(dict.fromkeys(found))
+
+
+def _validate_citations(db: Session, content: dict[str, Any], draft: Draft | None = None) -> None:
     cited = _collect_evidence(content)
-    if not cited:
+    if cited:
+        existing = set(
+            db.scalars(select(TimelineEvent.id).where(TimelineEvent.id.in_(cited))).all()
+        )
+        missing = [item for item in cited if item not in existing]
+        if missing:
+            raise ValueError(f"Unknown evidence event ids: {', '.join(missing[:5])}")
+
+    # A segment id must exist in the transcript the draft was made from. Drafts that were not
+    # made from a transcript (no created_from_event_ids) have none to check against.
+    sources = list(draft.created_from_event_ids or []) if draft else []
+    segment_ids = _collect_segment_ids(content)
+    if not sources or not segment_ids:
         return
-    existing = set(
-        db.scalars(select(TimelineEvent.id).where(TimelineEvent.id.in_(cited))).all()
-    )
-    missing = [item for item in cited if item not in existing]
-    if missing:
-        raise ValueError(f"Unknown evidence event ids: {', '.join(missing[:5])}")
+    known: set[str] = set()
+    for event in db.scalars(select(TimelineEvent).where(TimelineEvent.id.in_(sources))).all():
+        for segment in (event.payload or {}).get("segments") or []:
+            if isinstance(segment, dict) and segment.get("segment_id"):
+                known.add(str(segment["segment_id"]))
+    unknown = [item for item in segment_ids if item not in known]
+    if unknown:
+        raise ValueError(f"Unknown transcript segment ids: {', '.join(unknown[:5])}")
 
 
 def approve_draft(
@@ -273,7 +305,7 @@ def approve_draft(
             content = model_cls.model_validate(content).model_dump(mode="json")
         draft.content = content
     payload = draft.content or {}
-    _validate_citations(db, payload)
+    _validate_citations(db, payload, draft)
     patient = db.get(Patient, draft.patient_id)
     encounter = db.get(Encounter, draft.encounter_id) if draft.encounter_id else None
     if not patient or not encounter:
@@ -318,7 +350,8 @@ def approve_draft(
         payload=event_payload,
         source=draft.feature,
         author_type="model",
-        author_name=approver,
+        # The author of the text is the model that wrote it; the clinician who signed is approved_by.
+        author_name=f"{draft.model} ({draft.prompt_version})",
         status="approved",
         confidence=None,
         occurred_at=utcnow(),
@@ -404,6 +437,9 @@ def accept_tasks(
             priority=item.get("priority", "routine"),
             due_at=now + timedelta(hours=due_hours),
             owner=actor,
+            assigned_to=actor,
+            assigned_at=now,
+            assigned_by=actor,
             source_event_id=draft.committed_event_id,
             accepted_from_draft_id=draft.id,
             created_by=actor,

@@ -102,6 +102,14 @@ def match_document_request(request_id: str, body: MatchRequest, db: Session = De
     document = db.get(Document, body.document_id)
     if not request or not document:
         raise HTTPException(404, "Request or document not found")
+    if document.patient_id != request.patient_id:
+        raise HTTPException(400, "That document belongs to another patient and cannot answer this request.")
+    if request.request_type == "pre_auth" and document.doc_type != "pre_auth":
+        kind = str(document.doc_type or "unknown").replace("_", " ")
+        raise HTTPException(
+            400,
+            f"A pre-authorisation request needs a pre-authorisation document. This one is a {kind}.",
+        )
     request.status = "matched"
     request.matched_document_id = document.id
     add_audit(

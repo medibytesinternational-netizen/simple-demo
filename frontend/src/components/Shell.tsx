@@ -5,6 +5,7 @@ import { get, post, session } from "../api";
 import type { AppState, AuditEntry, Credits, Meta, PatientRow, UserInfo } from "../types";
 import { EvidenceDrawer } from "./Evidence";
 import { Modal } from "./Modal";
+import IntegrationBanner from "../features/s17/IntegrationBanner";
 
 const NAV = [
   { path: "/timeline", label: "Timeline", icon: "TL" },
@@ -158,6 +159,7 @@ export function Shell() {
         </nav>
 
         <main className="content">
+          <div className="mb-3"><IntegrationBanner /></div>
           <Outlet />
         </main>
       </div>

@@ -11,13 +11,14 @@ from ..models import (
     Draft,
     TimelineEvent,
 )
+from ..services import credits
 from ..services.identity import require
 from ..services.context import build_context, create_transcript_event
 from ..services.drafts import (
     create_draft,
     draft_to_dict,
 )
-from ..services.llm import DraftGenerationError, generate_draft
+from ..services.llm import DraftGenerationError, fallback_reason, generate_draft
 from ..services.timeline import (
     add_audit,
 )
@@ -55,6 +56,9 @@ async def transcribe_consultation(file: UploadFile = File(...), db: Session = De
     contents = await file.read()
     if len(contents) > 25 * 1024 * 1024:
         raise HTTPException(400, "Audio too large (max 25 MB)")
+    # A transcription is really about to run: charge before the work. The charge is only flushed, so
+    # a failed transcription leaves the request uncommitted and nothing is spent.
+    credits.charge(db, "voice_note", feature="F1", mode="live")
     try:
         from openai import OpenAI
 
@@ -117,6 +121,7 @@ def generate_note(body: NoteGenerateRequest, db: Session = Depends(get_db)):
         created_from_event_ids=[transcript_event.id],
     )
     db.commit()
+    reason = fallback_reason(llm_call)
     return {
         "draft": draft_to_dict(draft),
         "transcript_event_id": transcript_event.id,
@@ -127,6 +132,8 @@ def generate_note(body: NoteGenerateRequest, db: Session = Depends(get_db)):
             "latency_ms": llm_call.latency_ms,
             "tokens_in": llm_call.input_tokens,
             "tokens_out": llm_call.output_tokens,
+            "fallback": reason is not None,
+            "fallback_reason": reason,
         },
     }
 
