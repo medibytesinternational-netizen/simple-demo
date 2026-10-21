@@ -127,6 +127,8 @@ class Alert(Base):
     acknowledged_by = Column(String)
     dismissed_by = Column(String)
     dismissal_reason = Column(Text)
+    dismissal_category = Column(String)
+    resolution = Column(Text)
     created_at = Column(DateTime, default=utcnow)
     resolved_at = Column(DateTime)
 
@@ -271,4 +273,28 @@ class AuditEntry(Base):
     before = Column(JSON, default=dict)
     after = Column(JSON, default=dict)
     meta = Column(JSON, default=dict)
+    created_at = Column(DateTime, default=utcnow)
+
+
+class CreditAccount(Base):
+    __tablename__ = "credit_account"
+
+    id = Column(String, primary_key=True)
+    pack_size = Column(Integer, default=5000)
+    balance = Column(Integer, default=5000)
+    updated_at = Column(DateTime, default=utcnow)
+
+
+class CreditEntry(Base):
+    __tablename__ = "credit_ledger"
+
+    id = Column(String, primary_key=True)
+    operation = Column(String, nullable=False)
+    units = Column(Integer, nullable=False)
+    balance_after = Column(Integer, nullable=False)
+    feature = Column(String)
+    mode = Column(String)
+    llm_call_id = Column(String)
+    patient_id = Column(String)
+    actor = Column(String)
     created_at = Column(DateTime, default=utcnow)

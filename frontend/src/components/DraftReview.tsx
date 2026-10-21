@@ -52,7 +52,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
       if (editMode) content = JSON.parse(editText);
       return post<any>(`/drafts/${draft.id}/approve`, {
         content,
-        approved_by: meta.data?.demo_user || "Dr. Meera Shah",
+        approved_by: meta.data?.user.name || "Dr. Meera Shah",
       });
     },
     onSuccess: () => {
@@ -63,7 +63,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
   });
 
   const reject = useMutation({
-    mutationFn: () => post<any>(`/drafts/${draft.id}/reject`, { reason, actor: meta.data?.demo_user }),
+    mutationFn: () => post<any>(`/drafts/${draft.id}/reject`, { reason, actor: meta.data?.user.name }),
     onSuccess: () => {
       setRejectOpen(false);
       setReason("");
@@ -76,7 +76,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
   const saveEdit = useMutation({
     mutationFn: async () => {
       const parsed = JSON.parse(editText);
-      return patch<any>(`/drafts/${draft.id}`, { content: parsed, editor: meta.data?.demo_user });
+      return patch<any>(`/drafts/${draft.id}`, { content: parsed, editor: meta.data?.user.name });
     },
     onSuccess: () => {
       setEditMode(false);
@@ -107,7 +107,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
       content.not_documented = (content.not_documented || []).filter(
         (item: unknown) => !/exam|plan/i.test(String(item)),
       );
-      return patch<any>(`/drafts/${draft.id}`, { content, editor: meta.data?.demo_user });
+      return patch<any>(`/drafts/${draft.id}`, { content, editor: meta.data?.user.name });
     },
     onSuccess: () => {
       setError("");
@@ -117,7 +117,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
   });
 
   const accept = useMutation({
-    mutationFn: () => post<any>(`/drafts/${draft.id}/accept-tasks`, { indices: selectedTasks, actor: meta.data?.demo_user }),
+    mutationFn: () => post<any>(`/drafts/${draft.id}/accept-tasks`, { indices: selectedTasks, actor: meta.data?.user.name }),
     onSuccess: () => {
       setError("");
       invalidate();
@@ -129,7 +129,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
     mutationFn: (substance: string) =>
       post<any>(`/drafts/${draft.id}/verify-allergy`, {
         substance,
-        actor: meta.data?.demo_user,
+        actor: meta.data?.user.name,
       }),
     onSuccess: () => {
       setError("");
@@ -149,7 +149,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
       post<any>(`/patients/${draft.patient_id}/consents?encounter_id=${draft.encounter_id || ""}`, {
         consent_type: "consultation_capture",
         granted: true,
-        actor: meta.data?.demo_user,
+        actor: meta.data?.user.name,
         note: "Patient agrees to consultation capture for this episode.",
       }),
     onSuccess: () => {

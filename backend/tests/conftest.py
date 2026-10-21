@@ -12,6 +12,7 @@ _tmp = tempfile.mkdtemp(prefix="medibytes-test-")
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp}/test.db"
 os.environ["LLM_MODE"] = "cached"
 os.environ["OPENAI_API_KEY"] = ""
+os.environ["MEDIBYTES_BACKGROUND"] = "0"
 os.environ.pop("OPENAI_BASE_URL", None)
 
 import pytest  # noqa: E402

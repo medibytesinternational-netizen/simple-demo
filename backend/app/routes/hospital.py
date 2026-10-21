@@ -22,6 +22,7 @@ from ..models import (
     Task,
 )
 from ..seed import reset_demo
+from ..services import credits
 from ..services.revenue import claim_prep, leakage
 from ..services.timeline import (
     list_events,
@@ -308,4 +309,6 @@ def demo_status(db: Session = Depends(get_db)):
 @router.post("/demo/reset")
 def demo_reset(mode: Literal["start", "rehearsal"] = "rehearsal", db: Session = Depends(get_db)):
     reset_demo(db, mode)
+    credits.reset(db)
+    db.commit()
     return {"ok": True, "mode": mode}

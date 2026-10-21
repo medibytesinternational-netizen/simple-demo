@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import settings
+from ..services.identity import require
+from ..services.identity import acting_name
 from ..db import get_db, utcnow
 from ..models import (
     Document,
@@ -39,7 +40,7 @@ def document_requests(encounter_id: str | None = None, db: Session = Depends(get
     return {"requests": [_request_dict(request) for request in rows]}
 
 
-@router.post("/document-requests/generate")
+@router.post("/document-requests/generate", dependencies=[Depends(require("records_request"))])
 def generate_document_request(body: DocumentRequestGenerateRequest | None = None, db: Session = Depends(get_db)):
     """Supporting follow-up request for missing records or pre-authorization.
 
@@ -60,7 +61,7 @@ def generate_document_request(body: DocumentRequestGenerateRequest | None = None
         due_at=utcnow() + timedelta(days=3),
         status="approved",
         created_at=utcnow(),
-        approved_by=settings.demo_user,
+        approved_by=acting_name(),
     )
     db.add(request)
     add_audit(
@@ -76,7 +77,7 @@ def generate_document_request(body: DocumentRequestGenerateRequest | None = None
     return {"request": _request_dict(request), "missing_documents": prep["missing_documents"]}
 
 
-@router.post("/document-requests/{request_id}/export")
+@router.post("/document-requests/{request_id}/export", dependencies=[Depends(require("records_request"))])
 def export_document_request(request_id: str, db: Session = Depends(get_db)):
     request = db.get(DocumentRequest, request_id)
     if not request:
@@ -95,7 +96,7 @@ def export_document_request(request_id: str, db: Session = Depends(get_db)):
     return _request_dict(request)
 
 
-@router.post("/document-requests/{request_id}/match")
+@router.post("/document-requests/{request_id}/match", dependencies=[Depends(require("records_request"))])
 def match_document_request(request_id: str, body: MatchRequest, db: Session = Depends(get_db)):
     request = db.get(DocumentRequest, request_id)
     document = db.get(Document, body.document_id)

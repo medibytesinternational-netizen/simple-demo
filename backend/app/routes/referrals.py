@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import settings
+from ..services.identity import require
+from ..services.identity import acting_name
 from ..db import get_db, utcnow
 from ..models import (
     Referral,
@@ -43,7 +44,7 @@ def referrals(encounter_id: str | None = None, db: Session = Depends(get_db)):
     return {"referrals": [_referral_dict(referral) for referral in rows]}
 
 
-@router.post("/referrals/generate")
+@router.post("/referrals/generate", dependencies=[Depends(require("clinical_draft"))])
 def generate_referral(body: ReferralGenerateRequest | None = None, db: Session = Depends(get_db)):
     patient, encounter, state = _state(db)
     context = build_context(db, patient, encounter, state, "F11")
@@ -57,7 +58,7 @@ def generate_referral(body: ReferralGenerateRequest | None = None, db: Session =
     return {"draft": draft_to_dict(draft), "llm": {"mode": llm_call.mode, "latency_ms": llm_call.latency_ms}}
 
 
-@router.post("/referrals/{referral_id}/acknowledge")
+@router.post("/referrals/{referral_id}/acknowledge", dependencies=[Depends(require("send_request"))])
 def acknowledge_referral(referral_id: str, body: TaskActionRequest, db: Session = Depends(get_db)):
     referral = db.get(Referral, referral_id)
     if not referral:
@@ -77,7 +78,7 @@ def acknowledge_referral(referral_id: str, body: TaskActionRequest, db: Session 
         payload={"referral_id": referral.id, "status": "acknowledged"},
         source="referral",
         author_type="human",
-        author_name=body.actor or settings.demo_user,
+        author_name=acting_name(),
     )
     add_audit(
         db,
@@ -85,14 +86,14 @@ def acknowledge_referral(referral_id: str, body: TaskActionRequest, db: Session 
         "referral",
         referral.id,
         referral.patient_id,
-        actor_name=body.actor or settings.demo_user,
+        actor_name=acting_name(),
         after={"status": referral.status, "specialty": referral.specialty},
     )
     db.commit()
     return _referral_dict(referral)
 
 
-@router.post("/referrals/{referral_id}/complete")
+@router.post("/referrals/{referral_id}/complete", dependencies=[Depends(require("send_request"))])
 def complete_referral(referral_id: str, body: ReferralCompleteRequest, db: Session = Depends(get_db)):
     referral = db.get(Referral, referral_id)
     if not referral:
@@ -117,7 +118,7 @@ def complete_referral(referral_id: str, body: ReferralCompleteRequest, db: Sessi
         },
         source="referral",
         author_type="human",
-        author_name=body.actor or settings.demo_user,
+        author_name=acting_name(),
     )
     referral.consult_event_id = consult.id
     add_audit(
@@ -126,7 +127,7 @@ def complete_referral(referral_id: str, body: ReferralCompleteRequest, db: Sessi
         "referral",
         referral.id,
         referral.patient_id,
-        actor_name=body.actor or settings.demo_user,
+        actor_name=acting_name(),
         after={"status": referral.status, "response_summary": referral.response_summary},
     )
     db.commit()

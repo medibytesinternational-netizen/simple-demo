@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from . import meta
+from . import platform
 from . import drafts
 from . import notes
 from . import icu_labs
@@ -17,6 +18,7 @@ from . import hospital
 
 router = APIRouter(prefix="/api")
 router.include_router(meta.router)
+router.include_router(platform.router)
 router.include_router(drafts.router)
 router.include_router(notes.router)
 router.include_router(icu_labs.router)

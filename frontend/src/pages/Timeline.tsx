@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { get } from "../api";
 import type { AppState, TimelineEvent } from "../types";
 import { useEvidence } from "../components/Evidence";
+import { usePatientId } from "../session";
 
 function eventTone(type: string) {
   if (type === "lab_result") return "lab";
@@ -19,10 +20,16 @@ function fmt(value: string) {
 
 export function TimelinePage() {
   const { showEvent } = useEvidence();
-  const state = useQuery<AppState>({ queryKey: ["state"], queryFn: () => get<AppState>("/patients/pat_ravi/state") });
+  const patientId = usePatientId();
+  const state = useQuery<AppState>({
+    queryKey: ["state", patientId],
+    queryFn: () => get<AppState>(`/patients/${patientId}/state`),
+    enabled: !!patientId,
+  });
   const timeline = useQuery<{ events: TimelineEvent[]; count: number }>({
-    queryKey: ["timeline"],
-    queryFn: () => get<{ events: TimelineEvent[]; count: number }>("/patients/pat_ravi/timeline?limit=250"),
+    queryKey: ["timeline", patientId],
+    queryFn: () => get<{ events: TimelineEvent[]; count: number }>(`/patients/${patientId}/timeline?limit=250`),
+    enabled: !!patientId,
   });
 
   const data = state.data;

@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import settings
+from ..services.timeline import require_open_encounter
+from ..services.identity import require
+from ..services.identity import acting_name
 from ..db import get_db, utcnow
 from ..models import (
     Task,
@@ -50,9 +52,10 @@ def tasks_list(
     return {"tasks": [_task_dict(task) for task in rows]}
 
 
-@router.post("/tasks")
+@router.post("/tasks", dependencies=[Depends(require("manage_task"))])
 def task_create(body: TaskCreateRequest, db: Session = Depends(get_db)):
     patient, encounter, _ = _state(db)
+    require_open_encounter(encounter)
     task = Task(
         id=new_id("tsk"),
         patient_id=patient.id,
@@ -62,11 +65,11 @@ def task_create(body: TaskCreateRequest, db: Session = Depends(get_db)):
         status="accepted",
         priority=body.priority,
         due_at=utcnow() + timedelta(hours=body.due_in_hours),
-        owner=body.owner or settings.demo_user,
-        assigned_to=body.owner or settings.demo_user,
+        owner=body.owner or acting_name(),
+        assigned_to=body.owner or acting_name(),
         assigned_at=utcnow(),
-        assigned_by=settings.demo_user,
-        created_by=settings.demo_user,
+        assigned_by=acting_name(),
+        created_by=acting_name(),
         created_at=utcnow(),
     )
     db.add(task)
@@ -82,7 +85,7 @@ def task_create(body: TaskCreateRequest, db: Session = Depends(get_db)):
     return _task_dict(task)
 
 
-@router.post("/tasks/{task_id}/assign")
+@router.post("/tasks/{task_id}/assign", dependencies=[Depends(require("manage_task"))])
 def task_assign(task_id: str, body: TaskAssignRequest, db: Session = Depends(get_db)):
     task = db.get(Task, task_id)
     if not task:
@@ -92,14 +95,14 @@ def task_assign(task_id: str, body: TaskAssignRequest, db: Session = Depends(get
     task.assigned_to = assigned
     task.owner = assigned
     task.assigned_at = utcnow() if assigned else None
-    task.assigned_by = (body.actor or settings.demo_user) if assigned else None
+    task.assigned_by = acting_name() if assigned else None
     add_audit(
         db,
         "task_assigned" if assigned else "task_unassigned",
         "task",
         task.id,
         task.patient_id,
-        actor_name=body.actor or settings.demo_user,
+        actor_name=acting_name(),
         before={"owner": previous},
         after={"assigned_to": assigned},
     )
@@ -107,7 +110,7 @@ def task_assign(task_id: str, body: TaskAssignRequest, db: Session = Depends(get
     return _task_dict(task)
 
 
-@router.post("/tasks/{task_id}/acknowledge")
+@router.post("/tasks/{task_id}/acknowledge", dependencies=[Depends(require("work_task"))])
 def task_acknowledge(task_id: str, body: TaskActionRequest, db: Session = Depends(get_db)):
     task = db.get(Task, task_id)
     if not task:
@@ -118,7 +121,7 @@ def task_acknowledge(task_id: str, body: TaskActionRequest, db: Session = Depend
         raise HTTPException(400, f"Task is {task.status} and cannot be acknowledged")
     task.status = "acknowledged"
     task.acknowledged_at = utcnow()
-    task.acknowledged_by = body.actor or task.assigned_to or settings.demo_user
+    task.acknowledged_by = acting_name()
     add_audit(
         db,
         "task_acknowledged",
@@ -132,7 +135,7 @@ def task_acknowledge(task_id: str, body: TaskActionRequest, db: Session = Depend
     return _task_dict(task)
 
 
-@router.post("/tasks/{task_id}/escalate")
+@router.post("/tasks/{task_id}/escalate", dependencies=[Depends(require("manage_task"))])
 def task_escalate(task_id: str, body: TaskActionRequest, db: Session = Depends(get_db)):
     task = db.get(Task, task_id)
     if not task:
@@ -146,7 +149,7 @@ def task_escalate(task_id: str, body: TaskActionRequest, db: Session = Depends(g
         "task",
         task.id,
         task.patient_id,
-        actor_name=body.actor or settings.demo_user,
+        actor_name=acting_name(),
         after={
             "escalation_level": task.escalation_level,
             "escalation_reason": task.escalation_reason,
@@ -156,7 +159,7 @@ def task_escalate(task_id: str, body: TaskActionRequest, db: Session = Depends(g
     return _task_dict(task)
 
 
-@router.post("/tasks/escalations/run")
+@router.post("/tasks/escalations/run", dependencies=[Depends(require("manage_task"))])
 def run_task_escalations(body: TaskActionRequest, db: Session = Depends(get_db)):
     now = utcnow()
     tasks = list(
@@ -196,7 +199,7 @@ def run_task_escalations(body: TaskActionRequest, db: Session = Depends(get_db))
     return {"escalated": [_task_dict(task) for task in escalated], "count": len(escalated)}
 
 
-@router.patch("/tasks/{task_id}")
+@router.patch("/tasks/{task_id}", dependencies=[Depends(require("work_task"))])
 def task_update(task_id: str, body: TaskUpdateRequest, db: Session = Depends(get_db)):
     task = db.get(Task, task_id)
     if not task:
@@ -207,14 +210,14 @@ def task_update(task_id: str, body: TaskUpdateRequest, db: Session = Depends(get
         task.completed_at = utcnow()
     if body.status == "acknowledged":
         task.acknowledged_at = utcnow()
-        task.acknowledged_by = body.actor or settings.demo_user
+        task.acknowledged_by = acting_name()
     add_audit(
         db,
         "task_status_changed",
         "task",
         task.id,
         task.patient_id,
-        actor_name=body.actor or settings.demo_user,
+        actor_name=acting_name(),
         before=before,
         after={"status": task.status, "title": task.title},
     )

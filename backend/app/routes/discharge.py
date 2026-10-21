@@ -9,6 +9,7 @@ from ..db import get_db
 from ..models import (
     Draft,
 )
+from ..services.identity import require
 from ..services.context import build_context
 from ..services.drafts import (
     create_draft,
@@ -57,7 +58,7 @@ def discharge_readiness(encounter_id: str | None = None, db: Session = Depends(g
     }
 
 
-@router.post("/discharge/generate")
+@router.post("/discharge/generate", dependencies=[Depends(require("discharge_draft"))])
 def generate_discharge(db: Session = Depends(get_db)):
     patient, encounter, state = _state(db)
     context = build_context(db, patient, encounter, state, "F9")

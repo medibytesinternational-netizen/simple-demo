@@ -10,6 +10,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
+from ..services.identity import require
+from ..services.identity import acting_name
 from ..config import settings
 from ..db import get_db
 from ..models import (
@@ -43,7 +45,7 @@ def documents_list(encounter_id: str | None = None, db: Session = Depends(get_db
     return {"documents": [_doc_dict(document) for document in rows]}
 
 
-@router.post("/documents/upload")
+@router.post("/documents/upload", dependencies=[Depends(require("upload_document"))])
 async def document_upload(file: UploadFile = File(...), db: Session = Depends(get_db)):
     patient, encounter, _ = _state(db)
     contents = await file.read()
@@ -92,7 +94,7 @@ def document_image(document_id: str, db: Session = Depends(get_db)):
     return FileResponse(path, media_type=document.mime or "application/octet-stream")
 
 
-@router.post("/documents/{document_id}/confirm-field")
+@router.post("/documents/{document_id}/confirm-field", dependencies=[Depends(require("confirm_document"))])
 def document_confirm_field(document_id: str, body: ConfirmFieldRequest, db: Session = Depends(get_db)):
     document = db.get(Document, document_id)
     if not document:
@@ -115,19 +117,19 @@ def document_confirm_field(document_id: str, body: ConfirmFieldRequest, db: Sess
         "document",
         document.id,
         document.patient_id,
-        actor_name=body.actor or settings.demo_user,
+        actor_name=acting_name(),
         after={"field": fields[body.index].get("name"), "value": fields[body.index].get("value")},
     )
     db.commit()
     return _doc_dict(document)
 
 
-@router.post("/documents/{document_id}/commit")
+@router.post("/documents/{document_id}/commit", dependencies=[Depends(require("confirm_document"))])
 def document_commit(document_id: str, db: Session = Depends(get_db)):
     document = db.get(Document, document_id)
     if not document:
         raise HTTPException(404, "Document not found")
-    labs = _document_to_labs(db, document, settings.demo_user)
+    labs = _document_to_labs(db, document, acting_name())
     patient, encounter, state = _state(db, document.encounter_id)
     created_alerts = evaluate_rules(db, patient, encounter, state)
     db.commit()

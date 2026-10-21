@@ -10,6 +10,7 @@ from ..db import get_db, utcnow
 from ..models import (
     ClaimReview,
 )
+from ..services.identity import require
 from ..services.context import build_context
 from ..services.drafts import (
     create_draft,
@@ -56,7 +57,7 @@ def revenue_claim_prep(encounter_id: str | None = None, db: Session = Depends(ge
     }
 
 
-@router.post("/revenue/claim-prep/prepare")
+@router.post("/revenue/claim-prep/prepare", dependencies=[Depends(require("revenue_work"))])
 def prepare_claim(db: Session = Depends(get_db)):
     patient, encounter, state = _state(db)
     prep = claim_prep(db, patient, encounter, state)
@@ -98,7 +99,7 @@ def claim_pack(encounter_id: str | None = None, db: Session = Depends(get_db)):
     return HTMLResponse(claim_pack_html(patient, encounter, prep))
 
 
-@router.post("/revenue/claim-prep/explain")
+@router.post("/revenue/claim-prep/explain", dependencies=[Depends(require("revenue_work"))])
 def explain_claim(db: Session = Depends(get_db)):
     patient, encounter, state = _state(db)
     prep = claim_prep(db, patient, encounter, state)
@@ -123,7 +124,7 @@ def revenue_leakage(encounter_id: str | None = None, db: Session = Depends(get_d
     return leakage(db, patient, encounter, state)
 
 
-@router.post("/revenue/leakage/explain")
+@router.post("/revenue/leakage/explain", dependencies=[Depends(require("revenue_work"))])
 def explain_leakage(db: Session = Depends(get_db)):
     patient, encounter, state = _state(db)
     leak = leakage(db, patient, encounter, state)

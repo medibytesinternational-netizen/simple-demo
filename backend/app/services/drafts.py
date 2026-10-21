@@ -6,7 +6,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import settings
+from .identity import acting_name
 from ..db import utcnow
 from ..models import (
     Draft,
@@ -19,7 +19,7 @@ from ..models import (
     TimelineEvent,
 )
 from ..schemas import FEATURE_MODELS
-from .timeline import add_audit, add_event, new_id
+from .timeline import LOCKED_FEATURES, add_audit, add_event, new_id, require_open_encounter
 
 FEATURE_EVENT_TYPES = {
     "F1": "consult_note",
@@ -147,6 +147,8 @@ def create_draft(
     created_from_event_ids: list[str] | None = None,
 ) -> Draft:
     content = _clear_generated_authorship(content)
+    if feature in LOCKED_FEATURES:
+        require_open_encounter(encounter)
     draft = Draft(
         id=new_id("drf"),
         feature=feature,
@@ -201,7 +203,7 @@ def update_draft(
     before = {"status": draft.status, "content": draft.content}
     draft.content = content
     draft.status = "human_edited"
-    draft.edited_by = editor or settings.demo_user
+    draft.edited_by = acting_name()
     draft.evidence_event_ids = _collect_evidence(content)
     draft.updated_at = utcnow()
     add_audit(
@@ -230,7 +232,7 @@ def reject_draft(db: Session, draft: Draft, reason: str, actor: str | None = Non
         "draft",
         draft.id,
         draft.patient_id,
-        actor_name=actor or settings.demo_user,
+        actor_name=acting_name(),
         after={"reason": reason.strip()},
     )
     return draft
@@ -260,7 +262,11 @@ def approve_draft(
     if draft.status == "rejected":
         raise ValueError("Rejected drafts cannot be approved")
 
-    approver = approver or settings.demo_user
+    approver = acting_name()
+    if draft.feature in LOCKED_FEATURES and draft.encounter_id:
+        locked_encounter = db.get(Encounter, draft.encounter_id)
+        if locked_encounter:
+            require_open_encounter(locked_encounter)
     if content is not None:
         model_cls = FEATURE_MODELS.get(draft.feature)
         if model_cls:
@@ -478,7 +484,7 @@ def accept_tasks(
     if draft.feature != "F3":
         raise ValueError("Only round drafts produce proposed tasks")
     proposed = (draft.content or {}).get("proposed_tasks", [])
-    actor = actor or settings.demo_user
+    actor = acting_name()
     created: list[Task] = []
     now = utcnow()
     for index in indices:

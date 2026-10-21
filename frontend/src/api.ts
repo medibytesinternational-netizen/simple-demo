@@ -6,8 +6,39 @@ export class ApiError extends Error {
   }
 }
 
+const USER_KEY = "mb_user";
+const PATIENT_KEY = "mb_patient";
+
+function stored(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function store(key: string, value: string | null) {
+  try {
+    if (value) window.localStorage.setItem(key, value);
+    else window.localStorage.removeItem(key);
+  } catch {
+    // private window: the choice lasts until reload
+  }
+}
+
+export const session = {
+  user: () => stored(USER_KEY),
+  patient: () => stored(PATIENT_KEY),
+  setUser: (id: string | null) => store(USER_KEY, id),
+  setPatient: (id: string | null) => store(PATIENT_KEY, id),
+};
+
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers || {});
+  const user = session.user();
+  const patient = session.patient();
+  if (user) headers.set("X-User-Id", user);
+  if (patient) headers.set("X-Patient-Id", patient);
   if (options.body && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }

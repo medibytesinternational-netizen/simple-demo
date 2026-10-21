@@ -5,6 +5,9 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ..services.identity import require
+from ..services.identity import acting_name, acting_user
+from .platform import allowed_actions, user_dict
 from .. import clock
 from ..config import settings
 from ..db import get_db
@@ -46,8 +49,10 @@ def meta(db: Session = Depends(get_db)):
         "llm_mode": settings.effective_llm_mode,
         "model": settings.openai_model,
         "live_available": bool(settings.openai_api_key),
-        "demo_user": settings.demo_user,
-        "demo_role": settings.demo_role,
+        "demo_user": acting_name(),
+        "demo_role": acting_user().role,
+        "user": user_dict(acting_user()),
+        "allowed_actions": allowed_actions(),
         "features": list(FEATURE_MODELS.keys()),
         "disclaimer": "Synthetic demo data. Not for clinical use.",
     }
@@ -108,11 +113,11 @@ def patient_consents(patient_id: str, encounter_id: str | None = None, db: Sessi
     }
 
 
-@router.post("/patients/{patient_id}/consents")
+@router.post("/patients/{patient_id}/consents", dependencies=[Depends(require("consent"))])
 def record_consent(patient_id: str, body: ConsentRequest, encounter_id: str | None = None, db: Session = Depends(get_db)):
     patient = get_patient(db, patient_id)
     encounter = get_encounter(db, encounter_id)
-    actor = body.actor or settings.demo_user
+    actor = acting_name()
     event = add_event(
         db,
         patient_id=patient.id,

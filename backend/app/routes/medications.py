@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from ..db import get_db
+from ..services.identity import require
 from ..services.context import build_context
 from ..services.drafts import (
     create_draft,
@@ -34,7 +35,7 @@ def medication_reconciliation(encounter_id: str | None = None, db: Session = Dep
     return reconciliation(state)
 
 
-@router.post("/medications/reconciliation/generate")
+@router.post("/medications/reconciliation/generate", dependencies=[Depends(require("reconcile"))])
 def generate_reconciliation(db: Session = Depends(get_db)):
     patient, encounter, state = _state(db)
     recon = reconciliation(state)

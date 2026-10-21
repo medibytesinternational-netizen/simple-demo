@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { get, post, transcribeAudio } from "../api";
 import type { Draft, Lab } from "../types";
 import { DraftReview } from "../components/DraftReview";
+import { usePatientId } from "../session";
 
 const CONSULT_TRANSCRIPT = `Doctor: Mr Menon, what brings you in today?
 Ravi: My right leg has been swollen and red since Tuesday. It is warm and painful when I walk.
@@ -113,16 +114,17 @@ export function NotesPage() {
     queryFn: () => get("/referrals"),
     enabled: tab.kind === "referral",
   });
+  const patientId = usePatientId();
   const consents = useQuery<{ consents: Array<{ id: string; granted: boolean; consent_type: string; occurred_at: string }> }>({
-    queryKey: ["consents", "notes"],
-    queryFn: () => get("/patients/pat_ravi/consents"),
-    enabled: tab.feature === "F1",
+    queryKey: ["consents", "notes", patientId],
+    queryFn: () => get(`/patients/${patientId}/consents`),
+    enabled: tab.feature === "F1" && !!patientId,
   });
   const consentGranted = Boolean(consents.data?.consents?.some((entry) => entry.granted));
 
   const recordConsent = useMutation({
     mutationFn: () =>
-      post("/patients/pat_ravi/consents", {
+      post(`/patients/${patientId}/consents`, {
         consent_type: "consultation_capture",
         granted: true,
         note: "Patient agrees to consultation capture for this episode.",

@@ -7,6 +7,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from .identity import acting_name
 from ..config import settings
 from ..models import Document
 from .cached import f11_investigation  # noqa: F401  (kept for context parity)
@@ -237,7 +238,7 @@ def new_document(
         image_kind=image_kind,
         doc_type=doc_type,
         ocr_status="pending",
-        uploaded_by=settings.demo_user,
+        uploaded_by=acting_name(),
         extracted={},
     )
     db.add(document)

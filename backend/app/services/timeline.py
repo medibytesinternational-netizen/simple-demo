@@ -7,8 +7,8 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .identity import acting_name, current_patient_id
 from .. import clock
-from ..config import settings
 from ..db import utcnow
 from ..models import (
     Alert,
@@ -25,8 +25,8 @@ def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
 
-def get_patient(db: Session, patient_id: str = "pat_ravi") -> Patient:
-    patient = db.get(Patient, patient_id)
+def get_patient(db: Session, patient_id: str | None = None) -> Patient:
+    patient = db.get(Patient, patient_id or current_patient_id())
     if not patient:
         raise ValueError("Patient not found")
     return patient
@@ -59,6 +59,23 @@ def get_encounter(db: Session, encounter_id: str | None = None) -> Encounter:
     return encounter
 
 
+class EncounterLocked(ValueError):
+    """Raised for a clinical write to a discharged encounter; mapped to HTTP 409."""
+
+
+# Features that write clinical content. Revenue drafts (F12, F13) are not locked:
+# the PRD starts claim work after discharge.
+LOCKED_FEATURES = {"F1", "F2", "F3", "F4", "F6", "F7", "F9", "F10", "F11"}
+
+
+def require_open_encounter(encounter: Encounter) -> None:
+    if encounter.status != "active":
+        raise EncounterLocked(
+            f"This encounter is {encounter.status} and its clinical record is locked. "
+            "Only claim, document and follow-up work continues after discharge."
+        )
+
+
 def add_audit(
     db: Session,
     action: str,
@@ -74,7 +91,7 @@ def add_audit(
     entry = AuditEntry(
         id=new_id("aud"),
         actor_type=actor_type,
-        actor_name=actor_name or settings.demo_user,
+        actor_name=actor_name or acting_name(),
         action=action,
         entity_type=entity_type,
         entity_id=entity_id,
@@ -119,7 +136,7 @@ def add_event(
         payload=payload or {},
         source=source,
         author_type=author_type,
-        author_name=author_name or settings.demo_user,
+        author_name=author_name or acting_name(),
         status=status,
         confidence=confidence,
         supersedes_event_id=supersedes_event_id,
@@ -136,13 +153,13 @@ def add_event(
 
 def list_events(
     db: Session,
-    patient_id: str = "pat_ravi",
+    patient_id: str | None = None,
     encounter_id: str | None = None,
     *,
     approved_only: bool = True,
     limit: int = 300,
 ) -> list[TimelineEvent]:
-    stmt = select(TimelineEvent).where(TimelineEvent.patient_id == patient_id)
+    stmt = select(TimelineEvent).where(TimelineEvent.patient_id == (patient_id or current_patient_id()))
     if encounter_id:
         stmt = stmt.where(TimelineEvent.encounter_id == encounter_id)
     if approved_only:

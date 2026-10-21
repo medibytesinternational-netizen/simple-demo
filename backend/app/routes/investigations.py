@@ -9,6 +9,7 @@ from ..db import get_db, utcnow
 from ..models import (
     InvestigationRequest,
 )
+from ..services.identity import require
 from ..services.context import build_context
 from ..services.drafts import (
     create_draft,
@@ -41,7 +42,7 @@ def investigation_requests(encounter_id: str | None = None, db: Session = Depend
     return {"requests": [_investigation_dict(request) for request in rows]}
 
 
-@router.post("/investigation-requests/generate")
+@router.post("/investigation-requests/generate", dependencies=[Depends(require("clinical_draft"))])
 def generate_investigation_request(encounter_id: str | None = None, db: Session = Depends(get_db)):
     patient, encounter, state = _state(db, encounter_id)
     context = build_context(db, patient, encounter, state, "F10")
@@ -51,7 +52,7 @@ def generate_investigation_request(encounter_id: str | None = None, db: Session 
     return {"draft": draft_to_dict(draft), "llm": {"mode": llm_call.mode, "latency_ms": llm_call.latency_ms}}
 
 
-@router.post("/investigation-requests/{request_id}/export")
+@router.post("/investigation-requests/{request_id}/export", dependencies=[Depends(require("send_request"))])
 def export_investigation_request(request_id: str, db: Session = Depends(get_db)):
     request = db.get(InvestigationRequest, request_id)
     if not request:

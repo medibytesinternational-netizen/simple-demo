@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { get, post } from "../api";
-import type { AppState, AuditEntry, Meta } from "../types";
+import { get, post, session } from "../api";
+import type { AppState, AuditEntry, Credits, Meta, PatientRow, UserInfo } from "../types";
 import { EvidenceDrawer } from "./Evidence";
 import { Modal } from "./Modal";
 
@@ -24,7 +24,28 @@ export function Shell() {
   const [auditOpen, setAuditOpen] = useState(false);
 
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
-  const state = useQuery<AppState>({ queryKey: ["state"], queryFn: () => get<AppState>("/patients/pat_ravi/state") });
+  const patientId = meta.data?.patient.id;
+  const state = useQuery<AppState>({
+    queryKey: ["state", patientId],
+    queryFn: () => get<AppState>(`/patients/${patientId}/state`),
+    enabled: !!patientId,
+  });
+  const users = useQuery<{ users: UserInfo[] }>({ queryKey: ["users"], queryFn: () => get<{ users: UserInfo[] }>("/users") });
+  const patients = useQuery<{ patients: PatientRow[] }>({ queryKey: ["patients"], queryFn: () => get<{ patients: PatientRow[] }>("/patients") });
+  const credits = useQuery<Credits>({ queryKey: ["credits"], queryFn: () => get<Credits>("/credits"), refetchInterval: 15000 });
+
+  function switchUser(id: string) {
+    session.setUser(id);
+    queryClient.clear();
+    const home = users.data?.users.find((user) => user.id === id)?.home ?? "/timeline";
+    navigate(home);
+  }
+
+  function switchPatient(id: string) {
+    session.setPatient(id);
+    queryClient.clear();
+    navigate("/timeline");
+  }
   const audit = useQuery<{ audit: AuditEntry[] }>({
     queryKey: ["audit", "shell"],
     queryFn: () => get<{ audit: AuditEntry[] }>("/audit?limit=80"),
@@ -94,6 +115,21 @@ export function Shell() {
           <span className={`mode-badge ${meta.data?.llm_mode === "live" ? "live" : ""}`} title={meta.data?.live_available ? "OpenAI key detected" : "Add OPENAI_API_KEY to switch to live GPT-4o"}>
             {meta.data?.llm_mode === "live" ? "Live GPT-4o" : "Cached demo"}
           </span>
+          <label className="small muted" htmlFor="patient-select">Patient</label>
+          <select id="patient-select" className="btn btn-sm" value={meta.data?.patient.id ?? ""} onChange={(event) => switchPatient(event.target.value)}>
+            {patients.data?.patients.map((patient) => (
+              <option key={patient.id} value={patient.id}>{patient.name} · {patient.mrn}</option>
+            ))}
+          </select>
+          <label className="small muted" htmlFor="user-select">Signed in as</label>
+          <select id="user-select" className="btn btn-sm" value={meta.data?.user.id ?? ""} onChange={(event) => switchUser(event.target.value)}>
+            {users.data?.users.map((user) => (
+              <option key={user.id} value={user.id}>{user.name} · {user.role}</option>
+            ))}
+          </select>
+          <span className="badge badge-neutral" title={`Pack of ${credits.data?.pack_size ?? "—"} credits. Reading a report 1, voice note 2, medicine reconciliation 2, report analysis 4, discharge summary 5.`}>
+            {credits.data ? `${credits.data.balance.toLocaleString()} credits` : "— credits"}
+          </span>
           <span className="demo-clock">DEMO {demoClock}</span>
           <button className="btn btn-sm" onClick={() => setAuditOpen(true)}>Audit</button>
           <button className="btn btn-sm" onClick={() => setResetOpen(true)}>Demo</button>
@@ -116,8 +152,8 @@ export function Shell() {
           <div className="nav-footer">
             <div><strong>Synthetic data only.</strong></div>
             <div className="mt-1">Rules first. GPT writes the sentence. A human commits.</div>
-            <div className="mt-2 mono">{meta.data?.demo_user}</div>
-            <div>{meta.data?.demo_role}</div>
+            <div className="mt-2 mono">{meta.data?.user.name}</div>
+            <div>{meta.data?.user.role}</div>
           </div>
         </nav>
 

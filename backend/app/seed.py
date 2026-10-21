@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
+from .services.identity import acting_name
 from . import clock
 from .config import settings
 from .models import (
@@ -428,7 +429,7 @@ def seed_rehearsal(db: Session) -> None:
         ocr_status="needs_confirmation",
         raw_text=seed_extraction()["raw_text"],
         extracted=seed_extraction(),
-        uploaded_by=settings.demo_user,
+        uploaded_by=acting_name(),
         uploaded_at=datetime(2026, 10, 19, 15, 10),
     )
     db.add(document)
@@ -445,7 +446,7 @@ def seed_rehearsal(db: Session) -> None:
             due_at=datetime(2026, 10, 19, 17, 0),
             status="overdue",
             created_at=datetime(2026, 10, 18, 17, 30),
-            approved_by=settings.demo_user,
+            approved_by=acting_name(),
         )
     )
     _event(
@@ -476,7 +477,7 @@ def seed_rehearsal(db: Session) -> None:
             priority="routine",
             instructions="Assess renal size, echogenicity, hydronephrosis and renal artery flow. No contrast unless reviewed.",
             status="approved",
-            approved_by=settings.demo_user,
+            approved_by=acting_name(),
             created_at=datetime(2026, 10, 20, 7, 30),
         )
     )
@@ -491,7 +492,7 @@ def seed_rehearsal(db: Session) -> None:
             history="Type 2 diabetes, hypertension and CKD stage 3b; admitted with cellulitis and impaired renal function.",
             urgency="urgent",
             status="sent",
-            approved_by=settings.demo_user,
+            approved_by=acting_name(),
             sent_at=datetime(2026, 10, 20, 8, 0),
             created_at=datetime(2026, 10, 20, 8, 0),
         )
@@ -550,7 +551,7 @@ def seed_rehearsal(db: Session) -> None:
          DEMO_NOW + timedelta(days=2), None),
     ]
     for task_id, title, priority, status, due, source in tasks:
-        assigned_to = "Nurse Anita Rao" if task_id in {"tsk_seed_metformin", "tsk_seed_potassium"} else settings.demo_user
+        assigned_to = "Nurse Anita Rao" if task_id in {"tsk_seed_metformin", "tsk_seed_potassium"} else acting_name()
         db.add(
             Task(
                 id=task_id,
@@ -564,7 +565,7 @@ def seed_rehearsal(db: Session) -> None:
                 owner=assigned_to,
                 assigned_to=assigned_to,
                 assigned_at=datetime(2026, 10, 19, 9, 5),
-                assigned_by=settings.demo_user,
+                assigned_by=acting_name(),
                 acknowledged_at=datetime(2026, 10, 19, 9, 10)
                 if task_id in {"tsk_seed_metformin", "tsk_seed_potassium", "tsk_seed_antibiotics"}
                 else None,
@@ -575,7 +576,7 @@ def seed_rehearsal(db: Session) -> None:
                 escalated_at=DEMO_NOW - timedelta(hours=1) if task_id == "tsk_seed_metformin" else None,
                 escalation_reason="Overdue critical task" if task_id == "tsk_seed_metformin" else None,
                 source_event_id=source,
-                created_by=settings.demo_user,
+                created_by=acting_name(),
                 completed_at=DEMO_NOW - timedelta(hours=3) if status == "completed" else None,
                 created_at=datetime(2026, 10, 19, 9, 0),
             )
@@ -743,7 +744,7 @@ def seed_rehearsal(db: Session) -> None:
                 owner=task["assigned_to"],
                 assigned_to=task["assigned_to"],
                 assigned_at=datetime(2026, 10, 20, 8, 0),
-                assigned_by=settings.demo_user,
+                assigned_by=acting_name(),
                 acknowledged_at=datetime(2026, 10, 20, 8, 5)
                 if task["status"] in {"accepted", "in_progress", "completed"}
                 else None,
@@ -759,7 +760,7 @@ def seed_rehearsal(db: Session) -> None:
                 escalation_reason="Overdue in the hospital queue"
                 if task["status"] == "accepted" and task["due_at"] < DEMO_NOW
                 else None,
-                created_by=settings.demo_user,
+                created_by=acting_name(),
                 completed_at=DEMO_NOW - timedelta(hours=2)
                 if task["status"] == "completed"
                 else None,

@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import settings
+from ..services.identity import require
+from ..services.identity import acting_name
 from ..db import get_db, utcnow
 from ..models import (
     Alert,
@@ -57,7 +58,7 @@ def alerts(encounter_id: str | None = None, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/alerts/evaluate")
+@router.post("/alerts/evaluate", dependencies=[Depends(require("run_rules"))])
 def evaluate_alerts(db: Session = Depends(get_db)):
     patient, encounter, state = _state(db)
     created = evaluate_rules(db, patient, encounter, state)
@@ -65,13 +66,13 @@ def evaluate_alerts(db: Session = Depends(get_db)):
     return {"created": [{"id": alert.id, "rule_id": alert.rule_id, "title": alert.title} for alert in created]}
 
 
-@router.post("/alerts/{alert_id}/acknowledge")
+@router.post("/alerts/{alert_id}/acknowledge", dependencies=[Depends(require("acknowledge_alert"))])
 def acknowledge_alert(alert_id: str, db: Session = Depends(get_db)):
     alert = db.get(Alert, alert_id)
     if not alert:
         raise HTTPException(404, "Alert not found")
     alert.status = "acknowledged"
-    alert.acknowledged_by = settings.demo_user
+    alert.acknowledged_by = acting_name()
     alert.resolved_at = utcnow()
     add_audit(
         db,
@@ -85,13 +86,13 @@ def acknowledge_alert(alert_id: str, db: Session = Depends(get_db)):
     return {"id": alert.id, "status": alert.status}
 
 
-@router.post("/alerts/{alert_id}/dismiss")
+@router.post("/alerts/{alert_id}/dismiss", dependencies=[Depends(require("dismiss_alert"))])
 def dismiss_alert(alert_id: str, body: DismissRequest, db: Session = Depends(get_db)):
     alert = db.get(Alert, alert_id)
     if not alert:
         raise HTTPException(404, "Alert not found")
     alert.status = "dismissed"
-    alert.dismissed_by = body.actor or settings.demo_user
+    alert.dismissed_by = acting_name()
     alert.dismissal_reason = body.reason.strip()
     alert.resolved_at = utcnow()
     add_audit(

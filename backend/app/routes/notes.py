@@ -11,6 +11,7 @@ from ..models import (
     Draft,
     TimelineEvent,
 )
+from ..services.identity import require
 from ..services.context import build_context, create_transcript_event
 from ..services.drafts import (
     create_draft,
@@ -31,7 +32,7 @@ router = APIRouter()
 # --------------------------------------------------------------------------
 # Notes (F1, F2, F3, F4)
 # --------------------------------------------------------------------------
-@router.post("/notes/transcribe")
+@router.post("/notes/transcribe", dependencies=[Depends(require("clinical_draft"))])
 async def transcribe_consultation(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Transcribe a consented consultation recording.
 
@@ -82,7 +83,7 @@ async def transcribe_consultation(file: UploadFile = File(...), db: Session = De
     return {"text": text, "model": "whisper-1"}
 
 
-@router.post("/notes/generate")
+@router.post("/notes/generate", dependencies=[Depends(require("clinical_draft"))])
 def generate_note(body: NoteGenerateRequest, db: Session = Depends(get_db)):
     patient, encounter, state = _state(db)
     transcript_event = create_transcript_event(

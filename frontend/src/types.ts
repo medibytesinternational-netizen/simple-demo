@@ -17,6 +17,8 @@ export type Meta = {
   live_available: boolean;
   demo_user: string;
   demo_role: string;
+  user: UserInfo;
+  allowed_actions: string[];
   features: string[];
   disclaimer: string;
 };
@@ -415,4 +417,34 @@ export type AuditEntry = {
   after: any;
   meta: any;
   created_at: string;
+};
+
+export type UserInfo = { id: string; name: string; role: string; home: string };
+export type PatientRow = {
+  id: string;
+  mrn: string;
+  name: string;
+  age: number;
+  sex: string;
+  ward: string | null;
+  bed: string | null;
+  encounter_status: string | null;
+};
+export type CreditLedgerEntry = {
+  id: string;
+  operation: string;
+  units: number;
+  balance_after: number;
+  feature: string | null;
+  mode: string | null;
+  actor: string | null;
+  created_at: string;
+};
+export type Credits = {
+  pack_size: number;
+  balance: number;
+  used: number;
+  packs: number[];
+  schedule: Record<string, number>;
+  ledger: CreditLedgerEntry[];
 };

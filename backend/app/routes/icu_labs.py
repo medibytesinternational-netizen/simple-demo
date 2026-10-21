@@ -6,7 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
-from ..config import settings
+from ..services.identity import require
+from ..services.identity import acting_name
 from ..db import get_db, utcnow
 from ..models import (
     Alert,
@@ -51,7 +52,7 @@ def icu_flow_sheet(encounter_id: str | None = None, db: Session = Depends(get_db
     }
 
 
-@router.post("/icu/flow-sheet/generate")
+@router.post("/icu/flow-sheet/generate", dependencies=[Depends(require("clinical_draft"))])
 def generate_icu_flow_sheet(encounter_id: str | None = None, db: Session = Depends(get_db)):
     resolved = _icu_encounter_id(db, encounter_id)
     patient, encounter, state = _state(db, resolved)
@@ -72,7 +73,7 @@ def investigations(encounter_id: str | None = None, db: Session = Depends(get_db
     }
 
 
-@router.post("/labs/{event_id}/review")
+@router.post("/labs/{event_id}/review", dependencies=[Depends(require("review_lab"))])
 def review_lab(event_id: str, db: Session = Depends(get_db)):
     event = get_event(db, event_id)
     if event.type != "lab_result":
@@ -101,7 +102,7 @@ def review_lab(event_id: str, db: Session = Depends(get_db)):
     for alert in alerts:
         if event.id in (alert.evidence_event_ids or []):
             alert.status = "acknowledged"
-            alert.acknowledged_by = settings.demo_user
+            alert.acknowledged_by = acting_name()
             alert.resolved_at = utcnow()
             add_audit(
                 db,

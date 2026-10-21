@@ -54,6 +54,10 @@ def _ensure_sqlite_columns() -> None:
         "bill_line_items": {
             "expected_amount": "FLOAT",
         },
+        "alerts": {
+            "dismissal_category": "VARCHAR",
+            "resolution": "TEXT",
+        },
     }
     with engine.begin() as connection:
         for table, columns in additions.items():

@@ -122,7 +122,7 @@ class MatchRequest(BaseModel):
 # Helpers
 # --------------------------------------------------------------------------
 def _patient_encounter(db: Session, encounter_id: str | None = None):
-    patient = get_patient(db, "pat_ravi")
+    patient = get_patient(db)
     encounter = get_encounter(db, encounter_id)
     return patient, encounter
 

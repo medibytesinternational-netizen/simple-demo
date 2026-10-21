@@ -6,7 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
-from ..config import settings
+from ..services.identity import require, require_feature_role
+from ..services.identity import acting_name
 from ..db import get_db, utcnow
 from ..models import (
     Draft,
@@ -63,17 +64,18 @@ def draft_detail(draft_id: str, db: Session = Depends(get_db)):
     return draft_to_dict(draft)
 
 
-@router.patch("/drafts/{draft_id}")
+@router.patch("/drafts/{draft_id}", dependencies=[Depends(require("edit_draft"))])
 def draft_patch(draft_id: str, body: DraftPatchRequest, db: Session = Depends(get_db)):
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
+    require_feature_role("edit_draft", draft.feature)
     update_draft(db, draft, body.content, body.editor)
     db.commit()
     return draft_to_dict(draft)
 
 
-@router.post("/drafts/{draft_id}/verify-allergy")
+@router.post("/drafts/{draft_id}/verify-allergy", dependencies=[Depends(require("verify_allergy"))])
 def draft_verify_allergy(draft_id: str, body: VerifyAllergyRequest, db: Session = Depends(get_db)):
     draft = db.get(Draft, draft_id)
     if not draft:
@@ -90,7 +92,7 @@ def draft_verify_allergy(draft_id: str, body: VerifyAllergyRequest, db: Session 
     )
     if not match:
         raise HTTPException(404, "Allergy not found in this draft")
-    actor = body.actor or settings.demo_user
+    actor = acting_name()
     match["verified"] = True
     match["verified_by"] = actor
     match["verified_at"] = utcnow().isoformat()
@@ -118,11 +120,12 @@ def draft_verify_allergy(draft_id: str, body: VerifyAllergyRequest, db: Session 
     return draft_to_dict(draft)
 
 
-@router.post("/drafts/{draft_id}/approve")
+@router.post("/drafts/{draft_id}/approve", dependencies=[Depends(require("approve_draft"))])
 def draft_approve(draft_id: str, body: ApproveRequest, db: Session = Depends(get_db)):
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
+    require_feature_role("approve_draft", draft.feature)
     event = approve_draft(db, draft, body.content, body.approved_by)
     patient, encounter, state = _state(db, draft.encounter_id)
     created_alerts = evaluate_rules(db, patient, encounter, state)
@@ -134,17 +137,18 @@ def draft_approve(draft_id: str, body: ApproveRequest, db: Session = Depends(get
     }
 
 
-@router.post("/drafts/{draft_id}/reject")
+@router.post("/drafts/{draft_id}/reject", dependencies=[Depends(require("reject_draft"))])
 def draft_reject(draft_id: str, body: RejectRequest, db: Session = Depends(get_db)):
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
+    require_feature_role("reject_draft", draft.feature)
     reject_draft(db, draft, body.reason, body.actor)
     db.commit()
     return draft_to_dict(draft)
 
 
-@router.post("/drafts/{draft_id}/accept-tasks")
+@router.post("/drafts/{draft_id}/accept-tasks", dependencies=[Depends(require("accept_tasks"))])
 def draft_accept_tasks(draft_id: str, body: AcceptTasksRequest, db: Session = Depends(get_db)):
     draft = db.get(Draft, draft_id)
     if not draft:
