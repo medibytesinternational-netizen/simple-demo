@@ -254,6 +254,7 @@ def approve_draft(
     draft: Draft,
     content: dict[str, Any] | None,
     approver: str | None = None,
+    override: dict[str, Any] | None = None,
 ) -> TimelineEvent | None:
     if draft.status == "approved" and draft.committed_event_id:
         event = db.get(TimelineEvent, draft.committed_event_id)
@@ -277,7 +278,7 @@ def approve_draft(
     encounter = db.get(Encounter, draft.encounter_id) if draft.encounter_id else None
     if not patient or not encounter:
         raise ValueError("Patient or encounter missing")
-    ctx = ApprovalContext(db=db, draft=draft, payload=payload, patient=patient, encounter=encounter, approver=approver)
+    ctx = ApprovalContext(db=db, draft=draft, payload=payload, patient=patient, encounter=encounter, approver=approver, override=override)
     for validate in VALIDATORS.get(draft.feature, []):
         validate(ctx)
 

@@ -126,7 +126,7 @@ def draft_approve(draft_id: str, body: ApproveRequest, db: Session = Depends(get
     if not draft:
         raise HTTPException(404, "Draft not found")
     require_feature_role("approve_draft", draft.feature)
-    event = approve_draft(db, draft, body.content, body.approved_by)
+    event = approve_draft(db, draft, body.content, body.approved_by, override=body.override)
     patient, encounter, state = _state(db, draft.encounter_id)
     created_alerts = evaluate_rules(db, patient, encounter, state)
     db.commit()

@@ -41,6 +41,8 @@ class DraftPatchRequest(BaseModel):
 class ApproveRequest(BaseModel):
     content: dict[str, Any] | None = None
     approved_by: str | None = None
+    # A reason for approving past a warning (for example open safety alerts at discharge).
+    override: dict[str, Any] | None = None
 
 
 class RejectRequest(BaseModel):

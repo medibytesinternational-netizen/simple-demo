@@ -33,6 +33,7 @@ class ApprovalContext:
     patient: Patient
     encounter: Encounter
     approver: str
+    override: dict[str, Any] | None = None  # {"reason": ...} when the user approves past a warning
 
 
 VALIDATORS: dict[str, list[Callable[[ApprovalContext], None]]] = defaultdict(list)
