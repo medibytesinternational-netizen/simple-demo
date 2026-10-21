@@ -1,0 +1,20 @@
+import sys,subprocess; sys.path.insert(0,sys.argv[1])
+from api import call
+from p1helpers import texts
+sp=sys.argv[1]; PY="/home/sandy/Projects/Hospital-Demo-ARD/backend/.venv/bin/python"
+call("POST","/demo/reset?mode=rehearsal")
+print(subprocess.run([PY,"-I",sp+"/inject.py","lab"],capture_output=True,text=True).stdout)
+s,st=call("GET","/patients/pat_ravi/state"); print("state eGFR:",[l['value'] for l in st['latest_labs'] if l['name']=='eGFR'])
+s,x=call("POST","/alerts/evaluate"); print("evaluate -> new:",[(a['rule_id'],a['title'][:40]) for a in x['created']])
+s,al=call("GET","/alerts"); print("R1 alerts:",[(a['id'][-4:],a['status'],a['explanation'][:62]) for a in al['alerts'] if a['rule_id']=='R1'],"| R3:",[(a['status'],a['title'][:40]) for a in al['alerts'] if a['rule_id']=='R3'])
+s,r=call("POST","/referrals/generate",{}); print("F11 question:",r['draft']['content']['question']['text'][:100])
+s,r=call("POST","/discharge/generate"); print("F9:",[p['text'] for sct in r['draft']['content']['sections'] if sct['heading']=='Investigations' for p in sct['paragraphs']])
+s,r=call("POST","/notes/generate",{"feature":"F4","transcript":"Doctor: progress review.\nPatient: feeling better today."}); print("F4 mentions eGFR/creatinine:",any(w in " ".join(texts(r['draft']['content'])).lower() for w in ("egfr","creatinine")))
+s,r=call("POST","/medications/reconciliation/generate"); print("F6 metformin:",[d['explanation'][:60] for d in r['reconciliation']['discrepancies'] if d['kind']=='contraindicated'])
+s,tl=call("GET","/patients/pat_ravi/timeline"); print("F16 shows injected labs:",[ (e['title'],e['author_name'],e['source']) for e in tl['events'] if e['source']=='hms_feed'])
+print("--- now the clinician-equivalent action: metformin stopped")
+print(subprocess.run([PY,"-I",sp+"/inject.py","stop_metformin"],capture_output=True,text=True).stdout)
+s,m=call("GET","/medications"); print("active:",[x['drug'] for x in m['current_medications']])
+s,x=call("POST","/alerts/evaluate")
+s,al=call("GET","/alerts"); print("R1 / R6 still open after metformin stopped?:",[(a['rule_id'],a['status']) for a in al['alerts'] if a['rule_id'] in ('R1','R6')],"(a precise engine would auto-resolve)")
+s,r=call("POST","/medications/reconciliation/generate"); print("F6 after stop:",[d['kind'] for d in r['reconciliation']['discrepancies']])
