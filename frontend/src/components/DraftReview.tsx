@@ -30,7 +30,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
   const [f4Exam, setF4Exam] = useState("");
   const [f4Plan, setF4Plan] = useState("");
 
-  const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => fetch("/api/meta").then((r) => r.json()) });
+  const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta") });
   const tasks = useMemo<any[]>(() => draft.content?.proposed_tasks || [], [draft.content]);
   useEffect(() => {
     const defaults = tasks

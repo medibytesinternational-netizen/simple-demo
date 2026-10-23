@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { get, post } from "../api";
+import { get, openApiWindow, post } from "../api";
 import type { Draft } from "../types";
 import { DraftReview } from "../components/DraftReview";
 
@@ -35,7 +35,7 @@ export function DischargePage() {
         </div>
         <div className="page-actions">
           {draft?.status === "approved" ? (
-            <button className="btn" onClick={() => window.open(`/api/discharge/${draft.id}/print`, "_blank")}>Print summary</button>
+            <button className="btn" onClick={() => openApiWindow(`/discharge/${draft.id}/print`)}>Print summary</button>
           ) : null}
           <button className="btn btn-primary" onClick={() => generate.mutate()} disabled={generate.isPending || !readiness.data?.ready || Boolean(signed)}>
             {generate.isPending ? <><span className="spinner" /> Generating…</> : draft ? "Regenerate summary" : "Generate summary"}

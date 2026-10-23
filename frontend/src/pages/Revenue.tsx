@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { get, post } from "../api";
+import { get, openApiWindow, post } from "../api";
 import type { ClaimPrep, Draft, Leakage } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { EvidenceChip } from "../components/Evidence";
@@ -237,7 +237,7 @@ export function RevenuePage() {
                     <button className="btn btn-primary" onClick={() => prepare.mutate()} disabled={prepare.isPending}>
                       {prepare.isPending ? <><span className="spinner" /> Preparing…</> : "Prepare review pack"}
                     </button>
-                    <button className="btn" onClick={() => window.open("/api/revenue/claim-prep/pack.html", "_blank")}>
+                    <button className="btn" onClick={() => openApiWindow("/revenue/claim-prep/pack.html")}>
                       Open review copy
                     </button>
                     <button className="btn" onClick={() => explain.mutate()} disabled={explain.isPending}>
