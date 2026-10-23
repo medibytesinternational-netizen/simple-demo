@@ -17,6 +17,7 @@ import {
   type F08Document,
   type UploadResult,
 } from "../features/f08/types";
+import { PageHeader } from "../components/PageHeader";
 
 export function DocumentsPage() {
   const [params, setParams] = useSearchParams();
@@ -149,20 +150,19 @@ export function DocumentsPage() {
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">Documents</h1>
-          <div className="page-sub">
-            One reading paper in, one structured requisition out. Low-confidence extractions stay amber until a human confirms them. The original image stays beside the parsed value.
-          </div>
-        </div>
-        <div className="page-actions"><span className="badge badge-ai">OCR + requisition</span></div>
-      </div>
+      <PageHeader
+        title={tab === "requisition" ? "Investigation requests" : tab === "followup" ? "Records follow-up" : "Inbound reports"}
+        description={tab === "requisition"
+          ? "Imaging and laboratory requests pre-filled from the record. Allergies must be checked before a request is approved."
+          : tab === "followup"
+            ? "Requests for missing outside records and pre-authorisation, and matching what arrives."
+            : "Outside reports are read automatically. The original stays beside each value, and uncertain values must be confirmed by a person."}
+      />
 
       <div className="tabs">
-        <button className={`tab ${tab === "inbound" ? "active" : ""}`} onClick={() => setParams({ tab: "inbound" })}>Inbound · F8</button>
-        <button className={`tab ${tab === "requisition" ? "active" : ""}`} onClick={() => setParams({ tab: "requisition" })}>Requisition · F10</button>
-        <button className={`tab ${tab === "followup" ? "active" : ""}`} onClick={() => setParams({ tab: "followup" })}>Follow-up (support)</button>
+        <button className={`tab ${tab === "inbound" ? "active" : ""}`} onClick={() => setParams({ tab: "inbound" })}>Inbound reports</button>
+        <button className={`tab ${tab === "requisition" ? "active" : ""}`} onClick={() => setParams({ tab: "requisition" })}>Investigation requests</button>
+        <button className={`tab ${tab === "followup" ? "active" : ""}`} onClick={() => setParams({ tab: "followup" })}>Records follow-up</button>
       </div>
 
       {error ? <div className="error-box mb-3">{error}</div> : null}

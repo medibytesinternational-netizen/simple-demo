@@ -8,6 +8,7 @@ import { usePatientId } from "../session";
 import { buildTimelineQuery, hasFilters } from "../features/f16/filters";
 import { ProvenanceFacts } from "../features/f16/Provenance";
 import { NO_FILTERS, type TimelineFilters, type TimelineResponse } from "../features/f16/types";
+import { PageHeader } from "../components/PageHeader";
 
 function eventTone(type: string) {
   if (type === "lab_result") return "lab";
@@ -52,18 +53,14 @@ export function TimelinePage() {
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">Patient timeline</h1>
-          <div className="page-sub">
-            Append-only clinical record. Every feature reads this timeline through a whitelisted context slice. Superseded events stay visible.
-          </div>
-        </div>
-        <div className="page-actions">
+      <PageHeader
+        title="Patient chart"
+        description="Everything recorded for this patient, newest first. Select any event to see where it came from."
+        actions={<>
           <Link className="btn btn-primary" to="/notes?tab=consult">Start consultation</Link>
-          <Link className="btn" to="/notes?tab=round">Round handover</Link>
-        </div>
-      </div>
+          <Link className="btn" to="/notes?tab=round">Ward round</Link>
+        </>}
+      />
 
       <div className="grid-4 mb-3">
         <div className="card stat">

@@ -6,6 +6,8 @@ import { PatientDrawer } from "../components/PatientDrawer";
 import { PatientForm } from "../components/PatientForm";
 import { usePatientDirectory } from "../components/patientDirectory";
 import type { DirectoryRow } from "../components/patientDirectory";
+import { PageHeader } from "../components/PageHeader";
+import { Icon } from "../components/icons";
 
 type SortKey = "urgency" | "name" | "age" | "ward";
 
@@ -55,20 +57,16 @@ export function PatientsPage() {
 
   return (
     <div className="hms-page">
-      <div className="crumbs"><Link to="/dashboard">Home</Link><span aria-hidden="true">›</span><span>Patients</span></div>
-      <div className="hms-head">
-        <div className="hms-title-row">
-          <h1 className="hms-title">Patient List</h1>
-          <span className="hms-sub">{directory.rows.length} patients · {directory.rows.filter((r) => r.status === "active").length} with an active encounter</span>
-        </div>
-        <div className="page-actions">
-          {DEMO_MODE ? (
-            <button className="btn btn-primary" onClick={() => setForm({ mode: "add" })}>+ Add new patient</button>
-          ) : (
-            <button className="btn btn-primary" disabled title="Patient registration needs the patient API (planned)">+ Add new patient</button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title="Patient list"
+        description="Find a patient, see their summary and documents, or register a new patient."
+        meta={<span>{directory.rows.length} patients · {directory.rows.filter((r) => r.status === "active").length} with an active encounter</span>}
+        actions={DEMO_MODE ? (
+          <button className="btn btn-primary" onClick={() => setForm({ mode: "add" })}><Icon name="plus" size={16} /> Register patient</button>
+        ) : (
+          <button className="btn btn-primary" disabled title="Patient registration needs the patient API (planned)"><Icon name="plus" size={16} /> Register patient</button>
+        )}
+      />
 
       {notice ? <div className="success-box mb-3" role="status">{notice} <button className="btn btn-ghost btn-sm" onClick={() => setNotice(null)}>Dismiss</button></div> : null}
       {directory.error ? <div className="error-box mb-3">Could not load patients: {directory.error.message}</div> : null}

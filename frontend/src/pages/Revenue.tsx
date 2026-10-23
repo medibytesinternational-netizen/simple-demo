@@ -8,6 +8,7 @@ import { useCan } from "../session";
 import { ContradictionList } from "../features/f12/ContradictionList";
 import { TpaState } from "../features/f12/TpaState";
 import type { F12Contradiction } from "../features/f12/types";
+import { PageHeader } from "../components/PageHeader";
 
 function inr(value: number) {
   return `INR ${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -43,24 +44,20 @@ export function RevenuePage() {
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">Revenue</h1>
-          <div className="page-sub">
-            A review queue, never a billing engine. Everything here is computed from the timeline and the seeded bill. There is no charge, no submission and no payer connection.
-          </div>
-        </div>
-        <div className="page-actions">
-          <span className="badge badge-warning">review only · not submitted</span>
-        </div>
-      </div>
+      <PageHeader
+        title={tab === "leakage" ? "Revenue leakage" : "Claim review"}
+        description={tab === "leakage"
+          ? "Care that was documented compared with what was billed. Findings are for review only."
+          : "Checks the insurance claim for missing documents, underbilling and contradictions before anyone submits it."}
+        meta={<span className="tag tag-neutral">Review only — nothing is submitted or charged</span>}
+      />
 
       <div className="tabs">
         <button className={`tab ${tab === "claim" ? "active" : ""}`} onClick={() => setParams({ tab: "claim" })}>
-          Claim pack · F12
+          Claim review
         </button>
         <button className={`tab ${tab === "leakage" ? "active" : ""}`} onClick={() => setParams({ tab: "leakage" })}>
-          Leakage · F13
+          Revenue leakage
         </button>
       </div>
 

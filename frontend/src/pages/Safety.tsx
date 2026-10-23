@@ -11,6 +11,7 @@ import MedicineOrders from "../features/f06/MedicineOrders";
 import { DraftReview } from "../components/DraftReview";
 import { EvidenceChip } from "../components/Evidence";
 import { Modal } from "../components/Modal";
+import { PageHeader } from "../components/PageHeader";
 
 export function SafetyPage() {
   const [params, setParams] = useSearchParams();
@@ -70,26 +71,22 @@ export function SafetyPage() {
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">Safety</h1>
-          <div className="page-sub">
-            Deterministic rules decide whether something is wrong. GPT-4o only writes the sentence explaining it. Dismissing an alert always asks for a category and a reason. An alert closes by itself when the problem is no longer true.
-          </div>
-        </div>
-        <div className="page-actions">
-          <button className="btn" onClick={() => evaluate.mutate()} disabled={evaluate.isPending}>
-            {evaluate.isPending ? "Evaluating…" : "Re-run safety rules"}
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title={tab === "meds" ? "Medication reconciliation" : "Clinical alerts"}
+        description={tab === "meds"
+          ? "Medicines the patient takes at home compared with current hospital orders. Differences are found by fixed rules."
+          : "Safety rules check medicines, results and records. Acknowledge an alert, or dismiss it with a category and a written reason. An alert closes by itself when the problem is no longer true."}
+        actions={<button className="btn" onClick={() => evaluate.mutate()} disabled={evaluate.isPending}>
+          {evaluate.isPending ? "Checking…" : "Re-run safety checks"}
+        </button>}
+      />
 
       <div className="tabs">
         <button className={`tab ${tab === "alerts" ? "active" : ""}`} onClick={() => setParams({ tab: "alerts" })}>
-          Alerts · F5 {open.length ? <span className="badge badge-critical">{open.length}</span> : null}
+          Clinical alerts {open.length ? <span className="badge badge-critical">{open.length}</span> : null}
         </button>
         <button className={`tab ${tab === "meds" ? "active" : ""}`} onClick={() => setParams({ tab: "meds" })}>
-          Medication reconciliation · F6
+          Medication reconciliation
         </button>
       </div>
 

@@ -6,6 +6,7 @@ import { useEvidence } from "../components/Evidence";
 import { ReasonForm } from "../features/f15/ReasonForm";
 import { canAcknowledge, escalationKind, isClosed } from "../features/f15/rules";
 import type { ReasonTarget } from "../features/f15/types";
+import { PageHeader } from "../components/PageHeader";
 
 const FILTERS = ["all", "open", "overdue", "completed"] as const;
 
@@ -109,22 +110,13 @@ export function TasksPage() {
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">Tasks</h1>
-          <div className="page-sub">
-            Proposed tasks are not real until accepted. Every transition is audited. Overdue is computed against the demo clock, not hand-set.
-          </div>
-        </div>
-        <div className="page-actions">
-          <span className="badge badge-neutral">{all.length} total</span>
-          <span className="badge badge-warning">{overdue} overdue</span>
-          <span className="badge badge-critical">{escalated} escalated</span>
-          <button className="btn btn-sm" onClick={() => runEscalations.mutate()} disabled={runEscalations.isPending}>
-            {runEscalations.isPending ? "Running…" : "Run escalation sweep"}
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Tasks & escalations"
+        description="Care tasks with an owner and a due time. Overdue work is flagged and can be escalated to a senior."
+        actions={<button className="btn" onClick={() => runEscalations.mutate()} disabled={runEscalations.isPending}>
+          {runEscalations.isPending ? "Checking…" : "Run escalation check"}
+        </button>}
+      />
 
       <div className="grid-4 mb-3">
         <div className="card stat"><div className="stat-label">Active</div><div className="stat-value">{accepted}</div><div className="stat-note">Accepted, acknowledged or in progress</div></div>

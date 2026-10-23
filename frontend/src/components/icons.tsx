@@ -6,7 +6,6 @@ const PATHS: Record<string, string> = {
   admission: "M3 19V6 M3 15h18v4 M21 15v-3a3 3 0 00-3-3h-8v6 M6.5 12.5a1.5 1.5 0 100-.1",
   safety: "M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z M12 8v5 M12 16v.5",
   billing: "M6 2h12v20l-3-2-3 2-3-2-3 2z M9 7h6 M9 11h6 M9 15h4",
-  launcher: "M4 4h4v4H4z M10 4h4v4h-4z M16 4h4v4h-4z M4 10h4v4H4z M10 10h4v4h-4z M16 10h4v4h-4z M4 16h4v4H4z M10 16h4v4h-4z M16 16h4v4h-4z",
   consult: "M6 3v6a5 5 0 0010 0V3 M11 14v2a4 4 0 008 0v-3 M19 11a2 2 0 100 .1",
   round: "M8 3h8v3H8z M6 4.5H4V22h16V4.5h-2 M8 11h8 M8 15h8 M8 19h5",
   progress: "M4 20h4L19 9l-4-4L4 16z M13 7l4 4",
@@ -31,6 +30,10 @@ const PATHS: Record<string, string> = {
   check: "M5 12l5 5 9-10",
   chevron: "M9 6l6 6-6 6",
   plus: "M12 5v14 M5 12h14",
+  menu: "M4 6h16 M4 12h16 M4 18h16",
+  filter: "M4 5h16l-6 7v6l-4 2v-8z",
+  bed: "M3 19V6 M3 15h18v4 M21 15v-3a3 3 0 00-3-3h-8v6",
+  launcher: "M4 4h4v4H4z M10 4h4v4h-4z M16 4h4v4h-4z M4 10h4v4H4z M10 10h4v4h-4z M16 10h4v4h-4z M4 16h4v4H4z M10 16h4v4h-4z M16 16h4v4h-4z",
 };
 
 export function Icon({ name, size = 20, className }: { name: string; size?: number; className?: string }) {

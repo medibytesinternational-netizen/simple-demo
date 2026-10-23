@@ -10,6 +10,7 @@ import { RevenuePage } from "./pages/Revenue";
 import { DashboardPage } from "./pages/Dashboard";
 import { PatientsPage } from "./pages/Patients";
 import { AdmissionPage } from "./pages/Admission";
+import { AuditPage } from "./pages/Audit";
 
 export default function App() {
   return (
@@ -26,7 +27,8 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/patients" element={<PatientsPage />} />
         <Route path="/admission" element={<AdmissionPage />} />
-        <Route path="*" element={<Navigate to="/timeline" replace />} />
+        <Route path="/audit" element={<AuditPage />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>
   );

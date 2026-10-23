@@ -164,8 +164,11 @@ export function DraftReview({ draft }: { draft: Draft }) {
   const f4Incomplete =
     draft.feature === "F4" &&
     (!draft.content?.exam?.general?.text || !draft.content?.plan?.text);
+  // F2 admission notes and F10 investigation requests both carry allergies that a clinician must verify;
+  // the backend refuses approval of either until every one is verified.
+  const verifiesAllergies = draft.feature === "F2" || draft.feature === "F10";
   const f2Unverified =
-    draft.feature === "F2" &&
+    verifiesAllergies &&
     (draft.content?.allergies_to_verify || []).some((item: any) => !item.verified);
   const f1NoConsent =
     draft.feature === "F1" &&
@@ -197,7 +200,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
         </div>
         {!isApproved && !isRejected ? (
           <button className="btn btn-sm" onClick={() => setEditMode((value) => !value)}>
-            {editMode ? "Stop editing" : draft.feature === "F4" ? "Edit full JSON" : "Edit JSON"}
+            {editMode ? "Stop editing" : "Edit draft (advanced)"}
           </button>
         ) : null}
       </div>
@@ -229,7 +232,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
           </div>
         ) : null}
 
-        {draft.feature === "F2" && draft.content?.allergies_to_verify?.length ? (
+        {verifiesAllergies && draft.content?.allergies_to_verify?.length ? (
           <div className="mb-3">
             <div className="section-label">Allergy verification — explicit clinician action</div>
             <table className="table">

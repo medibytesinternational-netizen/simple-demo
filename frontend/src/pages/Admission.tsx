@@ -5,6 +5,7 @@ import { previewStore } from "../demo/previewStore";
 import { usePatientDirectory } from "../components/patientDirectory";
 import { ATTENDING, WARDS, bedKey } from "../components/wards";
 import { ALLERGY_UNAVAILABLE, allergyGateError } from "../components/admissionRules";
+import { PageHeader } from "../components/PageHeader";
 
 const TYPES = ["IPD", "ICU", "Day care"];
 const CHECKER = "Dr. Meera Shah";
@@ -61,16 +62,11 @@ export function AdmissionPage() {
 
   return (
     <div className="hms-page">
-      <div className="crumbs"><Link to="/dashboard">Home</Link><span aria-hidden="true">›</span><span>Admission</span></div>
-      <div className="hms-head">
-        <div className="hms-title-row">
-          <h1 className="hms-title">Admission</h1>
-          <span className="hms-sub">Create an inpatient, ICU or day-care encounter for an existing patient</span>
-        </div>
-        <div className="page-actions">
-          <Link className="btn" to="/notes?tab=admission">AI-assisted admission assessment (F2)</Link>
-        </div>
-      </div>
+      <PageHeader
+        title="New admission"
+        description="Admit an existing patient to a ward and bed. This creates the stay; the clinical admission note is written in Admission assessment."
+        actions={<Link className="btn" to="/notes?tab=admission">Go to admission assessment</Link>}
+      />
 
       {DEMO_MODE ? <div className="banner warning mb-3">{PREVIEW_SESSION_NOTE}</div> : (
         <div className="banner mb-3">Creating admissions needs the encounter API, which is not available yet. The form shows the planned workflow; submission is disabled. The existing AI-assisted admission assessment (F2) remains available for the current patient.</div>

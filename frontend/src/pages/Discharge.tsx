@@ -5,6 +5,7 @@ import { DraftReview } from "../components/DraftReview";
 import { ReadinessPanel } from "../features/f09/ReadinessPanel";
 import { SignPanel } from "../features/f09/SignPanel";
 import type { Readiness } from "../features/f09/types";
+import { PageHeader } from "../components/PageHeader";
 
 export function DischargePage() {
   const queryClient = useQueryClient();
@@ -22,22 +23,23 @@ export function DischargePage() {
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">Discharge</h1>
-          <div className="page-sub">
-            The summary is assembled from approved timeline events. Every paragraph carries its evidence. The medication list is built by code, not by the model. Signing locks the encounter.
-          </div>
-        </div>
-        <div className="page-actions">
+      <PageHeader
+        title="Discharge"
+        description="Check the record is complete, review the discharge summary, then sign. Signing locks the stay. The medicine list is built from active orders, not written by AI."
+        actions={<>
           {draft?.status === "approved" ? (
             <button className="btn" onClick={() => openApiWindow(`/discharge/${draft.id}/print`)}>Print summary</button>
           ) : null}
           <button className="btn btn-primary" onClick={() => generate.mutate()} disabled={generate.isPending || !readiness.data?.ready || Boolean(signed)}>
             {generate.isPending ? <><span className="spinner" /> Generating…</> : draft ? "Regenerate summary" : "Generate summary"}
           </button>
-        </div>
-      </div>
+        </>}
+      />
+
+      {/* Generation can be refused (credits exhausted, encounter locked, backend unreachable): say so. */}
+      {generate.isError ? (
+        <div className="error-box mb-3" role="alert">The discharge summary was not generated: {(generate.error as Error).message}</div>
+      ) : null}
 
       {signed ? (
         <div className="banner success mb-3">

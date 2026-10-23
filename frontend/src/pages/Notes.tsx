@@ -11,6 +11,7 @@ import IcuReadingForm from "../features/f07/IcuReadingForm";
 import ReferralRequestForm from "../features/f11/ReferralRequestForm";
 import { canAcknowledge, referralStatusLabel } from "../features/f11/rules";
 import { ConsultNoteStatus, type ConsultGenerateResult } from "../features/f01/ConsultNoteStatus";
+import { PageHeader } from "../components/PageHeader";
 
 const CONSULT_TRANSCRIPT = `Doctor: Mr Menon, what brings you in today?
 Ravi: My right leg has been swollen and red since Tuesday. It is warm and painful when I walk.
@@ -52,13 +53,13 @@ type Tab = {
 };
 
 const TABS: Tab[] = [
-  { key: "consult", label: "Consultation · F1", feature: "F1", kind: "transcript", title: "Ambient consultation note", description: "Record, upload an audio file, or paste the consultation. The note drafts itself and waits for your signature.", transcript: CONSULT_TRANSCRIPT },
-  { key: "admission", label: "Admission · F2", feature: "F2", kind: "transcript", title: "Admission assessment", description: "Draft an H&P from the referral interview. Proposed orders and allergy verification stay open until a clinician acts.", transcript: ADMISSION_TRANSCRIPT },
-  { key: "round", label: "Round · F3", feature: "F3", kind: "transcript", title: "Ward round handover", description: "Dictate the round. Instructions become proposed tasks and proposed nursing-chart entries you can accept or reject.", transcript: ROUND_TRANSCRIPT },
-  { key: "progress", label: "Progress · F4", feature: "F4", kind: "transcript", title: "Daily progress note", description: "The module refuses to invent examination findings or a plan. Missing sections stay visibly empty.", transcript: PROGRESS_TRANSCRIPT },
-  { key: "icu", label: "ICU chart · F7", feature: "F7", kind: "icu", title: "ICU flow sheet", description: "Assembles device readings and structured observations into a flow sheet. It cannot add, estimate or silently round a value.", transcript: "" },
-  { key: "referral", label: "Referral · F11", feature: "F11", kind: "referral", title: "Smart referral", description: "Drafts the right specialty, a specific clinical question and the documented history. A human approves before the demo status changes to sent.", transcript: "" },
-  { key: "labs", label: "Labs (support)", feature: "—", kind: "labs", title: "Laboratory results", description: "Support view: review abnormal results and close the unreviewed-result alert. This is not the F11 PRD module.", transcript: "" },
+  { key: "consult", label: "OPD consultation", feature: "F1", kind: "transcript", title: "OPD consultation", description: "Record or upload the consultation audio (with the patient's consent), or paste a transcript. The note drafts itself; you review, edit and sign it.", transcript: CONSULT_TRANSCRIPT },
+  { key: "admission", label: "Admission assessment", feature: "F2", kind: "transcript", title: "Admission assessment", description: "AI drafts the admission note from the interview. Verify the allergy record before approving; proposed orders stay as drafts.", transcript: ADMISSION_TRANSCRIPT },
+  { key: "round", label: "Ward round", feature: "F3", kind: "transcript", title: "Ward round", description: "Dictate the round. The note, nursing-chart entries and proposed tasks are drafted; you choose which tasks to create.", transcript: ROUND_TRANSCRIPT },
+  { key: "progress", label: "Progress note", feature: "F4", kind: "transcript", title: "Progress notes", description: "AI drafts what changed since the last note. Examination and plan must be written by the clinician before signing.", transcript: PROGRESS_TRANSCRIPT },
+  { key: "icu", label: "ICU flow sheet", feature: "F7", kind: "icu", title: "ICU flow sheet", description: "Assembles device readings and structured observations into a flow sheet. It cannot add, estimate or silently round a value.", transcript: "" },
+  { key: "referral", label: "Referral", feature: "F11", kind: "referral", title: "Referrals", description: "Drafts the right specialty, a specific clinical question and the documented history. A human approves before the demo status changes to sent.", transcript: "" },
+  { key: "labs", label: "Lab results", feature: "—", kind: "labs", title: "Lab results", description: "Support view: review abnormal results and close the unreviewed-result alert. This is not the F11 PRD module.", transcript: "" },
 ];
 
 type ICUEntry = {
@@ -259,23 +260,19 @@ export function NotesPage() {
   };
 
   const intro = useMemo(() => {
-    if (tab.kind === "icu") return "F7 reads structured device feeds. A missing section is listed as not documented, not guessed.";
-    if (tab.kind === "referral") return "F11 picks the specialty and the question. The clinician still decides whether to sign and send.";
-    if (tab.kind === "labs") return "Supporting laboratory review; the PRD's F11 is the smart-referral workflow.";
-    return "Every claim in the draft carries a source event or transcript segment. Nothing writes until approval.";
+    if (tab.kind === "icu") return "Readings from bedside devices, with units and times. Anything not recorded is shown as “not documented”, never guessed.";
+    if (tab.kind === "referral") return "Drafts the specialist question and history. A clinician approves the referral before its status changes.";
+    if (tab.kind === "labs") return "Laboratory results with reference ranges. Mark abnormal results as reviewed.";
+    return tab.description;
   }, [tab]);
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">Clinical notes</h1>
-          <div className="page-sub">{intro}</div>
-        </div>
-        <div className="page-actions">
-          <span className="badge badge-ai">draft → review → sign</span>
-        </div>
-      </div>
+      <PageHeader
+        title={tab.title}
+        description={intro}
+        meta={<span className="tag tag-ai">AI draft → clinician review → sign</span>}
+      />
 
       <div className="tabs">
         {TABS.map((item) => (
@@ -289,17 +286,16 @@ export function NotesPage() {
         <div className="card">
           <div className="card-head">
             <div>
-              <div className="card-title">{tab.title}</div>
-              <div className="card-sub">{tab.description}</div>
+              <div className="card-title">{tab.kind === "transcript" ? "1 · Input" : tab.kind === "labs" ? "Results" : tab.kind === "icu" ? "Device readings" : "Referral"}</div>
+              <div className="card-sub">{tab.kind === "transcript" ? "Paste or record what was said, then generate a draft." : "Information from the patient record."}</div>
             </div>
-            <span className="badge badge-neutral">{tab.feature}</span>
           </div>
           <div className="card-pad">
             {error ? <div className="error-box mb-3">{error}</div> : null}
 
             {tab.kind === "transcript" ? (
               <>
-                <label className="field-label">Consultation input</label>
+                <label className="field-label">Conversation or dictation</label>
                 <textarea
                   className="textarea"
                   value={transcript}

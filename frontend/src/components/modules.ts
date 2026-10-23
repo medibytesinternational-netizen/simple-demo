@@ -1,86 +1,107 @@
-// Navigation registry. The left navigation follows the demo flow from
-// "MediBytes ARD — Demo Architecture and UI Flow": one patient, eight screens, one path.
-// Routes and ?tab= values are the existing ones.
+// Single navigation registry for the whole shell: the sidebar, the bottom dock
+// and the header breadcrumbs all read from here, so they
+// always agree. Routes and ?tab= values are the existing ones.
 
-export type ModuleLink = {
+export type NavItem = {
   id: string;
   label: string;
   to: string;
   icon: string;
-  code?: string;
-  action?: "audit";
-};
-
-export type FlowStep = ModuleLink & {
-  step: number;
+  /** Short plain-language purpose, shown as the sidebar tooltip. */
   hint: string;
   match: (path: string, tab: string | null) => boolean;
-  count?: "alerts";
+  count?: "alerts" | "overdue";
 };
 
-/** The eight screens in demo order. Each ends in an approval that feeds the next screen. */
-export const FLOW_STEPS: FlowStep[] = [
-  { step: 1, id: "timeline", label: "Timeline", hint: "Everything that happened", code: "F16", to: "/timeline", icon: "chart",
-    match: (p) => p === "/timeline" },
-  { step: 2, id: "consult", label: "Consultation", hint: "Record, review note, sign", code: "F1", to: "/notes?tab=consult", icon: "consult",
-    match: (p, t) => p === "/notes" && (!t || t === "consult") },
-  { step: 3, id: "alerts", label: "Alerts", hint: "Act or dismiss with reason", code: "F5 F6", to: "/safety?tab=alerts", icon: "safety",
-    match: (p) => p === "/safety", count: "alerts" },
-  { step: 4, id: "round", label: "Ward round", hint: "Note plus proposed tasks", code: "F3 F4 F15", to: "/notes?tab=round", icon: "round",
-    match: (p, t) => (p === "/notes" && (t === "round" || t === "progress")) || p === "/tasks" },
-  { step: 5, id: "documents", label: "Documents", hint: "Upload, confirm extraction", code: "F8 F10", to: "/documents?tab=inbound", icon: "scan",
-    match: (p) => p === "/documents" },
-  { step: 6, id: "discharge", label: "Discharge", hint: "Summary with evidence", code: "F9 F11", to: "/discharge", icon: "discharge",
-    match: (p, t) => p === "/discharge" || (p === "/notes" && t === "referral") },
-  { step: 7, id: "claims", label: "Claims", hint: "Checklist, leakage queue", code: "F12 F13", to: "/revenue?tab=claim", icon: "billing",
-    match: (p) => p === "/revenue" },
-  { step: 8, id: "dashboard", label: "Dashboard", hint: "Counters and turnaround", code: "F14", to: "/dashboard", icon: "overview",
-    match: (p) => p === "/dashboard" },
+export type NavGroup = { id: string; title: string; items: NavItem[] };
+
+// Pages with tabs open on their first tab when no ?tab= is given.
+const tabIs = (path: string, wanted: string, fallback?: boolean) =>
+  (p: string, t: string | null) => p === path && (t === wanted || (fallback === true && !t));
+
+export const NAV_GROUPS: NavGroup[] = [
+  {
+    id: "overview",
+    title: "Overview",
+    items: [
+      { id: "dashboard", label: "Dashboard", to: "/dashboard", icon: "overview", hint: "What needs attention across the hospital", match: (p) => p === "/dashboard" },
+    ],
+  },
+  {
+    id: "patients",
+    title: "Patients",
+    items: [
+      { id: "patients", label: "Patient list", to: "/patients", icon: "patients", hint: "Find, register and view patients", match: (p) => p === "/patients" },
+      { id: "timeline", label: "Patient chart", to: "/timeline", icon: "chart", hint: "Timeline of everything recorded for the patient", match: (p) => p === "/timeline" },
+    ],
+  },
+  {
+    id: "clinical",
+    title: "Clinical care",
+    items: [
+      { id: "consult", label: "OPD consultation", to: "/notes?tab=consult", icon: "consult", hint: "Record a consultation and review the draft note", match: tabIs("/notes", "consult", true) },
+      { id: "new-admission", label: "New admission", to: "/admission", icon: "admission", hint: "Admit a patient to a ward and bed", match: (p) => p === "/admission" },
+      { id: "admission", label: "Admission assessment", to: "/notes?tab=admission", icon: "progress", hint: "Review the admission note and verify allergies", match: tabIs("/notes", "admission") },
+      { id: "round", label: "Ward round", to: "/notes?tab=round", icon: "round", hint: "Round note, nursing entries and proposed tasks", match: tabIs("/notes", "round") },
+      { id: "progress", label: "Progress notes", to: "/notes?tab=progress", icon: "progress", hint: "Daily note; examination and plan written by the clinician", match: tabIs("/notes", "progress") },
+      { id: "icu", label: "ICU flow sheet", to: "/notes?tab=icu", icon: "icu", hint: "Device readings assembled into a chart", match: tabIs("/notes", "icu") },
+      { id: "referral", label: "Referrals", to: "/notes?tab=referral", icon: "referral", hint: "Specialist referral and its status", match: tabIs("/notes", "referral") },
+      { id: "discharge", label: "Discharge", to: "/discharge", icon: "discharge", hint: "Discharge summary, medicines and sign-off", match: (p) => p === "/discharge" },
+    ],
+  },
+  {
+    id: "safety",
+    title: "Safety & results",
+    items: [
+      { id: "alerts", label: "Clinical alerts", to: "/safety?tab=alerts", icon: "safety", hint: "Safety alerts to acknowledge or dismiss with a reason", match: tabIs("/safety", "alerts", true), count: "alerts" },
+      { id: "meds", label: "Medication reconciliation", to: "/safety?tab=meds", icon: "pill", hint: "Home medicines compared with current orders", match: tabIs("/safety", "meds") },
+      { id: "labs", label: "Lab results", to: "/notes?tab=labs", icon: "lab", hint: "Results and abnormal values to review", match: tabIs("/notes", "labs") },
+    ],
+  },
+  {
+    id: "documents",
+    title: "Documents & investigations",
+    items: [
+      { id: "inbound", label: "Inbound reports", to: "/documents?tab=inbound", icon: "scan", hint: "Outside reports read by OCR, confirmed by a person", match: tabIs("/documents", "inbound", true) },
+      { id: "requisition", label: "Investigation requests", to: "/documents?tab=requisition", icon: "request", hint: "Imaging and lab requests", match: tabIs("/documents", "requisition") },
+      { id: "followup", label: "Records follow-up", to: "/documents?tab=followup", icon: "folder", hint: "Missing records and pre-authorisation requests", match: tabIs("/documents", "followup") },
+    ],
+  },
+  {
+    id: "work",
+    title: "Work management",
+    items: [
+      { id: "tasks", label: "Tasks & escalations", to: "/tasks", icon: "tasks", hint: "Care tasks, owners, due times and escalation", match: (p) => p === "/tasks", count: "overdue" },
+    ],
+  },
+  {
+    id: "billing",
+    title: "Billing",
+    items: [
+      { id: "claim", label: "Claim review", to: "/revenue?tab=claim", icon: "billing", hint: "Claim checklist and contradictions (review only)", match: tabIs("/revenue", "claim", true) },
+      { id: "leakage", label: "Revenue leakage", to: "/revenue?tab=leakage", icon: "leakage", hint: "Documented care compared with the bill", match: tabIs("/revenue", "leakage") },
+    ],
+  },
+  {
+    id: "admin",
+    title: "Administration",
+    items: [
+      { id: "audit", label: "Audit log", to: "/audit", icon: "audit", hint: "Every write, approval and model call", match: (p) => p === "/audit" },
+    ],
+  },
 ];
 
-/** Modules that are not a step of their own, but must stay one click away. */
-export const MORE_LINKS: (ModuleLink & { match?: (path: string, tab: string | null) => boolean })[] = [
-  { id: "patients", label: "Patients", to: "/patients", icon: "patients", match: (p) => p === "/patients" },
-  { id: "new-admission", label: "New admission", to: "/admission", icon: "admission", match: (p) => p === "/admission" },
-  { id: "admission", label: "Admission assessment", code: "F2", to: "/notes?tab=admission", icon: "progress", match: (p, t) => p === "/notes" && t === "admission" },
-  { id: "icu", label: "ICU chart", code: "F7", to: "/notes?tab=icu", icon: "icu", match: (p, t) => p === "/notes" && t === "icu" },
-  { id: "labs", label: "Lab results", to: "/notes?tab=labs", icon: "lab", match: (p, t) => p === "/notes" && t === "labs" },
-  { id: "tasks", label: "Tasks", code: "F15", to: "/tasks", icon: "tasks", match: (p) => p === "/tasks" },
-  { id: "audit", label: "Audit log", to: "", icon: "audit", action: "audit" },
-];
+export const ALL_ITEMS = NAV_GROUPS.flatMap((g) => g.items.map((item) => ({ ...item, group: g.title })));
 
-/** Every module, grouped, for the searchable launcher. */
-export const LAUNCHER_GROUPS: { title: string; items: ModuleLink[] }[] = [
-  {
-    title: "Demo path",
-    items: FLOW_STEPS.map(({ id, label, to, icon, code, step }) => ({ id: `flow-${id}`, label: `${step}. ${label}`, to, icon, code })),
-  },
-  {
-    title: "Patients & inpatient care",
-    items: [
-      { id: "plist", label: "Patient list", to: "/patients", icon: "patients" },
-      { id: "new-admission", label: "New admission", to: "/admission", icon: "admission" },
-      { id: "admission", label: "Admission assessment", to: "/notes?tab=admission", icon: "progress", code: "F2" },
-      { id: "progress", label: "Progress note", to: "/notes?tab=progress", icon: "progress", code: "F4" },
-      { id: "icu", label: "ICU flow sheet", to: "/notes?tab=icu", icon: "icu", code: "F7" },
-      { id: "referral", label: "Referral", to: "/notes?tab=referral", icon: "referral", code: "F11" },
-    ],
-  },
-  {
-    title: "Safety, results & documents",
-    items: [
-      { id: "meds", label: "Medication reconciliation", to: "/safety?tab=meds", icon: "pill", code: "F6" },
-      { id: "labs", label: "Lab results", to: "/notes?tab=labs", icon: "lab", code: "Labs" },
-      { id: "requisition", label: "Investigation requests", to: "/documents?tab=requisition", icon: "request", code: "F10" },
-      { id: "followup", label: "Records follow-up", to: "/documents?tab=followup", icon: "folder" },
-    ],
-  },
-  {
-    title: "Operations & billing",
-    items: [
-      { id: "tasks", label: "Tasks & escalations", to: "/tasks", icon: "tasks", code: "F15" },
-      { id: "audit", label: "Audit log", to: "", icon: "audit", action: "audit" },
-      { id: "leakage", label: "Revenue leakage", to: "/revenue?tab=leakage", icon: "leakage", code: "F13" },
-    ],
-  },
+export function findActive(path: string, tab: string | null) {
+  return ALL_ITEMS.find((item) => item.match(path, tab)) || null;
+}
+
+/** A few high-traffic shortcuts for the bottom dock. Every module is in the sidebar. */
+export const DOCK_ITEMS: { id: string; label: string; to: string; icon: string; match: (p: string, t: string | null) => boolean; count?: "alerts" | "overdue" }[] = [
+  { id: "dashboard", label: "Dashboard", to: "/dashboard", icon: "overview", match: (p) => p === "/dashboard" },
+  { id: "patients", label: "Patients", to: "/patients", icon: "patients", match: (p) => p === "/patients" || p === "/timeline" },
+  { id: "clinical", label: "Clinical care", to: "/notes?tab=round", icon: "round", match: (p, t) => (p === "/notes" && t !== "labs") || p === "/admission" || p === "/discharge" },
+  { id: "alerts", label: "Alerts", to: "/safety?tab=alerts", icon: "safety", match: (p) => p === "/safety", count: "alerts" },
+  { id: "tasks", label: "Tasks", to: "/tasks", icon: "tasks", match: (p) => p === "/tasks", count: "overdue" },
 ];

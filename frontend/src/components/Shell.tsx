@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, get, post, session } from "../api";
-import type { AppState, AuditEntry, Credits, Meta } from "../types";
+import type { AppState, Credits, Meta } from "../types";
+import IntegrationBanner from "../features/s17/IntegrationBanner";
 import { EvidenceDrawer } from "./Evidence";
 import { Modal } from "./Modal";
-import IntegrationBanner from "../features/s17/IntegrationBanner";
-import { Launcher } from "./Launcher";
-import { FlowFooter, SideNav } from "./SideNav";
+import { Dock } from "./Dock";
+import { PatientSearch } from "./PatientSearch";
+import { findActive } from "./modules";
+import { Icon } from "./icons";
 import { DEMO_MODE, PREVIEW_LABEL } from "../demo/config";
 
-// "The patient header never changes, so a client who clicks away stays oriented."
-// It is shown on every screen of the demo path. Patient List and New admission work
-// across patients, so the primary patient's header would be misleading there.
-const NO_PATIENT_HEADER = new Set(["/patients", "/admission"]);
+// The clinical modules are scoped to the primary patient's encounter, so the
+// identity banner appears on exactly those screens and nowhere else.
+const PATIENT_SCOPED = new Set(["/timeline", "/notes", "/safety", "/documents", "/discharge", "/revenue", "/tasks"]);
 
 function initials(name: string) {
   const parts = name.replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, "").split(" ").filter(Boolean);
@@ -25,13 +26,13 @@ function initials(name: string) {
 session.setUser(null);
 if (session.patient() !== "pat_ravi") session.setPatient(null);
 
+
 export function Shell() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
+  const tab = new URLSearchParams(location.search).get("tab");
   const [resetOpen, setResetOpen] = useState(false);
-  const [auditOpen, setAuditOpen] = useState(false);
-  const [launcherOpen, setLauncherOpen] = useState(false);
 
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
   const patientId = meta.data?.patient.id;
@@ -40,6 +41,7 @@ export function Shell() {
     queryFn: () => get<AppState>(`/patients/${patientId}/state`),
     enabled: !!patientId,
   });
+  // Credits are not in the preview fixtures; the preview does not ask for them.
   const credits = useQuery<Credits>({ queryKey: ["credits"], queryFn: () => get<Credits>("/credits"), refetchInterval: 15000, enabled: !DEMO_MODE });
 
   // A patient the server refuses (a stale id) falls back to Ravi instead of leaving every page in error.
@@ -50,119 +52,132 @@ export function Shell() {
     }
   }, [meta.error, queryClient]);
 
-  const audit = useQuery<{ audit: AuditEntry[] }>({
-    queryKey: ["audit", "shell"],
-    queryFn: () => get<{ audit: AuditEntry[] }>("/audit?limit=80"),
-    enabled: auditOpen,
-  });
-
   const reset = useMutation({
     mutationFn: (mode: string) => post(`/demo/reset?mode=${mode}`),
     onSuccess: () => {
       queryClient.clear();
       setResetOpen(false);
-      navigate("/timeline");
+      navigate("/dashboard");
     },
   });
 
+  const active = findActive(location.pathname, tab);
+  useEffect(() => {
+    document.title = `${active?.label || "MediBytes"} · MediBytes HMS`;
+  }, [active?.label, location.pathname, location.search]);
+
   const openAlerts = state.data?.alerts.filter((alert) => alert.status === "open").length || 0;
+  const overdue = state.data?.tasks.filter((t) => t.is_overdue && !["completed", "cancelled"].includes(t.status)).length || 0;
+  const counts = { alerts: openAlerts, overdue };
   const demoClock = meta.data?.demo_now
-    ? new Date(meta.data.demo_now)
-        .toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
-        .replace(",", " ·")
+    ? new Date(meta.data.demo_now).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
     : "—";
-  const showPatient = !NO_PATIENT_HEADER.has(location.pathname);
+  const user = meta.data?.user?.name || meta.data?.demo_user || "Dr. Meera Shah";
+  const showPatient = PATIENT_SCOPED.has(location.pathname);
   const egfr = state.data?.latest_labs.find((lab) => lab.name.toLowerCase() === "egfr");
   const stayDay = meta.data?.encounter.admitted_at && meta.data.demo_now
     ? Math.floor((Date.parse(meta.data.demo_now.slice(0, 10)) - Date.parse(meta.data.encounter.admitted_at.slice(0, 10))) / 86_400_000) + 1
     : null;
-  const user = meta.data?.demo_user || "Dr. Meera Shah";
 
   return (
-    <div className="app-shell">
-      <header className="header">
-        <div className="brand">
-          <div className="brand-mark">MB</div>
-          <div>
-            <div className="brand-name">MediBytes HMS</div>
-            <div className="brand-sub">Demo hospital</div>
-          </div>
-        </div>
-        <div className="header-divider" aria-hidden="true" />
-        <div className="hospital-name">
-          <div className="hospital-title">MediBytes Demo Hospital</div>
-          <div className="brand-sub">Hospital management system</div>
-        </div>
-        <div className="header-actions">
-          <span className="demo-clock">DEMO {demoClock}</span>
-          {DEMO_MODE ? (
-            <span className="preview-pill" role="status">{PREVIEW_LABEL}</span>
-          ) : (
-            <>
-              <span
-                className={`mode-badge ${meta.data?.llm_mode === "live" ? "live" : ""}`}
-                title={meta.data?.live_available ? "OpenAI key detected" : "Add OPENAI_API_KEY to switch to live GPT-4o"}
-              >
-                {meta.data?.llm_mode === "live" ? "Live GPT-4o" : "Cached demo"}
-              </span>
-              <span className="badge badge-neutral" title={`Pack of ${credits.data?.pack_size ?? "—"} credits. Reading a report 1, voice note 2, medicine reconciliation 2, report analysis 4, discharge summary 5.`}>
-                {credits.data ? `${credits.data.balance.toLocaleString()} credits` : "— credits"}
-              </span>
-              <span className="synthetic-badge">Synthetic data</span>
-            </>
-          )}
-          <span className="header-user">
-            <span className="avatar">{initials(user)}</span>
-            <span className="header-user-text">
-              <span className="header-user-name">{user}</span>
-              <span className="header-user-role">{meta.data?.demo_role || "Attending"}</span>
+    <div className="app">
+      <a className="skip-link" href="#main-content">Skip to content</a>
+
+      <div className="app-main">
+        <header className="topbar">
+          {/* All modules open from the dock's Modules button; the brand sits here now that there is no left navigation. */}
+          <Link to="/dashboard" className="sidenav-brand topbar-brand" aria-label="MediBytes — Hospital management, home">
+            <span className="brand-mark" aria-hidden="true">MB</span>
+            <span className="brand-text">
+              <span className="brand-name">MediBytes</span>
+              <span className="brand-sub">Hospital management</span>
             </span>
-          </span>
-          <button className="btn btn-header" onClick={() => setAuditOpen(true)}>Audit</button>
-          <button className="btn btn-header-solid" onClick={() => setResetOpen(true)}>Demo</button>
-        </div>
-      </header>
+          </Link>
+          <nav className="breadcrumbs" aria-label="Breadcrumb">
+            <Link to="/dashboard">Home</Link>
+            {active && active.id !== "dashboard" ? (
+              <>
+                <Icon name="chevron" size={14} />
+                <span>{active.group}</span>
+                <Icon name="chevron" size={14} />
+                <span aria-current="page" className="crumb-current">{active.label}</span>
+              </>
+            ) : (
+              <>
+                <Icon name="chevron" size={14} />
+                <span aria-current="page" className="crumb-current">Dashboard</span>
+              </>
+            )}
+          </nav>
+          <PatientSearch />
+          <div className="topbar-right">
+            {DEMO_MODE ? (
+              <span className="env-pill" role="status" title="All data is fictional. Nothing you do is saved.">
+                <span className="env-dot" aria-hidden="true" />{PREVIEW_LABEL}
+              </span>
+            ) : (
+              <>
+                <span className="env-pill" title="All data is fictional seed data.">
+                  <span className="env-dot" aria-hidden="true" />Synthetic data
+                </span>
+                <span className={`mode-pill ${meta.data?.llm_mode === "live" ? "live" : ""}`} title={meta.data?.live_available ? "OpenAI key detected" : "Drafts come from the cached demo set"}>
+                  {meta.data?.llm_mode === "live" ? "Live drafts" : "Cached drafts"}
+                </span>
+                <span className="mode-pill" title={`Pack of ${credits.data?.pack_size ?? "—"} credits. Reading a report 1, voice note 2, medicine reconciliation 2, report analysis 4, discharge summary 5.`}>
+                  {credits.data ? `${credits.data.balance.toLocaleString()} credits` : "— credits"}
+                </span>
+              </>
+            )}
+            <span className="topbar-clock" title="Demo clock — the application's simulated time">
+              <Icon name="clock" size={15} /> {demoClock}
+            </span>
+            <button type="button" className="btn btn-sm" onClick={() => setResetOpen(true)}>Demo controls</button>
+            <span className="topbar-user" title={`${user} · ${meta.data?.demo_role || "Attending physician"}`}>
+              <span className="avatar">{initials(user)}</span>
+              <span className="topbar-user-text">
+                <span className="topbar-user-name">{user}</span>
+                <span className="topbar-user-role">{meta.data?.demo_role || "Attending physician"}</span>
+              </span>
+            </span>
+          </div>
+        </header>
 
-
-      <div className="shell-body">
-        <SideNav counts={{ alerts: openAlerts }} onAudit={() => setAuditOpen(true)} onLauncher={() => setLauncherOpen(true)} />
-        <div className="shell-main">
-          {showPatient ? (
-            <div className="patient-bar" role="region" aria-label="Current patient">
-              {meta.data ? (
-                <>
-                  <span className="avatar avatar-soft">{initials(meta.data.patient.name)}</span>
-                  <div className="patient-id">
-                    <div className="patient-name">{meta.data.patient.name}</div>
-                    <div className="patient-meta">{meta.data.patient.age} y · {meta.data.patient.sex} · MRN {meta.data.patient.mrn}</div>
+        {showPatient ? (
+          <section className="patient-banner" aria-label="Current patient">
+            {meta.data ? (
+              <>
+                <span className="avatar avatar-lg">{initials(meta.data.patient.name)}</span>
+                <div className="pb-identity">
+                  <div className="pb-name">
+                    {meta.data.patient.name}
+                    <span className="pb-record-tag" title="This patient has a full clinical record in the demo data">Full record</span>
                   </div>
-                  <div className="patient-field"><span>Location</span>{meta.data.encounter.ward} · {meta.data.encounter.bed}{stayDay && meta.data.encounter.status === "active" ? ` · day ${stayDay}` : ""}</div>
-                  <div className="patient-field"><span>Attending</span>{meta.data.encounter.attending}</div>
-                  {egfr ? (
-                    <div className="patient-field"><span>Latest eGFR</span><strong className={`egfr-value ${egfr.flag === "low" || egfr.flag === "high" ? "lab-flag" : ""}`}>{egfr.value}{egfr.flag ? ` · ${egfr.flag}` : ""}</strong></div>
-                  ) : null}
-                  <span className="allergy-flag">⚠ Allergy: {meta.data.patient.allergies.join(", ") || "none recorded"}</span>
-                  {openAlerts ? <a className="alert-count" href="/safety?tab=alerts" onClick={(e) => { e.preventDefault(); navigate("/safety?tab=alerts"); }}>{openAlerts} open alert{openAlerts === 1 ? "" : "s"}</a> : null}
-                  <span className={meta.data.encounter.status === "discharged" ? "badge badge-success" : "badge badge-neutral"}>
-                    {meta.data.encounter.status}
-                  </span>
-                </>
-              ) : (
-                <span className="loading">Loading patient…</span>
-              )}
-            </div>
-          ) : null}
-          <main className="content-scroll" id="main-content">
-            <div className="content">
-              {DEMO_MODE ? null : <div className="mb-3"><IntegrationBanner /></div>}
-              <Outlet />
-              <FlowFooter />
-            </div>
-          </main>
-        </div>
-      </div>
+                  <div className="pb-meta">{meta.data.patient.age} y · {meta.data.patient.sex} · MRN {meta.data.patient.mrn}</div>
+                </div>
+                <dl className="pb-facts">
+                  <div><dt>Location</dt><dd>{meta.data.encounter.ward} · {meta.data.encounter.bed}</dd></div>
+                  <div><dt>Stay</dt><dd>{meta.data.encounter.kind}{stayDay && meta.data.encounter.status === "active" ? ` · day ${stayDay}` : ` · ${meta.data.encounter.status}`}</dd></div>
+                  <div><dt>Attending</dt><dd>{meta.data.encounter.attending}</dd></div>
+                  {egfr ? <div><dt>Latest eGFR</dt><dd className={egfr.flag === "low" || egfr.flag === "high" ? "pb-flag" : ""}>{egfr.value}{egfr.flag ? ` · ${egfr.flag}` : ""}</dd></div> : null}
+                </dl>
+                <div className="pb-status">
+                  <span className="pb-allergy"><Icon name="alert" size={15} /> Allergy: {meta.data.patient.allergies.join(", ") || "none recorded"}</span>
+                  {openAlerts ? <Link className="pb-alerts" to="/safety?tab=alerts">{openAlerts} open alert{openAlerts === 1 ? "" : "s"}</Link> : null}
+                </div>
+              </>
+            ) : <span className="muted">Loading patient…</span>}
+          </section>
+        ) : null}
 
-      {launcherOpen ? <Launcher onClose={() => setLauncherOpen(false)} onAudit={() => setAuditOpen(true)} /> : null}
+        <main className="content-scroll" id="main-content" tabIndex={-1}>
+          <div className="content">
+            {DEMO_MODE ? null : <div className="mb-3"><IntegrationBanner /></div>}
+            <Outlet />
+          </div>
+        </main>
+
+        <Dock counts={counts} />
+      </div>
 
       <EvidenceDrawer />
 
@@ -170,7 +185,7 @@ export function Shell() {
         <Modal
           title="Demo controls"
           onClose={() => setResetOpen(false)}
-          footer={<button className="btn" onClick={() => setResetOpen(false)}>Cancel</button>}
+          footer={<button className="btn" onClick={() => setResetOpen(false)}>Close</button>}
         >
           <p className="fs-13 muted" style={{ marginTop: 0 }}>
             {DEMO_MODE
@@ -178,52 +193,18 @@ export function Shell() {
               : "Reset the synthetic patient. All drafts, tasks, alerts, documents and audit entries are replaced."}
           </p>
           <div className="grid-2 mt-3">
-            <button className="card card-pad" style={{ textAlign: "left" }} onClick={() => reset.mutate("start")} disabled={reset.isPending || DEMO_MODE}>
-              <div className="card-title">Fresh start</div>
-              <div className="small muted mt-1">Demographics and allergy only. Empty timeline. Walk the ten-minute script from the beginning.</div>
+            <button className="choice-card" onClick={() => reset.mutate("start")} disabled={reset.isPending || DEMO_MODE}>
+              <span className="card-title">Fresh start</span>
+              <span className="small muted mt-1">Demographics and allergy only. Empty timeline.</span>
             </button>
-            <button className="card card-pad" style={{ textAlign: "left" }} onClick={() => reset.mutate("rehearsal")} disabled={reset.isPending || DEMO_MODE}>
-              <div className="card-title">Rehearsal data</div>
-              <div className="small muted mt-1">Pre-seeded admission, labs, meds, tasks, alerts, bill and outside scan. Ready to demo every screen.</div>
+            <button className="choice-card" onClick={() => reset.mutate("rehearsal")} disabled={reset.isPending || DEMO_MODE}>
+              <span className="card-title">Rehearsal data</span>
+              <span className="small muted mt-1">Pre-seeded admission, labs, medicines, tasks, alerts, bill and outside scan.</span>
             </button>
           </div>
           {reset.isPending ? <div className="banner mt-3"><span className="spinner" /> Resetting…</div> : null}
+          {reset.isError ? <div className="error-box mt-3" role="alert">The demo data was not reset: {(reset.error as Error).message}</div> : null}
         </Modal>
-      ) : null}
-
-      {auditOpen ? (
-        <>
-          <div className="drawer-backdrop" onClick={() => setAuditOpen(false)} />
-          <aside className="drawer" style={{ width: "min(520px, 94vw)" }} aria-label="Audit log">
-            <div className="drawer-head">
-              <div>
-                <div className="card-title">Audit log</div>
-                <div className="small muted">Every write and every model call</div>
-              </div>
-              <button className="btn btn-ghost btn-sm" onClick={() => setAuditOpen(false)}>Close</button>
-            </div>
-            <div className="drawer-body">
-              {audit.isLoading ? <div className="loading">Loading audit…</div> : null}
-              {audit.data?.audit.map((entry) => (
-                <div className="list-row" key={entry.id} style={{ display: "block" }}>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`badge ${entry.actor_type === "model" ? "badge-ai" : entry.actor_type === "system" ? "badge-neutral" : "badge-success"}`}>
-                      {entry.action.replaceAll("_", " ")}
-                    </span>
-                    <span className="small muted mono">{new Date(entry.created_at).toLocaleTimeString()}</span>
-                  </div>
-                  <div className="fs-13 mt-1"><strong>{entry.actor_name}</strong> · {entry.entity_type} <span className="mono small">{entry.entity_id}</span></div>
-                  {entry.after && Object.keys(entry.after).length ? (
-                    <div className="small muted mt-1" style={{ wordBreak: "break-word" }}>
-                      {Object.entries(entry.after).slice(0, 4).map(([key, value]) => `${key}: ${typeof value === "object" ? JSON.stringify(value) : value}`).join(" · ")}
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-              {audit.data && !audit.data.audit.length ? <div className="empty">No audit entries yet.</div> : null}
-            </div>
-          </aside>
-        </>
       ) : null}
     </div>
   );
