@@ -322,7 +322,7 @@ def test_a_transcript_shorter_than_ten_characters_cannot_be_drafted(fresh):
 # ---------- T5: one shared VoiceInput; the source tree proves it ----------
 
 def _source(path: str) -> str:
-    return (FRONTEND / path).read_text()
+    return (FRONTEND / path).read_text(encoding="utf-8")
 
 
 def _tsx_files():
@@ -331,15 +331,15 @@ def _tsx_files():
 
 def test_media_recorder_and_get_user_media_exist_only_in_voice_input():
     for needle in ("MediaRecorder", "getUserMedia"):
-        hits = sorted(str(p.relative_to(FRONTEND)) for p in _tsx_files() if needle in p.read_text())
+        hits = sorted(p.relative_to(FRONTEND).as_posix() for p in _tsx_files() if needle in p.read_text(encoding="utf-8"))
         assert hits == ["components/VoiceInput.tsx"], f"{needle} found in {hits}"
 
 
 def test_transcribe_audio_is_called_only_from_voice_input():
     callers = sorted(
-        str(p.relative_to(FRONTEND))
+        p.relative_to(FRONTEND).as_posix()
         for p in _tsx_files()
-        if re.search(r"transcribeAudio\(", p.read_text()) and p.name != "api.ts"
+        if re.search(r"transcribeAudio\(", p.read_text(encoding="utf-8")) and p.name != "api.ts"
     )
     assert callers == ["components/VoiceInput.tsx"]
 

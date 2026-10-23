@@ -1,292 +1,456 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { get } from "../api";
+import type { Alert, AppTask, DocumentSummary, Draft, InvestigationRequest, Meta } from "../types";
+import { DEMO_MODE } from "../demo/config";
+import { Icon } from "../components/icons";
+import { WARDS } from "../components/wards";
 import { AlertQualityTable } from "../features/f14/AlertQualityTable";
 import { OpenRecordButton } from "../features/f14/OpenRecordButton";
-import type { F14Dashboard } from "../features/f14/types";
+import type { F14Dashboard, F14Row } from "../features/f14/types";
 
-function fmt(value: number) {
-  return Number(value || 0).toLocaleString();
+type Row = F14Row;
+type Tone = "critical" | "attention" | "info" | "neutral";
+
+// Only the primary synthetic patient has a full clinical chart in the current backend.
+const CHART_PATIENT_ID = "pat_ravi";
+// The backend marks each row `browsable`; preview fixtures predate the flag, so fall back to the chart patient.
+const opensChart = (row: Row) => row.browsable ?? row.patient_id === CHART_PATIENT_ID;
+const PENDING_DRAFT = new Set(["draft_ready", "human_edited", "model_unavailable"]);
+
+// Draft-producing modules and the existing screen where each draft is reviewed.
+const DRAFT_SCREENS: { feature: string; label: string; to: string }[] = [
+  { feature: "F1", label: "consultation note", to: "/notes?tab=consult" },
+  { feature: "F2", label: "admission assessment", to: "/notes?tab=admission" },
+  { feature: "F3", label: "ward round note", to: "/notes?tab=round" },
+  { feature: "F4", label: "progress note", to: "/notes?tab=progress" },
+  { feature: "F7", label: "ICU flow sheet", to: "/notes?tab=icu" },
+  { feature: "F11", label: "referral letter", to: "/notes?tab=referral" },
+  { feature: "F6", label: "medication reconciliation summary", to: "/safety?tab=meds" },
+  { feature: "F9", label: "discharge summary", to: "/discharge" },
+  { feature: "F10", label: "investigation request", to: "/documents?tab=requisition" },
+  { feature: "F12", label: "claim review explanation", to: "/revenue?tab=claim" },
+  { feature: "F13", label: "revenue leakage explanation", to: "/revenue?tab=leakage" },
+];
+
+type Referral = { id: string; specialty: string; status: string; urgency?: string };
+
+type NextAction = {
+  key: string;
+  tone: Tone;
+  icon: string;
+  status: string;
+  title: string;
+  why: string;
+  patient?: Row;
+  action: string;
+  to: string;
+  rank: number;
+};
+
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const place = (row?: Row) => (row ? [row.ward, row.bed].filter(Boolean).join(" · ") : "");
+const initials = (name: string) => name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+
+function greetingFor(demoNow?: string) {
+  if (!demoNow) return "Welcome";
+  const hour = new Date(demoNow).getHours();
+  return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 }
 
-function actionBadge(action: string) {
-  if (action.includes("approved") || action.includes("committed")) return "badge-success";
-  if (action.includes("created") || action.includes("prepared") || action.includes("assigned")) return "badge-ai";
-  if (action.includes("dismissed") || action.includes("rejected") || action.includes("escalated")) return "badge-critical";
-  return "badge-neutral";
+function shortName(user?: string) {
+  if (!user) return "";
+  const parts = user.split(" ");
+  return parts[0].toLowerCase().startsWith("dr") && parts[1] ? `${parts[0]} ${parts[1]}` : parts[0];
 }
+
+const VISIBLE_ACTIONS = 6;
 
 export function DashboardPage() {
-  const dashboard = useQuery<F14Dashboard>({
-    queryKey: ["hospital-dashboard"],
-    queryFn: () => get("/hospital/dashboard"),
+  const [ward, setWard] = useState("all");
+  const [showAllActions, setShowAllActions] = useState(false);
+  const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta") });
+  const dashboard = useQuery<F14Dashboard>({ queryKey: ["hospital-dashboard"], queryFn: () => get("/hospital/dashboard") });
+  const alerts = useQuery<{ alerts: Alert[] }>({ queryKey: ["alerts"], queryFn: () => get("/alerts") });
+  const tasks = useQuery<{ tasks: AppTask[] }>({ queryKey: ["tasks"], queryFn: () => get("/tasks") });
+  const documents = useQuery<{ documents: DocumentSummary[] }>({ queryKey: ["documents"], queryFn: () => get("/documents") });
+  const referrals = useQuery<{ referrals: Referral[] }>({ queryKey: ["referrals"], queryFn: () => get("/referrals") });
+  const requests = useQuery<{ requests: InvestigationRequest[] }>({ queryKey: ["investigation-requests"], queryFn: () => get("/investigation-requests") });
+  const drafts = useQueries({
+    queries: DRAFT_SCREENS.map((d) => ({
+      queryKey: ["drafts", d.feature],
+      queryFn: () => get<{ drafts: Draft[] }>(`/drafts?feature=${d.feature}&limit=1`),
+    })),
   });
+
   const data = dashboard.data;
   const summary = data?.summary;
-  const wardEntries = Object.entries(summary?.wards || {});
+  const rows = data?.patients || [];
+  const byId = new Map(rows.map((r) => [r.patient_id, r]));
+  const primary = byId.get(CHART_PATIENT_ID);
+
+  // ---------- "What needs attention?" tiles (counts straight from /hospital/dashboard) ----------
+  const firstDraft = DRAFT_SCREENS.find((d, i) => drafts[i].data?.drafts?.some((x) => PENDING_DRAFT.has(x.status)));
+  const tiles = summary
+    ? [
+        {
+          key: "alerts", icon: "safety", tone: (summary.critical_alerts ? "critical" : "neutral") as Tone,
+          value: summary.critical_alerts, title: "Critical alerts",
+          text: summary.critical_alerts
+            ? `Safety checks found serious problems with medicines or records. ${plural(summary.open_alerts, "alert")} open in total.`
+            : summary.open_alerts ? `No critical alerts. ${plural(summary.open_alerts, "lower-priority alert")} still open.` : "No safety alerts are open.",
+          action: "Review alerts", to: "/safety?tab=alerts",
+        },
+        {
+          key: "tasks", icon: "clock", tone: (summary.overdue_tasks ? "attention" : "neutral") as Tone,
+          value: summary.overdue_tasks, title: "Overdue tasks",
+          text: summary.overdue_tasks
+            ? `Care tasks past their due time${summary.escalated_tasks ? `; ${summary.escalated_tasks} already escalated to a senior` : ""}.`
+            : "Every care task is on time.",
+          action: "View tasks", to: "/tasks",
+        },
+        {
+          key: "drafts", icon: "chart", tone: (summary.pending_drafts ? "info" : "neutral") as Tone,
+          value: summary.pending_drafts, title: "Notes & drafts to review",
+          text: summary.pending_drafts
+            ? "Written by AI. They are not part of the patient record until a clinician reviews and approves them."
+            : "No drafts are waiting for review.",
+          action: "Review notes", to: firstDraft?.to || "/notes",
+        },
+        {
+          key: "patients", icon: "user", tone: "neutral" as Tone,
+          value: summary.active_encounters, title: "Patients in care",
+          text: `Active admissions and day-care visits, out of ${plural(summary.patients, "patient")} on record.`,
+          action: "See patients", to: "/patients",
+        },
+      ]
+    : [];
+
+  // ---------- "Your next actions" (built only from records that exist) ----------
+  const actions: NextAction[] = [];
+  if (primary) {
+    const open = (alerts.data?.alerts || []).filter((a) => a.status === "open");
+    const critical = open.filter((a) => a.severity === "critical");
+    const warnings = open.filter((a) => a.severity !== "critical");
+    if (critical.length) {
+      actions.push({
+        key: "crit", tone: "critical", icon: "alert", status: "Critical", rank: 0,
+        title: critical.length === 1 ? "Review a critical patient alert" : `Review ${critical.length} critical patient alerts`,
+        why: critical.length === 1 ? critical[0].title : `For example: ${critical[0].title}`,
+        patient: primary, action: "Review alerts", to: "/safety?tab=alerts",
+      });
+    }
+    if (warnings.length) {
+      actions.push({
+        key: "warn", tone: "attention", icon: "alert", status: "Check", rank: 3,
+        title: warnings.length === 1 ? "Check a patient alert" : `Check ${warnings.length} patient alerts`,
+        why: warnings[0].title, patient: primary, action: "Review alerts", to: "/safety?tab=alerts",
+      });
+    }
+    (tasks.data?.tasks || [])
+      .filter((t) => t.is_overdue && !["completed", "cancelled"].includes(t.status))
+      .forEach((t) => actions.push({
+        key: `task-${t.id}`, tone: "attention", icon: "clock", status: t.escalation_level ? "Overdue · escalated" : "Overdue", rank: 1,
+        title: `Complete: ${t.title}`, why: t.owner ? `Past its due time · assigned to ${t.owner}` : "Past its due time",
+        patient: primary, action: "Open task", to: "/tasks",
+      }));
+    (documents.data?.documents || [])
+      .filter((d) => d.ocr_status === "needs_confirmation" || d.ocr_status === "pending")
+      .forEach((d) => actions.push({
+        key: `doc-${d.id}`, tone: "attention", icon: "scan", status: "Verify", rank: 2,
+        title: "Verify an incoming report",
+        why: "Values read from an outside report must be checked by a person before they enter the record",
+        patient: primary, action: "Verify report", to: "/documents?tab=inbound",
+      }));
+    (referrals.data?.referrals || [])
+      .filter((r) => r.status === "sent")
+      .forEach((r) => actions.push({
+        key: `ref-${r.id}`, tone: "neutral", icon: "referral", status: "Waiting", rank: 5,
+        title: `Follow up the ${r.specialty} referral`, why: "Sent, but the specialist has not acknowledged it yet",
+        patient: primary, action: "Open referral", to: "/notes?tab=referral",
+      }));
+    (requests.data?.requests || [])
+      .filter((r) => r.status === "approved")
+      .forEach((r) => actions.push({
+        key: `inv-${r.id}`, tone: "neutral", icon: "request", status: "Ready", rank: 6,
+        title: `Send the request: ${r.study}`, why: "Approved and ready to send to the department",
+        patient: primary, action: "Open request", to: "/documents?tab=requisition",
+      }));
+  }
+  // AI drafts are grouped into one action so they do not crowd out urgent work.
+  const pendingDrafts = DRAFT_SCREENS.map((screen, i) => ({ screen, draft: drafts[i].data?.drafts?.find((x) => PENDING_DRAFT.has(x.status)) }))
+    .filter((d) => d.draft) as { screen: (typeof DRAFT_SCREENS)[number]; draft: Draft }[];
+  if (pendingDrafts.length) {
+    const names = pendingDrafts.map((d) => d.screen.label);
+    const owners = Array.from(new Set(pendingDrafts.map((d) => d.draft.patient_id)));
+    const unavailable = pendingDrafts.some((d) => d.draft.status === "model_unavailable");
+    actions.push({
+      key: "drafts", tone: "info", icon: "progress", status: "AI draft", rank: 4,
+      title: pendingDrafts.length === 1 ? `Review the ${names[0]}` : `Review ${pendingDrafts.length} AI-written drafts`,
+      why: `${names.slice(0, 3).join(", ")}${names.length > 3 ? ` and ${names.length - 3} more` : ""} — not approved until a clinician reviews them${unavailable ? " (one could not be generated)" : ""}`,
+      patient: owners.length === 1 ? byId.get(owners[0]) : undefined,
+      action: "Start reviewing", to: pendingDrafts[0].screen.to,
+    });
+  }
+  rows
+    .filter((r) => r.patient_id !== CHART_PATIENT_ID && r.encounter_status !== "discharged" && (r.open_alerts || r.overdue_tasks))
+    .forEach((r) => {
+      const why = [
+        r.critical_alerts ? plural(r.critical_alerts, "critical alert") : "",
+        r.open_alerts - r.critical_alerts > 0 ? plural(r.open_alerts - r.critical_alerts, "alert") : "",
+        r.overdue_tasks ? `${plural(r.overdue_tasks, "overdue task")}${r.escalated_tasks ? " (escalated)" : ""}` : "",
+      ].filter(Boolean).join(" · ");
+      actions.push({
+        key: `cohort-${r.patient_id}`, tone: r.critical_alerts ? "critical" : "attention", icon: r.critical_alerts ? "alert" : "clock",
+        status: r.critical_alerts ? "Critical" : "Overdue", rank: r.critical_alerts ? 0.5 : 1.5,
+        title: `Check on ${r.name}`, why: `${why} — details are in the patient summary`,
+        patient: r, action: "View summary", to: `/patients?patient=${encodeURIComponent(r.patient_id)}`,
+      });
+    });
+  actions.sort((a, b) => a.rank - b.rank);
+  const detailsLoading = [alerts, tasks, documents, referrals, requests, ...drafts].some((q) => q.isLoading);
+  const detailsFailed = [alerts, tasks, documents, referrals, requests, ...drafts].some((q) => q.isError);
+
+  // ---------- Patients and wards ----------
+  const wardOptions = Array.from(new Set(rows.map((r) => r.ward).filter(Boolean))) as string[];
+  const patientRows = [...rows]
+    .filter((r) => ward === "all" || r.ward === ward)
+    .sort((a, b) => (b.critical_alerts * 100 + b.open_alerts * 10 + b.overdue_tasks - (b.encounter_status === "discharged" ? 1000 : 0))
+      - (a.critical_alerts * 100 + a.open_alerts * 10 + a.overdue_tasks - (a.encounter_status === "discharged" ? 1000 : 0)) || a.name.localeCompare(b.name));
+  const occupied = summary?.wards || {};
+  const configured = new Map(WARDS.map((w) => [w.name, w.beds.length]));
+  const wardNames = Array.from(new Set([...WARDS.map((w) => w.name), ...Object.keys(occupied)]));
+
+  const demoClock = meta.data?.demo_now
+    ? new Date(meta.data.demo_now).toLocaleString("en-GB", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })
+    : null;
+  const name = shortName(meta.data?.demo_user);
 
   return (
-    <>
-      <div className="page-head">
+    <div className="gd-page">
+      {/* A · Friendly introduction */}
+      <header className="gd-hello">
         <div>
-          <h1 className="page-title">Hospital command centre</h1>
-          <div className="page-sub">
-            F14 is a hospital-scoped queue, not a single-encounter scorecard. Counts come from the live demo database and the demo clock; value KPIs remain illustrative.
-          </div>
+          <h1 className="gd-greeting">{greetingFor(meta.data?.demo_now)}{name ? `, ${name}` : ""}</h1>
+          <p className="gd-lead">Here is what needs your attention today.</p>
+          <p className="gd-context">
+            <span className="gd-demo">{DEMO_MODE ? "Synthetic demo — UI preview only" : "Synthetic demo data"}</span>
+            {demoClock ? <span>Demo clock: {demoClock}</span> : null}
+            <span>All patients shown are fictional.</span>
+          </p>
         </div>
-        <div className="page-actions">
-          <span className="badge badge-ai">{data?.hospital.name || "hospital scope"}</span>
-          <span className="badge badge-warning">value KPIs illustrative</span>
-        </div>
-      </div>
+        <button className="btn gd-refresh" onClick={() => { dashboard.refetch(); alerts.refetch(); tasks.refetch(); documents.refetch(); referrals.refetch(); requests.refetch(); drafts.forEach((d) => d.refetch()); }} disabled={dashboard.isFetching}>
+          <Icon name="refresh" size={15} /> {dashboard.isFetching ? "Refreshing…" : "Refresh"}
+        </button>
+      </header>
 
-      <div className="grid-4 mb-3">
-        <div className="card stat">
-          <div className="stat-label">Active encounters</div>
-          <div className="stat-value">{fmt(summary?.active_encounters ?? 0)}</div>
-          <div className="stat-note">{fmt(summary?.patients ?? 0)} patients in the seeded cohort</div>
+      {dashboard.isError ? (
+        <div className="gd-error" role="alert">
+          <Icon name="alert" size={20} />
+          <div><strong>The hospital overview could not be loaded.</strong> {(dashboard.error as Error).message}</div>
+          <button className="btn btn-sm" onClick={() => dashboard.refetch()}>Try again</button>
         </div>
-        <div className="card stat">
-          <div className="stat-label">Drafts awaiting review</div>
-          <div className="stat-value">{fmt(summary?.pending_drafts ?? 0)}</div>
-          <div className="stat-note">{fmt(summary?.discharge_reviews ?? 0)} discharge drafts</div>
-        </div>
-        <div className="card stat">
-          <div className="stat-label">Open alerts</div>
-          <div className="stat-value" style={{ color: summary?.critical_alerts ? "var(--critical)" : "var(--success)" }}>{fmt(summary?.open_alerts ?? 0)}</div>
-          <div className="stat-note">{fmt(summary?.critical_alerts ?? 0)} critical; every dismissal needs a reason</div>
-        </div>
-        <div className="card stat">
-          <div className="stat-label">Tasks overdue</div>
-          <div className="stat-value" style={{ color: summary?.overdue_tasks ? "var(--warning)" : undefined }}>{fmt(summary?.overdue_tasks ?? 0)}</div>
-          <div className="stat-note">{fmt(summary?.escalated_tasks ?? 0)} escalated with a reason</div>
-        </div>
-      </div>
+      ) : null}
 
-      <div className="grid-4 mb-3">
-        <div className="card stat">
-          <div className="stat-label">Pending tasks</div>
-          <div className="stat-value">{fmt(summary?.pending_tasks ?? 0)}</div>
-          <div className="stat-note">Not yet completed or cancelled</div>
-        </div>
-        <div className="card stat">
-          <div className="stat-label">Draft discharges</div>
-          <div className="stat-value">{fmt(summary?.draft_discharges ?? 0)}</div>
-          <div className="stat-note">Waiting for a clinician to review</div>
-        </div>
-        <div className="card stat">
-          <div className="stat-label">Medicine discrepancies</div>
-          <div className="stat-value" style={{ color: summary?.medicine_discrepancies ? "var(--warning)" : undefined }}>{fmt(summary?.medicine_discrepancies ?? 0)}</div>
-          <div className="stat-note">Home list against current orders</div>
-        </div>
-      </div>
-
-      <div className="grid-4 mb-3">
-        <div className="card stat">
-          <div className="stat-label">Documents pending</div>
-          <div className="stat-value">{fmt(summary?.pending_documents ?? 0)}</div>
-          <div className="stat-note">OCR needs human confirmation</div>
-        </div>
-        <div className="card stat">
-          <div className="stat-label">Open referrals</div>
-          <div className="stat-value">{fmt(summary?.open_referrals ?? 0)}</div>
-          <div className="stat-note">Sent or acknowledged, not yet completed</div>
-        </div>
-        <div className="card stat">
-          <div className="stat-label">Investigation requests</div>
-          <div className="stat-value">{fmt(summary?.pending_investigations ?? 0)}</div>
-          <div className="stat-note">Approved, not yet marked exported</div>
-        </div>
-        <div className="card stat">
-          <div className="stat-label">Claim gaps</div>
-          <div className="stat-value">{fmt(summary?.claim_gaps ?? 0)}</div>
-          <div className="stat-note">Missing docs, underbilled, unsupported, contradictions</div>
-        </div>
-      </div>
-
-      <div className="split-main">
-        <div className="flex-col gap-3">
-          <div className="card">
-            <div className="card-head">
-              <div><div className="card-title">Hospital queue</div><div className="card-sub">Every row is a real encounter or task record. No aggregate is hand-typed.</div></div>
-              <span className="badge badge-neutral">{data?.patients.length || 0} patients</span>
-            </div>
-            <table className="table">
-              <thead><tr><th>Patient</th><th>Location</th><th>Open work</th><th>Discharge and medicines</th><th>Flags</th><th className="right">Open</th></tr></thead>
-              <tbody>
-                {data?.patients.map((patient) => (
-                  <tr key={patient.patient_id}>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{patient.name}</div>
-                      <div className="small muted">{patient.mrn} · {patient.age}{patient.sex.slice(0, 1)} · {patient.encounter_status}</div>
-                    </td>
-                    <td className="small">
-                      {patient.ward || "—"}<div className="small muted">{patient.bed || ""} {patient.kind || ""}</div>
-                    </td>
-                    <td className="small">
-                      <div>{patient.pending_tasks} pending tasks · {patient.overdue_tasks} overdue</div>
-                      <div className="small muted">{patient.open_alerts} alerts · {patient.open_referrals} referrals · {patient.claim_gaps} claim gaps</div>
-                    </td>
-                    <td className="small">
-                      <div>{patient.draft_discharges} draft discharges</div>
-                      <div className="small muted">{patient.medicine_discrepancies} medicine discrepancies</div>
-                    </td>
-                    <td>
-                      <div className="pill-row">
-                        {patient.flags.map((flag) => (
-                          <span className={`badge ${flag.includes("critical") || flag.includes("escalated") ? "badge-critical" : "badge-warning"}`} key={flag}>{flag}</span>
-                        ))}
-                        {!patient.flags.length ? <span className="badge badge-success">clear</span> : null}
-                      </div>
-                    </td>
-                    <td className="right">
-                      <OpenRecordButton patientId={patient.patient_id} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <AlertQualityTable />
-
-          <div className="card">
-            <div className="card-head">
-              <div><div className="card-title">Recent audit — hospital scope</div><div className="card-sub">Who did what, with model and evidence metadata where applicable</div></div>
-              <span className="badge badge-neutral">last 12</span>
-            </div>
-            <div className="list">
-              {data?.recent_audit.map((entry) => (
-                <div className="list-row" key={entry.id} style={{ display: "block" }}>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`badge ${actionBadge(entry.action)}`}>{entry.action.replaceAll("_", " ")}</span>
-                    <span className="mono small muted">{new Date(entry.created_at).toLocaleString()}</span>
-                  </div>
-                  <div className="fs-13 mt-1">
-                    <strong>{entry.actor_name}</strong>
-                    <span className="muted"> · {entry.entity_type}</span>
-                    <span className="mono small muted"> {entry.entity_id}</span>
-                  </div>
-                  {entry.meta?.model || entry.meta?.mode ? (
-                    <div className="small muted mt-1">model {entry.meta.model || "cached"} · mode {entry.meta.mode || "cached"}</div>
-                  ) : null}
-                </div>
-              ))}
-              {!data?.recent_audit.length ? <div className="empty">No audit entries.</div> : null}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-col gap-3">
-          <div className="card">
-            <div className="card-head"><div className="card-title">Ward load</div><span className="badge badge-neutral">active encounters</span></div>
-            <div className="card-pad">
-              {wardEntries.map(([ward, count]) => (
-                <div className="check-row" key={ward}>
-                  <span className="muted" style={{ flex: 1 }}>{ward}</span>
-                  <span className="mono fs-20">{count}</span>
-                </div>
-              ))}
-              {!wardEntries.length ? <div className="small muted">No active ward beds.</div> : null}
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-head">
-              <div><div className="card-title">Primary-patient claim posture</div><div className="card-sub">Review readiness, not a prediction</div></div>
-              <span className={`badge ${data?.claim.status === "review_ready" ? "badge-success" : "badge-warning"}`}>
-                {data?.claim.status?.replaceAll("_", " ") || "—"}
+      {/* B · What needs attention? */}
+      <section aria-labelledby="gd-attention">
+        <h2 id="gd-attention" className="gd-h2">What needs attention?</h2>
+        <p className="gd-h2-sub">Start with the red tile, then work left to right.</p>
+        <div className="gd-tiles">
+          {tiles.length ? tiles.map((t) => (
+            <Link key={t.key} to={t.to} className={`gd-tile tone-${t.tone}`} aria-label={`${t.value} ${t.title}. ${t.action}`}>
+              <span className="gd-tile-top">
+                <span className="gd-tile-icon"><Icon name={t.icon} size={28} /></span>
+                <span className="gd-tile-value">{t.value}</span>
               </span>
+              <span className="gd-tile-title">{t.title}</span>
+              <span className="gd-tile-text">{t.text}</span>
+              <span className="gd-tile-action">{t.action} <Icon name="chevron" size={16} /></span>
+            </Link>
+          )) : [0, 1, 2, 3].map((i) => (
+            <div key={i} className="gd-tile gd-tile-loading" aria-hidden="true">
+              <span className="gd-tile-icon" /><span className="gd-skel" /><span className="gd-skel short" />
             </div>
-            <div className="card-pad">
-              <div className="flex items-center justify-between">
-                <span className="muted fs-13">Seeded bill total</span>
-                <span className="mono fs-20">INR {fmt(data?.claim.total_amount ?? 0)}</span>
-              </div>
-              <div className="check-row">
-                <span className="muted fs-13" style={{ flex: 1 }}>Expected total</span>
-                <span className="mono">INR {fmt(data?.claim.expected_total_amount ?? 0)}</span>
-              </div>
-              <div className="check-row">
-                <span className="muted fs-13" style={{ flex: 1 }}>Underbilled</span>
-                <span className={`badge ${data?.claim.underbilled_items.length ? "badge-warning" : "badge-success"}`}>
-                  {data?.claim.underbilled_items.length || 0} items · INR {fmt(data?.claim.underbilled_amount ?? 0)}
-                </span>
-              </div>
-              <div className="check-row">
-                <span className="muted fs-13" style={{ flex: 1 }}>Contradictions</span>
-                <span className={`badge ${data?.claim.contradictions.length ? "badge-critical" : "badge-success"}`}>
-                  {data?.claim.contradictions.length || 0} open
-                </span>
-              </div>
-              <div className="section-label" style={{ marginTop: 14 }}>Missing before review</div>
-              {data?.claim.missing_documents.length ? (
-                <div className="pill-row">
-                  {data.claim.missing_documents.map((item) => <span className="badge badge-critical" key={item}>{item}</span>)}
-                </div>
-              ) : (
-                <span className="badge badge-success">Nothing missing</span>
-              )}
-              <div className="button-row mt-4">
-                <Link className="btn btn-sm" to="/revenue">Open claim pack</Link>
-                <Link className="btn btn-sm" to="/documents?tab=followup">Follow-up request</Link>
-                <Link className="btn btn-sm" to="/discharge">Open discharge</Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-head">
-              <div><div className="card-title">Value snapshot</div><div className="card-sub">Illustrative, not measured outcomes</div></div>
-              <span className="badge badge-warning">illustrative</span>
-            </div>
-            <div className="card-pad">
-              <div className="check-row">
-                <span className="muted" style={{ flex: 1 }}>Clinician minutes saved</span>
-                <span className="mono fs-20">{fmt(data?.illustrative.clinician_minutes_saved ?? 0)}</span>
-              </div>
-              <div className="check-row">
-                <span className="muted" style={{ flex: 1 }}>Billed value at risk</span>
-                <span className="mono fs-20">INR {fmt(data?.illustrative.revenue_at_risk ?? 0)}</span>
-              </div>
-              <div className="check-row">
-                <span className="muted" style={{ flex: 1 }}>Leakage findings</span>
-                <span className="mono fs-20">{fmt(data?.illustrative.leakage_identified ?? 0)}</span>
-              </div>
-              <div className="banner warning mt-3">{data?.illustrative.note || "Illustrative KPIs only."}</div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-head"><div className="card-title">Honesty panel</div><span className="badge badge-neutral">say this unprompted</span></div>
-            <div className="card-pad">
-              <div className="section-label">Working for real</div>
-              <div className="small" style={{ lineHeight: 1.7 }}>
-                Navigation, timeline, rule engine, tasks, assignment, acknowledgement, escalation, drafts, review and approve, audit, every model call, OCR confirmation, referral status, claim checklist.
-              </div>
-              <div className="section-label">Seeded / faked</div>
-              <div className="small" style={{ lineHeight: 1.7 }}>
-                Cohort patients, device feeds, insurer submission, billing data, value KPIs. “Send” and “export” are audited demo status changes; they do not transmit. The bill is seeded.
-              </div>
-              <div className="banner mt-3" style={{ lineHeight: 1.6 }}>
-                “The interesting part is not the generation. It is the boundary: rules decide, the model phrases, and only a human writes.”
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-head"><div className="card-title">Demo shortcuts</div></div>
-            <div className="card-pad button-row">
-              <Link className="btn btn-sm" to="/notes?tab=consult">F1 consult</Link>
-              <Link className="btn btn-sm" to="/notes?tab=icu">F7 ICU</Link>
-              <Link className="btn btn-sm" to="/notes?tab=referral">F11 referral</Link>
-              <Link className="btn btn-sm" to="/documents?tab=requisition">F10 requisition</Link>
-              <Link className="btn btn-sm" to="/tasks">F15 tasks</Link>
-              <Link className="btn btn-sm" to="/revenue">F12 claim</Link>
-            </div>
-          </div>
+          ))}
         </div>
+      </section>
+
+      <div className="gd-main">
+        <div className="gd-col">
+          {/* C · Your next actions */}
+          <section className="gd-panel" aria-labelledby="gd-next">
+            <div className="gd-panel-head">
+              <div>
+                <h2 id="gd-next" className="gd-h2">Your next actions</h2>
+                <p className="gd-h2-sub">Most urgent first. Each item opens the screen where the work is done.</p>
+              </div>
+            </div>
+            {dashboard.isLoading || (data && detailsLoading && !actions.length) ? <div className="gd-muted-block">Loading your work list…</div> : null}
+            {data && !detailsLoading && !actions.length ? (
+              <div className="gd-empty">
+                <span className="gd-empty-icon"><Icon name="check" size={22} /></span>
+                <div><strong>You are all caught up.</strong> No alerts, overdue tasks, reports or drafts are waiting.</div>
+              </div>
+            ) : null}
+            <ol className="gd-actions">
+              {(showAllActions ? actions : actions.slice(0, VISIBLE_ACTIONS)).map((a, index) => (
+                <li key={a.key}>
+                  <Link to={a.to} className={`gd-action tone-${a.tone}`}>
+                    <span className="gd-step" aria-hidden="true">{index + 1}</span>
+                    <span className="gd-action-icon" aria-hidden="true"><Icon name={a.icon} size={20} /></span>
+                    <span className="gd-action-body">
+                      <span className="gd-action-title">{a.title}</span>
+                      <span className="gd-action-why">
+                        <span className="gd-action-status">{a.status}</span>
+                        {a.why}
+                      </span>
+                    </span>
+                    <span className="gd-action-patient">
+                      {a.patient ? <><strong>{a.patient.name}</strong><span>{place(a.patient) || a.patient.mrn}</span></> : <span className="gd-muted">Hospital-wide</span>}
+                    </span>
+                    <span className="gd-action-go">{a.action} <Icon name="chevron" size={16} /></span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+            {actions.length > VISIBLE_ACTIONS ? (
+              <button className="gd-more" onClick={() => setShowAllActions((v) => !v)} aria-expanded={showAllActions}>
+                {showAllActions ? "Show fewer" : `Show all ${actions.length} actions`}
+              </button>
+            ) : null}
+            {data && detailsFailed ? <p className="gd-foot">Some details could not be loaded, so this list may be incomplete. The tiles above still show the full counts.</p> : null}
+          </section>
+
+          {/* D · Patients */}
+          <section className="gd-panel" aria-labelledby="gd-patients">
+            <div className="gd-panel-head">
+              <div>
+                <h2 id="gd-patients" className="gd-h2">Patients</h2>
+                <p className="gd-h2-sub">Patients needing attention are listed first.</p>
+              </div>
+              <div className="gd-panel-tools">
+                <select className="select select-compact" value={ward} onChange={(e) => setWard(e.target.value)} aria-label="Show patients in ward">
+                  <option value="all">All wards</option>
+                  {wardOptions.map((w) => <option key={w}>{w}</option>)}
+                </select>
+                <Link className="link-action" to="/patients">Patient list <Icon name="chevron" size={14} /></Link>
+              </div>
+            </div>
+            {dashboard.isLoading ? <div className="gd-muted-block">Loading patients…</div> : null}
+            {data && !patientRows.length ? <div className="gd-muted-block">No patients in {ward}.</div> : null}
+            <ul className="gd-patients">
+              {patientRows.map((r) => {
+                const discharged = r.encounter_status === "discharged";
+                const status = discharged ? { tone: "neutral", icon: "discharge", text: "Discharged" }
+                  : r.critical_alerts ? { tone: "critical", icon: "alert", text: plural(r.critical_alerts, "critical alert") }
+                  : r.overdue_tasks ? { tone: "attention", icon: "clock", text: plural(r.overdue_tasks, "overdue task") }
+                  : r.open_alerts ? { tone: "attention", icon: "alert", text: plural(r.open_alerts, "alert") + " to check" }
+                  : { tone: "ok", icon: "check", text: "Nothing outstanding" };
+                const chart = opensChart(r);
+                return (
+                  <li key={r.patient_id} className={`gd-patient ${discharged ? "is-muted" : ""}`}>
+                    <span className="gd-avatar" aria-hidden="true">{initials(r.name)}</span>
+                    <span className="gd-patient-id">
+                      <strong>{r.name}</strong>
+                      <span>{place(r) || "No bed"}{r.kind ? ` · ${r.kind}` : ""} · {r.age} {r.sex.slice(0, 1)} · {r.mrn}</span>
+                    </span>
+                    <span className={`gd-patient-status tone-${status.tone}`}><Icon name={status.icon} size={16} /> {status.text}</span>
+                    <span className="gd-patient-go">
+                      {chart ? (
+                        <OpenRecordButton patientId={r.patient_id} browsable={r.browsable} />
+                      ) : (
+                        <>
+                          <span className="gd-summary-tag">Summary only</span>
+                          <Link className="btn btn-sm" to={`/patients?patient=${encodeURIComponent(r.patient_id)}`}>View summary</Link>
+                        </>
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            {data ? <p className="gd-foot">A full clinical chart exists for {primary?.name || "the primary patient"} only. Other patients have summary records.</p> : null}
+          </section>
+
+          {DEMO_MODE ? null : <AlertQualityTable />}
+        </div>
+
+        <aside className="gd-col gd-side">
+          {/* E · Wards */}
+          <section className="gd-panel" aria-labelledby="gd-wards">
+            <div className="gd-panel-head"><h2 id="gd-wards" className="gd-h2">Wards</h2></div>
+            {data ? (
+              <ul className="gd-wards">
+                {wardNames.map((w) => {
+                  const used = occupied[w] || 0;
+                  const total = configured.get(w);
+                  return (
+                    <li key={w} className="gd-ward">
+                      <span className="gd-ward-name">{w}</span>
+                      <span className="gd-ward-count">{total ? `${used} of ${total} beds in use` : `${plural(used, "patient")}`}</span>
+                      {total ? (
+                        <span className="gd-meter" role="img" aria-label={`${used} of ${total} beds in use`}>
+                          <span style={{ width: `${Math.min(100, (used / total) * 100)}%` }} />
+                        </span>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : <div className="gd-muted-block">Loading wards…</div>}
+            <p className="gd-foot">Beds in use = active admissions. Bed totals come from the bed list used by the admission form in this demo.</p>
+          </section>
+
+          {/* Hospital workload (F14 counts from /hospital/dashboard) */}
+          <section className="gd-panel" aria-labelledby="gd-workload">
+            <div className="gd-panel-head"><h2 id="gd-workload" className="gd-h2">Hospital workload</h2></div>
+            {summary ? (
+              <ul className="gd-wards">
+                {[
+                  { label: "Pending tasks", value: summary.pending_tasks },
+                  { label: "Draft discharges to review", value: summary.draft_discharges },
+                  { label: "Medicine discrepancies", value: summary.medicine_discrepancies },
+                  { label: "Documents to confirm", value: summary.pending_documents },
+                  { label: "Open referrals", value: summary.open_referrals },
+                  { label: "Investigation requests", value: summary.pending_investigations },
+                  { label: "Claim gaps", value: summary.claim_gaps },
+                ].filter((w) => w.value !== undefined).map((w) => (
+                  <li key={w.label} className="gd-ward">
+                    <span className="gd-ward-name">{w.label}</span>
+                    <span className="gd-ward-count">{Number(w.value).toLocaleString()}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : <div className="gd-muted-block">Loading workload…</div>}
+          </section>
+
+          {/* F · Start a task (navigation for first-time users) */}
+          <section className="gd-panel" aria-labelledby="gd-start">
+            <div className="gd-panel-head"><h2 id="gd-start" className="gd-h2">Start a task</h2></div>
+            <ul className="gd-start">
+              {[
+                { icon: "patients", label: "Find or register a patient", to: "/patients" },
+                { icon: "admission", label: "Admit a patient", to: "/admission" },
+                { icon: "consult", label: "Outpatient consultation", to: "/notes?tab=consult" },
+                { icon: "round", label: "Ward round notes", to: "/notes?tab=round" },
+                { icon: "lab", label: "Lab results", to: "/notes?tab=labs" },
+                { icon: "discharge", label: "Discharge a patient", to: "/discharge" },
+                { icon: "billing", label: "Billing review", to: "/revenue" },
+              ].map((s) => (
+                <li key={s.to}>
+                  <Link to={s.to} className="gd-start-link">
+                    <span className="gd-start-icon" aria-hidden="true"><Icon name={s.icon} size={18} /></span>
+                    {s.label}
+                    <Icon name="chevron" size={16} className="gd-start-chev" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className="gd-foot">Every other module is in the left navigation, or search with <strong>All modules</strong>.</p>
+          </section>
+        </aside>
       </div>
-    </>
+    </div>
   );
 }

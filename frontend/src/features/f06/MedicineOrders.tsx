@@ -171,9 +171,13 @@ export default function MedicineOrders() {
       <div className="card">
         <div className="card-head">
           <div className="card-title">Doses recorded by nurses</div>
-          <span className="badge badge-neutral">{doses.data?.administrations.length ?? 0}</span>
+          <span className="badge badge-neutral">{doses.isError ? "—" : doses.data?.administrations.length ?? 0}</span>
         </div>
-        {!doses.data?.administrations.length ? <div className="card-pad small muted">No dose has been recorded yet.</div> : null}
+        {doses.isError ? (
+          <div className="card-pad small muted">The dose record is not available right now, so recorded doses cannot be shown.</div>
+        ) : doses.data && !doses.data.administrations.length ? (
+          <div className="card-pad small muted">No dose has been recorded yet.</div>
+        ) : null}
         <table className="table">
           <tbody>
             {doses.data?.administrations.map((dose) => (

@@ -5,6 +5,7 @@ The cohort is hidden, not deleted: seed data and the hospital dashboard are unch
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -120,7 +121,13 @@ def test_demo_reset_works_in_both_modes(client, mode):
 
 
 def test_the_header_has_no_patient_picker():
-    source = SHELL.read_text()
+    source = SHELL.read_text(encoding="utf-8")
     assert "patient-select" not in source
     assert "switchPatient" not in source
-    assert '"/patients"' not in source
+    # No patient dropdown in the shell.
+    assert not re.search(r"<select\b", source), "the shell renders a <select>"
+    # The shell never loads the patient list (GET /patients, any quoting), the data a picker needs.
+    assert not re.search(r"""\bget\s*(<[^>]*>)?\(\s*["'`]/patients(\?[^"'`]*)?["'`]""", source), "the shell fetches the patient list"
+    # The shell may only clear the patient (fall back to Ravi), never set another one.
+    calls = re.findall(r"session\.setPatient\(([^)]*)\)", source)
+    assert all(arg.strip() == "null" for arg in calls), f"the shell sets a patient: {calls}"

@@ -8,6 +8,8 @@ import { DocumentsPage } from "./pages/Documents";
 import { DischargePage } from "./pages/Discharge";
 import { RevenuePage } from "./pages/Revenue";
 import { DashboardPage } from "./pages/Dashboard";
+import { PatientsPage } from "./pages/Patients";
+import { AdmissionPage } from "./pages/Admission";
 
 export default function App() {
   return (
@@ -22,6 +24,8 @@ export default function App() {
         <Route path="/discharge" element={<DischargePage />} />
         <Route path="/revenue" element={<RevenuePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/patients" element={<PatientsPage />} />
+        <Route path="/admission" element={<AdmissionPage />} />
         <Route path="*" element={<Navigate to="/timeline" replace />} />
       </Route>
     </Routes>

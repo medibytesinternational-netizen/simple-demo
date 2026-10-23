@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { get, post } from "../api";
+import { get, openApiWindow, post } from "../api";
 import type { ClaimPrep, Draft, Leakage } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { EvidenceChip } from "../components/Evidence";
@@ -228,7 +228,7 @@ export function RevenuePage() {
                         {prepare.isPending ? <><span className="spinner" /> Preparing…</> : "Prepare review pack"}
                       </button>
                     ) : null}
-                    <button className="btn" onClick={() => window.open("/api/revenue/claim-prep/pack.html", "_blank")}>
+                    <button className="btn" onClick={() => openApiWindow("/revenue/claim-prep/pack.html")}>
                       Open review copy
                     </button>
                     {canWork ? (
@@ -239,6 +239,9 @@ export function RevenuePage() {
                   </div>
                   {!canWork ? (
                     <div className="small muted mt-2">Read only for your role. Billing and doctors prepare and explain the pack.</div>
+                  ) : null}
+                  {prepare.isError || explain.isError ? (
+                    <div className="error-box mt-3" role="alert">{((prepare.error || explain.error) as Error).message}</div>
                   ) : null}
                   {prepare.isSuccess ? (
                     <div className="success-box mt-3">

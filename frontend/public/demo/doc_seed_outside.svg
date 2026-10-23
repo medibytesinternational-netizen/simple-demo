@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1160" viewBox="0 0 900 1160">
+  <rect width="900" height="1160" fill="#ffffff"/>
+  <rect x="0" y="0" width="900" height="90" fill="#eef2f7"/>
+  <text x="48" y="42" font-family="Arial" font-size="22" font-weight="700" fill="#16181d">STAR CITY DIAGNOSTICS</text>
+  <text x="48" y="68" font-family="Arial" font-size="13" fill="#5b6472">Department of Laboratory Medicine · NABL accredited</text>
+  <text x="48" y="132" font-family="Arial" font-size="16" font-weight="700" fill="#16181d">BIOCHEMISTRY REPORT</text>
+  <text x="48" y="160" font-family="Arial" font-size="13" fill="#333">Patient: Ravi Menon</text>
+  <text x="48" y="182" font-family="Arial" font-size="13" fill="#333">MRN: MB-1001        Age/Sex: 58 / Male</text>
+  <text x="48" y="204" font-family="Arial" font-size="13" fill="#333">Collected: 12 Oct 2026 07:40        Reported: 12 Oct 2026 11:20</text>
+  <text x="48" y="226" font-family="Arial" font-size="13" fill="#333">Referred by: Dr. Meera Shah        Sample: Serum</text>
+  <line x1="48" y1="246" x2="852" y2="246" stroke="#c9d0d9"/>
+  <text x="48" y="280" font-family="Arial" font-size="12" font-weight="700" fill="#5b6472">TEST</text>
+  <text x="380" y="280" font-family="Arial" font-size="12" font-weight="700" fill="#5b6472">RESULT</text>
+  <text x="540" y="280" font-family="Arial" font-size="12" font-weight="700" fill="#5b6472">UNIT</text>
+  <text x="660" y="280" font-family="Arial" font-size="12" font-weight="700" fill="#5b6472">REFERENCE</text>
+  <line x1="48" y1="296" x2="852" y2="296" stroke="#c9d0d9"/>
+  <text x="48" y="332" font-family="Arial" font-size="15" fill="#16181d">Creatinine</text>
+  <text x="380" y="332" font-family="Arial" font-size="15" font-weight="700" fill="#c62828">3.1</text>
+  <text x="540" y="332" font-family="Arial" font-size="15" fill="#16181d">mg/dL</text>
+  <text x="660" y="332" font-family="Arial" font-size="15" fill="#16181d">0.7 - 1.3</text>
+  <text x="48" y="376" font-family="Arial" font-size="15" fill="#16181d">eGFR (CKD-EPI)</text>
+  <text x="380" y="376" font-family="Arial" font-size="15" font-weight="700" fill="#c62828">21</text>
+  <text x="540" y="376" font-family="Arial" font-size="15" fill="#16181d">mL/min/1.73m²</text>
+  <text x="660" y="376" font-family="Arial" font-size="15" fill="#16181d">&gt; 90</text>
+  <text x="48" y="420" font-family="Arial" font-size="15" fill="#16181d">Potassium</text>
+  <text x="380" y="420" font-family="Arial" font-size="15" font-weight="700" fill="#b26a00">5.3</text>
+  <text x="540" y="420" font-family="Arial" font-size="15" fill="#16181d">mmol/L</text>
+  <text x="660" y="420" font-family="Arial" font-size="15" fill="#16181d">3.5 - 5.1</text>
+  <text x="48" y="464" font-family="Arial" font-size="15" fill="#16181d">HbA1c</text>
+  <text x="380" y="464" font-family="Arial" font-size="15" font-weight="700" fill="#b26a00">8.4</text>
+  <text x="540" y="464" font-family="Arial" font-size="15" fill="#16181d">%</text>
+  <text x="660" y="464" font-family="Arial" font-size="15" fill="#16181d">4.0 - 5.6</text>
+  <text x="48" y="508" font-family="Arial" font-size="15" fill="#16181d">White cell count</text>
+  <text x="380" y="508" font-family="Arial" font-size="15" font-weight="700" fill="#b26a00">13.8</text>
+  <text x="540" y="508" font-family="Arial" font-size="15" fill="#16181d">10^3/µL</text>
+  <text x="660" y="508" font-family="Arial" font-size="15" fill="#16181d">4.0 - 11.0</text>
+  <line x1="48" y1="548" x2="852" y2="548" stroke="#c9d0d9"/>
+  <text x="48" y="590" font-family="Arial" font-size="13" font-style="italic" fill="#5b6472">Interpretation: Creatinine elevated. eGFR severely reduced. Potassium at upper limit.</text>
+  <text x="48" y="616" font-family="Arial" font-size="13" fill="#5b6472">This is a synthetic report generated for a product demo. Not for clinical use.</text>
+  <text x="48" y="700" font-family="Arial" font-size="13" fill="#333">Dr. A. Rao, MD (Pathology)</text>
+  <text x="48" y="722" font-family="Arial" font-size="12" fill="#6b7280">Digitally signed · 12 Oct 2026</text>
+  <rect x="48" y="800" width="804" height="1" fill="#c9d0d9"/>
+  <text x="48" y="840" font-family="Arial" font-size="12" fill="#6b7280">Scanned from paper · OCR confidence varies by field</text>
+</svg>
