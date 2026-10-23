@@ -4,6 +4,7 @@ import { DEMO_MODE, PREVIEW_SESSION_NOTE } from "../demo/config";
 import { previewStore } from "../demo/previewStore";
 import { usePatientDirectory } from "../components/patientDirectory";
 import { ATTENDING, WARDS, bedKey } from "../components/wards";
+import { ALLERGY_UNAVAILABLE, allergyGateError } from "../components/admissionRules";
 
 const TYPES = ["IPD", "ICU", "Day care"];
 const CHECKER = "Dr. Meera Shah";
@@ -17,7 +18,8 @@ function nowLocal() {
 export function AdmissionPage() {
   const [params, setParams] = useSearchParams();
   const directory = usePatientDirectory();
-  const [form, setForm] = useState({ kind: "IPD", ward: "", bed: "", attending: "", admittedAt: nowLocal(), reason: "", notes: "", allergyChecked: false });
+  // The patient whose allergy record the clinician verified. A verification counts only for that patient.
+  const [form, setForm] = useState({ kind: "IPD", ward: "", bed: "", attending: "", admittedAt: nowLocal(), reason: "", notes: "", allergyVerifiedFor: null as string | null });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState<string | null>(null);
   const patientId = params.get("patient") || "";
@@ -38,7 +40,8 @@ export function AdmissionPage() {
     if (!form.admittedAt) e.admittedAt = "Enter the admission date and time.";
     else if (new Date(form.admittedAt) > new Date()) e.admittedAt = "Admission time cannot be in the future.";
     if (form.reason.trim().length < 5) e.reason = "Describe the reason for admission (at least 5 characters).";
-    if (!form.allergyChecked) e.allergyChecked = "A clinician must verify the allergy record before admission.";
+    const allergyError = allergyGateError(patient ? patient.allergiesKnown : true, form.allergyVerifiedFor === patient?.id);
+    if (allergyError) e.allergyVerified = allergyError;
     return e;
   }
 
@@ -51,7 +54,7 @@ export function AdmissionPage() {
       admittedAt: new Date(form.admittedAt).toISOString(), reason: form.reason.trim(), notes: form.notes.trim(), allergyCheckedBy: CHECKER,
     });
     setNotice(`${patient.name} shown as admitted to ${form.ward} · ${form.bed} in this preview tab only. No encounter was created in any hospital system.`);
-    setForm({ kind: "IPD", ward: "", bed: "", attending: "", admittedAt: nowLocal(), reason: "", notes: "", allergyChecked: false });
+    setForm({ kind: "IPD", ward: "", bed: "", attending: "", admittedAt: nowLocal(), reason: "", notes: "", allergyVerifiedFor: null });
   }
 
   const err = (key: string) => (errors[key] ? <div className="field-error" role="alert">{errors[key]}</div> : null);
@@ -101,11 +104,17 @@ export function AdmissionPage() {
               <div className={`allergy-panel ${patient.allergies.length || !patient.allergiesKnown ? "" : "none"}`}>
                 <div className="section-label" style={{ margin: 0 }}>Recorded allergies</div>
                 <div className="fs-13 mt-1">{patient.allergies.length ? patient.allergies.join(", ") : patient.allergiesKnown ? "No known drug allergies recorded" : "Allergy record not available in this view. Check the hospital record before prescribing."}</div>
-                <label className="check-inline mt-2">
-                  <input type="checkbox" className="checkbox" checked={form.allergyChecked} onChange={(e) => set("allergyChecked", e.target.checked)} />
-                  I have verified this allergy record with the patient or carer ({CHECKER})
-                </label>
-                {err("allergyChecked")}
+                {patient.allergiesKnown ? (
+                  <>
+                    <label className="check-inline mt-2">
+                      <input type="checkbox" className="checkbox" checked={form.allergyVerifiedFor === patient.id} onChange={(e) => set("allergyVerifiedFor", e.target.checked ? patient.id : null)} />
+                      I have verified this allergy record with the patient or carer ({CHECKER})
+                    </label>
+                    {err("allergyVerified")}
+                  </>
+                ) : (
+                  <div className="field-error mt-2" role="alert" data-testid="allergy-unavailable">{ALLERGY_UNAVAILABLE}</div>
+                )}
               </div>
             ) : null}
           </div>
