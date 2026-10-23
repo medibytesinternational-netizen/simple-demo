@@ -14,9 +14,6 @@ from app.models import Alert, AuditEntry
 from .helpers import generate_note, inject_event, inject_lab
 
 DOCTOR = {"X-User-Id": "u_meera"}
-NURSE = {"X-User-Id": "u_anita"}
-PHARMACIST = {"X-User-Id": "u_dev"}
-MGMT = {"X-User-Id": "u_mgmt"}
 DISMISS = {"category": "known_and_accepted", "reason": "Reviewed and accepted by the team"}
 
 
@@ -273,15 +270,6 @@ def test_dismissal_stores_the_category_and_reason(client):
     assert _audits("alert_dismissed", alert["id"]) == 1
 
 
-def test_only_a_doctor_can_dismiss_an_alert(client):
-    alert = _first_open(client)
-    url = f"/api/alerts/{alert['id']}/dismiss"
-    assert client.post(url, json=DISMISS, headers=PHARMACIST).status_code == 403
-    assert client.post(url, json=DISMISS, headers=NURSE).status_code == 403
-    assert _api_alerts(client)[alert["id"]]["status"] == "open"
-    assert client.post(f"/api/alerts/{alert['id']}/acknowledge", headers=PHARMACIST).status_code == 200
-
-
 # ---------- measuring usefulness ----------
 
 def _quality(client, **kwargs):
@@ -329,7 +317,7 @@ def test_quality_precision_is_useful_dismissals_over_categorised_dismissals(clie
     assert body["sample_size"] == 5
 
 
-def test_quality_counts_every_patient_and_every_role_can_read_it(client):
+def test_quality_counts_every_patient(client):
     db = SessionLocal()
     db.add(Alert(
         id="alr_q_other", patient_id="pat_joseph", encounter_id=None, rule_id="R3", dedupe_key="hand:other",
@@ -337,7 +325,7 @@ def test_quality_counts_every_patient_and_every_role_can_read_it(client):
     ))
     db.commit()
     db.close()
-    _, rules = _quality(client, headers=MGMT)
+    _, rules = _quality(client)
     assert rules["R3"]["acted_on"] == 1
     assert rules["R3"]["precision"] == 1.0
 

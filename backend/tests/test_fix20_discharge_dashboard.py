@@ -11,10 +11,9 @@ from sqlalchemy import select
 from app.db import SessionLocal
 from app.models import Alert, AuditEntry, Draft, Task
 
-from .helpers import discharge, inject_event
+from .helpers import as_patient, discharge, inject_event
 
 REASON = "Reviewed with the team before discharge"
-PHARMACIST = {"X-User-Id": "u_dev"}
 NOTE = "Decided after checking the chart"
 
 
@@ -31,7 +30,6 @@ def _resolve(client, discrepancy_id: str):
     return client.post(
         f"/api/medications/reconciliation/{discrepancy_id}/resolve",
         json={"decision": "continue", "note": NOTE},
-        headers=PHARMACIST,
     )
 
 
@@ -133,7 +131,7 @@ def test_deciding_a_difference_lowers_the_dashboard_row_and_summary_by_one(clien
     ravi_before = _row(before, "pat_ravi")["medicine_discrepancies"]
     assert ravi_before >= 3
     assert _resolve(client, _recon_ids(client)[0]).status_code == 200
-    for headers in ({}, {"X-Patient-Id": "pat_joseph"}):
+    for headers in ({}, {"X-Patient-Id": "pat_joseph"}):  # the dashboard is hospital-wide: any open patient
         after = client.get("/api/hospital/dashboard", headers=headers).json()
         assert _row(after, "pat_ravi")["medicine_discrepancies"] == ravi_before - 1
         assert after["summary"]["medicine_discrepancies"] == before["summary"]["medicine_discrepancies"] - 1
@@ -175,15 +173,33 @@ def test_print_page_shows_the_real_patient_and_escapes_text(client):
     assert "Ravi Menon" in page and "MB-1001" in page
 
 
+def _discharge_draft_for(patient_id: str) -> str:
+    """A discharge draft for a cohort patient, made through services as the generate route does
+    (clinical routes refuse cohort patients)."""
+    from app.services.context import build_context
+    from app.services.drafts import create_draft
+    from app.services.llm import generate_draft
+    from app.services.timeline import get_encounter, get_patient, get_state
+
+    with as_patient(patient_id):
+        db = SessionLocal()
+        try:
+            patient = get_patient(db)
+            encounter = get_encounter(db)
+            state = get_state(db, patient, encounter)
+            context = build_context(db, patient, encounter, state, "F9")
+            content, llm_call = generate_draft(db, "F9", context)
+            draft = create_draft(db, feature="F9", patient=patient, encounter=encounter, content=content, llm_call=llm_call)
+            db.commit()
+            return draft.id
+        finally:
+            db.close()
+
+
 def test_print_page_is_not_hard_coded_to_ravi(client):
-    headers = {"X-Patient-Id": "pat_joseph"}
-    generated = client.post("/api/discharge/generate", headers=headers)
-    assert generated.status_code == 200, generated.text
-    draft_id = generated.json()["draft"]["id"]
-    patient = client.get("/api/patients/pat_joseph/timeline").json()
+    draft_id = _discharge_draft_for("pat_joseph")
     joseph = next(r for r in client.get("/api/hospital/dashboard").json()["patients"] if r["patient_id"] == "pat_joseph")
-    assert patient["count"] > 0
-    for header in ({}, headers, {"X-Patient-Id": "pat_ravi"}):
+    for header in ({}, {"X-Patient-Id": "pat_ravi"}):
         page = _print(client, draft_id, **header).text
         assert joseph["name"] in page and joseph["mrn"] in page
         assert "Ravi Menon" not in page and "MB-1001" not in page

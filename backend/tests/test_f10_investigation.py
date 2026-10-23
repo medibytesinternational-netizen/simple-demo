@@ -7,8 +7,6 @@ from datetime import datetime
 from tests.helpers import ASTHMA, generate_note, inject_lab, joined
 
 GEN = "/api/investigation-requests/generate"
-NURSE = {"X-User-Id": "u_anita"}
-BILLING = {"X-User-Id": "u_billing"}
 
 
 def _approved_request(client, body=None) -> dict:
@@ -114,10 +112,9 @@ def test_approval_is_blocked_until_the_allergy_is_verified(client):
     assert [(r["study"], r["status"]) for r in created] == [("Renal ultrasound", "approved")]
 
 
-def test_only_a_doctor_verifies_and_unknown_allergies_are_refused(client):
+def test_unknown_allergies_are_refused(client):
     draft = client.post(GEN).json()["draft"]
     url = f"/api/drafts/{draft['id']}/verify-allergy"
-    assert client.post(url, json={"substance": "Penicillin"}, headers=NURSE).status_code == 403
     # The draft holds the split substance, not the patient's unsplit string.
     assert client.post(url, json={"substance": "Penicillin — rash"}).status_code == 404
     assert client.post(url, json={"substance": "Latex"}).status_code == 404
@@ -164,13 +161,12 @@ def test_export_is_refused_for_a_request_that_is_not_approved(client):
     assert response.json()["detail"] == "Only approved requests can be exported"
 
 
-def test_the_nurse_may_export_and_billing_may_not(client):
+def test_an_approved_request_can_be_exported(client):
     request = _approved_request(client)
     url = f"/api/investigation-requests/{request['id']}/export"
-    assert client.post(url, headers=BILLING).status_code == 403
-    assert client.post(url, headers=NURSE).status_code == 200
+    assert client.post(url).status_code == 200
 
 
-def test_the_nurse_may_generate_and_billing_may_not(client):
-    assert client.post(GEN, headers=NURSE).status_code == 200
-    assert client.post(GEN, headers=BILLING).status_code == 403
+def test_a_request_can_be_generated(client):
+    assert client.post(GEN).status_code == 200
+

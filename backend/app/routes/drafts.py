@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
-from ..services.identity import require, require_feature_role
+from ..services.identity import require
 from ..services.identity import acting_name
 from ..db import get_db, utcnow
 from ..models import (
@@ -69,7 +69,6 @@ def draft_patch(draft_id: str, body: DraftPatchRequest, db: Session = Depends(ge
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
-    require_feature_role("edit_draft", draft.feature)
     update_draft(db, draft, body.content, body.editor)
     db.commit()
     return draft_to_dict(draft)
@@ -125,7 +124,6 @@ def draft_approve(draft_id: str, body: ApproveRequest, db: Session = Depends(get
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
-    require_feature_role("approve_draft", draft.feature)
     event = approve_draft(db, draft, body.content, body.approved_by, override=body.override)
     patient, encounter, state = _state(db, draft.encounter_id)
     created_alerts = evaluate_rules(db, patient, encounter, state)
@@ -142,7 +140,6 @@ def draft_reject(draft_id: str, body: RejectRequest, db: Session = Depends(get_d
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
-    require_feature_role("reject_draft", draft.feature)
     reject_draft(db, draft, body.reason, body.actor)
     db.commit()
     return draft_to_dict(draft)

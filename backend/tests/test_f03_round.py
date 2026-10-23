@@ -17,8 +17,7 @@ from app.services.context import segments_from_transcript
 
 from .helpers import generate_note
 
-NURSE = {"X-User-Id": "u_anita"}
-NURSE_NAME = "Nurse Anita Rao"
+DOCTOR_NAME = "Dr. Meera Shah"
 
 ROUND = (
     "Doctor: Good morning, how is the leg?\n"
@@ -167,19 +166,19 @@ def test_accepting_tasks_creates_exactly_the_chosen_ones_for_the_acting_user(cli
     assert len(proposed) == 3
     before = _task_count(client)
     response = client.post(
-        f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [1, 2], "actor": "Somebody Else"}, headers=NURSE
+        f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [1, 2], "actor": "Somebody Else"}
     )
     assert response.status_code == 200, response.text
     created = response.json()["tasks"]
     assert [t["title"] for t in created] == [proposed[1]["title"], proposed[2]["title"]]
     assert {t["status"] for t in created} == {"accepted"}
-    assert {t["owner"] for t in created} == {NURSE_NAME}
+    assert {t["owner"] for t in created} == {DOCTOR_NAME}
     assert [t["priority"] for t in created] == ["urgent", "urgent"]
     board = client.get("/api/tasks").json()["tasks"]
     assert len(board) == before + 2
     from_draft = [t for t in board if t["accepted_from_draft_id"] == draft["id"]]
     assert [t["title"] for t in from_draft] == [c["title"] for c in created]
-    again = client.post(f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [1, 2]}, headers=NURSE)
+    again = client.post(f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [1, 2]})
     assert again.json()["tasks"] == []
     assert _task_count(client) == before + 2
 

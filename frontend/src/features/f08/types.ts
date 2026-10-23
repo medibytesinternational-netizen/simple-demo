@@ -28,6 +28,18 @@ export type ManualFieldInput = {
   collected_at: string;
 };
 
+/** Who the server records as the author when a clean lab report is saved by the upload itself. */
+export const AUTO_ACTOR = "system (auto)";
+
+/** The upload response: the document plus what the automatic save of a clean lab report did. */
+export type UploadResult = DocumentDetail & {
+  auto_committed: boolean;
+  auto_commit_error: string | null;
+  labs: unknown[];
+  events: unknown[];
+  new_alerts: { id: string; rule_id: string; title: string }[];
+};
+
 export type CommitResult = {
   document: DocumentDetail;
   labs: unknown[];

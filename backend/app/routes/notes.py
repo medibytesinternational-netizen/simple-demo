@@ -21,6 +21,7 @@ from ..services.drafts import (
 from ..services.llm import DraftGenerationError, fallback_reason, generate_draft
 from ..services.timeline import (
     add_audit,
+    require_open_encounter,
 )
 from .common import (
     NoteGenerateRequest,
@@ -28,6 +29,25 @@ from .common import (
 )
 
 router = APIRouter()
+
+MAX_AUDIO_BYTES = 25 * 1024 * 1024
+# Formats the transcription service accepts.
+AUDIO_EXTENSIONS = {"mp3", "wav", "m4a", "webm", "ogg", "oga", "mp4", "mpeg", "mpga", "flac"}
+
+
+def _looks_like_audio(filename: str | None, content_type: str | None) -> bool:
+    """Judge by the declared type and the file name only (no byte sniffing).
+
+    A file name with an extension outside the audio set is refused even if it claims audio/*.
+    Browsers type picked files unevenly (video/webm, application/octet-stream), so the extension
+    decides when it is present; without an extension the declared type must be audio/*.
+    """
+    declared = (content_type or "").split(";")[0].strip().lower()
+    name = (filename or "").rsplit("/", 1)[-1]
+    extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    if extension:
+        return extension in AUDIO_EXTENSIONS
+    return declared.startswith("audio/")
 
 
 # --------------------------------------------------------------------------
@@ -41,6 +61,7 @@ async def transcribe_consultation(file: UploadFile = File(...), db: Session = De
     pretend to understand audio. Consent must already exist for the encounter.
     """
     patient, encounter, _ = _state(db)
+    # Every refusal below happens before credits.charge, so a refused upload spends nothing.
     consents = db.scalars(
         select(TimelineEvent).where(
             TimelineEvent.patient_id == patient.id,
@@ -51,11 +72,17 @@ async def transcribe_consultation(file: UploadFile = File(...), db: Session = De
     ).all()
     if not any((event.payload or {}).get("granted") is True for event in consents):
         raise HTTPException(403, "Record patient consent before capturing audio")
+    # A discharged encounter is locked, so a transcript could never become a draft: refuse before charging.
+    require_open_encounter(encounter)
+    if not _looks_like_audio(file.filename, file.content_type):
+        raise HTTPException(415, "That file is not audio. Upload mp3, wav, m4a, webm or ogg.")
+    contents = await file.read(MAX_AUDIO_BYTES + 1)
+    if len(contents) > MAX_AUDIO_BYTES:
+        raise HTTPException(413, "Audio too large (max 25 MB)")
+    if not contents:
+        raise HTTPException(400, "The audio file is empty")
     if not settings.openai_api_key:
         raise HTTPException(400, "Live transcription requires OPENAI_API_KEY; use the seeded transcript in cached mode")
-    contents = await file.read()
-    if len(contents) > 25 * 1024 * 1024:
-        raise HTTPException(400, "Audio too large (max 25 MB)")
     # A transcription is really about to run: charge before the work. The charge is only flushed, so
     # a failed transcription leaves the request uncommitted and nothing is spent.
     credits.charge(db, "voice_note", feature="F1", mode="live")

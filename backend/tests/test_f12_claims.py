@@ -15,9 +15,6 @@ from app.models import BillLineItem, Document, TimelineEvent
 
 from .helpers import discharge, inject_event
 
-NURSE = {"X-User-Id": "u_anita"}
-MGMT = {"X-User-Id": "u_mgmt"}
-BILLING = {"X-User-Id": "u_billing"}
 DOCTOR = {"X-User-Id": "u_meera"}
 OVERRIDE = {"reason": "Test discharge with open alerts"}
 NOTE_TYPES = ["admission_note", "progress_note", "round_note", "consult_note", "nursing_note"]
@@ -310,15 +307,8 @@ def test_claim_work_is_allowed_after_discharge(client):
     assert client.post("/api/revenue/claim-prep/explain").status_code == 200
 
 
-@pytest.mark.parametrize("headers", [NURSE, MGMT])
-def test_nurse_and_management_cannot_prepare_or_explain_but_can_read(client, headers):
-    assert client.post("/api/revenue/claim-prep/prepare", headers=headers).status_code == 403
-    assert client.post("/api/revenue/claim-prep/explain", headers=headers).status_code == 403
-    assert client.get("/api/revenue/claim-prep", headers=headers).status_code == 200
-
-
-@pytest.mark.parametrize("headers", [BILLING, DOCTOR])
-def test_billing_and_doctor_can_prepare_and_explain(client, headers):
+@pytest.mark.parametrize("headers", [{}, DOCTOR])
+def test_the_doctor_can_prepare_and_explain(client, headers):
     prepared = client.post("/api/revenue/claim-prep/prepare", headers=headers)
     assert prepared.status_code == 200
     assert prepared.json()["review"]["status"] == "needs_clarification"

@@ -151,6 +151,7 @@ def hospital_dashboard(db: Session = Depends(get_db)):
                 "ward": encounter.ward if encounter else None,
                 "bed": encounter.bed if encounter else None,
                 "encounter_status": encounter.status if encounter else "no encounter",
+                "browsable": identity.is_browsable(patient.id),
                 "open_alerts": len(patient_alerts),
                 "critical_alerts": sum(1 for item in patient_alerts if item.severity == "critical"),
                 "overdue_tasks": len(patient_overdue),

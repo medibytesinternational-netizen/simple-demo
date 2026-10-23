@@ -173,6 +173,8 @@ def _task_dict(task: Task) -> dict[str, Any]:
         "assigned_at": task.assigned_at.isoformat() if task.assigned_at else None,
         "acknowledged_at": task.acknowledged_at.isoformat() if task.acknowledged_at else None,
         "acknowledged_by": task.acknowledged_by,
+        # The doctor completes on the assignee's behalf; the assignee is who the task is credited to.
+        "completed_by": task.assigned_to if task.status == "completed" else None,
         "escalation_level": task.escalation_level or 0,
         "escalated_at": task.escalated_at.isoformat() if task.escalated_at else None,
         "escalation_reason": task.escalation_reason,

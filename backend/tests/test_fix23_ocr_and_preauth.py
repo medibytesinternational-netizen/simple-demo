@@ -11,9 +11,7 @@ from app.models import Document, DocumentRequest
 
 from .helpers import text_pdf
 
-NURSE = {"X-User-Id": "u_anita"}
 DOCTOR = {"X-User-Id": "u_meera"}
-BILLING = {"X-User-Id": "u_billing"}
 
 CRITICAL = ["CITY LAB REPORT", "Collected: 03 Sep 2026 07:40", "Sodium 118 mmol/L (135-145)", "Potassium 6.8 mmol/L (3.5-5.1)"]
 
@@ -35,10 +33,8 @@ def _r3(client, status=None):
 
 
 def _commit_critical(client):
-    doc = _upload(client, CRITICAL, NURSE)
-    done = client.post(f"/api/documents/{doc['id']}/commit", headers=NURSE)
-    assert done.status_code == 200, done.text
-    return doc, done.json()
+    doc = _upload(client, CRITICAL)  # a clean lab report is committed by the upload itself
+    return doc, doc
 
 
 def _add_document(doc_id, doc_type, patient_id="pat_ravi", status="reviewed"):
@@ -64,7 +60,7 @@ def _add_document(doc_id, doc_type, patient_id="pat_ravi", status="reviewed"):
 
 
 def _prep(client):
-    return client.get("/api/revenue/claim-prep", headers=BILLING).json()
+    return client.get("/api/revenue/claim-prep").json()
 
 
 def _pre_auth_present(prep):
@@ -107,9 +103,8 @@ def test_confirmed_ocr_labs_are_unreviewed_and_raise_r3_alerts_citing_the_lab_ev
 def test_a_normal_confirmed_lab_is_unreviewed_but_raises_no_alert(client):
     before = {a["id"] for a in _r3(client)}
     doc = _upload(client, ["Sodium 140 mmol/L (135-145)"])
-    body = client.post(f"/api/documents/{doc['id']}/commit").json()
-    assert body["labs"][0]["payload"]["review_status"] == "unreviewed"
-    assert body["labs"][0]["payload"]["flag"] == "normal"
+    assert doc["labs"][0]["payload"]["review_status"] == "unreviewed"
+    assert doc["labs"][0]["payload"]["flag"] == "normal"
     assert [a for a in _r3(client) if a["id"] not in before] == []
 
 
@@ -135,13 +130,13 @@ def test_the_original_is_still_served_after_commit(client):
 
 def test_low_confidence_fields_still_block_commit_and_raise_no_alert_until_confirmed(client):
     before = {a["id"] for a in _r3(client)}
-    doc = _upload(client, ["Sodium 118 (135-145)"], NURSE)  # no unit: confidence under 0.8
+    doc = _upload(client, ["Sodium 118 (135-145)"])  # no unit: confidence under 0.8
     assert doc["extracted"]["fields"][0]["confidence"] < 0.8
-    refused = client.post(f"/api/documents/{doc['id']}/commit", headers=NURSE)
+    refused = client.post(f"/api/documents/{doc['id']}/commit")
     assert refused.status_code == 400 and "Sodium" in refused.json()["detail"]
     assert [a for a in _r3(client) if a["id"] not in before] == []
-    assert client.post(f"/api/documents/{doc['id']}/confirm-field", json={"index": 0, "value": "118"}, headers=NURSE).status_code == 200
-    done = client.post(f"/api/documents/{doc['id']}/commit", headers=NURSE)
+    assert client.post(f"/api/documents/{doc['id']}/confirm-field", json={"index": 0, "value": "118"}).status_code == 200
+    done = client.post(f"/api/documents/{doc['id']}/commit")
     assert done.status_code == 200, done.text
     assert done.json()["labs"][0]["payload"]["review_status"] == "unreviewed"
     assert [a["title"] for a in _r3(client) if a["id"] not in before] == ["Unreviewed abnormal result: Sodium"]

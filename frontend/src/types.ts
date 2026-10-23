@@ -375,6 +375,8 @@ export type HospitalDashboard = {
     kind?: string | null;
     ward?: string | null;
     bed?: string | null;
+    /** False when this record is not open in this view (only Ravi's is). Absent means open. */
+    browsable?: boolean;
     encounter_status: string;
     open_alerts: number;
     critical_alerts: number;

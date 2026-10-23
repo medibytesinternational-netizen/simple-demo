@@ -154,17 +154,17 @@ def test_every_event_has_who_when_and_source(client):
 def test_another_patients_events_never_appear(client):
     mine = inject_event(type="progress_note", title="Ravi only", occurred_at=BASE, source="human")
     theirs = inject_event(patient_id="pat_anita", encounter_id=None, type="progress_note", title="Anita only", occurred_at=BASE, source="human")
-    for header in ({}, {"X-Patient-Id": "pat_ravi"}, {"X-Patient-Id": "pat_anita"}):
+    for header in ({}, {"X-Patient-Id": "pat_ravi"}):
         ravi = _timeline(client, headers=header)
         assert mine in _ids(ravi) and theirs not in _ids(ravi)
         assert {event["patient_id"] for event in ravi["events"]} == {"pat_ravi"}
-        anita = _timeline(client, "/api/patients/pat_anita/timeline", headers=header)
-        assert theirs in _ids(anita) and mine not in _ids(anita)
-        assert {event["patient_id"] for event in anita["events"]} == {"pat_anita"}
+    # A cohort patient's own timeline is closed, by path or by header.
+    for header in ({}, {"X-Patient-Id": "pat_anita"}):
+        assert client.get("/api/patients/pat_anita/timeline", headers=header).status_code == 403
     # The drawer follows the same rule: an event of another patient is not served.
     response = client.get(f"/api/events/{theirs}", headers={"X-Patient-Id": "pat_ravi"})
     assert response.status_code == 400 and "another patient" in response.json()["detail"]
-    assert client.get(f"/api/events/{theirs}", headers={"X-Patient-Id": "pat_anita"}).status_code == 200
+    assert client.get(f"/api/events/{theirs}", headers={"X-Patient-Id": "pat_anita"}).status_code == 403
 
 
 def test_model_and_human_events_display_differently(client):

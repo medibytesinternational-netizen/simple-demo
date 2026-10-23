@@ -12,8 +12,6 @@ from pathlib import Path
 from tests.helpers import inject_event, inject_lab
 
 DOCTOR = {"X-User-Id": "u_meera"}
-NURSE = {"X-User-Id": "u_anita"}
-PHARMACIST = {"X-User-Id": "u_dev"}
 
 ORDER_KEYS = {"drug", "dose", "route", "frequency", "indication", "kind", "status", "reason", "action", "ordered_by"}
 ADMIN_KEYS = {"drug", "dose", "route", "status", "given_at", "order_event_id", "note", "recorded_by"}
@@ -249,14 +247,13 @@ def test_resolve_unknown_discrepancy_is_404(client):
     assert response.status_code == 404
 
 
-def test_pharmacist_can_resolve_but_nurse_cannot(client):
+def test_the_doctor_resolves_a_difference_and_is_recorded_as_the_decider(client):
     ident = recon(client)["discrepancies"][0]["id"]
     body = {"decision": "continue", "note": "Checked with the prescriber"}
-    assert client.post(f"/api/medications/reconciliation/{ident}/resolve", json=body, headers=NURSE).status_code == 403
     assert recon(client)["discrepancies"][0]["status"] == "open"
-    response = client.post(f"/api/medications/reconciliation/{ident}/resolve", json=body, headers=PHARMACIST)
+    response = client.post(f"/api/medications/reconciliation/{ident}/resolve", json=body)
     assert response.status_code == 200
-    assert by_id(recon(client))[ident]["decided_by"] == "Pharmacist Dev Patel"
+    assert by_id(recon(client))[ident]["decided_by"] == "Dr. Meera Shah"
 
 
 def test_a_decision_reopens_when_the_order_it_was_made_on_changes(client):
@@ -384,12 +381,6 @@ def test_order_reason_needs_ten_characters(fresh):
     assert events_of(fresh, "med_order") == []
 
 
-def test_only_a_doctor_can_order(fresh):
-    for headers in (NURSE, PHARMACIST):
-        assert order(fresh, headers=headers, action="start", drug="Paracetamol").status_code == 403
-    assert events_of(fresh, "med_order") == []
-
-
 def test_ordering_is_refused_on_a_discharged_encounter(fresh):
     lock_encounter()
     response = order(fresh, action="start", drug="Paracetamol")
@@ -420,12 +411,12 @@ def start_paracetamol(client) -> str:
     return order(client, action="start", drug="Paracetamol", dose="500 mg", route="PO").json()["event"]["id"]
 
 
-def give(client, event_id, headers=NURSE, **body):
+def give(client, event_id, headers=DOCTOR, **body):
     body.setdefault("status", "given")
     return client.post(f"/api/medications/orders/{event_id}/administrations", json=body, headers=headers)
 
 
-def test_nurse_records_a_given_dose_with_the_exact_payload(fresh):
+def test_a_given_dose_is_recorded_with_the_exact_payload(fresh):
     order_id = start_paracetamol(fresh)
     response = give(fresh, order_id, given_at="2026-10-20T09:30:00", note="Taken with water")
     assert response.status_code == 200, response.text
@@ -434,7 +425,7 @@ def test_nurse_records_a_given_dose_with_the_exact_payload(fresh):
     assert event["payload"] == {
         "drug": "Paracetamol", "dose": "500 mg", "route": "PO", "status": "given",
         "given_at": "2026-10-20T09:30:00", "order_event_id": order_id, "note": "Taken with water",
-        "recorded_by": "Nurse Anita Rao",
+        "recorded_by": "Dr. Meera Shah",
     }
     assert set(event["payload"]) == ADMIN_KEYS
     listed = fresh.get("/api/medications/administrations").json()["administrations"]
@@ -460,13 +451,6 @@ def test_administration_status_and_time_are_validated(fresh):
     order_id = start_paracetamol(fresh)
     assert give(fresh, order_id, status="bogus").status_code == 422
     assert give(fresh, order_id, given_at="yesterday morning").status_code == 400
-    assert fresh.get("/api/medications/administrations").json()["administrations"] == []
-
-
-def test_a_doctor_cannot_record_a_given_dose(fresh):
-    order_id = start_paracetamol(fresh)
-    assert give(fresh, order_id, headers=DOCTOR).status_code == 403
-    assert give(fresh, order_id, headers=PHARMACIST).status_code == 403
     assert fresh.get("/api/medications/administrations").json()["administrations"] == []
 
 
@@ -499,7 +483,7 @@ def test_giving_is_refused_on_a_discharged_encounter(fresh):
 
 def test_generating_the_reconciliation_charges_two_credits(client):
     before = client.get("/api/credits").json()["balance"]
-    response = client.post("/api/medications/reconciliation/generate", headers=PHARMACIST)
+    response = client.post("/api/medications/reconciliation/generate")
     assert response.status_code == 200, response.text
     assert client.get("/api/credits").json()["balance"] == before - 2
     assert client.get("/api/credits").json()["ledger"][0]["operation"] == "medicine_reconciliation"

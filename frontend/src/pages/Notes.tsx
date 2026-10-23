@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
-import { get, post, transcribeAudio } from "../api";
+import { Link, useSearchParams } from "react-router-dom";
+import { get, post } from "../api";
 import type { Draft, Lab, Meta } from "../types";
 import { DraftReview } from "../components/DraftReview";
-import { usePatientId } from "../session";
+import { VoiceInput } from "../components/VoiceInput";
+import { useCan, usePatientId } from "../session";
+import { uploadReport } from "../features/f08/upload";
 import IcuReadingForm from "../features/f07/IcuReadingForm";
 import ReferralRequestForm from "../features/f11/ReferralRequestForm";
 import { canAcknowledge, referralStatusLabel } from "../features/f11/rules";
@@ -36,6 +38,9 @@ Nurse: I will update the task list.`;
 const PROGRESS_TRANSCRIPT = `Nurse: Overnight the patient slept poorly. Temperature came down to 37.4 after paracetamol. He reports less leg pain.
 Doctor: No new breathlessness. I will review him on the ward round and complete the examination then.`;
 
+const AUTO_DRAFT_DELAY_S = 3;
+const MAX_REPORT_BYTES = 12 * 1024 * 1024;
+
 type Tab = {
   key: string;
   label: string;
@@ -47,7 +52,7 @@ type Tab = {
 };
 
 const TABS: Tab[] = [
-  { key: "consult", label: "Consultation · F1", feature: "F1", kind: "transcript", title: "Ambient consultation note", description: "Record or paste the consultation. The note drafts itself and waits for your signature.", transcript: CONSULT_TRANSCRIPT },
+  { key: "consult", label: "Consultation · F1", feature: "F1", kind: "transcript", title: "Ambient consultation note", description: "Record, upload an audio file, or paste the consultation. The note drafts itself and waits for your signature.", transcript: CONSULT_TRANSCRIPT },
   { key: "admission", label: "Admission · F2", feature: "F2", kind: "transcript", title: "Admission assessment", description: "Draft an H&P from the referral interview. Proposed orders and allergy verification stay open until a clinician acts.", transcript: ADMISSION_TRANSCRIPT },
   { key: "round", label: "Round · F3", feature: "F3", kind: "transcript", title: "Ward round handover", description: "Dictate the round. Instructions become proposed tasks and proposed nursing-chart entries you can accept or reject.", transcript: ROUND_TRANSCRIPT },
   { key: "progress", label: "Progress · F4", feature: "F4", kind: "transcript", title: "Daily progress note", description: "The module refuses to invent examination findings or a plan. Missing sections stay visibly empty.", transcript: PROGRESS_TRANSCRIPT },
@@ -88,15 +93,19 @@ export function NotesPage() {
   const [transcript, setTranscript] = useState<string>(tab.transcript);
   const [error, setError] = useState("");
   const [consultResult, setConsultResult] = useState<ConsultGenerateResult | null>(null);
-  const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  // A transcript waiting out the short cancel window before it is drafted.
+  const [pendingDraft, setPendingDraft] = useState<{ text: string; feature: string; left: number } | null>(null);
+  const voiceFeatureRef = useRef("");
+  const [labResult, setLabResult] = useState<any>(null);
+  const canUpload = useCan("upload_document");
 
   useEffect(() => {
     setTranscript(tab.transcript);
     setError("");
     setConsultResult(null);
+    setPendingDraft(null);
+    setLabResult(null);
   }, [tab.key]);
 
   const hasDraft = tab.kind !== "labs";
@@ -142,56 +151,26 @@ export function NotesPage() {
     onError: (err: any) => setError(String(err?.message || err)),
   });
 
-  const startRecording = async () => {
+  // A transcript from VoiceInput (recording or upload) lands in the textarea first, so nothing is lost
+  // if drafting fails, then drafts after a short window in which the clinician can cancel.
+  const onVoiceTranscript = (text: string) => {
+    // The feature was pinned when transcription began; a transcript for another tab is dropped.
+    if (voiceFeatureRef.current !== tab.feature) return;
+    setTranscript(text);
     setError("");
-    if (!consentGranted) {
-      setError("Record patient consent before capturing audio.");
+    if (text.trim().length < 10) {
+      setError("Transcript is too short to draft. Edit it and press Generate draft.");
       return;
     }
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setError("Audio capture is not available in this browser. Paste the seeded transcript instead.");
-      return;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      chunksRef.current = [];
-      recorder.ondataavailable = (event) => {
-        if (event.data.size) chunksRef.current.push(event.data);
-      };
-      recorder.onstop = async () => {
-        stream.getTracks().forEach((track) => track.stop());
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
-        setTranscribing(true);
-        try {
-          const result = await transcribeAudio(blob);
-          setTranscript(result.text);
-          setError("");
-        } catch (err: any) {
-          setError(String(err?.message || err));
-        } finally {
-          setTranscribing(false);
-        }
-      };
-      recorder.start();
-      recorderRef.current = recorder;
-      setRecording(true);
-    } catch (err: any) {
-      setError(`Microphone unavailable: ${String(err?.message || err)}`);
-    }
+    setPendingDraft({ text, feature: tab.feature, left: AUTO_DRAFT_DELAY_S });
   };
 
-  const stopRecording = () => {
-    recorderRef.current?.stop();
-    setRecording(false);
-  };
-
-  const generate = useMutation({
-    mutationFn: async () => {
+  const generate = useMutation<any, Error, { text?: string } | undefined>({
+    mutationFn: async (override) => {
       if (tab.kind === "transcript") {
         return post<any>("/notes/generate", {
           feature: tab.feature,
-          transcript,
+          transcript: override?.text ?? transcript,
           title: `${tab.title} transcript`,
         });
       }
@@ -207,6 +186,49 @@ export function NotesPage() {
     },
     onError: (err: any) => setError(String(err?.message || err)),
   });
+
+  // Counts the cancel window down, then drafts. Editing the text, switching tab or leaving cancels it.
+  useEffect(() => {
+    if (!pendingDraft) return;
+    if (pendingDraft.feature !== tab.feature) {
+      setPendingDraft(null);
+      return;
+    }
+    if (pendingDraft.left <= 0) {
+      generate.mutate({ text: pendingDraft.text });
+      setPendingDraft(null);
+      return;
+    }
+    const timer = window.setTimeout(() => setPendingDraft((current) => (current ? { ...current, left: current.left - 1 } : current)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [pendingDraft, tab.feature]);
+
+  const uploadLab = useMutation({
+    mutationFn: (file: File) => uploadReport(file, "lab_report"),
+    onSuccess: (result: any) => {
+      setError("");
+      setLabResult(result);
+      queryClient.invalidateQueries();
+    },
+    onError: (err: any) => setError(String(err?.message || err)),
+  });
+
+  const chooseLabReport = (file: File | undefined) => {
+    if (!file) return;
+    setError("");
+    setLabResult(null);
+    const name = file.name.toLowerCase();
+    const readable = file.type.startsWith("image/") || file.type === "application/pdf" || /\.(pdf|png|jpe?g|gif|webp|bmp|tiff?)$/.test(name);
+    if (!readable) {
+      setError("Choose a PDF or an image of the report.");
+      return;
+    }
+    if (file.size > MAX_REPORT_BYTES) {
+      setError("File too large (max 12 MB).");
+      return;
+    }
+    uploadLab.mutate(file);
+  };
 
   const reviewLab = useMutation({
     mutationFn: (eventId: string) => post(`/labs/${eventId}/review`),
@@ -233,6 +255,7 @@ export function NotesPage() {
     setParams({ tab: key });
     setTranscript(next.transcript);
     setError("");
+    setPendingDraft(null);
   };
 
   const intro = useMemo(() => {
@@ -277,13 +300,20 @@ export function NotesPage() {
             {tab.kind === "transcript" ? (
               <>
                 <label className="field-label">Consultation input</label>
-                <textarea className="textarea" value={transcript} onChange={(event) => setTranscript(event.target.value)} />
+                <textarea
+                  className="textarea"
+                  value={transcript}
+                  onChange={(event) => {
+                    setTranscript(event.target.value);
+                    setPendingDraft(null);
+                  }}
+                />
                 {tab.feature === "F1" ? (
                   <div className={`banner ${consentGranted ? "success" : "warning"} mt-2`}>
                     <div className="flex items-center justify-between gap-2">
                       <span>
                         {consentGranted
-                          ? "Consent is recorded. Audio capture is available; transcription uses Whisper in live mode."
+                          ? "Consent is recorded. Record audio or upload an audio file; transcription needs the OpenAI key (live mode)."
                           : "Consent for consultation capture has not been recorded. Audio capture is blocked until it is."}
                       </span>
                       <div className="button-row">
@@ -291,15 +321,32 @@ export function NotesPage() {
                           <button className="btn btn-sm" onClick={() => recordConsent.mutate()} disabled={recordConsent.isPending}>
                             {recordConsent.isPending ? "Recording consent…" : "Record consent"}
                           </button>
-                        ) : recording ? (
-                          <button className="btn btn-danger btn-sm" onClick={stopRecording}>Stop & transcribe</button>
-                        ) : (
-                          <button className="btn btn-sm" onClick={startRecording} disabled={transcribing}>
-                            {transcribing ? <><span className="spinner" /> Transcribing…</> : "Record audio"}
-                          </button>
-                        )}
+                        ) : null}
+                        <VoiceInput
+                          consentGranted={consentGranted}
+                          disabled={generate.isPending || pendingDraft !== null}
+                          onTranscribingChange={(active) => {
+                            if (active) voiceFeatureRef.current = tab.feature;
+                            setTranscribing(active);
+                          }}
+                          onTranscript={onVoiceTranscript}
+                        />
                       </div>
                     </div>
+                  </div>
+                ) : null}
+                {transcribing || pendingDraft || generate.isPending ? (
+                  <div className="banner mt-2" role="status">
+                    {transcribing ? (
+                      <><span className="spinner" /> Transcribing...</>
+                    ) : pendingDraft ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <span>Drafting in {pendingDraft.left} s. The transcript is in the box above; you can edit it first.</span>
+                        <button className="btn btn-sm" onClick={() => setPendingDraft(null)}>Cancel</button>
+                      </div>
+                    ) : (
+                      <><span className="spinner" /> Drafting...</>
+                    )}
                   </div>
                 ) : null}
                 <div className="button-row mt-2">
@@ -307,7 +354,7 @@ export function NotesPage() {
                     {generate.isPending ? <><span className="spinner" /> Generating draft…</> : "Generate draft"}
                   </button>
                   <button className="btn" onClick={() => setTranscript(tab.transcript)}>Load seeded transcript</button>
-                  <span className="small muted">Paste text in the demo; audio upload uses Whisper in production.</span>
+                  {tab.feature === "F1" ? <span className="small muted">Paste text, record, or upload an audio file.</span> : <span className="small muted">Paste or type the text; this tab has no voice input.</span>}
                 </div>
                 {tab.feature === "F1" ? <ConsultNoteStatus result={consultResult} /> : null}
                 {tab.feature === "F1" || tab.feature === "F2" ? (
@@ -387,7 +434,62 @@ export function NotesPage() {
               <>
                 <div className="flex items-center justify-between mb-2">
                   <div className="card-sub">Latest results · {labs.data?.reviewed_count ?? 0} reviewed</div>
+                  <label
+                    className="btn btn-primary btn-sm"
+                    title={canUpload ? undefined : "Your role cannot upload documents"}
+                    style={canUpload ? undefined : { opacity: 0.5, pointerEvents: "none" }}
+                  >
+                    Upload lab report
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      style={{ display: "none" }}
+                      disabled={!canUpload || uploadLab.isPending}
+                      onChange={(event) => {
+                        chooseLabReport(event.target.files?.[0]);
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
                 </div>
+                {uploadLab.isPending ? <div className="banner mb-2" role="status"><span className="spinner" /> Reading report...</div> : null}
+                {labResult ? (
+                  <div className={`banner ${labResult.ocr_status === "confirmed" || labResult.auto_committed ? "success" : "warning"} mb-2`} role="status">
+                    {labResult.ocr_status === "confirmed" || labResult.auto_committed ? (
+                      <div>
+                        Saved {Array.isArray(labResult.labs) ? labResult.labs.length : labResult.extracted?.fields?.length ?? 0} result(s) from {labResult.filename} to the record as unreviewed. They are in the table below; a doctor still reviews each one.
+                      </div>
+                    ) : labResult.ocr_status === "needs_manual_entry" ? (
+                      <div>
+                        No text could be read from {labResult.filename}. Type the values from the original in Documents. <Link to="/documents?tab=inbound">Review in Documents</Link>
+                      </div>
+                    ) : labResult.ocr_status === "needs_confirmation" ? (
+                      <div>
+                        Some values in {labResult.filename} are low confidence. Confirm them in Documents before they are saved. <Link to="/documents?tab=inbound">Review in Documents</Link>
+                      </div>
+                    ) : (
+                      <div>
+                        <div>Read {labResult.extracted?.fields?.length ?? 0} value(s) from {labResult.filename}. Nothing is saved yet. <Link to="/documents?tab=inbound">Review in Documents</Link></div>
+                        {labResult.auto_commit_error ? <div className="small mt-1">Automatic save did not complete: {String(labResult.auto_commit_error)}</div> : null}
+                      </div>
+                    )}
+                    {!(labResult.ocr_status === "confirmed" || labResult.auto_committed) && labResult.extracted?.fields?.length ? (
+                      <table className="table mt-2">
+                        <thead><tr><th>Test</th><th>Value</th><th>Reference</th><th>Confidence</th></tr></thead>
+                        <tbody>
+                          {labResult.extracted.fields.map((field: any, index: number) => (
+                            <tr key={`${field.name}-${index}`}>
+                              <td>{field.name}</td>
+                              <td className="mono">{field.value} {field.unit}</td>
+                              <td className="mono small muted">{field.reference_range || "—"}</td>
+                              <td>{Math.round((field.confidence ?? 0) * 100)}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : null}
+                  </div>
+                ) : null}
                 <table className="table">
                   <thead><tr><th>Test</th><th>Value</th><th>Reference</th><th>Status</th><th /></tr></thead>
                   <tbody>

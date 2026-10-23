@@ -3,6 +3,12 @@
 A task moves along a fixed path: proposed, accepted, acknowledged, in progress, completed. A task is
 not a completion (PRD rule 4): nothing skips acknowledgement, and a finished task only comes back
 through ``reopen`` with a reason. Overdue work escalates by itself through the background job.
+
+There is one acting user, the doctor. Assignment is data: a task keeps the assignee's name
+("Nurse Anita Rao") but the doctor acknowledges, works, escalates and reopens it on the assignee's
+behalf. The stored assignee fields never change; the audit entry names the doctor as the actor and
+carries ``on_behalf_of`` (in ``meta`` and ``after``) when the assignee is someone else. Overdue
+escalation is not on behalf of anyone: its actor is the "Escalation engine".
 """
 
 from __future__ import annotations
@@ -73,38 +79,54 @@ def check_transition(task: Task, new_status: str) -> None:
     )
 
 
+def _behalf(task: Task) -> dict:
+    """``on_behalf_of`` for the audit trail: the assignee, when someone other than the actor."""
+    if task.assigned_to and task.assigned_to != acting_name():
+        return {"on_behalf_of": task.assigned_to}
+    return {}
+
+
 def acknowledge(db: Session, task: Task) -> Task:
-    """Only the assignee acknowledges, and only an accepted task."""
+    """The acting doctor acknowledges an accepted task on behalf of its assignee.
+
+    The task must be assigned (400) and accepted (409). ``acknowledged_by`` keeps the assignee's
+    name; the audit actor is the doctor and ``on_behalf_of`` is the assignee.
+    """
     if not task.assigned_to:
         raise HTTPException(400, "Assign the task before it can be acknowledged")
-    if acting_name() != task.assigned_to:
-        raise HTTPException(403, f"Only the assignee ({task.assigned_to}) can acknowledge this task")
     check_transition(task, "acknowledged")
     before = {"status": task.status}
     task.status = "acknowledged"
     task.acknowledged_at = utcnow()
-    task.acknowledged_by = acting_name()
+    task.acknowledged_by = task.assigned_to
+    behalf = _behalf(task)
     add_audit(
         db,
         "task_acknowledged",
         "task",
         task.id,
         task.patient_id,
-        actor_name=task.acknowledged_by,
+        actor_name=acting_name(),
         before=before,
-        after={"status": task.status, "title": task.title},
+        after={"status": task.status, "title": task.title, **behalf},
+        meta=behalf,
     )
     return task
 
 
 def change_status(db: Session, task: Task, new_status: str) -> Task:
+    """Move a task along the path; the doctor acts on behalf of the assignee."""
     if new_status == "acknowledged":
         return acknowledge(db, task)
     check_transition(task, new_status)
     before = {"status": task.status}
     task.status = new_status
+    behalf = _behalf(task)
+    after = {"status": task.status, "title": task.title, **behalf}
     if new_status == "completed":
         task.completed_at = utcnow()
+        if task.assigned_to:
+            after["completed_by"] = task.assigned_to
     add_audit(
         db,
         "task_status_changed",
@@ -113,13 +135,14 @@ def change_status(db: Session, task: Task, new_status: str) -> Task:
         task.patient_id,
         actor_name=acting_name(),
         before=before,
-        after={"status": task.status, "title": task.title},
+        after=after,
+        meta=behalf,
     )
     return task
 
 
 def escalate(db: Session, task: Task, reason: str) -> Task:
-    """Manual escalation; the reason was already checked by EscalateRequest."""
+    """Manual escalation by the doctor (on behalf of the assignee); the reason was already checked."""
     before = {"escalation_level": task.escalation_level or 0}
     task.escalation_level = min((task.escalation_level or 0) + 1, 2)
     task.escalated_at = utcnow()
@@ -136,12 +159,15 @@ def escalate(db: Session, task: Task, reason: str) -> Task:
             "escalation_level": task.escalation_level,
             "escalation_reason": task.escalation_reason,
             "kind": "manual",
+            **_behalf(task),
         },
+        meta=_behalf(task),
     )
     return task
 
 
 def reopen(db: Session, task: Task, reason: str) -> Task:
+    """Reopen a closed task, with a reason, as the doctor on behalf of the assignee."""
     if task.status not in CLOSED:
         raise HTTPException(409, f"Task is {task.status}; only completed or cancelled tasks can be reopened")
     before = {
@@ -161,8 +187,8 @@ def reopen(db: Session, task: Task, reason: str) -> Task:
         task.patient_id,
         actor_name=acting_name(),
         before=before,
-        after={"status": task.status, "title": task.title, "reason": reason},
-        meta={"reason": reason},
+        after={"status": task.status, "title": task.title, "reason": reason, **_behalf(task)},
+        meta={"reason": reason, **_behalf(task)},
     )
     return task
 

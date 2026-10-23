@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from datetime import datetime
 from typing import Any
 
@@ -104,3 +105,19 @@ def inject_lab(name: str, value: str, unit: str, ref: str, flag: str, at: dateti
 def discharge(client, **approve_body) -> dict:
     draft = client.post("/api/discharge/generate").json()["draft"]
     return client.post(f"/api/drafts/{draft['id']}/approve", json=approve_body)
+
+
+@contextmanager
+def as_patient(patient_id: str):
+    """Act on a patient through services, as the seed does.
+
+    Clinical routes refuse non-browsable cohort patients, so tests that need a cohort record
+    reach it here instead of through ``X-Patient-Id``.
+    """
+    from app.services import identity
+
+    tokens = identity.set_context(None, patient_id)
+    try:
+        yield
+    finally:
+        identity.reset_context(tokens)

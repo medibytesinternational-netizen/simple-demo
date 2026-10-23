@@ -17,9 +17,6 @@ from app.services.ocr import (
 )
 
 PNG = b"\x89PNG\r\n\x1a\n"
-NURSE = {"X-User-Id": "u_anita"}
-PHARMACIST = {"X-User-Id": "u_dev"}
-BILLING = {"X-User-Id": "u_billing"}
 
 LAB = [
     "CITY LAB REPORT",
@@ -60,7 +57,8 @@ def test_foreign_pdf_values_come_through_with_units_and_ranges(client):
         "88", "mL/min/1.73m2", "> 90")
     assert all(f["confidence"] == 0.92 and f["page"] == 1 for f in by_name.values())
     assert "3.1" not in {f["value"] for f in by_name.values()}  # none of the seeded values
-    assert body["ocr_status"] == "reviewed"
+    assert body["ocr_status"] == "confirmed"
+    assert body["auto_committed"] is True
 
 
 def test_collected_date_is_read_from_the_report_else_the_upload_date(client):
@@ -153,16 +151,14 @@ def test_manual_entry_rules(client):
     url = f"/api/documents/{doc['id']}/fields"
     assert client.post(url, json={"name": "  ", "value": "1"}).status_code == 400
     assert client.post(url, json={"name": "Sodium", "value": " "}).status_code == 400
-    assert client.post(url, json={"name": "Sodium", "value": "140"}, headers=PHARMACIST).status_code == 403
-    assert client.post(url, json={"name": "Sodium", "value": "140"}, headers=NURSE).status_code == 200
-    assert client.post(f"/api/documents/{doc['id']}/commit", headers=NURSE).status_code == 200
+    assert client.post(url, json={"name": "Sodium", "value": "140"}).status_code == 200
+    assert client.post(f"/api/documents/{doc['id']}/commit").status_code == 200
     assert client.post(url, json={"name": "Urea", "value": "5"}).status_code == 409
 
 
 def test_second_commit_is_refused_and_adds_no_events(client):
     doc = upload(client, "lab.pdf", text_pdf(LAB), "application/pdf").json()
-    assert client.post(f"/api/documents/{doc['id']}/commit").status_code == 200
-    assert len(events_of(client, doc["id"])) == 3
+    assert len(events_of(client, doc["id"])) == 3  # a clean lab report is committed by the upload itself
     assert client.post(f"/api/documents/{doc['id']}/commit").status_code == 409
     assert len(events_of(client, doc["id"])) == 3
 

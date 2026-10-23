@@ -16,7 +16,6 @@ from app.models import AuditEntry, Task, TimelineEvent
 from .helpers import SHORT_VISIT, discharge, inject_event, inject_lab, texts
 
 REASON = "Reviewed with the team before discharge"
-NURSE = {"X-User-Id": "u_anita"}
 
 
 def _generate(client) -> dict:
@@ -361,10 +360,3 @@ def test_a_refused_generation_after_discharge_is_not_charged(client):
     assert client.post("/api/discharge/generate").status_code == 409
     assert client.get("/api/credits").json()["balance"] == balance
 
-
-def test_only_a_doctor_generates_and_approves_a_discharge_summary(client):
-    assert client.post("/api/discharge/generate", headers=NURSE).status_code == 403
-    draft = _generate(client)
-    response = client.post(f"/api/drafts/{draft['id']}/approve", json={"override": {"reason": REASON}}, headers=NURSE)
-    assert response.status_code == 403
-    assert client.get("/api/discharge/readiness").json()["encounter_status"] == "active"

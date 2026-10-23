@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { get, post, session } from "../api";
-import type { AppState, AuditEntry, Credits, Meta, PatientRow, UserInfo } from "../types";
+import { ApiError, get, post, session } from "../api";
+import type { AppState, AuditEntry, Credits, Meta } from "../types";
 import { EvidenceDrawer } from "./Evidence";
 import { Modal } from "./Modal";
 import IntegrationBanner from "../features/s17/IntegrationBanner";
@@ -18,6 +18,11 @@ const NAV = [
   { path: "/dashboard", label: "Dashboard", icon: "DB" },
 ];
 
+// One doctor and one browsable patient (Ravi). A browser that last ran when the app had roles or a
+// patient picker may still hold those ids; drop them once at load so the first request is not refused.
+session.setUser(null);
+if (session.patient() !== "pat_ravi") session.setPatient(null);
+
 export function Shell() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -31,22 +36,16 @@ export function Shell() {
     queryFn: () => get<AppState>(`/patients/${patientId}/state`),
     enabled: !!patientId,
   });
-  const users = useQuery<{ users: UserInfo[] }>({ queryKey: ["users"], queryFn: () => get<{ users: UserInfo[] }>("/users") });
-  const patients = useQuery<{ patients: PatientRow[] }>({ queryKey: ["patients"], queryFn: () => get<{ patients: PatientRow[] }>("/patients") });
   const credits = useQuery<Credits>({ queryKey: ["credits"], queryFn: () => get<Credits>("/credits"), refetchInterval: 15000 });
 
-  function switchUser(id: string) {
-    session.setUser(id);
-    queryClient.clear();
-    const home = users.data?.users.find((user) => user.id === id)?.home ?? "/timeline";
-    navigate(home);
-  }
+  // A patient the server refuses (a stale id) falls back to Ravi instead of leaving every page in error.
+  useEffect(() => {
+    if (meta.error instanceof ApiError && meta.error.status === 403 && session.patient()) {
+      session.setPatient(null);
+      queryClient.invalidateQueries();
+    }
+  }, [meta.error, queryClient]);
 
-  function switchPatient(id: string) {
-    session.setPatient(id);
-    queryClient.clear();
-    navigate("/timeline");
-  }
   const audit = useQuery<{ audit: AuditEntry[] }>({
     queryKey: ["audit", "shell"],
     queryFn: () => get<{ audit: AuditEntry[] }>("/audit?limit=80"),
@@ -116,18 +115,6 @@ export function Shell() {
           <span className={`mode-badge ${meta.data?.llm_mode === "live" ? "live" : ""}`} title={meta.data?.live_available ? "OpenAI key detected" : "Add OPENAI_API_KEY to switch to live GPT-4o"}>
             {meta.data?.llm_mode === "live" ? "Live GPT-4o" : "Cached demo"}
           </span>
-          <label className="small muted" htmlFor="patient-select">Patient</label>
-          <select id="patient-select" className="btn btn-sm" value={meta.data?.patient.id ?? ""} onChange={(event) => switchPatient(event.target.value)}>
-            {patients.data?.patients.map((patient) => (
-              <option key={patient.id} value={patient.id}>{patient.name} · {patient.mrn}</option>
-            ))}
-          </select>
-          <label className="small muted" htmlFor="user-select">Signed in as</label>
-          <select id="user-select" className="btn btn-sm" value={meta.data?.user.id ?? ""} onChange={(event) => switchUser(event.target.value)}>
-            {users.data?.users.map((user) => (
-              <option key={user.id} value={user.id}>{user.name} · {user.role}</option>
-            ))}
-          </select>
           <span className="badge badge-neutral" title={`Pack of ${credits.data?.pack_size ?? "—"} credits. Reading a report 1, voice note 2, medicine reconciliation 2, report analysis 4, discharge summary 5.`}>
             {credits.data ? `${credits.data.balance.toLocaleString()} credits` : "— credits"}
           </span>

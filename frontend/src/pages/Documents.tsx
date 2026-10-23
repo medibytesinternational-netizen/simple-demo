@@ -8,7 +8,15 @@ import { useCan } from "../session";
 import { DocTypeSelect } from "../features/f08/DocTypeSelect";
 import { ManualEntryForm } from "../features/f08/ManualEntryForm";
 import { uploadReport } from "../features/f08/upload";
-import { commitSummary, docTypeLabel, type CommitResult, type DocType, type F08Document } from "../features/f08/types";
+import {
+  AUTO_ACTOR,
+  commitSummary,
+  docTypeLabel,
+  type CommitResult,
+  type DocType,
+  type F08Document,
+  type UploadResult,
+} from "../features/f08/types";
 
 export function DocumentsPage() {
   const [params, setParams] = useSearchParams();
@@ -55,14 +63,28 @@ export function DocumentsPage() {
 
   const upload = useMutation({
     mutationFn: (file: File) => uploadReport(file, docType),
-    onSuccess: (result: any) => {
+    onSuccess: (result: UploadResult) => {
       setSelectedId(result.id);
       setError("");
-      setSuccess(
-        result.ocr_status === "needs_manual_entry"
-          ? "Upload complete. No text could be read from this file. Type the values from the original."
-          : "Upload complete. Check the values against the original before saving.",
-      );
+      if (result.auto_committed) {
+        const alerts = result.new_alerts.map((alert) => alert.title);
+        setSuccess(
+          `Saved to the timeline automatically: ${commitSummary(result.doc_type, result.events.length)}. ` +
+            "The values are marked unreviewed; a doctor must review them." +
+            (alerts.length ? ` New alerts: ${alerts.join("; ")}.` : ""),
+        );
+      } else if (result.auto_commit_error) {
+        setSuccess(
+          `Upload complete, but the automatic save did not finish (${result.auto_commit_error}). ` +
+            "Check the values against the original and use Save to timeline.",
+        );
+      } else {
+        setSuccess(
+          result.ocr_status === "needs_manual_entry"
+            ? "Upload complete. No text could be read from this file. Type the values from the original."
+            : "Upload complete. Check the values against the original before saving.",
+        );
+      }
       queryClient.invalidateQueries();
     },
     onError: (err: any) => setError(String(err?.message || err)),
@@ -285,7 +307,11 @@ export function DocumentsPage() {
                     </span>
                   </div>
                   {document.data.ocr_status === "confirmed" ? (
-                    <div className="banner success mt-2">Saved. The values are on the timeline with this document as their source.</div>
+                    <div className="banner success mt-2">
+                      {document.data.confirmed_by === AUTO_ACTOR
+                        ? "Saved automatically (clean lab report). The values are on the timeline with this document as their source and stay unreviewed until a doctor reviews them."
+                        : "Saved. The values are on the timeline with this document as their source."}
+                    </div>
                   ) : null}
                 </div>
               </div>
@@ -296,7 +322,7 @@ export function DocumentsPage() {
             <div className="card">
               <div className="card-head"><div className="card-title">What OCR does not decide</div></div>
               <div className="card-pad small muted" style={{ lineHeight: 1.7 }}>
-                The reader copies text from the file and gives a confidence. It does not write to the record. A person confirms uncertain values and saves; only then does anything reach the timeline. If no text can be read, nothing is filled in and you type the values.
+                The reader copies text from the file and gives a confidence. It does not write to the record, with one exception: a clean lab report (every value read at 80% confidence or more) is saved on upload as unreviewed results, and a doctor still reviews them. For every other report, a person confirms uncertain values and saves; only then does anything reach the timeline. If no text can be read, nothing is filled in and you type the values.
               </div>
             </div>
           </div>

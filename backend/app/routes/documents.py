@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 import uuid
 from pathlib import Path
@@ -34,6 +35,10 @@ from .common import (
 )
 
 router = APIRouter()
+log = logging.getLogger(__name__)
+
+# Actor recorded when a clean lab report is saved by the upload handler rather than by a person.
+AUTO_ACTOR = "system (auto)"
 
 # PRD credit schedule: reading a lab report or prescription is "report reading";
 # radiology and discharge reports are "report analysis".
@@ -127,8 +132,47 @@ async def document_upload(
         doc_type=doc_type,
     )
     run_ocr(db, document)
+    # Persist the document, the OCR audit entry and the credit charge first. If the auto-commit below
+    # fails, this is the state the document is left in (reviewed, nothing on the timeline).
     db.commit()
-    return _doc_dict(document)
+    outcome: dict[str, Any] = {
+        "auto_committed": False,
+        "auto_commit_error": None,
+        "labs": [],
+        "events": [],
+        "new_alerts": [],
+    }
+    if document.doc_type == "lab_report" and document.ocr_status == "reviewed":
+        document_id, patient_id = document.id, document.patient_id
+        try:
+            events, alerts = _commit_and_evaluate(db, document, AUTO_ACTOR, auto=True)
+            db.commit()
+        except Exception as exc:  # the upload itself must still succeed
+            db.rollback()
+            log.warning("Auto-commit of document %s failed: %s", document_id, exc)
+            message = str(getattr(exc, "detail", None) or exc) or exc.__class__.__name__
+            outcome["auto_commit_error"] = message
+            add_audit(
+                db,
+                "document_auto_commit_failed",
+                "document",
+                document_id,
+                patient_id,
+                actor_type="system",
+                actor_name=AUTO_ACTOR,
+                after={"error": message},
+                meta={"trigger": "upload"},
+            )
+            db.commit()
+        else:
+            dicts = [event_to_dict(event) for event in events]
+            outcome.update(
+                auto_committed=True,
+                labs=dicts,
+                events=dicts,
+                new_alerts=[{"id": a.id, "rule_id": a.rule_id, "title": a.title} for a in alerts],
+            )
+    return {**_doc_dict(document), **outcome}
 
 
 @router.get("/documents/{document_id}")
@@ -222,8 +266,12 @@ def document_add_field(document_id: str, body: ManualFieldRequest, db: Session =
     return _doc_dict(document)
 
 
-def _commit_document(db: Session, document: Document, actor: str) -> list[TimelineEvent]:
-    """Write the confirmed fields to the timeline as the event type that matches the document."""
+def _commit_document(db: Session, document: Document, actor: str, *, auto: bool = False) -> list[TimelineEvent]:
+    """Write the confirmed fields to the timeline as the event type that matches the document.
+
+    ``auto`` is the upload handler saving a clean lab report: the author and audit actor are the
+    system, not a person, and a single ``document_auto_committed`` entry replaces ``document_confirmed``.
+    """
     if document.ocr_status == "confirmed":
         raise HTTPException(409, "This document is already on the timeline")
     fields = (document.extracted or {}).get("fields", [])
@@ -240,10 +288,11 @@ def _commit_document(db: Session, document: Document, actor: str) -> list[Timeli
         patient_id=document.patient_id,
         encounter_id=document.encounter_id,
         source="F8",
-        author_type="human",
+        author_type="system" if auto else "human",
         author_name=actor,
         document_id=document.id,
     )
+    audit_actor: dict[str, Any] = {"actor_type": "system", "actor_name": actor} if auto else {}
     created: list[TimelineEvent] = []
     if doc_type == "prescription":
         for field in fields:
@@ -317,12 +366,13 @@ def _commit_document(db: Session, document: Document, actor: str) -> list[Timeli
     document.confirmed_at = utcnow()
     add_audit(
         db,
-        "document_confirmed",
+        "document_auto_committed" if auto else "document_confirmed",
         "document",
         document.id,
         document.patient_id,
         actor_name=actor,
         after={"events_created": [event.id for event in created], "doc_type": doc_type},
+        **({"actor_type": "system", "meta": {"trigger": "upload", "uploaded_by": document.uploaded_by}} if auto else {}),
     )
     for event in created:
         add_audit(
@@ -332,16 +382,24 @@ def _commit_document(db: Session, document: Document, actor: str) -> list[Timeli
             event.id,
             document.patient_id,
             after={"type": event.type, "title": event.title, "source": "F8"},
+            **audit_actor,
         )
     return created
+
+
+def _commit_and_evaluate(
+    db: Session, document: Document, actor: str, *, auto: bool = False
+) -> tuple[list[TimelineEvent], list[Any]]:
+    """The one commit path: write the events, then re-run the safety rules. The caller commits the session."""
+    events = _commit_document(db, document, actor, auto=auto)
+    patient, encounter, state = _state(db, document.encounter_id)
+    return events, evaluate_rules(db, patient, encounter, state)
 
 
 @router.post("/documents/{document_id}/commit", dependencies=[Depends(require("confirm_document"))])
 def document_commit(document_id: str, db: Session = Depends(get_db)):
     document = _get_document(db, document_id)
-    events = _commit_document(db, document, acting_name())
-    patient, encounter, state = _state(db, document.encounter_id)
-    created_alerts = evaluate_rules(db, patient, encounter, state)
+    events, created_alerts = _commit_and_evaluate(db, document, acting_name())
     db.commit()
     dicts = [event_to_dict(event) for event in events]
     return {

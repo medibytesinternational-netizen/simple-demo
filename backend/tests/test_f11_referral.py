@@ -17,10 +17,6 @@ from .helpers import inject_lab, joined
 
 PATIENT = "pat_ravi"
 PLACEHOLDER = "Question to be written by the referring clinician"
-NURSE = {"X-User-Id": "u_anita"}
-PHARMACIST = {"X-User-Id": "u_dev"}
-BILLING = {"X-User-Id": "u_billing"}
-MGMT = {"X-User-Id": "u_mgmt"}
 QUESTION = "Please advise on whether the falling kidney function needs a change of the current medicines."
 
 
@@ -189,22 +185,10 @@ def test_referral_lifecycle_writes_timeline_events(client):
         db.close()
 
 
-def test_nurse_may_acknowledge_but_other_roles_may_not(client):
+def test_a_sent_referral_can_be_acknowledged(client):
     referral = _sent_referral(client)
     url = f"/api/referrals/{referral['id']}/acknowledge"
-    for headers in (PHARMACIST, BILLING, MGMT):
-        assert client.post(url, json={}, headers=headers).status_code == 403
-    response = client.post(url, json={}, headers=NURSE)
+    response = client.post(url, json={})
     assert response.status_code == 200
     assert response.json()["status"] == "acknowledged"
 
-
-def test_only_clinical_roles_draft_and_only_a_doctor_approves(client):
-    known = {r["id"] for r in _referrals(client)}
-    assert client.post("/api/referrals/generate", json={"specialty": "Cardiology"}, headers=MGMT).status_code == 403
-    assert client.post("/api/referrals/generate", json={"specialty": "Cardiology"}, headers=BILLING).status_code == 403
-    draft = client.post(
-        "/api/referrals/generate", json={"specialty": "Cardiology", "question": QUESTION}, headers=NURSE
-    ).json()["draft"]
-    assert client.post(f"/api/drafts/{draft['id']}/approve", json={}, headers=NURSE).status_code == 403
-    assert {r["id"] for r in _referrals(client)} == known

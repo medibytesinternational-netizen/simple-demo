@@ -171,20 +171,19 @@ def test_overdue_task_escalates_without_a_manual_sweep(client):
     assert listed[task["id"]]["escalation_level"] >= 1
 
 
-NURSE = {"X-User-Id": "u_anita"}
 
 
 def test_task_cannot_skip_acknowledgement(client):
     task = _task(client)
-    response = client.patch(f"/api/tasks/{task['id']}", json={"status": "completed"}, headers=NURSE)
+    response = client.patch(f"/api/tasks/{task['id']}", json={"status": "completed"})
     assert response.status_code in (400, 409)
 
 
 def test_completed_task_cannot_be_reopened_without_a_reason(client):
     task = _task(client)
-    assert client.post(f"/api/tasks/{task['id']}/acknowledge", headers=NURSE).status_code == 200
-    assert client.patch(f"/api/tasks/{task['id']}", json={"status": "completed"}, headers=NURSE).status_code == 200
-    assert client.patch(f"/api/tasks/{task['id']}", json={"status": "proposed"}, headers=NURSE).status_code in (400, 409)
+    assert client.post(f"/api/tasks/{task['id']}/acknowledge").status_code == 200
+    assert client.patch(f"/api/tasks/{task['id']}", json={"status": "completed"}).status_code == 200
+    assert client.patch(f"/api/tasks/{task['id']}", json={"status": "proposed"}).status_code in (400, 409)
 
 
 def test_manual_escalation_needs_a_reason(client):
@@ -192,11 +191,11 @@ def test_manual_escalation_needs_a_reason(client):
     assert client.post(f"/api/tasks/{task['id']}/escalate", json={}).status_code in (400, 422)
 
 
-def test_only_the_assignee_can_acknowledge(client):
-    task = _task(client)  # assigned to the nurse; the default user is the doctor
+def test_the_doctor_acknowledges_on_behalf_of_the_assignee(client):
+    task = _task(client)  # assigned to the nurse; the acting user is the doctor
     response = client.post(f"/api/tasks/{task['id']}/acknowledge")
-    assert response.status_code in (400, 403)
-    assert client.post(f"/api/tasks/{task['id']}/acknowledge", headers=NURSE).status_code == 200
+    assert response.status_code == 200
+    assert response.json()["acknowledged_by"] == "Nurse Anita Rao"
 
 
 # ---------- Shared record (PRD page 3) and write path (rules 1 and 4) ----------

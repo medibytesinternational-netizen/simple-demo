@@ -8,10 +8,6 @@ import pytest
 
 from .helpers import inject_event
 
-NURSE = {"X-User-Id": "u_anita"}
-MGMT = {"X-User-Id": "u_mgmt"}
-PHARM = {"X-User-Id": "u_dev"}
-HMS = {"X-User-Id": "u_hms"}
 WARD = "enc_ipd_1"  # Ward 4B, active
 ICU_CATEGORIES = {"ventilator", "infusion", "neuro", "lines"}
 WARD_CATEGORIES = {"vitals", "intake_output", "skin", "medication"}
@@ -76,7 +72,7 @@ def device_event_count() -> int:
 
 
 def test_posted_reading_shows_on_sheet_with_unit_time_device_and_real_source(client):
-    response = client.post("/api/icu/readings", json=reading(), headers=NURSE)
+    response = client.post("/api/icu/readings", json=reading())
     assert response.status_code == 200, response.text
     posted = response.json()
     assert posted["duplicate"] is False
@@ -89,40 +85,40 @@ def test_posted_reading_shows_on_sheet_with_unit_time_device_and_real_source(cli
     row = event_row(entry["source_event_id"])
     assert row[0] == "device_reading"
     assert row[1]["value"] == "88" and row[1]["chart"] == "ward"
-    assert row[3] == "Nurse Anita Rao"  # attributed to the acting user, not to the device field
+    assert row[3] == "Dr. Meera Shah"  # attributed to the acting user, not to the device field
     assert row[2] == WARD
 
 
 def test_numeric_value_without_unit_is_refused(client):
     before = device_event_count()
-    response = client.post("/api/icu/readings", json=reading(unit=""), headers=NURSE)
+    response = client.post("/api/icu/readings", json=reading(unit=""))
     assert response.status_code == 422
     assert "unit" in response.json()["detail"].lower()
     assert device_event_count() == before
     # a value that is not a number needs no unit
-    ok = client.post("/api/icu/readings", json=reading(category="lines", label="Peripheral IV", value="Right forearm", unit=""), headers=NURSE)
+    ok = client.post("/api/icu/readings", json=reading(category="lines", label="Peripheral IV", value="Right forearm", unit=""))
     assert ok.status_code == 200 and ok.json()["duplicate"] is False
 
 
 def test_unknown_category_and_bad_time_are_refused(client):
     before = device_event_count()
-    assert client.post("/api/icu/readings", json=reading(category="other"), headers=NURSE).status_code == 422
-    assert client.post("/api/icu/readings", json=reading(category="nonsense"), headers=NURSE).status_code == 422
-    assert client.post("/api/icu/readings", json=reading(recorded_at="yesterday morning"), headers=NURSE).status_code == 422
+    assert client.post("/api/icu/readings", json=reading(category="other")).status_code == 422
+    assert client.post("/api/icu/readings", json=reading(category="nonsense")).status_code == 422
+    assert client.post("/api/icu/readings", json=reading(recorded_at="yesterday morning")).status_code == 422
     assert device_event_count() == before
 
 
 def test_duplicate_reading_does_not_double(client):
-    first = client.post("/api/icu/readings", json=reading(), headers=NURSE).json()
+    first = client.post("/api/icu/readings", json=reading()).json()
     after_first = device_event_count()
-    second = client.post("/api/icu/readings", json=reading(), headers=NURSE)
+    second = client.post("/api/icu/readings", json=reading())
     assert second.status_code == 200
     assert second.json()["duplicate"] is True
     assert second.json()["source_event_id"] == first["source_event_id"]
     assert device_event_count() == after_first
     assert len([e for e in sheet(client)["entries"] if e["label"] == "Heart rate"]) == 1
     # a different time is a new reading
-    third = client.post("/api/icu/readings", json=reading(recorded_at="2026-10-20T07:00:00"), headers=NURSE).json()
+    third = client.post("/api/icu/readings", json=reading(recorded_at="2026-10-20T07:00:00")).json()
     assert third["duplicate"] is False
 
 
@@ -131,7 +127,6 @@ def test_chart_routing_each_category_on_a_ward(client, category):
     response = client.post(
         "/api/icu/readings",
         json=reading(category=category, label=f"{category} item", value="x", unit=""),
-        headers=NURSE,
     )
     assert response.status_code == 200, response.text
     expected = "icu" if category in ICU_CATEGORIES else "ward"
@@ -146,7 +141,6 @@ def test_ward_named_icu_routes_everything_to_icu(client):
         response = client.post(
             "/api/icu/readings",
             json=reading(category=category, label=f"{category} item", value="x", unit="", encounter_id=encounter),
-            headers=NURSE,
         )
         assert response.status_code == 200, response.text
         assert response.json()["chart"] == "icu"
@@ -157,7 +151,7 @@ def test_ward_named_icu_routes_everything_to_icu(client):
 
 def test_chart_filter_on_sheet_and_generate(client):
     for category in ("ventilator", "vitals"):
-        client.post("/api/icu/readings", json=reading(category=category, label=f"{category} item", value="x", unit=""), headers=NURSE)
+        client.post("/api/icu/readings", json=reading(category=category, label=f"{category} item", value="x", unit=""))
     both = sheet(client)
     assert {e["chart"] for e in both["entries"] if e["label"].endswith(" item")} == {"icu", "ward"}
     only_icu = sheet(client, chart="icu")
@@ -210,32 +204,27 @@ def test_empty_record_gives_empty_sheet_listing_what_is_missing(fresh):
     assert draft["content"]["entries"] == []
     assert draft["content"]["summary"]["source_event_ids"] == []
     assert "Vital signs" in draft["content"]["not_documented"]
-    fresh.post("/api/icu/readings", json=reading(), headers=NURSE)
+    fresh.post("/api/icu/readings", json=reading())
     after = sheet(fresh)
     assert "Vital signs" not in after["not_documented"]
     assert "Ventilator readings" in after["not_documented"]
 
 
-def test_nurse_can_record_management_cannot(client):
-    assert client.post("/api/icu/readings", json=reading(label="A"), headers=NURSE).status_code == 200
-    assert client.post("/api/icu/readings", json=reading(label="B"), headers=HMS).status_code == 200
-    assert client.post("/api/icu/readings", json=reading(label="C")).status_code == 200  # doctor, the default user
-    before = device_event_count()
-    assert client.post("/api/icu/readings", json=reading(label="D"), headers=MGMT).status_code == 403
-    assert client.post("/api/icu/readings", json=reading(label="E"), headers=PHARM).status_code == 403
-    assert device_event_count() == before
+def test_the_doctor_can_record_readings(client):
+    assert client.post("/api/icu/readings", json=reading(label="A")).status_code == 200
+    assert client.post("/api/icu/readings", json=reading(label="B"), headers={"X-User-Id": "u_meera"}).status_code == 200
 
 
 def test_discharged_encounter_refuses_reading(client):
     before = device_event_count()
-    response = client.post("/api/icu/readings", json=reading(encounter_id="enc_icu_1"), headers=NURSE)
+    response = client.post("/api/icu/readings", json=reading(encounter_id="enc_icu_1"))
     assert response.status_code == 409
     assert "locked" in response.json()["detail"]
     assert device_event_count() == before
 
 
 def test_flow_sheet_draft_is_built_from_events_only(client):
-    client.post("/api/icu/readings", json=reading(category="neuro", label="Pupil check", value="equal and reactive", unit=""), headers=NURSE)
+    client.post("/api/icu/readings", json=reading(category="neuro", label="Pupil check", value="equal and reactive", unit=""))
     draft = client.post(f"/api/icu/flow-sheet/generate?encounter_id={WARD}").json()["draft"]
     entries = draft["content"]["entries"]
     assert [e["label"] for e in entries] == ["Pupil check"]
@@ -245,18 +234,18 @@ def test_flow_sheet_draft_is_built_from_events_only(client):
 
 
 def test_encounter_of_another_patient_is_refused(client):
-    assert client.get("/api/icu/flow-sheet?encounter_id=enc_icu_1", headers={"X-Patient-Id": "pat_ravi"}).status_code == 200
+    assert client.get("/api/icu/flow-sheet?encounter_id=enc_icu_1").status_code == 200
     from app.db import SessionLocal
-    from app.models import Patient
+    from app.models import Encounter
 
     db = SessionLocal()
     try:
-        other = db.query(Patient).filter(Patient.id != "pat_ravi").first()
-        other_id = other.id
+        other_encounter = db.query(Encounter).filter(Encounter.patient_id != "pat_ravi").first().id
     finally:
         db.close()
-    assert client.get("/api/icu/flow-sheet?encounter_id=enc_icu_1", headers={"X-Patient-Id": other_id}).status_code == 404
-    assert client.post("/api/icu/readings", json=reading(encounter_id="enc_icu_1"), headers={"X-Patient-Id": other_id, **NURSE}).status_code == 404
+    # Ravi is the open patient; an encounter that belongs to someone else is refused.
+    assert client.get(f"/api/icu/flow-sheet?encounter_id={other_encounter}").status_code == 404
+    assert client.post("/api/icu/readings", json=reading(encounter_id=other_encounter)).status_code == 404
 
 
 def test_seeded_icu_stay_still_shows_with_derived_chart(client):

@@ -14,10 +14,8 @@ from app import background
 from app.db import SessionLocal, utcnow
 from app.models import Task
 
-NURSE = {"X-User-Id": "u_anita"}
-MGMT = {"X-User-Id": "u_mgmt"}
-PHARMACIST = {"X-User-Id": "u_dev"}
 NURSE_NAME = "Nurse Anita Rao"
+DOCTOR_NAME = "Dr. Meera Shah"
 
 STATES = ["proposed", "accepted", "acknowledged", "in_progress", "completed", "cancelled"]
 ALLOWED = {
@@ -91,7 +89,7 @@ def _audit(client, task_id: str, action: str) -> list[dict]:
 @pytest.mark.parametrize("old,new", PAIRS)
 def test_task_status_follows_the_transition_table(client, old, new):
     task_id = _insert(old, tid=f"tsk_f15_matrix_{old}_{new}")
-    response = client.patch(f"/api/tasks/{task_id}", json={"status": new}, headers=NURSE)
+    response = client.patch(f"/api/tasks/{task_id}", json={"status": new})
     if new in ALLOWED[old]:
         assert response.status_code == 200, response.text
         assert response.json()["status"] == new
@@ -104,7 +102,7 @@ def test_task_status_follows_the_transition_table(client, old, new):
 
 def test_task_cannot_skip_acknowledgement(client):
     task = _make(client)
-    response = client.patch(f"/api/tasks/{task['id']}", json={"status": "completed"}, headers=NURSE)
+    response = client.patch(f"/api/tasks/{task['id']}", json={"status": "completed"})
     assert response.status_code == 409
     assert "acknowledged" in response.json()["detail"]
     assert _row(task["id"])["status"] == "accepted"
@@ -113,73 +111,75 @@ def test_task_cannot_skip_acknowledgement(client):
 
 def test_completing_without_acknowledgement_is_refused_even_when_started(client):
     task = _make(client)
-    assert client.patch(f"/api/tasks/{task['id']}", json={"status": "in_progress"}, headers=NURSE).status_code == 409
+    assert client.patch(f"/api/tasks/{task['id']}", json={"status": "in_progress"}).status_code == 409
     assert _row(task["id"])["status"] == "accepted"
 
 
 def test_task_runs_the_whole_path_with_the_right_people_recorded(client):
     task = _make(client)
-    assert client.post(f"/api/tasks/{task['id']}/acknowledge", headers=NURSE).status_code == 200
-    assert client.patch(f"/api/tasks/{task['id']}", json={"status": "in_progress"}, headers=NURSE).status_code == 200
-    done = client.patch(f"/api/tasks/{task['id']}", json={"status": "completed"}, headers=NURSE)
+    assert client.post(f"/api/tasks/{task['id']}/acknowledge").status_code == 200
+    assert client.patch(f"/api/tasks/{task['id']}", json={"status": "in_progress"}).status_code == 200
+    done = client.patch(f"/api/tasks/{task['id']}", json={"status": "completed"})
     assert done.status_code == 200
     body = done.json()
     assert body["status"] == "completed"
     assert body["acknowledged_by"] == NURSE_NAME
+    assert body["completed_by"] == NURSE_NAME
     assert body["completed_at"]
     changed = _audit(client, task["id"], "task_status_changed")
     assert {row["after"]["status"] for row in changed} == {"in_progress", "completed"}
-    assert all(row["actor_name"] == NURSE_NAME for row in changed)
+    # The doctor did it, on behalf of the assignee; both are on the record.
+    assert all(row["actor_name"] == DOCTOR_NAME for row in changed)
+    assert all(row["meta"]["on_behalf_of"] == NURSE_NAME for row in changed)
 
 
 def test_acknowledge_only_works_on_an_accepted_task(client):
     proposed = _insert("proposed", tid="tsk_f15_ack_proposed")
-    response = client.post(f"/api/tasks/{proposed}/acknowledge", headers=NURSE)
+    response = client.post(f"/api/tasks/{proposed}/acknowledge")
     assert response.status_code == 409
     assert _row(proposed)["status"] == "proposed"
 
 
 # ---------------- assignee rule ----------------
 
-def test_only_the_assignee_can_acknowledge(client):
-    task = _make(client)  # assigned to the nurse; the default user is the doctor
-    refused = client.post(f"/api/tasks/{task['id']}/acknowledge")
-    assert refused.status_code == 403
-    assert _row(task["id"])["status"] == "accepted"
-    assert _row(task["id"])["acknowledged_by"] is None
-    ok = client.post(f"/api/tasks/{task['id']}/acknowledge", headers=NURSE)
+def test_the_doctor_acknowledges_on_behalf_of_the_assignee(client):
+    task = _make(client)  # assigned to the nurse; the acting user is the doctor
+    assert task["assigned_to"] == NURSE_NAME
+    ok = client.post(f"/api/tasks/{task['id']}/acknowledge")
     assert ok.status_code == 200
-    assert ok.json()["acknowledged_by"] == NURSE_NAME
+    assert ok.json()["acknowledged_by"] == NURSE_NAME  # the assignee name stays
+    assert ok.json()["assigned_to"] == NURSE_NAME
     assert ok.json()["status"] == "acknowledged"
+    assert _row(task["id"])["acknowledged_by"] == NURSE_NAME
+    entry = _audit(client, task["id"], "task_acknowledged")
+    assert len(entry) == 1
+    assert entry[0]["actor_name"] == DOCTOR_NAME
+    assert entry[0]["meta"]["on_behalf_of"] == NURSE_NAME
 
 
-def test_acknowledging_through_patch_is_also_assignee_only(client):
+def test_acknowledging_through_patch_is_also_on_behalf_of_the_assignee(client):
     task = _make(client)
-    refused = client.patch(f"/api/tasks/{task['id']}", json={"status": "acknowledged"})
-    assert refused.status_code == 403
-    assert _row(task["id"])["status"] == "accepted"
-    allowed = client.patch(f"/api/tasks/{task['id']}", json={"status": "acknowledged"}, headers=NURSE)
+    allowed = client.patch(f"/api/tasks/{task['id']}", json={"status": "acknowledged"})
     assert allowed.status_code == 200
+    assert allowed.json()["acknowledged_by"] == NURSE_NAME
+    entry = _audit(client, task["id"], "task_acknowledged")
+    assert entry[0]["actor_name"] == DOCTOR_NAME and entry[0]["meta"]["on_behalf_of"] == NURSE_NAME
 
 
 def test_actor_in_the_body_is_ignored_when_acknowledging(client):
     task = _make(client)
-    response = client.post(f"/api/tasks/{task['id']}/acknowledge", json={"actor": NURSE_NAME})
-    assert response.status_code == 403
-    assert _row(task["id"])["acknowledged_by"] is None
+    response = client.post(f"/api/tasks/{task['id']}/acknowledge", json={"actor": "Somebody Else"})
+    assert response.status_code == 200
+    assert response.json()["acknowledged_by"] == NURSE_NAME
+    entry = _audit(client, task["id"], "task_acknowledged")
+    assert entry[0]["actor_name"] == DOCTOR_NAME
 
 
 def test_unassigned_task_cannot_be_acknowledged(client):
     task_id = _insert("accepted", assigned_to=None, tid="tsk_f15_unassigned")
-    response = client.post(f"/api/tasks/{task_id}/acknowledge", headers=NURSE)
+    response = client.post(f"/api/tasks/{task_id}/acknowledge")
     assert response.status_code == 400
     assert "Assign" in response.json()["detail"]
-
-
-def test_management_cannot_create_tasks(client):
-    before = len(client.get("/api/tasks").json()["tasks"])
-    assert client.post("/api/tasks", json={"title": "Not allowed"}, headers=MGMT).status_code == 403
-    assert len(client.get("/api/tasks").json()["tasks"]) == before
 
 
 # ---------------- escalation ----------------
@@ -197,8 +197,8 @@ def test_background_job_takes_late_tasks_to_the_right_level_and_leaves_others(cl
     late9 = _make(client, due_in_hours=-9)["id"]
     future = _make(client, due_in_hours=5)["id"]
     finished = _make(client, due_in_hours=-6)["id"]
-    assert client.post(f"/api/tasks/{finished}/acknowledge", headers=NURSE).status_code == 200
-    assert client.patch(f"/api/tasks/{finished}", json={"status": "completed"}, headers=NURSE).status_code == 200
+    assert client.post(f"/api/tasks/{finished}/acknowledge").status_code == 200
+    assert client.patch(f"/api/tasks/{finished}", json={"status": "completed"}).status_code == 200
     assert "task-escalation" in background.JOBS
     assert [_row(i)["level"] for i in (late3, late9, future, finished)] == [0, 0, 0, 0]
 
@@ -263,17 +263,17 @@ def test_manual_escalation_stores_the_reason(client):
 def test_completed_task_cannot_be_reopened_without_a_reason(client):
     task = _make(client)
     tid = task["id"]
-    assert client.post(f"/api/tasks/{tid}/acknowledge", headers=NURSE).status_code == 200
-    assert client.patch(f"/api/tasks/{tid}", json={"status": "completed"}, headers=NURSE).status_code == 200
+    assert client.post(f"/api/tasks/{tid}/acknowledge").status_code == 200
+    assert client.patch(f"/api/tasks/{tid}", json={"status": "completed"}).status_code == 200
     for status in ("proposed", "accepted", "in_progress"):
-        assert client.patch(f"/api/tasks/{tid}", json={"status": status}, headers=NURSE).status_code == 409
+        assert client.patch(f"/api/tasks/{tid}", json={"status": status}).status_code == 409
     url = f"/api/tasks/{tid}/reopen"
-    assert client.post(url, headers=NURSE).status_code == 422
-    assert client.post(url, json={}, headers=NURSE).status_code == 422
-    assert client.post(url, json={"reason": "too short"}, headers=NURSE).status_code == 422
+    assert client.post(url).status_code == 422
+    assert client.post(url, json={}).status_code == 422
+    assert client.post(url, json={"reason": "too short"}).status_code == 422
     assert _row(tid)["status"] == "completed"
 
-    ok = client.post(url, json={"reason": "Result was entered on the wrong patient"}, headers=NURSE)
+    ok = client.post(url, json={"reason": "Result was entered on the wrong patient"})
     assert ok.status_code == 200
     body = ok.json()
     assert body["status"] == "accepted"
@@ -283,9 +283,10 @@ def test_completed_task_cannot_be_reopened_without_a_reason(client):
     assert len(entry) == 1
     assert entry[0]["after"]["reason"] == "Result was entered on the wrong patient"
     assert entry[0]["before"]["status"] == "completed"
-    assert entry[0]["actor_name"] == NURSE_NAME
+    assert entry[0]["actor_name"] == DOCTOR_NAME
+    assert entry[0]["meta"]["on_behalf_of"] == NURSE_NAME
 
-    again = client.post(url, json={"reason": "Trying a second reopen"}, headers=NURSE)
+    again = client.post(url, json={"reason": "Trying a second reopen"})
     assert again.status_code == 409  # works once: the task is open now
 
 
@@ -293,17 +294,9 @@ def test_cancelled_task_can_be_reopened_and_open_task_cannot(client):
     task = _make(client)
     tid = task["id"]
     url = f"/api/tasks/{tid}/reopen"
-    assert client.post(url, json={"reason": "Not finished at all"}, headers=NURSE).status_code == 409
-    assert client.patch(f"/api/tasks/{tid}", json={"status": "cancelled"}, headers=NURSE).status_code == 200
-    ok = client.post(url, json={"reason": "Cancelled by mistake"}, headers=NURSE)
+    assert client.post(url, json={"reason": "Not finished at all"}).status_code == 409
+    assert client.patch(f"/api/tasks/{tid}", json={"status": "cancelled"}).status_code == 200
+    ok = client.post(url, json={"reason": "Cancelled by mistake"})
     assert ok.status_code == 200
     assert ok.json()["status"] == "accepted"
 
-
-def test_management_cannot_reopen_a_task(client):
-    task = _make(client)
-    tid = task["id"]
-    client.patch(f"/api/tasks/{tid}", json={"status": "cancelled"}, headers=NURSE)
-    response = client.post(f"/api/tasks/{tid}/reopen", json={"reason": "Management should not do this"}, headers=MGMT)
-    assert response.status_code == 403
-    assert _row(tid)["status"] == "cancelled"

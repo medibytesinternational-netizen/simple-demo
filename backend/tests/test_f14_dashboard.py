@@ -13,6 +13,11 @@ from sqlalchemy.orm import sessionmaker
 
 from app.db import Base, SessionLocal
 from app.models import Alert, Draft, Task, TimelineEvent
+from app.services import medicines
+from app.services.rules import evaluate_rules
+from app.services.timeline import get_encounter, get_patient, get_state
+
+from .helpers import as_patient
 
 COHORT = ["pat_anita", "pat_joseph", "pat_meera", "pat_arun"]
 EXPECTED_RULES = {
@@ -22,7 +27,19 @@ EXPECTED_RULES = {
     "pat_arun": Counter(),
 }
 EXPECTED_DISCREPANCIES = {"pat_anita": 2, "pat_joseph": 2, "pat_meera": 1, "pat_arun": 0}
-MGMT = {"X-User-Id": "u_mgmt"}
+
+
+def _reconciliation(patient_id: str) -> dict:
+    """The reconciliation the medicines route serves, read for a cohort patient through services
+    (clinical routes refuse cohort patients: they are dashboard numbers, not open records)."""
+    with as_patient(patient_id):
+        db = SessionLocal()
+        try:
+            patient = get_patient(db)
+            encounter = get_encounter(db)
+            return medicines.reconciliation_with_decisions(db, patient, encounter, get_state(db, patient, encounter))
+        finally:
+            db.close()
 
 
 def _dash(client, **headers) -> dict:
@@ -44,12 +61,18 @@ def _open_alerts(patient_id: str) -> list[Alert]:
 
 
 def test_each_cohort_patient_has_a_real_record_behind_the_row(client):
+    db = SessionLocal()
+    try:
+        for patient_id in COHORT:
+            events = list(db.scalars(select(TimelineEvent).where(TimelineEvent.patient_id == patient_id)))
+            types = {event.type for event in events}
+            assert len(events) >= 3, patient_id
+            assert {"admission_note", "med_order", "vitals", "lab_result"} <= types, patient_id
+    finally:
+        db.close()
+    # Clinical screens stay closed to them.
     for patient_id in COHORT:
-        body = client.get(f"/api/patients/{patient_id}/timeline").json()
-        types = {event["type"] for event in body["events"]}
-        assert body["count"] >= 3, patient_id
-        assert {"admission_note", "med_order", "vitals", "lab_result"} <= types, patient_id
-        assert all(event["patient_id"] == patient_id for event in body["events"])
+        assert client.get(f"/api/patients/{patient_id}/timeline").status_code == 403
 
 
 def test_cohort_alerts_come_from_the_rules_engine_with_evidence(client):
@@ -81,9 +104,16 @@ def test_evaluating_a_cohort_patient_again_keeps_their_alerts(client):
     before = {pid: sorted((a.id, a.status) for a in _open_alerts(pid)) for pid in COHORT}
     assert before["pat_joseph"], "precondition: Joseph has open alerts"
     for patient_id in COHORT:
-        response = client.post("/api/alerts/evaluate", headers={"X-Patient-Id": patient_id})
-        assert response.status_code == 200, response.text
-        assert response.json()["created"] == []
+        with as_patient(patient_id):
+            db = SessionLocal()
+            try:
+                patient = get_patient(db)
+                encounter = get_encounter(db)
+                created = evaluate_rules(db, patient, encounter, get_state(db, patient, encounter))
+                db.commit()
+            finally:
+                db.close()
+        assert created == [], patient_id
     after = {pid: sorted((a.id, a.status) for a in _open_alerts(pid)) for pid in COHORT}
     assert after == before
 
@@ -141,8 +171,7 @@ def test_dashboard_totals_equal_the_sums_of_the_rows(client):
     assert data["summary"]["draft_discharges"] == len(f9_drafts)
     unresolved = 0
     for patient_id in ("pat_ravi", *COHORT):
-        recon = client.get("/api/medications/reconciliation", headers={"X-Patient-Id": patient_id}).json()
-        unresolved += recon["unresolved_count"]
+        unresolved += _reconciliation(patient_id)["unresolved_count"]
     assert data["summary"]["medicine_discrepancies"] == unresolved > 0
 
 
@@ -150,7 +179,7 @@ def test_rows_count_medicine_discrepancies_from_reconciliation(client):
     data = _dash(client)
     for patient_id, expected in EXPECTED_DISCREPANCIES.items():
         assert _row(data, patient_id)["medicine_discrepancies"] == expected, patient_id
-    ravi = client.get("/api/medications/reconciliation", headers={"X-Patient-Id": "pat_ravi"}).json()
+    ravi = client.get("/api/medications/reconciliation").json()
     assert _row(data, "pat_ravi")["medicine_discrepancies"] == len(ravi["discrepancies"]) > 0
 
 
@@ -176,13 +205,13 @@ def test_dashboard_is_hospital_wide_whatever_patient_is_open(client):
         assert other["claim"] == reference["claim"], patient_id
 
 
-def test_management_can_read_the_dashboard(client):
-    data = _dash(client, **MGMT)
+def test_the_dashboard_lists_the_whole_cohort(client):
+    data = _dash(client)
     assert {row["patient_id"] for row in data["patients"]} == {"pat_ravi", *COHORT}
 
 
 def test_dashboard_loads_after_the_empty_record_reset(fresh):
-    data = _dash(fresh, **MGMT)
+    data = _dash(fresh)
     assert [row["patient_id"] for row in data["patients"]] == ["pat_ravi"]
     row = data["patients"][0]
     assert row["draft_discharges"] == 0

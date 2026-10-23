@@ -12,8 +12,6 @@ from app.services.context import segments_from_transcript
 
 from .helpers import generate_note
 
-NURSE = {"X-User-Id": "u_anita"}
-NURSE_NAME = "Nurse Anita Rao"
 DOCTOR_NAME = "Dr. Meera Shah"
 
 ROUND = (
@@ -33,26 +31,23 @@ def _open_task_ids(client) -> set[str]:
     return {t["id"] for t in readiness["warnings"]["open_tasks"]}
 
 
-def test_accepted_round_tasks_can_be_worked_to_completion_by_the_accepting_nurse(client):
+def test_accepted_round_tasks_can_be_worked_to_completion_by_the_doctor_for_the_assignee(client):
     draft = generate_note(client, "F3", ROUND)
-    response = client.post(f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [0, 1]}, headers=NURSE)
+    response = client.post(f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [0, 1]})
     assert response.status_code == 200, response.text
     created = response.json()["tasks"]
     assert len(created) == 2
     for task in created:
-        assert task["owner"] == NURSE_NAME
-        assert task["assigned_to"] == NURSE_NAME
+        assert task["owner"] == DOCTOR_NAME
+        assert task["assigned_to"] == DOCTOR_NAME
     ids = {t["id"] for t in created}
     assert ids <= _open_task_ids(client)
 
-    # Only the assignee acknowledges.
-    assert client.post(f"/api/tasks/{created[0]['id']}/acknowledge").status_code == 403
-
     for task in created:
         task_id = task["id"]
-        assert client.post(f"/api/tasks/{task_id}/acknowledge", headers=NURSE).status_code == 200
-        assert client.patch(f"/api/tasks/{task_id}", json={"status": "in_progress"}, headers=NURSE).status_code == 200
-        done = client.patch(f"/api/tasks/{task_id}", json={"status": "completed"}, headers=NURSE)
+        assert client.post(f"/api/tasks/{task_id}/acknowledge").status_code == 200
+        assert client.patch(f"/api/tasks/{task_id}", json={"status": "in_progress"}).status_code == 200
+        done = client.patch(f"/api/tasks/{task_id}", json={"status": "completed"})
         assert done.status_code == 200, done.text
     assert not (ids & _open_task_ids(client))
     board = {t["id"]: t["status"] for t in client.get("/api/tasks").json()["tasks"]}

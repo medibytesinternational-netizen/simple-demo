@@ -1,4 +1,4 @@
-"""Shared plumbing: roles, patient scope, credits, background jobs, encounter lock."""
+"""Shared plumbing: identity, patient scope, credits, background jobs, encounter lock."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from app.services import credits
 
 from .helpers import SHORT_VISIT, discharge, generate_note
 
-DOCTOR, NURSE, PHARMACIST, BILLING, MGMT = "u_meera", "u_anita", "u_dev", "u_billing", "u_mgmt"
+DOCTOR = "u_meera"
 
 
 def as_user(user_id: str) -> dict:
@@ -30,59 +30,35 @@ def test_unknown_user_is_rejected(client):
 
 
 def test_meta_reports_what_the_user_may_do(client):
-    nurse = client.get("/api/meta", headers=as_user(NURSE)).json()
-    assert "give_medicine" in nurse["allowed_actions"]
-    assert "approve_draft" not in nurse["allowed_actions"]
-
-
-def test_nurse_cannot_approve_a_draft(client):
-    draft = client.post("/api/referrals/generate", json={}, headers=as_user(DOCTOR))
-    draft_id = (draft.json() if draft.status_code == 200 else generate_note(client, "F3", SHORT_VISIT + "\nDoctor: check bloods."))
-    draft_id = draft_id["draft"]["id"] if "draft" in draft_id else draft_id["id"]
-    response = client.post(f"/api/drafts/{draft_id}/approve", json={}, headers=as_user(NURSE))
-    assert response.status_code == 403
-
-
-def test_management_is_read_only(client):
-    assert client.get("/api/hospital/dashboard", headers=as_user(MGMT)).status_code == 200
-    assert client.post("/api/tasks", json={"title": "Not allowed"}, headers=as_user(MGMT)).status_code == 403
-
-
-def test_nurse_can_create_and_pharmacist_cannot_dismiss_alerts(client):
-    assert client.post("/api/tasks", json={"title": "Nurse task"}, headers=as_user(NURSE)).status_code == 200
-    alert = client.get("/api/alerts").json()["alerts"][0]
-    body = {"reason": "Reviewed and accepted by the team", "category": "known_and_accepted"}
-    assert client.post(f"/api/alerts/{alert['id']}/dismiss", json=body, headers=as_user(PHARMACIST)).status_code == 403
-
-
-def test_billing_works_on_claims_only(client):
-    assert client.post("/api/revenue/claim-prep/explain", headers=as_user(BILLING)).status_code == 200
-    note = generate_note(client, "F4", SHORT_VISIT)
-    assert client.post(f"/api/drafts/{note['id']}/approve", json={}, headers=as_user(BILLING)).status_code == 403
+    me = client.get("/api/meta").json()
+    allowed = set(me["allowed_actions"])
+    assert {"give_medicine", "approve_draft", "buy_credits", "revenue_work", "order_medicine"} <= allowed
+    assert "ingest" not in allowed  # the system link's action, not a person's
 
 
 def test_acting_user_is_recorded_not_taken_from_the_request_body(client):
-    task = client.post("/api/tasks", json={"title": "Who made this"}, headers=as_user(NURSE)).json()
+    task = client.post("/api/tasks", json={"title": "Who made this"}, headers=as_user(DOCTOR)).json()
     audit = client.get("/api/audit").json()["audit"]
     created = [e for e in audit if e["action"] == "task_created" and e["entity_id"] == task["id"]]
-    assert created and created[0]["actor_name"] == "Nurse Anita Rao"
+    assert created and created[0]["actor_name"] == "Dr. Meera Shah"
 
 
 # ---------- patient scope ----------
 
-def test_patient_header_changes_who_the_app_shows(client):
-    meta = client.get("/api/meta", headers={"X-Patient-Id": "pat_anita"}).json()
-    assert meta["patient"]["id"] == "pat_anita"
-    assert meta["encounter"]["id"] != "enc_ipd_1"
+def test_patient_header_for_a_cohort_patient_is_refused(client):
+    assert client.get("/api/meta", headers={"X-Patient-Id": "pat_anita"}).status_code == 403
+    assert client.get("/api/meta", headers={"X-Patient-Id": "pat_ravi"}).json()["patient"]["id"] == "pat_ravi"
 
 
-def test_patient_list_includes_the_cohort(client):
-    ids = {p["id"] for p in client.get("/api/patients").json()["patients"]}
-    assert {"pat_ravi", "pat_anita", "pat_arun", "pat_joseph", "pat_meera"} <= ids
+def test_patient_list_is_ravi_only(client):
+    ids = [p["id"] for p in client.get("/api/patients").json()["patients"]]
+    assert ids == ["pat_ravi"]
 
 
 def test_unknown_patient_is_a_clear_error(client):
-    assert client.get("/api/meta", headers={"X-Patient-Id": "pat_nobody"}).status_code == 400
+    response = client.get("/api/meta", headers={"X-Patient-Id": "pat_nobody"})
+    assert response.status_code == 403
+    assert "pat_nobody" in response.json()["detail"]
 
 
 # ---------- credits ----------
@@ -119,11 +95,10 @@ def test_exhausted_pack_blocks_the_operation():
         db.close()
 
 
-def test_only_billing_can_add_a_pack(client):
-    assert client.post("/api/credits/packs", json={"size": 15000}, headers=as_user(NURSE)).status_code == 403
-    result = client.post("/api/credits/packs", json={"size": 15000}, headers=as_user(BILLING))
+def test_the_doctor_can_add_a_pack(client):
+    result = client.post("/api/credits/packs", json={"size": 15000}, headers=as_user(DOCTOR))
     assert result.status_code == 200 and result.json()["balance"] == 20000
-    assert client.post("/api/credits/packs", json={"size": 7}, headers=as_user(BILLING)).status_code == 400
+    assert client.post("/api/credits/packs", json={"size": 7}, headers=as_user(DOCTOR)).status_code == 400
 
 
 # ---------- background jobs ----------

@@ -24,7 +24,7 @@ from app.models import Alert, Encounter, Patient, TimelineEvent
 from app.models_ext.s17_integration import IntegrationSync, OutboundMessage
 from app.services.timeline import get_state
 
-HMS = {"X-User-Id": "u_hms"}
+HMS = {"X-System-Id": "sys_hms"}  # the system actor: not a user, not selectable
 SYSTEM = "demo-hms"
 MR = {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v2-0203", "code": "MR"}]}
 
@@ -279,10 +279,12 @@ def test_units_reference_ranges_and_flags_map():
     assert reading["payload"]["unit"] == "mmHg"
 
 
-def test_only_the_integration_user_may_ingest(client):
-    for user in ["u_meera", "u_anita", "u_dev", "u_billing", "u_mgmt"]:
-        response = ingest(client, lab("o1", "Potassium", 4.0, "mmol/L"), headers={"X-User-Id": user})
-        assert response.status_code == 403, user
+def test_only_the_hospital_system_link_may_ingest(client):
+    # The doctor, and a caller that names no system, are refused; the removed user id is rejected outright.
+    assert ingest(client, lab("o1", "Potassium", 4.0, "mmol/L"), headers={"X-User-Id": "u_meera"}).status_code == 403
+    assert ingest(client, lab("o1", "Potassium", 4.0, "mmol/L"), headers={}).status_code == 403
+    assert ingest(client, lab("o1", "Potassium", 4.0, "mmol/L"), headers={"X-System-Id": "sys_other"}).status_code == 403
+    assert ingest(client, lab("o1", "Potassium", 4.0, "mmol/L"), headers={"X-User-Id": "u_hms"}).status_code == 400
     assert fhir_events() == []
     assert ingest(client, lab("o1", "Potassium", 4.0, "mmol/L")).status_code == 200
     assert len(fhir_events()) == 1
@@ -499,7 +501,7 @@ def test_status_shows_the_host_only_and_never_credentials(client, mock, monkeypa
     monkeypatch.setenv("FHIR_BASE_URL", f"http://nurse:s3cret@127.0.0.1:{mock.server_address[1]}/fhir?token=abc")
     monkeypatch.setenv("FHIR_AUTH_TOKEN", "tok-123")
     approve_referral(client)
-    body = client.get("/api/integrations/status", headers={"X-User-Id": "u_mgmt"}).json()
+    body = client.get("/api/integrations/status").json()
     assert body["configured"] is True
     assert body["host"] == f"127.0.0.1:{mock.server_address[1]}"
     text = json.dumps(body)
@@ -520,7 +522,7 @@ def test_credentials_in_the_address_are_sent_as_headers_not_in_the_url(client, m
     assert mock.posts[1]["headers"]["Authorization"] == "Bearer tok-123"
 
 
-def test_only_the_integration_user_retries_and_retry_requeues_failed_messages(client, mock):
+def test_only_the_hospital_system_link_retries_and_retry_requeues_failed_messages(client, mock):
     approve_referral(client)
     mock.post_status = 400
     run_delivery()

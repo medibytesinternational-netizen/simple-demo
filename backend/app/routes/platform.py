@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..models import Encounter, Patient
 from ..services import credits
-from ..services.identity import DIRECTORY, PERMISSIONS, USERS, acting_user, require
+from ..services.identity import BROWSABLE_PATIENT_IDS, DIRECTORY, PERMISSIONS, USERS, acting_user, require
 
 router = APIRouter()
 
@@ -35,7 +35,7 @@ def users():
 
 @router.get("/patients")
 def patients(db: Session = Depends(get_db)):
-    rows = db.scalars(select(Patient).order_by(Patient.name)).all()
+    rows = db.scalars(select(Patient).where(Patient.id.in_(BROWSABLE_PATIENT_IDS)).order_by(Patient.name)).all()
     encounters = db.scalars(select(Encounter).order_by(Encounter.admitted_at.desc())).all()
     latest: dict[str, Encounter] = {}
     for encounter in encounters:

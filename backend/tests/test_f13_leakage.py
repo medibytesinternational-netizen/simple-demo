@@ -14,7 +14,6 @@ from app.seeds.f13_tariff import DEFAULT_TARIFF, upsert_tariff
 from app.services.leakage import leakage
 from tests.helpers import inject_event
 
-BILLING = {"X-User-Id": "u_billing"}
 PINNED_START = datetime(2026, 10, 18, 14, 10)
 PINNED_END = datetime(2026, 10, 20, 9, 0)  # 1 whole day for the seeded encounter, whatever the clock says
 
@@ -301,7 +300,7 @@ def test_amounts_follow_the_tariff_not_a_constant(client):
 def test_explanation_is_built_from_the_findings(client):
     _pin()
     leak = client.get("/api/revenue/leakage").json()
-    response = client.post("/api/revenue/leakage/explain", headers=BILLING)
+    response = client.post("/api/revenue/leakage/explain")
     assert response.status_code == 200, response.text
     content = response.json()["draft"]["content"]
     assert [(f["procedure"], f["billing_status"], f["evidence_event_ids"]) for f in content["findings"]] == [
@@ -321,7 +320,7 @@ def test_explanation_validates_with_a_quantity_mismatch_finding(client):
     mismatch = _by_code(leak, "97597")[0]
     assert (mismatch["kind"], mismatch["billing_status"]) == ("quantity_mismatch", "underbilled")
     assert (mismatch["documented_quantity"], mismatch["billed_quantity"]) == (2, 1)
-    response = client.post("/api/revenue/leakage/explain", headers=BILLING)
+    response = client.post("/api/revenue/leakage/explain")
     assert response.status_code == 200, response.text
     statuses = {f["procedure"]: f["billing_status"] for f in response.json()["draft"]["content"]["findings"]}
     assert statuses["Wound debridement"] == "underbilled"
