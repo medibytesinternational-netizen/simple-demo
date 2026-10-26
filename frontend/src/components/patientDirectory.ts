@@ -50,6 +50,8 @@ export function usePatientDirectory() {
       queryKey: ["patient-detail", row.patient_id],
       queryFn: () => get<{ patient: { allergies: string[]; problems: string[] } }>(`/patients/${row.patient_id}`),
       staleTime: 60_000,
+      // The server refuses clinical detail for patients outside this view.
+      enabled: row.browsable ?? row.patient_id === CHART_PATIENT_ID,
     })),
   });
 

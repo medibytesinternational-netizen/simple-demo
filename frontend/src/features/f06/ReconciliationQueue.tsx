@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, post } from "../../api";
 import { EvidenceChip } from "../../components/Evidence";
+import { Icon } from "../../components/icons";
+import { Banner, EmptyState, ListRow, Panel, Pill, Skeleton } from "../../components/ui";
 import { useCan } from "../../session";
 import { DECISION_LABEL, decisionText, noteOk } from "./rules";
 import { MIN_NOTE } from "./types";
@@ -26,9 +28,9 @@ function DecisionForm({ item, onDone }: { item: Discrepancy; onDone: (change: Pr
     onError: (err: any) => setError(String(err?.message || err)),
   });
   return (
-    <div className="mt-2">
-      <div className="form-row" style={{ alignItems: "flex-end" }}>
-        <div>
+    <div className="decision-form">
+      <div className="form-row">
+        <div className="form-field">
           <label className="field-label">Decision</label>
           <select className="input" value={decision} onChange={(event) => setDecision(event.target.value as Decision)}>
             {(Object.keys(DECISION_LABEL) as Decision[]).map((key) => (
@@ -36,7 +38,7 @@ function DecisionForm({ item, onDone }: { item: Discrepancy; onDone: (change: Pr
             ))}
           </select>
         </div>
-        <div style={{ flex: 1, minWidth: 240 }}>
+        <div className="form-field decision-why">
           <label className="field-label">Why</label>
           <input
             className="input"
@@ -45,11 +47,17 @@ function DecisionForm({ item, onDone }: { item: Discrepancy; onDone: (change: Pr
             onChange={(event) => setNote(event.target.value)}
           />
         </div>
-        <button className="btn btn-sm btn-primary" disabled={!noteOk(note) || resolve.isPending} onClick={() => resolve.mutate()}>
+        <button
+          className="btn btn-sm btn-primary"
+          disabled={!noteOk(note) || resolve.isPending}
+          onClick={() => resolve.mutate()}
+          aria-busy={resolve.isPending || undefined}
+        >
+          {resolve.isPending ? <span className="spinner" /> : null}
           Record decision
         </button>
       </div>
-      {error ? <div className="error-box mt-2">{error}</div> : null}
+      {error ? <div className="error-box mt-2" role="alert">{error}</div> : null}
     </div>
   );
 }
@@ -64,63 +72,78 @@ export default function ReconciliationQueue() {
   const items = recon.data?.discrepancies ?? [];
 
   return (
-    <div className="card">
-      <div className="card-head">
-        <div className="card-title">Differences to decide</div>
-        <span className={`badge ${recon.data?.unresolved_count ? "badge-warning" : "badge-success"}`}>
+    <Panel
+      title="Decide differences"
+      sub="A decision is a record of what a clinician decided. It does not order, stop or change any medicine."
+      actions={(
+        <Pill tone={recon.data?.unresolved_count ? "warning" : "success"} dot>
           {recon.data?.unresolved_count ?? 0} open
-        </span>
-      </div>
-      <div className="card-pad">
-        <div className="small muted mb-2">
-          A decision is a record of what a clinician decided. It does not order, stop or change any medicine.
+        </Pill>
+      )}
+    >
+      {proposed ? (
+        <div className="panel-body">
+          <Banner
+            tone="info"
+            title={`Proposed: ${proposed.action} ${proposed.drug}`}
+            actions={<button className="btn btn-sm btn-ghost" onClick={() => setProposed(null)}>Dismiss</button>}
+          >
+            {proposed.message}
+          </Banner>
         </div>
-        {recon.isLoading ? <div className="loading">Loading…</div> : null}
-        {!recon.isLoading && !items.length ? <div className="empty">No differences found.</div> : null}
-        {proposed ? (
-          <div className="alert-card mb-2">
-            <div className="alert-title">
-              Proposed: {proposed.action} {proposed.drug}
-            </div>
-            <div className="small muted">{proposed.message}</div>
-            <button className="btn btn-sm btn-ghost mt-1" onClick={() => setProposed(null)}>Dismiss</button>
-          </div>
-        ) : null}
-        {items.map((item) => (
-          <div className="alert-card mb-2" key={item.id}>
-            <div className="flex items-center gap-2">
-              <span className={`badge ${item.status === "resolved" ? "badge-success" : "badge-warning"}`}>{item.status}</span>
-              <span className="badge badge-neutral">{item.kind}</span>
-              <strong className="fs-13">{item.home_med}</strong>
-              <span className="small muted">→ {item.current_order || "not ordered"}</span>
-            </div>
-            <div className="alert-explanation">{item.explanation}</div>
-            {item.field ? (
-              <div className="small muted">
-                {item.field}: home “{item.home_value || "—"}” → inpatient “{item.current_value || "—"}”
-              </div>
-            ) : null}
-            <div className="flex items-center gap-2 flex-wrap">
-              {item.evidence_event_ids.map((id) => <EvidenceChip key={id} eventIds={[id]} label="evidence" />)}
-            </div>
-            {item.status === "resolved" ? (
-              <div className="small mt-1">
-                {decisionText(item.decision)} by {item.decided_by}: {item.note}
-              </div>
-            ) : (
-              <>
-                {item.earlier_decision ? (
-                  <div className="small muted mt-1">
-                    Earlier decision ({decisionText(item.earlier_decision.decision)} by {item.earlier_decision.decided_by}) no longer applies: the record changed.
-                  </div>
-                ) : null}
-                <div className="alert-action">{item.recommended_action}</div>
-                {canResolve ? <DecisionForm item={item} onDone={setProposed} /> : null}
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
+      ) : null}
+      {recon.isLoading ? <div className="panel-body"><Skeleton variant="rows" count={2} /></div> : null}
+      {!recon.isLoading && !items.length ? (
+        <EmptyState icon="check" title="No differences found.">
+          The home list matches the current orders. New differences appear here when an order changes.
+        </EmptyState>
+      ) : null}
+      {items.length ? (
+        <div className="rows rows-flush">
+          {items.map((item) => (
+            <ListRow
+              key={item.id}
+              icon="pill"
+              tone={item.status === "resolved" ? "success" : "warning"}
+              muted={item.status === "resolved"}
+              title={(
+                <>
+                  {item.home_med}
+                  <span className="recon-arrow"> → </span>
+                  <span className="recon-current">{item.current_order || "not ordered"}</span>
+                </>
+              )}
+              meta={item.field ? (
+                <>{item.field}: home “{item.home_value || "none"}”, inpatient “{item.current_value || "none"}”</>
+              ) : undefined}
+              body={item.explanation}
+              chips={(
+                <>
+                  <Pill tone={item.status === "resolved" ? "success" : "warning"}>{item.status}</Pill>
+                  <Pill>{item.kind}</Pill>
+                  {item.evidence_event_ids.map((id) => <EvidenceChip key={id} eventIds={[id]} label="evidence" />)}
+                </>
+              )}
+              expand={item.status === "resolved" ? (
+                <div className="recon-decided">
+                  <Icon name="check" size={14} />
+                  <span>{decisionText(item.decision)} by {item.decided_by}: {item.note}</span>
+                </div>
+              ) : (
+                <div className="recon-open">
+                  {item.earlier_decision ? (
+                    <div className="small muted">
+                      Earlier decision ({decisionText(item.earlier_decision.decision)} by {item.earlier_decision.decided_by}) no longer applies: the record changed.
+                    </div>
+                  ) : null}
+                  <div className="alert-action">{item.recommended_action}</div>
+                  {canResolve ? <DecisionForm item={item} onDone={setProposed} /> : null}
+                </div>
+              )}
+            />
+          ))}
+        </div>
+      ) : null}
+    </Panel>
   );
 }

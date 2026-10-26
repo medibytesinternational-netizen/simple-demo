@@ -9,6 +9,9 @@ import { buildTimelineQuery, hasFilters } from "../features/f16/filters";
 import { ProvenanceFacts } from "../features/f16/Provenance";
 import { NO_FILTERS, type TimelineFilters, type TimelineResponse } from "../features/f16/types";
 import { PageHeader } from "../components/PageHeader";
+import { EmptyState, Field, ListRow, Menu, MenuItem, Panel, Pill, Skeleton, Toolbar } from "../components/ui";
+import type { TimelineEventF16 } from "../features/f16/types";
+import { Icon } from "../components/icons";
 
 function eventTone(type: string) {
   if (type === "lab_result") return "lab";
@@ -50,6 +53,9 @@ export function TimelinePage() {
   const egfr = data?.latest_labs.find((lab) => lab.name.toLowerCase() === "egfr");
   const openAlerts = data?.alerts.filter((alert) => alert.status === "open").length || 0;
   const overdue = data?.tasks.filter((task) => task.is_overdue).length || 0;
+  const days = groupByDay(events);
+  const activeFilterCount = (filters.source ? 1 : 0) + (filters.after ? 1 : 0) + (filters.before ? 1 : 0);
+  const typeFacets = (facets?.types || []).filter((type) => type !== "transcript");
 
   return (
     <>
@@ -62,182 +68,259 @@ export function TimelinePage() {
         </>}
       />
 
-      <div className="grid-4 mb-3">
-        <div className="card stat">
-          <div className="stat-label">Active medications</div>
-          <div className="stat-value">{data?.active_meds.length ?? "—"}</div>
-          <div className="stat-note">Current inpatient orders</div>
-        </div>
-        <div className="card stat">
-          <div className="stat-label">Latest eGFR</div>
-          <div className="stat-value mono">{egfr ? egfr.value : "—"}</div>
-          <div className="stat-note">{egfr ? `${egfr.review_status} · ${egfr.collected_at.slice(0, 10)}` : "No result"}</div>
-        </div>
-        <div className="card stat">
-          <div className="stat-label">Open alerts</div>
-          <div className="stat-value" style={{ color: openAlerts ? "var(--critical)" : undefined }}>{openAlerts}</div>
-          <div className="stat-note">{data?.alerts.filter((alert) => alert.status === "dismissed").length || 0} dismissed with reason</div>
-        </div>
-        <div className="card stat">
-          <div className="stat-label">Tasks overdue</div>
-          <div className="stat-value" style={{ color: overdue ? "var(--warning)" : undefined }}>{overdue}</div>
-          <div className="stat-note">{data?.tasks.length || 0} tasks total</div>
-        </div>
-      </div>
-
-      <div className="split-main">
-        <div className="card">
-          <div className="card-head">
-            <div>
-              <div className="card-title">Clinical event stream</div>
-              <div className="card-sub">{events.length} approved events · click any event to inspect its source</div>
-            </div>
-            <span className="badge badge-neutral">append-only</span>
-          </div>
-          <div className="card-pad" style={{ borderBottom: "1px solid var(--border, #e5e7eb)" }} data-testid="timeline-filters">
-            <div className="pill-row">
-              {(facets?.types || []).filter((type) => type !== "transcript").map((type) => (
-                <button
-                  key={type}
-                  className={`btn btn-sm ${filters.types.includes(type) ? "btn-primary" : ""}`}
-                  aria-pressed={filters.types.includes(type)}
-                  onClick={() => toggleType(type)}
-                >
-                  {type.replaceAll("_", " ")}
-                </button>
-              ))}
-            </div>
-            <div className="button-row mt-3">
-              <label className="small">
-                Source{" "}
-                <select
-                  className="select"
-                  value={filters.source}
-                  onChange={(event) => setFilters({ ...filters, source: event.target.value })}
-                >
-                  <option value="">All sources</option>
-                  {(facets?.sources || []).map((item) => (
-                    <option key={item.source} value={item.source}>{item.label}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="small">
-                From{" "}
-                <input className="input" type="date" value={filters.after} onChange={(event) => setFilters({ ...filters, after: event.target.value })} />
-              </label>
-              <label className="small">
-                Before{" "}
-                <input className="input" type="date" value={filters.before} onChange={(event) => setFilters({ ...filters, before: event.target.value })} />
-              </label>
-              {hasFilters(filters) ? (
-                <button className="btn btn-ghost btn-sm" onClick={() => setFilters(NO_FILTERS)}>Clear filters</button>
-              ) : null}
-            </div>
-          </div>
-          <div className="card-pad" style={{ maxHeight: 760, overflowY: "auto" }}>
-            {timeline.isLoading ? <div className="loading">Loading timeline…</div> : null}
-            {!timeline.isLoading && !events.length && hasFilters(filters) ? (
-              <div className="empty">
-                <div className="empty-title">No events match these filters.</div>
+      <div className="pg-timeline with-rail">
+        <Panel
+          title="Clinical event stream"
+          count={events.length}
+          sub="Approved events, newest first. Select a title to inspect its source."
+          actions={<Pill icon="audit">Append-only</Pill>}
+        >
+          <div data-testid="timeline-filters">
+            <Toolbar label="Timeline filters">
+              <div className="toolbar-group tl-types" role="group" aria-label="Event types">
+                {typeFacets.map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    className="chip"
+                    aria-pressed={filters.types.includes(type)}
+                    onClick={() => toggleType(type)}
+                  >
+                    {filters.types.includes(type) ? <Icon name="check" size={13} /> : null}
+                    {type.replaceAll("_", " ")}
+                  </button>
+                ))}
               </div>
+              <span className="toolbar-spacer" />
+              <Menu label="Filter" icon="filter" badge={activeFilterCount} align="right">
+                {(close) => (
+                  <>
+                    <div className="menu-body">
+                      <Field label="Source" htmlFor="tl-source">
+                        <select
+                          id="tl-source"
+                          className="select"
+                          value={filters.source}
+                          onChange={(event) => setFilters({ ...filters, source: event.target.value })}
+                        >
+                          <option value="">All sources</option>
+                          {(facets?.sources || []).map((item) => (
+                            <option key={item.source} value={item.source}>{item.label}</option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="From" htmlFor="tl-after" hint="Includes this day.">
+                        <input id="tl-after" className="input" type="date" value={filters.after} onChange={(event) => setFilters({ ...filters, after: event.target.value })} />
+                      </Field>
+                      <Field label="Before" htmlFor="tl-before" hint="Up to, not including, this day.">
+                        <input id="tl-before" className="input" type="date" value={filters.before} onChange={(event) => setFilters({ ...filters, before: event.target.value })} />
+                      </Field>
+                    </div>
+                    {hasFilters(filters) ? (
+                      <>
+                        <div className="menu-sep" />
+                        <MenuItem icon="close" onSelect={() => { setFilters(NO_FILTERS); close(); }}>Clear filters</MenuItem>
+                      </>
+                    ) : null}
+                  </>
+                )}
+              </Menu>
+            </Toolbar>
+          </div>
+
+          <div className="panel-body">
+            {timeline.isLoading ? <Skeleton variant="rows" count={5} /> : null}
+            {!timeline.isLoading && !events.length && hasFilters(filters) ? (
+              <EmptyState
+                icon="filter"
+                title="No events match these filters."
+                action={<button type="button" className="btn btn-sm" onClick={() => setFilters(NO_FILTERS)}>Clear filters</button>}
+              >
+                Try another event type or a wider date range.
+              </EmptyState>
             ) : null}
             {!timeline.isLoading && !events.length && !hasFilters(filters) ? (
-              <div className="empty">
-                <div className="empty-title">The timeline is empty.</div>
-                <div>Use the Demo menu to load rehearsal data, or start with a consultation.</div>
-                <div className="mt-3"><Link className="btn btn-primary" to="/notes?tab=consult">Start consultation</Link></div>
+              <EmptyState
+                icon="chart"
+                title="No events yet."
+                action={<Link className="btn btn-primary" to="/notes?tab=consult">Start consultation</Link>}
+              >
+                Start a consultation to write the first note, or load rehearsal data from Demo controls.
+              </EmptyState>
+            ) : null}
+            {events.length ? (
+              <div className="timeline timeline-scroll">
+                {days.map((day, index) => (
+                  <section className="day-group" key={`${day.key}-${index}`} aria-label={day.label}>
+                    <h3 className="day-head">
+                      <span>{day.label}</span>
+                      <span className="day-count">{day.events.length} {day.events.length === 1 ? "event" : "events"}</span>
+                    </h3>
+                    <div className="rows">
+                      {day.events.map((event) => (
+                        <ListRow
+                          key={event.id}
+                          icon={eventIcon(event.type)}
+                          tone={rowTone(eventTone(event.type))}
+                          title={
+                            <button type="button" className="lrow-title-btn" onClick={() => showEvent(event.id)}>
+                              {event.title}
+                            </button>
+                          }
+                          meta={
+                            <span className="pill-row">
+                              <Pill>{event.type.replaceAll("_", " ")}</Pill>
+                              {event.status === "superseded" ? (
+                                event.superseded_by ? (
+                                  <button
+                                    type="button"
+                                    className="badge badge-warning tl-superseded"
+                                    title="Open the version that replaced this one"
+                                    onClick={() => showEvent(event.superseded_by!)}
+                                  >
+                                    superseded by {event.superseded_by}
+                                  </button>
+                                ) : (
+                                  <Pill tone="warning">superseded</Pill>
+                                )
+                              ) : null}
+                            </span>
+                          }
+                          body={event.body_text ? <span className="tl-preview">{event.body_text}</span> : undefined}
+                          chips={<ProvenanceFacts event={event} />}
+                          side={
+                            <span className="tl-when">
+                              <time className="event-time" dateTime={event.occurred_at} title={fmt(event.occurred_at)}>{timeOf(event.occurred_at)}</time>
+                              <span className="mono tl-id">{event.id}</span>
+                            </span>
+                          }
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))}
               </div>
             ) : null}
-            <div className="timeline">
-              {events.map((event) => (
-                <div className="timeline-item" key={event.id}>
-                  <div className="timeline-time">{fmt(event.occurred_at)}</div>
-                  <div className="timeline-rail"><span className={`timeline-dot ${eventTone(event.type)}`} /></div>
-                  <div className="timeline-card" onClick={() => showEvent(event.id)}>
-                    <div className="timeline-card-head">
-                      <span className="timeline-title">{event.title}</span>
-                      <span className="badge badge-neutral">{event.type.replaceAll("_", " ")}</span>
-                      {event.status === "superseded" ? (
-                        event.superseded_by ? (
-                          <button
-                            className="badge badge-warning"
-                            title="Open the version that replaced this one"
-                            onClick={(click) => {
-                              click.stopPropagation();
-                              showEvent(event.superseded_by!);
-                            }}
-                          >
-                            superseded by {event.superseded_by}
-                          </button>
-                        ) : (
-                          <span className="badge badge-warning">superseded</span>
-                        )
-                      ) : null}
-                    </div>
-                    {event.body_text ? <div className="timeline-body">{event.body_text}</div> : null}
-                    <ProvenanceFacts event={event} />
-                    <div className="timeline-meta">
-                      <span className="mono">{event.id}</span>
-                    </div>
+          </div>
+        </Panel>
+
+        <aside className="rail rail-sticky" aria-label="Patient summary">
+          <Panel title="Current state" sub="Resolved from the timeline" padded>
+            {state.isLoading ? <Skeleton count={6} /> : (
+              <>
+                <div className="section-label tl-first">Problems</div>
+                <div className="pill-row">
+                  {data?.patient.problems.map((problem) => <Pill key={problem}>{problem}</Pill>)}
+                  {data && !data.patient.problems.length ? <span className="small muted">None recorded</span> : null}
+                </div>
+                <div className="section-label">Allergies</div>
+                <div className="pill-row">
+                  {data?.patient.allergies.map((allergy) => <Pill tone="critical" icon="alert" key={allergy}>{allergy}</Pill>)}
+                  {data && !data.patient.allergies.length ? <span className="small muted">None recorded</span> : null}
+                </div>
+                <div className="section-label">Active medications</div>
+                {data?.active_meds.map((med) => (
+                  <div className="check-row" key={med.event_id}>
+                    <span className="tl-grow">{med.drug}</span>
+                    <span className="mono small">{med.dose} {med.frequency}</span>
+                    <button type="button" className="btn btn-ghost btn-sm" aria-label={`Source of ${med.drug}`} onClick={() => showEvent(med.event_id)}>Source</button>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+                ))}
+                {data && !data.active_meds.length ? <div className="small muted">No active orders</div> : null}
+                <div className="section-label">Latest results</div>
+                {data?.latest_labs.map((lab) => (
+                  <div className="check-row" key={lab.event_id}>
+                    <span className="tl-grow">{lab.name}</span>
+                    <span className="mono small">{lab.value} {lab.unit}</span>
+                    <Pill tone={lab.review_status === "unreviewed" ? "warning" : lab.flag === "high" || lab.flag === "low" ? "neutral" : "success"}>
+                      {lab.review_status === "unreviewed" ? "unreviewed" : lab.flag}
+                    </Pill>
+                  </div>
+                ))}
+                {data && !data.latest_labs.length ? <div className="small muted">No results yet</div> : null}
+              </>
+            )}
+          </Panel>
 
-        <div className="flex-col gap-3">
-          <div className="card">
-            <div className="card-head">
-              <div className="card-title">Current state</div>
-              <span className="badge badge-ai">resolved from timeline</span>
-            </div>
-            <div className="card-pad">
-              <div className="section-label">Problems</div>
-              <div className="pill-row">
-                {data?.patient.problems.map((problem) => <span className="badge badge-neutral" key={problem}>{problem}</span>)}
-              </div>
-              <div className="section-label">Allergies</div>
-              <div className="pill-row">
-                {data?.patient.allergies.map((allergy) => <span className="badge badge-critical" key={allergy}>{allergy}</span>)}
-              </div>
-              <div className="section-label">Active medications</div>
-              {data?.active_meds.map((med) => (
-                <div className="check-row" key={med.event_id}>
-                  <span style={{ flex: 1 }}>{med.drug}</span>
-                  <span className="mono small">{med.dose} {med.frequency}</span>
-                  <button className="btn btn-ghost btn-sm" onClick={() => showEvent(med.event_id)}>source</button>
-                </div>
+          <Panel title="Care pathway" sub="Each step ends in an approval that writes to this timeline.">
+            <ol className="tl-path">
+              {PATHWAY.map((step) => (
+                <li key={step.to}>
+                  <Link className="tl-path-link" to={step.to}>
+                    <Icon name={step.icon} size={16} />
+                    <span>{step.label}</span>
+                    <Icon name="chevron" size={14} className="tl-path-chev" />
+                  </Link>
+                </li>
               ))}
-              <div className="section-label">Latest results</div>
-              {data?.latest_labs.map((lab) => (
-                <div className="check-row" key={lab.event_id}>
-                  <span style={{ flex: 1 }}>{lab.name}</span>
-                  <span className="mono small">{lab.value} {lab.unit}</span>
-                  <span className={`badge ${lab.review_status === "unreviewed" ? "badge-warning" : lab.flag === "high" || lab.flag === "low" ? "badge-neutral" : "badge-success"}`}>
-                    {lab.review_status === "unreviewed" ? "unreviewed" : lab.flag}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-head"><div className="card-title">Join the flow</div></div>
-            <div className="card-pad">
-              <div className="small muted" style={{ lineHeight: 1.7 }}>
-                Consultation → admission → alerts → reconciliation → round → documents → discharge → revenue.
-                Every screen ends in an approval that writes to this timeline, and the next screen reads it.
-              </div>
-              <div className="button-row mt-3">
-                <Link className="btn btn-sm" to="/safety">Open safety</Link>
-                <Link className="btn btn-sm" to="/documents">Documents</Link>
-                <Link className="btn btn-sm" to="/discharge">Discharge</Link>
-              </div>
-            </div>
-          </div>
-        </div>
+            </ol>
+          </Panel>
+        </aside>
       </div>
     </>
   );
+}
+
+const PATHWAY = [
+  { label: "Consultation", to: "/notes?tab=consult", icon: "consult" },
+  { label: "Admission", to: "/admission", icon: "admission" },
+  { label: "Safety alerts", to: "/safety?tab=alerts", icon: "safety" },
+  { label: "Ward round", to: "/notes?tab=round", icon: "round" },
+  { label: "Documents", to: "/documents?tab=inbound", icon: "scan" },
+  { label: "Discharge", to: "/discharge", icon: "discharge" },
+  { label: "Claim review", to: "/revenue?tab=claim", icon: "billing" },
+];
+
+const EVENT_ICONS: Record<string, string> = {
+  lab_result: "lab",
+  consult_note: "consult",
+  admission_note: "admission",
+  round_note: "round",
+  progress_note: "progress",
+  nursing_summary: "round",
+  nursing_chart: "round",
+  nursing_note: "round",
+  investigation_review: "lab",
+  discharge_summary: "discharge",
+  alert: "alert",
+  billing: "billing",
+  referral_consult: "referral",
+  referral_update: "referral",
+  consent: "edit",
+  device_reading: "icu",
+  med_order: "pill",
+  medication_administration: "pill",
+  reconciliation_decision: "pill",
+  allergy_record: "alert",
+  document_request: "request",
+  document_review: "scan",
+};
+
+function eventIcon(type: string) {
+  return EVENT_ICONS[type] || "chart";
+}
+
+/** Same tones as the old timeline dot: AI notes, labs (amber), critical events, else neutral. */
+function rowTone(tone: string): "ai" | "warning" | "critical" | undefined {
+  if (tone === "ai") return "ai";
+  if (tone === "lab") return "warning";
+  if (tone === "critical") return "critical";
+  return undefined;
+}
+
+function timeOf(value: string) {
+  return new Date(value).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+}
+
+/** Presentational grouping of the already-filtered list; order is kept. */
+function groupByDay(events: TimelineEventF16[]) {
+  const days: { key: string; label: string; events: TimelineEventF16[] }[] = [];
+  for (const event of events) {
+    const date = new Date(event.occurred_at);
+    const key = date.toDateString();
+    const last = days[days.length - 1];
+    if (last && last.key === key) last.events.push(event);
+    else days.push({ key, label: date.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" }), events: [event] });
+  }
+  return days;
 }

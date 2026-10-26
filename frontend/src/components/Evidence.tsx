@@ -109,15 +109,15 @@ export function EvidenceDrawer() {
                 <dt>Recorded by</dt>
                 <dd>{event.recorded_by}</dd>
                 <dt>Drafted by</dt>
-                <dd>{event.drafted_by || "—"}</dd>
+                <dd>{event.drafted_by || "Not recorded"}</dd>
                 <dt>Approved by</dt>
-                <dd>{event.approved_by || "—"}</dd>
+                <dd>{event.approved_by || "Not recorded"}</dd>
                 <dt>Source</dt>
                 <dd>{event.source_label} <span className="mono small">({event.source})</span></dd>
                 <dt>Event id</dt>
                 <dd className="mono">{event.id}</dd>
                 <dt>Encounter</dt>
-                <dd className="mono">{event.encounter_id || "—"}</dd>
+                <dd className="mono">{event.encounter_id || "Not recorded"}</dd>
                 {event.superseded_by ? (
                   <>
                     <dt>Superseded by</dt>

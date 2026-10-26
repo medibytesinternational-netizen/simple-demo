@@ -2,11 +2,10 @@ import { DOC_TYPE_OPTIONS, type DocType } from "./types";
 
 export function DocTypeSelect({ value, onChange }: { value: DocType; onChange: (value: DocType) => void }) {
   return (
-    <label className="small muted" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      Type
+    <label className="doc-type-select">
+      <span className="doc-type-label">Type</span>
       <select
-        className="select"
-        style={{ width: 150, padding: "3px 6px", fontSize: 12 }}
+        className="select select-sm"
         value={value}
         onChange={(event) => onChange(event.target.value as DocType)}
         aria-label="Document type"

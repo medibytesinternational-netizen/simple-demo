@@ -8,7 +8,7 @@ import { EvidenceDrawer } from "./Evidence";
 import { Modal } from "./Modal";
 import { Dock } from "./Dock";
 import { PatientSearch } from "./PatientSearch";
-import { PatientStrip, initials } from "./PatientStrip";
+import { initials } from "./PatientStrip";
 import { ThemeToggle } from "./ThemeToggle";
 import { findActive } from "./modules";
 import { Icon } from "./icons";
@@ -17,9 +17,6 @@ import { DEMO_MODE, PREVIEW_LABEL } from "../demo/config";
 // This file stays ASCII-only: a backend test reads it with the platform default encoding.
 const SEP = String.fromCharCode(183);
 
-// The clinical modules are scoped to the primary patient's encounter, so the
-// identity strip appears on exactly those screens and nowhere else.
-const PATIENT_SCOPED = new Set(["/timeline", "/notes", "/safety", "/documents", "/discharge", "/revenue", "/tasks"]);
 
 // Documents still waiting for a person to confirm what OCR read.
 const AWAITING_REVIEW = new Set(["needs_confirmation", "pending", "needs_manual_entry"]);
@@ -36,7 +33,6 @@ export function Shell() {
   const location = useLocation();
   const tab = new URLSearchParams(location.search).get("tab");
   const [resetOpen, setResetOpen] = useState(false);
-  const [launchpadOpen, setLaunchpadOpen] = useState(false);
 
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
   const patientId = meta.data?.patient.id;
@@ -80,11 +76,6 @@ export function Shell() {
     : null;
   const user = meta.data?.user?.name || meta.data?.demo_user || "Dr. Meera Shah";
   const role = meta.data?.demo_role || "Attending physician";
-  const showPatient = PATIENT_SCOPED.has(location.pathname);
-  const egfr = state.data?.latest_labs.find((lab) => lab.name.toLowerCase() === "egfr");
-  const stayDay = meta.data?.encounter.admitted_at && meta.data.demo_now
-    ? Math.floor((Date.parse(meta.data.demo_now.slice(0, 10)) - Date.parse(meta.data.encounter.admitted_at.slice(0, 10))) / 86_400_000) + 1
-    : null;
 
   return (
     <div className="app">
@@ -117,7 +108,7 @@ export function Shell() {
           </nav>
           <PatientSearch />
           <div className="topbar-right">
-            <button type="button" className="chrome-btn icon-only chrome-btn-search" onClick={() => setLaunchpadOpen(true)} aria-label="Search modules and patients">
+            <button type="button" className="chrome-btn icon-only chrome-btn-search" onClick={() => navigate("/patients")} aria-label="Find a patient">
               <Icon name="search" size={17} />
             </button>
             {DEMO_MODE ? (
@@ -132,9 +123,7 @@ export function Shell() {
                 <span className={`mode-pill ${meta.data?.llm_mode === "live" ? "live" : ""}`} title={meta.data?.live_available ? "OpenAI key detected" : "Drafts come from the cached demo set"}>
                   {meta.data?.llm_mode === "live" ? "Live drafts" : "Cached drafts"}
                 </span>
-                <span className="mode-pill" title={`Pack of ${credits.data?.pack_size ?? "?"} credits. Reading a report 1, voice note 2, medicine reconciliation 2, report analysis 4, discharge summary 5.`}>
-                  {credits.data ? `${credits.data.balance.toLocaleString()} credits` : "Credits loading"}
-                </span>
+                <IntegrationBanner />
               </>
             )}
             {demoClock ? (
@@ -156,16 +145,13 @@ export function Shell() {
           </div>
         </header>
 
-        {showPatient ? <PatientStrip meta={meta.data} openAlerts={openAlerts} egfr={egfr} stayDay={stayDay} /> : null}
-
         <main className="content-scroll" id="main-content" tabIndex={-1}>
           <div className="content">
-            {DEMO_MODE ? null : <IntegrationBanner />}
             <Outlet />
           </div>
         </main>
 
-        <Dock counts={counts} launchpadOpen={launchpadOpen} setLaunchpadOpen={setLaunchpadOpen} />
+        <Dock counts={counts} />
       </div>
 
       <EvidenceDrawer />
@@ -181,6 +167,12 @@ export function Shell() {
               ? "Demo reset is not available in the UI preview: there is no backend. Refresh the page to clear anything added in this tab."
               : "Reset the synthetic patient. All drafts, tasks, alerts, documents and audit entries are replaced."}
           </p>
+          {!DEMO_MODE ? (
+            <p className="small muted" style={{ marginTop: 0 }}>
+              Draft mode: {meta.data?.llm_mode === "live" ? "live model" : "cached demo drafts"}.
+              {credits.data ? ` ${credits.data.balance.toLocaleString()} of ${credits.data.pack_size.toLocaleString()} credits remaining.` : ""}
+            </p>
+          ) : null}
           <div className="grid-2 mt-3">
             <button className="choice-card" onClick={() => reset.mutate("start")} disabled={reset.isPending || DEMO_MODE}>
               <span className="card-title">Fresh start</span>

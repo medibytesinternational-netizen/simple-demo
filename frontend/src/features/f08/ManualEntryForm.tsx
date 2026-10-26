@@ -33,55 +33,55 @@ export function ManualEntryForm({
     setForm((current) => ({ ...current, [key]: event.target.value }));
 
   return (
-    <div className="field-row" style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 8 }}>
+    <div className="manual-entry">
       <div className="field-name">Type a value from the original</div>
       <div className="small muted">What you type is saved as confirmed by you and marked as typed by hand.</div>
-      <div className="flex gap-2 mt-1" style={{ flexWrap: "wrap" }}>
+      <div className="manual-entry-grid">
         <input
-          className="input"
+          className="input manual-name"
           placeholder={isRx ? "Medicine" : isText ? "Heading (Impression, Findings)" : "Test name"}
+          aria-label={isRx ? "Medicine" : isText ? "Heading" : "Test name"}
           value={form.name}
           onChange={set("name")}
-          style={{ width: 170 }}
         />
         <input
-          className="input"
+          className={`input ${isText ? "manual-text" : "manual-value"}`}
           placeholder={isRx ? "Dose" : isText ? "Text" : "Result"}
+          aria-label={isRx ? "Dose" : isText ? "Text" : "Result"}
           value={form.value}
           onChange={set("value")}
-          style={{ width: isText ? 260 : 100 }}
         />
         {!isText && !isRx ? (
-          <input className="input" placeholder="Unit" value={form.unit} onChange={set("unit")} style={{ width: 90 }} />
+          <input className="input manual-unit" placeholder="Unit" aria-label="Unit" value={form.unit} onChange={set("unit")} />
         ) : null}
         {!isText ? (
           <input
-            className="input"
+            className="input manual-range"
             placeholder={isRx ? "How often" : "Reference range"}
+            aria-label={isRx ? "How often" : "Reference range"}
             value={form.reference_range}
             onChange={set("reference_range")}
-            style={{ width: 130 }}
           />
         ) : null}
         {!isText && !isRx ? (
           <input
-            className="input"
+            className="input manual-date"
             type="date"
             aria-label="Collected on"
             value={form.collected_at}
             onChange={set("collected_at")}
-            style={{ width: 140 }}
           />
         ) : null}
         <button
           className="btn btn-sm"
           onClick={() => add.mutate()}
+          aria-busy={add.isPending || undefined}
           disabled={!allowed || add.isPending || !form.name.trim() || !form.value.trim()}
         >
-          {add.isPending ? "Saving…" : "Add value"}
+          {add.isPending ? <><span className="spinner" /> Saving…</> : "Add value"}
         </button>
       </div>
-      {!allowed ? <div className="small muted mt-1">Your role cannot enter values.</div> : null}
+      {!allowed ? <div className="small muted">Your role cannot enter values.</div> : null}
     </div>
   );
 }

@@ -1,0 +1,18 @@
+/* Discharge: stepper in the header, readiness on the left, summary and sign on the right */
+.pg-discharge .page-meta { margin-top: 14px; }
+.pg-discharge .dc-left, .pg-discharge .dc-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* readiness checklist (f09 ReadinessPanel) */
+.pg-discharge .readiness { display: flex; flex-direction: column; gap: 12px; }
+.pg-discharge .readiness .checklist { list-style: none; margin: 0; padding: 0; }
+.pg-discharge .check-label { flex: 1; min-width: 0; }
+.pg-discharge .check-source { font-size: var(--fs-xs); color: var(--muted); text-align: right; }
+.pg-discharge .readiness .banner { align-items: flex-start; }
+.pg-discharge .readiness-list { margin: 4px 0 0; padding-left: 18px; font-size: var(--fs-xs); line-height: 1.6; }
+.pg-discharge .readiness-note { margin: 0; }
+
+.pg-discharge .disclosure-body p { margin: 0 0 8px; }
+.pg-discharge .disclosure-body p:last-child { margin-bottom: 0; }
+
+/* sign panel (f09 SignPanel) */
+.pg-discharge .sign-panel .form-row .form-field { flex: 1 1 260px; }

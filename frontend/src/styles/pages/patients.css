@@ -1,0 +1,38 @@
+/* Patient list (pages/Patients.tsx). Shared look lives in components.css. */
+.pg-patients .pt-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+
+/* gallery view: compact patient tiles on the panel surface */
+.pg-patients .pt-gallery { list-style: none; margin: 0; padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.pg-patients .pt-gallery > .skeleton-rows { grid-column: 1 / -1; padding: 0; }
+.pg-patients .pt-card { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 14px; border-radius: var(--radius); border: 1px solid var(--border-soft); background: var(--surface-2); }
+.pg-patients .pt-card-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pg-patients .pt-card-id { min-width: 0; }
+.pg-patients .pt-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+
+@media (max-width: 600px) {
+  .pg-patients .pt-gallery { grid-template-columns: minmax(0, 1fr); padding: 12px; }
+}
+
+/* ---------- dashboard-kit look ---------- */
+.pg-patients button.dk-kpi { text-align: left; font: inherit; cursor: pointer; }
+.pg-patients button.dk-kpi:hover { transform: translateY(-2px); box-shadow: 0 14px 28px -18px rgb(21 62 117 / .55); }
+.pg-patients .dk-kpi.is-on:not(.is-feature) { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.pg-patients .dk-kpi.tone-critical.is-on { border-color: var(--critical); box-shadow: 0 0 0 3px var(--critical-soft); }
+.pg-patients button.dk-kpi:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pg-patients .dk-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.pg-patients .pt-panel { padding: 0; overflow: hidden; }
+.pg-patients .pt-panel .toolbar { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.pg-patients .pt-panel .search-input input, .pg-patients .pt-panel .toolbar .btn, .pg-patients .pt-panel .segmented { border-radius: 999px; }
+.pg-patients .pt-panel table th, .pg-patients .pt-panel table th button { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.pg-patients .pt-panel table td { padding-top: 11px; padding-bottom: 11px; }
+.pg-patients .pt-panel tbody tr { transition: background var(--dur-1) var(--ease-out); }
+.pg-patients .pt-panel tbody tr:hover { background: var(--surface-2); }
+.pg-patients .pt-who { display: flex; align-items: center; gap: 10px; }
+.pg-patients .pt-panel .pill { border-radius: 6px; }
+.pg-patients .pt-panel td:last-child { white-space: nowrap; }
+.pg-patients .pt-panel td:last-child .dk-btn + .dk-btn { margin-left: 6px; }
+.pg-patients .pt-foot { margin: 0; padding: 12px 18px 14px; border-top: 1px solid var(--border); }
+
+.pg-patients .pt-card { border-radius: 18px; background: var(--surface-2); border-color: var(--border); transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out); }
+.pg-patients .pt-card:hover { transform: translateY(-2px); box-shadow: 0 14px 28px -18px rgb(21 62 117 / .55); }

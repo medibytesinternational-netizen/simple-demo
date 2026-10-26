@@ -36,6 +36,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Patients",
     items: [
       { id: "patients", label: "Patient list", to: "/patients", icon: "patients", hint: "Find, register and view patients", match: (p) => p === "/patients", keywords: ["register", "directory", "mrn"] },
+      { id: "overview-patient", label: "Patient dashboard", to: "/patient", icon: "overview", hint: "Summary of the open patient: alerts, labs, medicines and next steps", match: (p) => p === "/patient", keywords: ["summary", "overview", "ravi"] },
       { id: "timeline", label: "Patient chart", to: "/timeline", icon: "chart", hint: "Timeline of everything recorded for the patient", match: (p) => p === "/timeline", keywords: ["timeline", "history", "events", "ravi"] },
     ],
   },
@@ -101,14 +102,31 @@ export function findActive(path: string, tab: string | null) {
   return ALL_ITEMS.find((item) => item.match(path, tab)) || null;
 }
 
-/** High-traffic shortcuts for the bottom dock. Every module is in the launchpad. */
-export const DOCK_ITEMS: { id: string; label: string; to: string; icon: string; match: (p: string, t: string | null) => boolean; count?: CountKey }[] = [
+export type DockItem = { id: string; label: string; to: string; icon: string; match: (p: string, t: string | null) => boolean; count?: CountKey; optional?: boolean };
+
+/** Pages that act on the open patient: the patient bar and the patient dock show on exactly these. */
+export const PATIENT_ROUTES = new Set(["/patient", "/timeline", "/notes", "/safety", "/documents", "/discharge", "/revenue", "/tasks"]);
+export const isPatientRoute = (path: string) => PATIENT_ROUTES.has(path);
+
+/** Dock outside a patient: hospital-wide pages. Every module is in the launchpad. */
+export const HOSPITAL_DOCK: DockItem[] = [
   { id: "dashboard", label: "Dashboard", to: "/dashboard", icon: "overview", match: (p) => p === "/dashboard" },
-  { id: "patients", label: "Patients", to: "/patients", icon: "patients", match: (p) => p === "/patients" || p === "/timeline" },
-  { id: "clinical", label: "Clinical care", to: "/notes?tab=round", icon: "round", match: (p, t) => (p === "/notes" && t !== "labs") || p === "/admission" || p === "/discharge" },
-  { id: "alerts", label: "Alerts", to: "/safety?tab=alerts", icon: "safety", match: (p) => p === "/safety", count: "alerts" },
-  { id: "tasks", label: "Tasks", to: "/tasks", icon: "tasks", match: (p) => p === "/tasks", count: "overdue" },
-  { id: "documents", label: "Documents", to: "/documents?tab=inbound", icon: "scan", match: (p) => p === "/documents", count: "documents" },
+  { id: "patients", label: "Patients", to: "/patients", icon: "patients", match: (p) => p === "/patients" },
+  { id: "new-admission", label: "Admit", to: "/admission", icon: "admission", match: (p) => p === "/admission" },
+  { id: "audit", label: "Audit", to: "/audit", icon: "audit", match: (p) => p === "/audit", optional: true },
+];
+
+/** Dock inside a patient's record: that patient's tabs. */
+export const PATIENT_DOCK: DockItem[] = [
+  { id: "overview", label: "Overview", to: "/patient", icon: "overview", match: (p) => p === "/patient" },
+  { id: "chart", label: "Chart", to: "/timeline", icon: "chart", match: (p) => p === "/timeline" },
+  { id: "care", label: "Care", to: "/notes?tab=round", icon: "round", match: (p, t) => p === "/notes" && t !== "labs" },
+  // Labs live under Safety even though the URL starts with /notes.
+  { id: "safety", label: "Safety", to: "/safety?tab=alerts", icon: "safety", match: (p, t) => p === "/safety" || (p === "/notes" && t === "labs"), count: "alerts" },
+  { id: "documents", label: "Documents", to: "/documents?tab=inbound", icon: "scan", match: (p) => p === "/documents", count: "documents", optional: true },
+  { id: "tasks", label: "Tasks", to: "/tasks", icon: "tasks", match: (p) => p === "/tasks", count: "overdue", optional: true },
+  { id: "discharge", label: "Discharge", to: "/discharge", icon: "discharge", match: (p) => p === "/discharge", optional: true },
+  { id: "billing", label: "Billing", to: "/revenue?tab=claim", icon: "billing", match: (p) => p === "/revenue", optional: true },
 ];
 
 /** Badge colour per count: red for safety, amber for overdue work, blue for review queues. */

@@ -4,7 +4,7 @@ import { session } from "../api";
 
 /**
  * Opens a patient's chart the way PR #3's OpenRecordButton does: remember the patient (so every
- * request carries X-Patient-Id), drop cached pages, then go to the timeline. Callers only offer it
+ * request carries X-Patient-Id), drop cached pages, then go to the patient dashboard. Callers only offer it
  * for rows the server marks browsable; every other patient opens the read-only summary instead.
  */
 export function useOpenChart() {
@@ -13,6 +13,6 @@ export function useOpenChart() {
   return (patientId: string) => {
     session.setPatient(patientId);
     queryClient.clear();
-    navigate("/timeline");
+    navigate("/patient");
   };
 }

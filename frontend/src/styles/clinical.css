@@ -7,7 +7,7 @@
 .timeline-scroll { max-height: 760px; overflow-y: auto; padding-right: 4px; }
 .day-group { display: flex; flex-direction: column; gap: 8px; }
 .day-group + .day-group { margin-top: 18px; }
-.day-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 6px 0; background: var(--bg); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.day-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 6px 0; background: var(--surface); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .day-head::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 .event-time { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
 /* legacy timeline classes kept for any remaining caller */

@@ -23,33 +23,35 @@ export default function ReferralRequestForm() {
   });
 
   return (
-    <div className="mb-3">
-      <div className="form-row">
-        <div>
-          <label className="field-label">Specialty</label>
+    <div className="referral-form">
+      <div className="form-grid">
+        <label className="form-field">
+          <span className="field-label">Specialty</span>
           <input className="input" value={specialty} placeholder="Nephrology" onChange={(event) => setSpecialty(event.target.value)} />
-        </div>
-        <div>
-          <label className="field-label">Urgency</label>
-          <select className="input" value={urgency} onChange={(event) => setUrgency(event.target.value)}>
+        </label>
+        <label className="form-field">
+          <span className="field-label">Urgency</span>
+          <select className="select" value={urgency} onChange={(event) => setUrgency(event.target.value)}>
             <option value="">Not set (routine)</option>
             <option value="routine">Routine</option>
             <option value="urgent">Urgent</option>
             <option value="emergency">Emergency</option>
           </select>
-        </div>
-        <div style={{ flex: 1, minWidth: 240 }}>
-          <label className="field-label">Question to the specialist</label>
+        </label>
+        <label className="form-field form-span">
+          <span className="field-label">Question to the specialist</span>
           <input className="input" value={question} onChange={(event) => setQuestion(event.target.value)} />
-        </div>
-        <button className="btn btn-primary btn-sm" onClick={() => draft.mutate()} disabled={!allowed || draft.isPending}>
-          {draft.isPending ? <><span className="spinner" /> Drafting…</> : "Draft referral"}
-        </button>
+        </label>
       </div>
-      <div className="small muted mt-1">
+      <div className="field-hint">
         Leave the specialty blank to use an abnormal kidney result. Leave the question blank and write it in the draft; approval is refused until it is written.
       </div>
-      {!allowed ? <div className="small muted mt-1">Your role cannot draft a referral.</div> : null}
+      <div className="button-row mt-3">
+        <button className="btn btn-primary" onClick={() => draft.mutate()} disabled={!allowed || draft.isPending} aria-busy={draft.isPending || undefined}>
+          {draft.isPending ? <><span className="spinner" /> Drafting…</> : "Draft referral"}
+        </button>
+        {!allowed ? <span className="small muted">Your role cannot draft a referral.</span> : null}
+      </div>
       {error ? <div className="error-box mt-2">{error}</div> : null}
     </div>
   );

@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../../api";
 import type { AlertQuality } from "./types";
+import { Banner, DataTable, EmptyState, Pill } from "../../components/ui";
+import type { Column } from "../../components/ui";
+import type { AlertQualityRule } from "./types";
 
 function percent(value: number | null | undefined) {
   return value === null || value === undefined ? "n/a" : `${Math.round(value * 100)}%`;
@@ -14,52 +17,41 @@ export function AlertQualityTable() {
   });
   const data = quality.data;
 
+  const count = (key: keyof AlertQualityRule, header: string): Column<AlertQualityRule> => ({
+    key, header, align: "right", sort: (rule) => rule[key] as number, cell: (rule) => rule[key] as number,
+  });
+  const columns: Column<AlertQualityRule>[] = [
+    { key: "rule_id", header: "Rule", sort: (rule) => rule.rule_id, cell: (rule) => <span className="mono">{rule.rule_id}</span> },
+    count("opened", "Opened"),
+    count("open", "Still open"),
+    count("false_positive", "False positive"),
+    count("known_and_accepted", "Known, accepted"),
+    count("acted_on", "Acted on"),
+    count("auto_resolved", "Auto-resolved"),
+    { key: "precision", header: "Precision", align: "right", sort: (rule) => rule.precision, cell: (rule) => percent(rule.precision) },
+  ];
+
   return (
-    <div className="card">
-      <div className="card-head">
-        <div>
-          <div className="card-title">Alert quality (small sample)</div>
-          <div className="card-sub">How each safety rule has performed on the alerts it opened</div>
-        </div>
-        {data ? <span className="badge badge-neutral">{data.sample_size} alerts</span> : null}
+    <div className="aq">
+      <div className="aq-head">
+        <span className="muted small">How each safety rule has performed on the alerts it opened.</span>
+        {data ? <Pill>{data.sample_size} alerts</Pill> : null}
       </div>
       {quality.isError ? (
-        <div className="card-pad">
-          <div className="banner warning">Alert quality is not available right now.</div>
-        </div>
+        <Banner tone="warning">Alert quality is not available right now.</Banner>
       ) : (
         <>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Rule</th>
-                <th className="right">Opened</th>
-                <th className="right">Still open</th>
-                <th className="right">False positive</th>
-                <th className="right">Known, accepted</th>
-                <th className="right">Acted on</th>
-                <th className="right">Auto-resolved</th>
-                <th className="right">Precision</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data?.rules.map((rule) => (
-                <tr key={rule.rule_id}>
-                  <td className="mono">{rule.rule_id}</td>
-                  <td className="right">{rule.opened}</td>
-                  <td className="right">{rule.open}</td>
-                  <td className="right">{rule.false_positive}</td>
-                  <td className="right">{rule.known_and_accepted}</td>
-                  <td className="right">{rule.acted_on}</td>
-                  <td className="right">{rule.auto_resolved}</td>
-                  <td className="right">{percent(rule.precision)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {quality.isLoading ? <div className="card-pad small muted">Loading.</div> : null}
-          {data && !data.rules.length ? <div className="empty">No alerts to measure yet.</div> : null}
-          {data?.note ? <div className="card-pad small muted">{data.note}</div> : null}
+          <div className="aq-table">
+            <DataTable
+              columns={columns}
+              rows={data?.rules || []}
+              rowKey={(rule) => rule.rule_id}
+              loading={quality.isLoading}
+              caption="Alert quality by rule"
+              empty={<EmptyState icon="safety" title="No alerts to measure yet">Each rule is scored here once its alerts are acted on, accepted or dismissed.</EmptyState>}
+            />
+          </div>
+          {data?.note ? <p className="small muted m-0">{data.note}</p> : null}
         </>
       )}
     </div>

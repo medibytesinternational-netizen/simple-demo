@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { Fragment, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { COUNT_TONE, DOCK_ITEMS, type CountKey } from "./modules";
+import { COUNT_TONE, HOSPITAL_DOCK, PATIENT_DOCK, isPatientRoute, type CountKey, type DockItem } from "./modules";
 import { Icon } from "./icons";
-import { Launchpad } from "./Launchpad";
 
 const MAX_SCALE = 0.16;
 const REACH = 100;
@@ -23,38 +21,32 @@ function useMagnify() {
   return ok;
 }
 
+// Leaves the patient's record for the hospital-wide pages.
+const BACK_TO_HOSPITAL: DockItem = { id: "hospital", label: "Hospital", to: "/dashboard", icon: "back", match: () => false };
+
+const COUNT_SCOPE: Record<CountKey, (n: number) => string> = {
+  alerts: (n) => `${n} open alert${n === 1 ? "" : "s"} for the current patient`,
+  overdue: (n) => `${n} overdue task${n === 1 ? "" : "s"} for the current patient`,
+  documents: (n) => `${n} report${n === 1 ? "" : "s"} awaiting confirmation`,
+  labs: (n) => `${n} unreviewed lab result${n === 1 ? "" : "s"}`,
+};
+
 /**
  * macOS-style dock: the main navigation. It sits in its own strip under the
- * paper canvas (not on top of it), so it never covers content. The last tile
- * opens the Launchpad with every module; Ctrl/Cmd+K opens it from anywhere.
+ * paper canvas (not on top of it), so it never covers content. It shows the
+ * hospital pages, or the open patient's tabs; on phones it scrolls sideways.
  */
-export function Dock({ counts, launchpadOpen, setLaunchpadOpen }: {
-  counts: Record<CountKey, number>;
-  launchpadOpen: boolean;
-  setLaunchpadOpen: (open: boolean) => void;
-}) {
+export function Dock({ counts }: { counts: Record<CountKey, number> }) {
   const location = useLocation();
   const tab = new URLSearchParams(location.search).get("tab");
   const [scales, setScales] = useState<number[]>([]);
   const [focus, setFocus] = useState(0);
   const refs = useRef<(HTMLElement | null)[]>([]);
   const magnify = useMagnify();
-  const total = DOCK_ITEMS.length + 1;
-  const launcherIndex = DOCK_ITEMS.length;
-
-  // Any route change closes the launchpad.
-  useEffect(() => { setLaunchpadOpen(false); }, [location.pathname, location.search, setLaunchpadOpen]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setLaunchpadOpen(!launchpadOpen);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [launchpadOpen, setLaunchpadOpen]);
+  const patientMode = isPatientRoute(location.pathname);
+  const modeItems = patientMode ? PATIENT_DOCK : HOSPITAL_DOCK;
+  const items = [...(patientMode ? [BACK_TO_HOSPITAL] : []), ...modeItems];
+  const total = items.length;
 
   const onMove = (e: ReactPointerEvent) => {
     if (!magnify) return;
@@ -75,36 +67,30 @@ export function Dock({ counts, launchpadOpen, setLaunchpadOpen }: {
 
   return (
     <div className="dock-strip">
-      <nav aria-label="Main">
-        <ul className={`dock glass ${magnify ? "can-magnify" : ""}`} onPointerMove={onMove} onPointerLeave={() => setScales([])} onKeyDown={onKey}>
-          {DOCK_ITEMS.map((item, i) => {
+      <nav aria-label={patientMode ? "Patient record" : "Hospital"}>
+        <ul key={patientMode ? "patient" : "hospital"} className={`dock dock-${patientMode ? "patient" : "hospital"} ${magnify ? "can-magnify" : ""}`} onPointerMove={onMove} onPointerLeave={() => setScales([])} onKeyDown={onKey}>
+          {items.map((item, i) => {
             const active = item.match(location.pathname, tab);
             const count = item.count ? counts[item.count] : 0;
+            const scope = item.count && count ? COUNT_SCOPE[item.count](count) : "";
             return (
-              <li key={item.id}>
-                <Link ref={(el) => { refs.current[i] = el; }} to={item.to} className={`dock-item ${active ? "active" : ""}`}
-                  aria-current={active ? "page" : undefined} aria-label={count ? `${item.label}, ${count}` : item.label}
-                  tabIndex={i === focus ? 0 : -1} onFocus={() => setFocus(i)} style={{ transform: `scale(${scales[i] || 1})` }}>
-                  <span className="dock-icon"><Icon name={item.icon} size={21} /></span>
+              <Fragment key={item.id}>
+              <li className={item.optional ? "dock-optional" : undefined}>
+                <Link ref={(el) => { refs.current[i] = el; }} to={item.to} className={`dock-item ${active ? "active" : ""} ${item.optional ? "dock-optional" : ""} ${item === BACK_TO_HOSPITAL ? "dock-back" : ""}`}
+                  aria-current={active ? "page" : undefined} aria-label={item === BACK_TO_HOSPITAL ? "Back to hospital dashboard" : scope ? `${item.label}. ${scope}` : item.label}
+                  title={item === BACK_TO_HOSPITAL ? "Back to hospital dashboard" : scope || item.label}
+                  tabIndex={i === focus ? 0 : -1} onFocus={() => setFocus(i)}>
+                  <span className="dock-icon" style={{ transform: scales[i] && scales[i] !== 1 ? `translateY(-3px) scale(${scales[i]})` : undefined }}><Icon name={item.icon} size={21} /></span>
                   <span className="dock-label">{item.label}</span>
                   {count ? <span className={`dock-badge ${COUNT_TONE[item.count!]}`} aria-hidden="true">{count}</span> : null}
                 </Link>
               </li>
+              {item === BACK_TO_HOSPITAL ? <li aria-hidden="true"><span className="dock-sep" /></li> : null}
+              </Fragment>
             );
           })}
-          <li aria-hidden="true"><span className="dock-sep" /></li>
-          <li>
-            <button type="button" ref={(el) => { refs.current[launcherIndex] = el; }} className={`dock-item ${launchpadOpen ? "active" : ""}`}
-              aria-haspopup="dialog" aria-expanded={launchpadOpen} aria-label="All modules (Ctrl+K)"
-              tabIndex={launcherIndex === focus ? 0 : -1} onFocus={() => setFocus(launcherIndex)} onClick={() => setLaunchpadOpen(!launchpadOpen)}
-              style={{ transform: `scale(${scales[launcherIndex] || 1})` }}>
-              <span className="dock-icon"><Icon name="launcher" size={21} /></span>
-              <span className="dock-label">All modules</span>
-            </button>
-          </li>
         </ul>
       </nav>
-      {launchpadOpen ? createPortal(<Launchpad counts={counts} onClose={() => setLaunchpadOpen(false)} />, document.body) : null}
     </div>
   );
 }

@@ -4,6 +4,9 @@ import { get, patch, post } from "../api";
 import type { Claim, Draft, Meta } from "../types";
 import { EvidenceChip } from "./Evidence";
 import { Modal } from "./Modal";
+import { Icon } from "./icons";
+import { Banner, Field, MetaChip, Pill } from "./ui";
+import type { Tone } from "./ui";
 
 const FEATURE_LABELS: Record<string, string> = {
   F1: "Consultation note",
@@ -183,202 +186,277 @@ export function DraftReview({ draft }: { draft: Draft }) {
           ? "Approve & queue referral (demo)"
           : "Approve & sign";
 
+  // UI-only derived values for the render below (no new gating logic: every flag comes from the values above).
+  const isClosed = isApproved || isRejected;
+  const statusTone = isApproved ? "success" : isRejected ? "critical" : "ai";
+  const statusLabel = isApproved ? "Approved" : isRejected ? "Rejected" : draft.status === "human_edited" ? "Human edited" : "AI draft";
+  const allergyItems: any[] = verifiesAllergies ? draft.content?.allergies_to_verify || [] : [];
+  const showConsentGate = draft.feature === "F1";
+  const showAllergyGate = verifiesAllergies && allergyItems.length > 0;
+  const showF4Gate = draft.feature === "F4" && !editMode && !isApproved && !isRejected;
+  const gateStates: boolean[] = [
+    ...(showConsentGate ? [!f1NoConsent] : []),
+    ...(showAllergyGate ? allergyItems.map((item: any) => Boolean(item.verified)) : []),
+    ...(showF4Gate ? [!f4Incomplete] : []),
+  ];
+  const gatesDone = gateStates.filter(Boolean).length;
+  const gatesClear = gatesDone === gateStates.length;
+  const blockReason = f4Incomplete
+    ? "Examination and plan are required. Document them under Before you sign."
+    : f2Unverified
+      ? "Verify the documented allergy under Before you sign. A model may not mark an allergy as verified."
+      : f1NoConsent
+        ? "Record the patient's consent for consultation capture before signing."
+        : "";
+
   return (
     <div className={`draft-shell ${isApproved ? "draft-approved" : ""} ${isRejected ? "draft-rejected" : ""}`}>
       <div className="draft-head">
-        <div>
-          <div className="draft-title">{FEATURE_LABELS[draft.feature] || draft.feature}</div>
+        <div className="draft-head-text">
+          <div className="draft-title-row">
+            <h3 className="draft-title">{FEATURE_LABELS[draft.feature] || draft.feature}</h3>
+            <Pill tone={statusTone} icon={isApproved ? "check" : isRejected ? "close" : "spark"}>{statusLabel}</Pill>
+          </div>
           <div className="draft-meta">
-            <span className={`badge ${isApproved ? "badge-success" : isRejected ? "badge-critical" : "badge-ai"}`}>
-              {isApproved ? "Approved" : isRejected ? "Rejected" : draft.status === "human_edited" ? "Human edited" : "AI draft"}
-            </span>
-            <span>{draft.model}</span>
-            <span>prompt {draft.prompt_version}</span>
-            <span>{draft.evidence_event_ids.length} source{draft.evidence_event_ids.length === 1 ? "" : "s"}</span>
-            {draft.edited_by ? <span>edited by {draft.edited_by}</span> : null}
+            <MetaChip icon="spark" title="Model">{draft.model}</MetaChip>
+            <MetaChip title="Prompt version">prompt {draft.prompt_version}</MetaChip>
+            <MetaChip icon="link" title="Timeline events this draft cites">
+              {draft.evidence_event_ids.length} source{draft.evidence_event_ids.length === 1 ? "" : "s"}
+            </MetaChip>
+            {draft.edited_by ? <MetaChip icon="user">edited by {draft.edited_by}</MetaChip> : null}
           </div>
         </div>
         {!isApproved && !isRejected ? (
-          <button className="btn btn-sm" onClick={() => setEditMode((value) => !value)}>
+          <button className="btn btn-sm" aria-pressed={editMode} onClick={() => setEditMode((value) => !value)}>
+            <Icon name="edit" size={14} />
             {editMode ? "Stop editing" : "Edit draft (advanced)"}
           </button>
         ) : null}
       </div>
 
+      {error ? <div className="error-box draft-error" role="alert">{error}</div> : null}
+
+      {showConsentGate || showAllergyGate || showF4Gate ? (
+        <section className={`draft-gates ${gatesClear ? "is-clear" : ""}`} aria-label={isClosed ? "Sign-off checks" : "Before you sign"}>
+          <div className="draft-gates-title">
+            <Icon name={gatesClear ? "check" : "alert"} size={16} />
+            {isClosed ? "Sign-off checks" : "Before you sign"}
+            <span className="draft-gates-count">{gatesDone} of {gateStates.length} done</span>
+          </div>
+          <div className="draft-gates-sub">Explicit clinician actions. The model cannot complete these for you.</div>
+
+          {showConsentGate ? (
+            <div className="draft-gate">
+              <GateMark ok={!f1NoConsent} />
+              <div className="draft-gate-text">
+                <div className="draft-gate-label">Consent for consultation capture</div>
+                <div className="draft-gate-hint">
+                  {f1NoConsent
+                    ? "Not recorded yet. The model cannot record it for you."
+                    : "Recorded and audited."}
+                </div>
+              </div>
+              {f1NoConsent ? (
+                <button
+                  className="btn btn-sm"
+                  onClick={() => recordConsent.mutate()}
+                  disabled={recordConsent.isPending}
+                  aria-busy={recordConsent.isPending || undefined}
+                >
+                  {recordConsent.isPending ? <><span className="spinner" /> Recording…</> : "Record consent"}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
+          {showAllergyGate
+            ? allergyItems.map((item: any, index: number) => (
+                <div className="draft-gate" key={`${item.substance}-${index}`}>
+                  <GateMark ok={Boolean(item.verified)} />
+                  <div className="draft-gate-text">
+                    <div className="draft-gate-label">Allergy: {item.substance}</div>
+                    <div className="draft-gate-hint">Reaction: {item.reaction || "not recorded"}</div>
+                  </div>
+                  <Pill tone={item.verified ? "success" : "warning"}>{item.verified ? "verified" : "unverified"}</Pill>
+                  <EvidenceChip eventIds={item.source_event_id ? [item.source_event_id] : []} />
+                  {!item.verified && !isApproved && !isRejected ? (
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => verifyAllergy.mutate(item.substance)}
+                      disabled={verifyAllergy.isPending}
+                      aria-busy={(verifyAllergy.isPending && verifyAllergy.variables === item.substance) || undefined}
+                    >
+                      {verifyAllergy.isPending && verifyAllergy.variables === item.substance ? <><span className="spinner" /> Verify</> : "Verify"}
+                    </button>
+                  ) : null}
+                </div>
+              ))
+            : null}
+
+          {showF4Gate ? (
+            <div className="draft-gate">
+              <GateMark ok={!f4Incomplete} />
+              <div className="draft-gate-text">
+                <div className="draft-gate-label">Examination and plan (clinician-authored)</div>
+                <div className="draft-gate-hint">
+                  The draft will not invent examination findings or a plan. What you type is attributed to you,
+                  not to the transcript.
+                </div>
+              </div>
+              <div className="draft-gate-body">
+                <Field label="Examination" htmlFor={`f4-exam-${draft.id}`}>
+                  <textarea
+                    id={`f4-exam-${draft.id}`}
+                    className="textarea small"
+                    placeholder="e.g. Right lower leg erythema reduced; chest clear; no pedal oedema."
+                    value={f4Exam}
+                    onChange={(event) => setF4Exam(event.target.value)}
+                  />
+                </Field>
+                <Field label="Plan" htmlFor={`f4-plan-${draft.id}`}>
+                  <textarea
+                    id={`f4-plan-${draft.id}`}
+                    className="textarea small"
+                    placeholder="e.g. Continue IV flucloxacillin; hold metformin; repeat renal panel tomorrow."
+                    value={f4Plan}
+                    onChange={(event) => setF4Plan(event.target.value)}
+                  />
+                </Field>
+                <div className="button-row">
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => saveF4.mutate()}
+                    disabled={!f4Exam.trim() || !f4Plan.trim() || saveF4.isPending}
+                    aria-busy={saveF4.isPending || undefined}
+                  >
+                    {saveF4.isPending ? <><span className="spinner" /> Saving…</> : "Save clinician documentation"}
+                  </button>
+                  {saveF4.isSuccess ? <span className="small muted" role="status">Saved as human-authored and audited.</span> : null}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       <div className="draft-body">
-        {error ? <div className="error-box mb-3">{error}</div> : null}
         {isApproved ? (
-          <div className="banner success mb-3">
-            Committed to the timeline by {draft.approved_by || "clinician"}
-            {draft.committed_event_id ? <span className="mono"> · {draft.committed_event_id}</span> : null}
+          <div className="mb-3">
+            <Banner tone="success">
+              Committed to the timeline by {draft.approved_by || "clinician"}
+              {draft.committed_event_id ? <span className="mono"> · {draft.committed_event_id}</span> : null}
+            </Banner>
           </div>
         ) : null}
         {isRejected ? (
-          <div className="banner danger mb-3">Rejected: {draft.rejected_reason}</div>
+          <div className="mb-3">
+            <Banner tone="danger">Rejected: {draft.rejected_reason}</Banner>
+          </div>
         ) : null}
 
-        {draft.feature === "F1" ? (
-          <div className={`banner ${f1NoConsent ? "warning" : "success"} mb-3`}>
-            {f1NoConsent ? (
-              <div className="flex items-center justify-between gap-2">
-                <span>Consent for consultation capture has not been recorded. The model cannot record it for you.</span>
-                <button className="btn btn-sm" onClick={() => recordConsent.mutate()} disabled={recordConsent.isPending}>
-                  {recordConsent.isPending ? "Recording…" : "Record consent"}
+        <article className="draft-paper">
+          {editMode ? (
+            <div className="draft-editing">
+              <label className="field-label" htmlFor={`draft-json-${draft.id}`}>Draft content (JSON)</label>
+              <div className="field-hint mb-2">
+                Edit the validated JSON. Saving re-validates the draft and marks it human-edited.
+              </div>
+              <textarea
+                id={`draft-json-${draft.id}`}
+                className="textarea"
+                value={editText}
+                onChange={(event) => setEditText(event.target.value)}
+              />
+              <div className="button-row mt-2">
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => saveEdit.mutate()}
+                  disabled={saveEdit.isPending}
+                  aria-busy={saveEdit.isPending || undefined}
+                >
+                  {saveEdit.isPending ? <><span className="spinner" /> Saving…</> : "Save edits"}
                 </button>
               </div>
-            ) : (
-              <span>Consent for consultation capture is recorded and audited.</span>
-            )}
-          </div>
-        ) : null}
-
-        {verifiesAllergies && draft.content?.allergies_to_verify?.length ? (
-          <div className="mb-3">
-            <div className="section-label">Allergy verification — explicit clinician action</div>
-            <table className="table">
-              <thead><tr><th>Substance</th><th>Reaction</th><th>Status</th><th>Source</th><th /></tr></thead>
-              <tbody>
-                {draft.content.allergies_to_verify.map((item: any, index: number) => (
-                  <tr key={`${item.substance}-${index}`}>
-                    <td>{item.substance}</td>
-                    <td>{item.reaction || "—"}</td>
-                    <td>
-                      <span className={`badge ${item.verified ? "badge-success" : "badge-warning"}`}>
-                        {item.verified ? "verified" : "unverified"}
-                      </span>
-                    </td>
-                    <td><EvidenceChip eventIds={item.source_event_id ? [item.source_event_id] : []} /></td>
-                    <td className="right">
-                      {!item.verified && !isApproved && !isRejected ? (
-                        <button className="btn btn-sm" onClick={() => verifyAllergy.mutate(item.substance)} disabled={verifyAllergy.isPending}>
-                          Verify
-                        </button>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-
-        {draft.feature === "F4" && !editMode && !isApproved && !isRejected ? (
-          <div className="card mb-3" style={{ padding: 14 }}>
-            <div className="section-label">Document required sections — clinician-authored</div>
-            <div className="small muted mb-2">
-              The draft will not invent examination findings or a plan. What you type is attributed to you,
-              not to the transcript.
             </div>
-            <label className="field-label" htmlFor={`f4-exam-${draft.id}`}>Examination</label>
-            <textarea
-              id={`f4-exam-${draft.id}`}
-              className="textarea small mb-2"
-              placeholder="e.g. Right lower leg erythema reduced; chest clear; no pedal oedema."
-              value={f4Exam}
-              onChange={(event) => setF4Exam(event.target.value)}
-            />
-            <label className="field-label" htmlFor={`f4-plan-${draft.id}`}>Plan</label>
-            <textarea
-              id={`f4-plan-${draft.id}`}
-              className="textarea small"
-              placeholder="e.g. Continue IV flucloxacillin; hold metformin; repeat renal panel tomorrow."
-              value={f4Plan}
-              onChange={(event) => setF4Plan(event.target.value)}
-            />
-            <div className="button-row mt-2">
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => saveF4.mutate()}
-                disabled={!f4Exam.trim() || !f4Plan.trim() || saveF4.isPending}
-              >
-                {saveF4.isPending ? "Saving…" : "Save clinician documentation"}
-              </button>
-              {saveF4.isSuccess ? <span className="small muted">Saved as human-authored and audited.</span> : null}
-            </div>
-          </div>
-        ) : null}
-
-        {editMode ? (
-          <div className="draft-editing">
-            <div className="small muted mb-2">
-              Edit the validated JSON. Saving re-validates the draft and marks it human-edited.
-            </div>
-            <textarea className="textarea" value={editText} onChange={(event) => setEditText(event.target.value)} />
-            <div className="button-row mt-2">
-              <button className="btn btn-primary btn-sm" onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending}>
-                {saveEdit.isPending ? "Saving…" : "Save edits"}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <DraftContent draft={draft} selectedTasks={selectedTasks} setSelectedTasks={setSelectedTasks} />
-        )}
+          ) : (
+            <DraftContent draft={draft} selectedTasks={selectedTasks} setSelectedTasks={setSelectedTasks} />
+          )}
+        </article>
 
         {draft.feature === "F3" && tasks.length ? (
-          <div className="mt-4">
-            <div className="section-label">Proposed tasks — choose what becomes real</div>
-            <div className="list card">
-              {tasks.map((task, index) => (
-                <label className="list-row" key={`${task.title}-${index}`} style={{ cursor: "pointer" }}>
-                  <input
-                    className="checkbox"
-                    type="checkbox"
-                    checked={selectedTasks.includes(index)}
-                    onChange={(event) => {
-                      setSelectedTasks((current) =>
-                        event.target.checked ? [...current, index] : current.filter((item) => item !== index),
-                      );
-                    }}
-                  />
-                  <span style={{ flex: 1 }}>
-                    <span className="fs-13" style={{ fontWeight: 600 }}>{task.title}</span>
-                    <span className="small muted" style={{ display: "block" }}>
-                      {task.priority} · due in {task.due_in_hours}h · {Math.round((task.confidence ?? 1) * 100)}% confidence
+          <section className="draft-tasks" aria-label="Proposed tasks">
+            <h4 className="draft-section-title">
+              Proposed tasks<span className="draft-section-sub">Choose what becomes real</span>
+            </h4>
+            <div className="rows">
+              {tasks.map((task, index) => {
+                const checked = selectedTasks.includes(index);
+                return (
+                  <label className={`lrow draft-task ${checked ? "selected" : ""}`} key={`${task.title}-${index}`}>
+                    <input
+                      className="checkbox"
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(event) => {
+                        setSelectedTasks((current) =>
+                          event.target.checked ? [...current, index] : current.filter((item) => item !== index),
+                        );
+                      }}
+                    />
+                    <span className="lrow-main">
+                      <span className="lrow-title">{task.title}</span>
+                      <span className="lrow-chips">
+                        <Pill tone={priorityTone(task.priority)}>{task.priority}</Pill>
+                        <MetaChip icon="clock">due in {task.due_in_hours}h</MetaChip>
+                        <MetaChip>{Math.round((task.confidence ?? 1) * 100)}% confidence</MetaChip>
+                      </span>
                     </span>
-                  </span>
-                  <EvidenceChip eventIds={[]} segmentIds={task.source_segment_ids} />
-                </label>
-              ))}
+                    <span className="lrow-side">
+                      <EvidenceChip eventIds={[]} segmentIds={task.source_segment_ids} />
+                    </span>
+                  </label>
+                );
+              })}
             </div>
-            <div className="button-row mt-2">
+            <div className="button-row mt-3">
               <button
                 className="btn btn-primary btn-sm"
                 disabled={!isApproved || accept.isPending || !selectedTasks.length}
                 onClick={() => accept.mutate()}
+                aria-busy={accept.isPending || undefined}
               >
-                {accept.isPending ? "Accepting…" : `Accept ${selectedTasks.length} selected task${selectedTasks.length === 1 ? "" : "s"}`}
+                {accept.isPending
+                  ? <><span className="spinner" /> Accepting…</>
+                  : `Accept ${selectedTasks.length} selected task${selectedTasks.length === 1 ? "" : "s"}`}
               </button>
               {!isApproved ? <span className="small muted">Approve the note first, then accept tasks.</span> : null}
             </div>
-            {accept.isSuccess ? <div className="success-box mt-2">Tasks accepted. They are now real work items.</div> : null}
-          </div>
+            {accept.isSuccess ? <div className="success-box mt-2" role="status">Tasks accepted. They are now real work items.</div> : null}
+          </section>
         ) : null}
       </div>
 
       {!isApproved && !isRejected ? (
         <div className="draft-actions">
-          <div>
-            {f4Incomplete ? (
-              <div className="small" style={{ color: "var(--warning)", fontWeight: 600 }}>
-                Examination and plan are required. Document them in the clinician-authored editor before signing.
-              </div>
-            ) : f2Unverified ? (
-              <div className="small" style={{ color: "var(--warning)", fontWeight: 600 }}>
-                Verify the documented allergy below. A model may not mark an allergy as verified.
-              </div>
-            ) : f1NoConsent ? (
-              <div className="small" style={{ color: "var(--warning)", fontWeight: 600 }}>
-                Record the patient's consent for consultation capture before signing.
-              </div>
-            ) : (
-              <div className="small muted">Nothing is written until you approve. Every commit is audited.</div>
-            )}
-          </div>
+          {blockReason ? (
+            <div className="draft-block-reason" role="status">
+              <Icon name="alert" size={14} />
+              {blockReason}
+            </div>
+          ) : (
+            <div className="small muted">Nothing is written until you approve. Every commit is audited.</div>
+          )}
           <div className="button-row">
             <button className="btn btn-danger btn-sm" onClick={() => setRejectOpen(true)}>
               Reject
             </button>
-            <button className="btn btn-primary" onClick={() => approve.mutate()} disabled={approve.isPending || approvalBlocked}>
+            <button
+              className="btn btn-primary"
+              onClick={() => approve.mutate()}
+              disabled={approve.isPending || approvalBlocked}
+              title={approvalBlocked ? blockReason : undefined}
+              aria-busy={approve.isPending || undefined}
+            >
               {approve.isPending ? <><span className="spinner" /> Committing…</> : actionLabel}
             </button>
           </div>
@@ -416,6 +494,27 @@ export function DraftReview({ draft }: { draft: Draft }) {
   );
 }
 
+function GateMark({ ok }: { ok: boolean }) {
+  return (
+    <span className={`check-mark ${ok ? "ok" : "bad"}`}>
+      <Icon name={ok ? "check" : "alert"} size={12} />
+      <span className="sr-only">{ok ? "Done" : "To do"}</span>
+    </span>
+  );
+}
+
+function priorityTone(priority: unknown): Tone {
+  const value = String(priority || "").toLowerCase();
+  if (/stat|urgent|critical|immediate/.test(value)) return "critical";
+  if (/high/.test(value)) return "warning";
+  return "neutral";
+}
+
+/** Shown in a table cell or quoted value when the source carries nothing. */
+function Blank({ label = "Not recorded" }: { label?: string }) {
+  return <span className="muted">{label}</span>;
+}
+
 function ClaimLine({
   claim,
   emptyLabel = "Not documented",
@@ -428,7 +527,7 @@ function ClaimLine({
   if (!claim || !claim.text) {
     return (
       <div className="empty-field">
-        {emptyLabel} — {required ? "required before signing." : "no source in the transcript."}
+        {emptyLabel}: {required ? "required before signing." : "no source in the transcript."}
       </div>
     );
   }
@@ -437,24 +536,27 @@ function ClaimLine({
       <div className="claim-text">{claim.text}</div>
       <div className="claim-meta">
         {claim.human_authored ? (
-          <span className="badge badge-neutral">Clinician-authored</span>
+          <Pill tone="neutral" icon="user">Clinician-authored</Pill>
         ) : (
           <EvidenceChip eventIds={claim.source_event_ids} segmentIds={claim.source_segment_ids} />
         )}
         {claim.confidence !== undefined && claim.confidence < 0.85 ? (
-          <span className="badge badge-warning">{Math.round(claim.confidence * 100)}% confidence</span>
+          <Pill tone="warning">{Math.round(claim.confidence * 100)}% confidence</Pill>
         ) : null}
       </div>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: any }) {
+function Section({ title, sub, children }: { title: string; sub?: string; children: any }) {
   return (
-    <div className="mb-3">
-      <div className="section-label">{title}</div>
+    <section className="draft-section">
+      <h4 className="draft-section-title">
+        {title}
+        {sub ? <span className="draft-section-sub">{sub}</span> : null}
+      </h4>
       {children}
-    </div>
+    </section>
   );
 }
 
@@ -487,19 +589,21 @@ function DraftContent({
           <Section title="Plan"><ClaimList claims={content.plan} /></Section>
           {content.medication_mentions?.length ? (
             <Section title="Medication mentions">
-              <table className="table">
-                <thead><tr><th>Drug</th><th>Dose</th><th>Frequency</th><th>Source</th></tr></thead>
-                <tbody>
-                  {content.medication_mentions.map((med: any, index: number) => (
-                    <tr key={index}>
-                      <td>{med.drug}</td>
-                      <td className="mono">{med.dose || "—"}</td>
-                      <td>{med.frequency || "—"}</td>
-                      <td><EvidenceChip eventIds={med.source_event_ids} segmentIds={med.source_segment_ids} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead><tr><th>Drug</th><th>Dose</th><th>Frequency</th><th>Source</th></tr></thead>
+                  <tbody>
+                    {content.medication_mentions.map((med: any, index: number) => (
+                      <tr key={index}>
+                        <td>{med.drug}</td>
+                        <td className="mono">{med.dose || <Blank />}</td>
+                        <td>{med.frequency || <Blank />}</td>
+                        <td><EvidenceChip eventIds={med.source_event_ids} segmentIds={med.source_segment_ids} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </Section>
           ) : null}
           <Section title="Follow-up"><ClaimLine claim={content.follow_up} /></Section>
@@ -518,18 +622,20 @@ function DraftContent({
           <Section title="Assessment"><ClaimList claims={content.assessment} /></Section>
           <Section title="Plan"><ClaimList claims={content.plan} /></Section>
           {content.proposed_orders?.length ? (
-            <Section title="Proposed orders — drafts only">
-              <table className="table">
-                <thead><tr><th>Order</th><th>Rationale</th></tr></thead>
-                <tbody>
-                  {content.proposed_orders.map((order: any, index: number) => (
-                    <tr key={index}>
-                      <td>{order.order}</td>
-                      <td className="muted">{order.rationale}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <Section title="Proposed orders" sub="Drafts only">
+              <div className="table-wrap">
+                <table className="table">
+                  <thead><tr><th>Order</th><th>Rationale</th></tr></thead>
+                  <tbody>
+                    {content.proposed_orders.map((order: any, index: number) => (
+                      <tr key={index}>
+                        <td>{order.order}</td>
+                        <td className="muted">{order.rationale}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </Section>
           ) : null}
           <NotDocumented items={content.not_documented} />
@@ -539,7 +645,7 @@ function DraftContent({
       return (
         <>
           <Section title="Round note"><ClaimList claims={content.note_claims} /></Section>
-          <Section title="Proposed nursing chart entries — committed on note approval">
+          <Section title="Proposed nursing chart entries" sub="Committed on note approval">
             {content.nursing_entries?.length ? (
               <ClaimList claims={content.nursing_entries} />
             ) : (
@@ -568,23 +674,27 @@ function DraftContent({
         <>
           <Section title="Summary">{content.summary ? <p className="fs-13">{content.summary}</p> : null}</Section>
           <Section title="Discrepancies">
-            {content.discrepancies?.map((item: any, index: number) => (
-              <div className="alert-card mb-2" key={index} style={{ borderLeftColor: item.kind === "interaction" || item.kind === "contraindicated" ? "var(--critical)" : "var(--warning)" }}>
-                <div className="flex items-center gap-2">
-                  <span className={`badge ${item.kind === "interaction" || item.kind === "contraindicated" ? "badge-critical" : "badge-warning"}`}>{item.kind}</span>
-                  <strong className="fs-13">{item.home_med}</strong>
-                  <span className="small muted">→ {item.current_order || "not ordered"}</span>
-                </div>
-                <div className="alert-explanation">{item.explanation}</div>
-                {item.field ? (
-                  <div className="small muted">
-                    {item.field}: home “{item.home_value || "—"}” → inpatient “{item.current_value || "—"}”
+            {content.discrepancies?.map((item: any, index: number) => {
+              const severe = item.kind === "interaction" || item.kind === "contraindicated";
+              return (
+                <div className={`alert-card ${severe ? "critical" : "warning"} mb-2`} key={index}>
+                  <span className="alert-icon" aria-hidden="true"><Icon name="pill" size={18} /></span>
+                  <div className="flex items-center flex-wrap gap-2">
+                    <Pill tone={severe ? "critical" : "warning"}>{item.kind}</Pill>
+                    <strong className="fs-13">{item.home_med}</strong>
+                    <span className="small muted">→ {item.current_order || "not ordered"}</span>
                   </div>
-                ) : null}
-                {item.recommended_action ? <div className="small"><strong>Recommended:</strong> {item.recommended_action}</div> : null}
-                <EvidenceChip eventIds={item.evidence_event_ids} />
-              </div>
-            ))}
+                  <div className="alert-explanation">{item.explanation}</div>
+                  {item.field ? (
+                    <div className="small muted">
+                      {item.field}: home “{item.home_value || "not recorded"}” → inpatient “{item.current_value || "not recorded"}”
+                    </div>
+                  ) : null}
+                  {item.recommended_action ? <div className="alert-action"><strong>Recommended:</strong> {item.recommended_action}</div> : null}
+                  <div className="mt-2"><EvidenceChip eventIds={item.evidence_event_ids} /></div>
+                </div>
+              );
+            })}
           </Section>
         </>
       );
@@ -597,20 +707,22 @@ function DraftContent({
           <Section title="Assembly summary"><ClaimLine claim={content.summary} /></Section>
           <Section title="Flow-sheet entries">
             {content.entries?.length ? (
-              <table className="table">
-                <thead><tr><th>Category</th><th>Observation</th><th>Value</th><th>Recorded</th><th>Source</th></tr></thead>
-                <tbody>
-                  {content.entries.map((entry: any, index: number) => (
-                    <tr key={`${entry.source_event_id}-${index}`}>
-                      <td><span className="badge badge-neutral">{entry.category}</span></td>
-                      <td>{entry.label}<div className="small muted">{entry.device}</div></td>
-                      <td className="mono">{entry.value} {entry.unit}</td>
-                      <td className="small muted">{entry.recorded_at?.replace("T", " ").slice(0, 16)}</td>
-                      <td><EvidenceChip eventIds={entry.source_event_id ? [entry.source_event_id] : []} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead><tr><th>Category</th><th>Observation</th><th>Value</th><th>Recorded</th><th>Source</th></tr></thead>
+                  <tbody>
+                    {content.entries.map((entry: any, index: number) => (
+                      <tr key={`${entry.source_event_id}-${index}`}>
+                        <td><Pill tone="neutral">{entry.category}</Pill></td>
+                        <td>{entry.label}<div className="small muted">{entry.device}</div></td>
+                        <td className="mono">{entry.value} {entry.unit}</td>
+                        <td className="small muted">{entry.recorded_at?.replace("T", " ").slice(0, 16)}</td>
+                        <td><EvidenceChip eventIds={entry.source_event_id ? [entry.source_event_id] : []} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <div className="empty-field">No structured observations were available for this shift.</div>
             )}
@@ -627,34 +739,38 @@ function DraftContent({
             </Section>
           ))}
           {content.medications?.length ? (
-            <Section title="Discharge medications — assembled deterministically">
+            <Section title="Discharge medications" sub="Assembled deterministically">
               {content.medications.some((med: any) => med.safety_status && med.safety_status !== "ok") ? (
-                <div className="banner warning mb-2">
-                  Some active orders carry an open safety alert. The list is carried from active orders for reconciliation; resolve the flagged items before any external use.
+                <div className="mb-2">
+                  <Banner tone="warning">
+                    Some active orders carry an open safety alert. The list is carried from active orders for reconciliation; resolve the flagged items before any external use.
+                  </Banner>
                 </div>
               ) : null}
-              <table className="table">
-                <thead><tr><th>Drug</th><th>Dose</th><th>Route</th><th>Frequency</th><th>Safety</th><th>Source</th></tr></thead>
-                <tbody>
-                  {content.medications.map((med: any, index: number) => (
-                    <tr key={index}>
-                      <td>
-                        {med.drug}
-                        {med.safety_note ? <div className="small" style={{ color: "var(--critical)", maxWidth: 320 }}>{med.safety_note}</div> : null}
-                      </td>
-                      <td className="mono">{med.dose}</td>
-                      <td>{med.route}</td>
-                      <td>{med.frequency}</td>
-                      <td>
-                        <span className={`badge ${med.safety_status === "contraindicated" ? "badge-critical" : med.safety_status === "review" ? "badge-warning" : "badge-success"}`}>
-                          {med.safety_status === "contraindicated" ? "alert" : med.safety_status === "review" ? "review" : "clear"}
-                        </span>
-                      </td>
-                      <td><EvidenceChip eventIds={med.source_event_id ? [med.source_event_id] : []} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead><tr><th>Drug</th><th>Dose</th><th>Route</th><th>Frequency</th><th>Safety</th><th>Source</th></tr></thead>
+                  <tbody>
+                    {content.medications.map((med: any, index: number) => (
+                      <tr key={index}>
+                        <td>
+                          {med.drug}
+                          {med.safety_note ? <div className="small draft-med-note">{med.safety_note}</div> : null}
+                        </td>
+                        <td className="mono">{med.dose}</td>
+                        <td>{med.route}</td>
+                        <td>{med.frequency}</td>
+                        <td>
+                          <Pill tone={med.safety_status === "contraindicated" ? "critical" : med.safety_status === "review" ? "warning" : "success"}>
+                            {med.safety_status === "contraindicated" ? "alert" : med.safety_status === "review" ? "review" : "clear"}
+                          </Pill>
+                        </td>
+                        <td><EvidenceChip eventIds={med.source_event_id ? [med.source_event_id] : []} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </Section>
           ) : null}
           <Section title="Pending results">
@@ -677,33 +793,37 @@ function DraftContent({
               <dt>Type</dt><dd>{content.request_type}</dd>
               <dt>Study</dt><dd>{content.study}</dd>
               <dt>Priority</dt><dd>{content.priority}</dd>
-              <dt>Diagnosis</dt><dd>{content.diagnosis || "—"}</dd>
+              <dt>Diagnosis</dt><dd>{content.diagnosis || <Blank />}</dd>
             </dl>
           </Section>
           <Section title="Clinical indication"><ClaimLine claim={content.indication} /></Section>
           <Section title="Instructions">
             <div className="small">{content.instructions || "No special instructions."}</div>
           </Section>
-          <Section title="Allergies carried forward — verification required">
+          <Section title="Allergies carried forward" sub="Verification required">
             {content.allergies_to_verify?.length ? (
-              <table className="table">
-                <thead><tr><th>Substance</th><th>Reaction</th><th>Status</th><th>Source</th></tr></thead>
-                <tbody>
-                  {content.allergies_to_verify.map((item: any, index: number) => (
-                    <tr key={index}>
-                      <td>{item.substance}</td>
-                      <td>{item.reaction || "—"}</td>
-                      <td><span className={`badge ${item.verified ? "badge-success" : "badge-warning"}`}>{item.verified ? "verified" : "unverified"}</span></td>
-                      <td><EvidenceChip eventIds={item.source_event_id ? [item.source_event_id] : []} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead><tr><th>Substance</th><th>Reaction</th><th>Status</th><th>Source</th></tr></thead>
+                  <tbody>
+                    {content.allergies_to_verify.map((item: any, index: number) => (
+                      <tr key={index}>
+                        <td>{item.substance}</td>
+                        <td>{item.reaction || <Blank />}</td>
+                        <td><Pill tone={item.verified ? "success" : "warning"}>{item.verified ? "verified" : "unverified"}</Pill></td>
+                        <td><EvidenceChip eventIds={item.source_event_id ? [item.source_event_id] : []} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <div className="empty-field">No allergy is documented. Confirm this with the patient before a contrast or procedure request.</div>
             )}
           </Section>
-          <div className="banner warning mt-3">Demo export only. No laboratory, radiology or external transmission exists in this build.</div>
+          <div className="mt-3">
+            <Banner tone="warning">Demo export only. No laboratory, radiology or external transmission exists in this build.</Banner>
+          </div>
         </>
       );
     case "F11":
@@ -712,15 +832,17 @@ function DraftContent({
           <Section title="Referral">
             <dl className="kv">
               <dt>Specialty</dt><dd>{content.specialty}</dd>
-              <dt>Service</dt><dd>{content.specialist || "—"}</dd>
+              <dt>Service</dt><dd>{content.specialist || <Blank label="Not named" />}</dd>
               <dt>Urgency</dt><dd>{content.urgency}</dd>
             </dl>
           </Section>
           <Section title="Clinical question"><ClaimLine claim={content.question} /></Section>
           <Section title="History"><ClaimLine claim={content.history} /></Section>
           <Section title="Relevant results"><ClaimList claims={content.relevant_results} emptyLabel="No abnormal results were attached" /></Section>
-          <div className="banner warning mt-3">
-            The model does not invent a specialist, appointment or response. Approval changes the demo status to sent; no external transmission occurs.
+          <div className="mt-3">
+            <Banner tone="warning">
+              The model does not invent a specialist, appointment or response. Approval changes the demo status to sent; no external transmission occurs.
+            </Banner>
           </div>
         </>
       );
@@ -730,14 +852,17 @@ function DraftContent({
           <Section title="Summary"><p className="fs-13">{content.summary}</p></Section>
           <Section title="Review gaps">
             {content.gaps?.map((gap: any, index: number) => (
-              <div className="alert-card mb-2" key={index}>
-                <span className="badge badge-warning">{gap.kind.replaceAll("_", " ")}</span>
+              <div className="alert-card warning mb-2" key={index}>
+                <span className="alert-icon" aria-hidden="true"><Icon name="billing" size={18} /></span>
+                <div><Pill tone="warning">{gap.kind.replaceAll("_", " ")}</Pill></div>
                 <div className="alert-explanation">{gap.description}</div>
-                <EvidenceChip eventIds={gap.evidence_event_ids} />
+                <div><EvidenceChip eventIds={gap.evidence_event_ids} /></div>
               </div>
             ))}
           </Section>
-          <div className="banner warning">Review queue only. No claim is submitted.</div>
+          <div className="mt-3">
+            <Banner tone="warning">Review queue only. No claim is submitted.</Banner>
+          </div>
         </>
       );
     case "F13":
@@ -745,18 +870,24 @@ function DraftContent({
         <>
           <Section title="Summary"><p className="fs-13">{content.summary}</p></Section>
           <Section title="Findings">
-            {content.findings?.map((finding: any, index: number) => (
-              <div className="alert-card mb-2" key={index}>
-                <div className="flex items-center gap-2">
-                  <span className={`badge ${finding.billing_status === "unsupported" ? "badge-critical" : "badge-warning"}`}>{finding.billing_status}</span>
-                  <strong className="fs-13">{finding.procedure}</strong>
+            {content.findings?.map((finding: any, index: number) => {
+              const unsupported = finding.billing_status === "unsupported";
+              return (
+                <div className={`alert-card ${unsupported ? "critical" : "warning"} mb-2`} key={index}>
+                  <span className="alert-icon" aria-hidden="true"><Icon name="leakage" size={18} /></span>
+                  <div className="flex items-center flex-wrap gap-2">
+                    <Pill tone={unsupported ? "critical" : "warning"}>{finding.billing_status}</Pill>
+                    <strong className="fs-13">{finding.procedure}</strong>
+                  </div>
+                  <div className="alert-explanation">{finding.explanation}</div>
+                  <div><EvidenceChip eventIds={finding.evidence_event_ids} /></div>
                 </div>
-                <div className="alert-explanation">{finding.explanation}</div>
-                <EvidenceChip eventIds={finding.evidence_event_ids} />
-              </div>
-            ))}
+              );
+            })}
           </Section>
-          <div className="banner warning">Review queue only. Nothing is charged automatically.</div>
+          <div className="mt-3">
+            <Banner tone="warning">Review queue only. Nothing is charged automatically.</Banner>
+          </div>
         </>
       );
     default:

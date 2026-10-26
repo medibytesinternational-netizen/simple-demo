@@ -23,7 +23,7 @@ function fmtSize(bytes: number) {
 }
 
 function fmtDate(value?: string | null) {
-  return value ? new Date(value).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+  return value ? new Date(value).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Not recorded";
 }
 
 export function PatientDrawer({ row, onClose, onEdit }: { row: DirectoryRow; onClose: () => void; onEdit?: () => void }) {
@@ -63,20 +63,20 @@ function Summary({ row, onEdit }: { row: DirectoryRow; onEdit?: () => void }) {
       </div>
       <dl className="kv">
         <dt>MRN</dt><dd className="mono">{row.mrn}</dd>
-        <dt>Age / sex</dt><dd>{row.age ?? "—"} · {row.sex}</dd>
-        {p ? <><dt>Date of birth</dt><dd>{p.dob}</dd><dt>Phone</dt><dd>{p.phone}</dd><dt>Address</dt><dd>{p.address || "—"}</dd>
-          <dt>Emergency contact</dt><dd>{p.emergencyName ? `${p.emergencyName}${p.emergencyPhone ? ` · ${p.emergencyPhone}` : ""}` : "—"}</dd>
+        <dt>Age / sex</dt><dd>{row.age ?? "Unknown"} · {row.sex}</dd>
+        {p ? <><dt>Date of birth</dt><dd>{p.dob}</dd><dt>Phone</dt><dd>{p.phone}</dd><dt>Address</dt><dd>{p.address || "Not recorded"}</dd>
+          <dt>Emergency contact</dt><dd>{p.emergencyName ? `${p.emergencyName}${p.emergencyPhone ? ` · ${p.emergencyPhone}` : ""}` : "Not recorded"}</dd>
           <dt>Blood group</dt><dd>{p.bloodGroup || "Not recorded"}</dd></> : null}
         <dt>Problems</dt><dd>{row.problems.length ? row.problems.join(" · ") : "None recorded"}</dd>
         <dt>Encounter</dt><dd>{row.status === "active" ? `${row.kind || ""} · ${row.ward} · ${row.bed}` : row.status}</dd>
         {row.source === "seed" ? <><dt>Open alerts</dt><dd>{row.openAlerts} ({row.criticalAlerts} critical)</dd><dt>Overdue tasks</dt><dd>{row.overdueTasks}</dd></> : null}
       </dl>
       {row.chartAvailable ? (
-        <Link className="btn btn-primary" to="/timeline">Open full clinical chart</Link>
+        <Link className="btn btn-primary" to="/patient">Open patient dashboard</Link>
       ) : (
         <div className="banner">
           {row.source === "preview"
-            ? "Preview patient — no clinical records exist. Notes, medications, labs and alerts are not shown because none have been documented."
+            ? "Preview patient: no clinical records exist. Notes, medications, labs and alerts are not shown because none have been documented."
             : "Summary only. A full clinical chart for this patient needs patient-scoped APIs, which are not available yet."}
         </div>
       )}
@@ -191,11 +191,11 @@ function Encounter({ row }: { row: DirectoryRow }) {
   if (enc) {
     return (
       <div className="flex-col gap-3">
-        <div className="banner warning">Preview admission — recorded in this browser tab only. No encounter was created in any hospital system.</div>
+        <div className="banner warning">Preview admission: recorded in this browser tab only. No encounter was created in any hospital system.</div>
         <dl className="kv">
           <dt>Type</dt><dd>{enc.kind}</dd><dt>Ward / bed</dt><dd>{enc.ward} · {enc.bed}</dd><dt>Attending</dt><dd>{enc.attending}</dd>
           <dt>Admitted</dt><dd>{fmtDate(enc.admittedAt)}</dd><dt>Reason</dt><dd>{enc.reason}</dd>
-          <dt>Clinical notes</dt><dd>{enc.notes || "—"}</dd><dt>Allergy record checked by</dt><dd>{enc.allergyCheckedBy}</dd>
+          <dt>Clinical notes</dt><dd>{enc.notes || "None"}</dd><dt>Allergy record checked by</dt><dd>{enc.allergyCheckedBy}</dd>
         </dl>
       </div>
     );

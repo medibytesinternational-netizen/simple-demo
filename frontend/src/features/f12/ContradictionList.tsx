@@ -1,37 +1,45 @@
 import { EvidenceChip } from "../../components/Evidence";
+import { Banner, ListRow, Pill } from "../../components/ui";
 import type { F12Contradiction } from "./types";
 
 /** Contradictions found before submission, each with a link to both sources and what they say. */
 export function ContradictionList({ items }: { items: F12Contradiction[] }) {
   if (!items.length) {
-    return <div className="small muted">No contradictions detected. TPA review can proceed to human review.</div>;
+    return <Banner tone="success">No contradictions detected. TPA review can proceed to human review.</Banner>;
   }
   return (
-    <>
-      {items.map((item) => (
-        <div className="alert-card critical mb-2" key={item.id}>
-          <div className="flex items-center gap-2">
-            <span className="badge badge-critical">{item.kind.replaceAll("_", " ")}</span>
-            <strong className="fs-13">{item.title}</strong>
-          </div>
-          <div className="alert-explanation">{item.explanation}</div>
-          {item.evidence?.length ? (
-            <div className="mt-1">
-              {item.evidence.map((source) => (
-                <div className="small muted" key={source.event_id}>
-                  <EvidenceChip eventIds={[source.event_id]} label={source.title} />
-                  {source.quote ? <> “{source.quote}”</> : null}
+    <div className="contradictions">
+      <div className="rows">
+        {items.map((item) => (
+          <ListRow
+            key={item.id}
+            icon="alert"
+            tone="critical"
+            title={item.title}
+            chips={<Pill tone="critical">{item.kind.replaceAll("_", " ")}</Pill>}
+            body={item.explanation}
+            expand={
+              item.evidence?.length ? (
+                <div className="contradiction-sources">
+                  {item.evidence.map((source) => (
+                    <div className="contradiction-source" key={source.event_id}>
+                      <EvidenceChip eventIds={[source.event_id]} label={source.title} />
+                      {source.quote ? <q className="small muted">{source.quote}</q> : null}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <EvidenceChip eventIds={item.evidence_event_ids} />
-          )}
-        </div>
-      ))}
-      <div className="banner warning">
-        TPA review is blocked. A human must resolve every contradiction before this pack is review-ready.
+              ) : (
+                <div className="contradiction-sources">
+                  <EvidenceChip eventIds={item.evidence_event_ids} />
+                </div>
+              )
+            }
+          />
+        ))}
       </div>
-    </>
+      <Banner tone="warning">
+        TPA review is blocked. A human must resolve every contradiction before this pack is review-ready.
+      </Banner>
+    </div>
   );
 }

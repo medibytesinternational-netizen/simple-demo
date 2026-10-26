@@ -1,5 +1,6 @@
 import { DISMISS_CATEGORIES, MIN_REASON } from "./types";
 import type { DismissCategory } from "./types";
+import { Field } from "../../components/ui";
 
 type Props = {
   category: DismissCategory | "";
@@ -15,26 +16,34 @@ export function dismissReady(category: DismissCategory | "", reason: string): bo
 export function DismissFields({ category, reason, onCategory, onReason }: Props) {
   const missing = MIN_REASON - reason.trim().length;
   return (
-    <>
-      <label className="field-label">Why is it being dismissed? (required)</label>
-      <select
-        className="input mb-2"
-        value={category}
-        onChange={(event) => onCategory(event.target.value as DismissCategory | "")}
+    <div className="flex-col gap-3">
+      <Field label="Why is it being dismissed?" htmlFor="dismiss-category" required>
+        <select
+          id="dismiss-category"
+          className="input"
+          value={category}
+          onChange={(event) => onCategory(event.target.value as DismissCategory | "")}
+        >
+          <option value="">Choose one…</option>
+          {DISMISS_CATEGORIES.map((item) => (
+            <option key={item.value} value={item.value}>{item.label}</option>
+          ))}
+        </select>
+      </Field>
+      <Field
+        label="Reason (audited)"
+        htmlFor="dismiss-reason"
+        required
+        hint={reason && missing > 0 ? `${missing} more characters required.` : undefined}
       >
-        <option value="">Choose one…</option>
-        {DISMISS_CATEGORIES.map((item) => (
-          <option key={item.value} value={item.value}>{item.label}</option>
-        ))}
-      </select>
-      <label className="field-label">Reason (required, audited)</label>
-      <textarea
-        className="textarea small"
-        value={reason}
-        onChange={(event) => onReason(event.target.value)}
-        placeholder="Say what you checked or decided."
-      />
-      {reason && missing > 0 ? <div className="small muted mt-1">{missing} more characters required.</div> : null}
-    </>
+        <textarea
+          id="dismiss-reason"
+          className="textarea small"
+          value={reason}
+          onChange={(event) => onReason(event.target.value)}
+          placeholder="Say what you checked or decided."
+        />
+      </Field>
+    </div>
   );
 }

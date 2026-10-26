@@ -1,0 +1,26 @@
+/* Tasks: Sundays-style toolbar, summary, composer and task card rows */
+.pg-tasks { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pg-tasks .tk-composer .form-row { align-items: flex-end; }
+.pg-tasks .tk-grow { flex: 2 1 260px; min-width: 0; }
+.pg-tasks .tk-hours { width: 120px; }
+
+.pg-tasks .tk-rows .lrow { align-items: start; }
+.pg-tasks .tk-rows .lrow-side { align-self: center; }
+.pg-tasks .tk-meta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.pg-tasks .tk-meta .link { font-size: var(--fs-xs); }
+.pg-tasks .tk-reason { color: var(--text-2); }
+.pg-tasks .tk-owner { min-width: 170px; max-width: 200px; }
+
+/* reason form (f15) expands inline under its row */
+.pg-tasks .lrow-expand { padding-top: 12px; margin-top: 2px; border-top: 1px solid var(--border-soft); }
+.pg-tasks .reason-form { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+.pg-tasks .reason-field { flex: 1 1 280px; }
+.pg-tasks .reason-actions { padding-top: 22px; }
+
+@media (max-width: 900px) {
+  .pg-tasks .tk-owner { min-width: 0; max-width: none; flex: 1 1 160px; }
+}
+@media (max-width: 600px) {
+  .pg-tasks .reason-actions { padding-top: 0; }
+  .pg-tasks .tk-hours { width: 100%; }
+}

@@ -4,6 +4,7 @@ import { post } from "../../api";
 import { useCan } from "../../session";
 import { READING_CATEGORIES, needsUnit, readingOk } from "./types";
 import type { ReadingBody, ReadingCategory, ReadingResult } from "./types";
+import { Panel } from "../../components/ui";
 
 function nowLocal(): string {
   const now = new Date();
@@ -59,46 +60,51 @@ export default function IcuReadingForm({
   };
 
   return (
-    <div className="card mb-3">
-      <div className="card-sub mb-2">Record a reading</div>
-      <div className="form-row" style={{ alignItems: "flex-end" }}>
-        <div>
-          <label className="field-label">Type</label>
-          <select className="input" value={category} onChange={(e) => setCategory(e.target.value as ReadingCategory)}>
-            {READING_CATEGORIES.map((item) => (
-              <option key={item.value} value={item.value}>{item.label}</option>
-            ))}
-          </select>
+    <Panel title="Record a reading" sub="Each value is saved with its unit, device and time. Nothing is estimated.">
+      <div className="panel-body">
+        <div className="icu-form">
+          <label className="form-field">
+            <span className="field-label">Type</span>
+            <select className="select" value={category} onChange={(e) => setCategory(e.target.value as ReadingCategory)}>
+              {READING_CATEGORIES.map((item) => (
+                <option key={item.value} value={item.value}>{item.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="form-field">
+            <span className="field-label">What was measured</span>
+            <input className="input" value={label} placeholder="Heart rate" onChange={(e) => setLabel(e.target.value)} />
+          </label>
+          <label className="form-field">
+            <span className="field-label">Value</span>
+            <input className="input" value={value} onChange={(e) => setValue(e.target.value)} />
+          </label>
+          <label className="form-field">
+            <span className="field-label">Unit{needsUnit(value) ? " (required)" : ""}</span>
+            <input className="input" value={unit} placeholder="bpm" onChange={(e) => setUnit(e.target.value)} />
+          </label>
+          <label className="form-field">
+            <span className="field-label">Device</span>
+            <input className="input" value={device} placeholder="Bedside monitor" onChange={(e) => setDevice(e.target.value)} />
+          </label>
+          <label className="form-field">
+            <span className="field-label">Time</span>
+            <input className="input" type="datetime-local" value={recordedAt} onChange={(e) => setRecordedAt(e.target.value)} />
+          </label>
         </div>
-        <div>
-          <label className="field-label">What was measured</label>
-          <input className="input" value={label} placeholder="Heart rate" onChange={(e) => setLabel(e.target.value)} />
+        <div className="button-row mt-3">
+          <button
+            className="btn btn-primary"
+            disabled={!readingOk({ label, value, unit, recorded_at: recordedAt }) || record.isPending}
+            aria-busy={record.isPending || undefined}
+            onClick={() => record.mutate(body)}
+          >
+            {record.isPending ? <span className="spinner" /> : null}
+            Record
+          </button>
+          {notice ? <span className="small muted" role="status">{notice}</span> : null}
         </div>
-        <div>
-          <label className="field-label">Value</label>
-          <input className="input" value={value} onChange={(e) => setValue(e.target.value)} />
-        </div>
-        <div>
-          <label className="field-label">Unit{needsUnit(value) ? " (required)" : ""}</label>
-          <input className="input" value={unit} placeholder="bpm" onChange={(e) => setUnit(e.target.value)} />
-        </div>
-        <div>
-          <label className="field-label">Device</label>
-          <input className="input" value={device} placeholder="Bedside monitor" onChange={(e) => setDevice(e.target.value)} />
-        </div>
-        <div>
-          <label className="field-label">Time</label>
-          <input className="input" type="datetime-local" value={recordedAt} onChange={(e) => setRecordedAt(e.target.value)} />
-        </div>
-        <button
-          className="btn btn-sm btn-primary"
-          disabled={!readingOk({ label, value, unit, recorded_at: recordedAt }) || record.isPending}
-          onClick={() => record.mutate(body)}
-        >
-          Record
-        </button>
       </div>
-      {notice ? <div className="small muted mt-2">{notice}</div> : null}
-    </div>
+    </Panel>
   );
 }

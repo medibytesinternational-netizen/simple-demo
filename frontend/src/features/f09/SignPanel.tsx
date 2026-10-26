@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, post } from "../../api";
 import { useCan } from "../../session";
+import { Banner, Field, Panel } from "../../components/ui";
 import type { Draft, Meta } from "../../types";
 import type { Readiness } from "./types";
 import { MIN_REASON, reasonOk, warningCount } from "./types";
@@ -46,56 +47,66 @@ export function SignPanel({ draft, readiness }: { draft: Draft; readiness: Readi
   if (draft.status === "approved" || draft.status === "rejected") return null;
 
   return (
-    <div className="card mt-3">
-      <div className="card-head"><div className="card-title">Approve discharge</div></div>
-      <div className="card-pad">
+    <Panel
+      className="sign-panel"
+      title="Approve discharge"
+      sub="Nothing is written until you approve. Signing locks the encounter and escalates tasks that are still open."
+      padded
+    >
+      <div className="flex-col gap-3">
         {blocked ? (
-          <div className="small" style={{ color: "var(--warning)", fontWeight: 600 }}>
+          <Banner tone="warning" role="status">
             Required documentation is missing. This summary cannot be approved yet.
-          </div>
+          </Banner>
         ) : null}
         {needsReason && !blocked ? (
-          <div className="mt-2">
-            <label className="field-label">Why discharge with open alerts, open tasks or undecided medicine differences?</label>
+          <Field label="Why discharge with open alerts, open tasks or undecided medicine differences?" htmlFor="discharge-override-reason" required>
             <input
+              id="discharge-override-reason"
               className="input"
               value={reason}
               placeholder={`At least ${MIN_REASON} characters`}
               onChange={(event) => setReason(event.target.value)}
             />
-          </div>
+          </Field>
         ) : null}
-        {error ? <div className="banner warning mt-2">{error}</div> : null}
-        <div className="button-row mt-3">
+        {error ? <Banner tone="warning" role="alert">{error}</Banner> : null}
+        <div className="button-row">
           <button
             className="btn btn-primary"
             disabled={!canApprove || blocked || approve.isPending || (needsReason && !reasonOk(reason))}
             onClick={() => approve.mutate()}
+            aria-busy={approve.isPending || undefined}
           >
             {approve.isPending ? <><span className="spinner" /> Signing…</> : "Approve and discharge"}
           </button>
-          <button className="btn btn-danger btn-sm" disabled={!canApprove} onClick={() => setRejecting(!rejecting)}>
+          <button className="btn btn-danger btn-sm" disabled={!canApprove} onClick={() => setRejecting(!rejecting)} aria-expanded={rejecting}>
             Reject
           </button>
         </div>
         {rejecting ? (
-          <div className="form-row mt-2" style={{ alignItems: "flex-end" }}>
-            <div style={{ flex: 1, minWidth: 260 }}>
-              <label className="field-label">Why reject this summary?</label>
+          <div className="form-row">
+            <Field label="Why reject this summary?" htmlFor="discharge-reject-reason">
               <input
+                id="discharge-reject-reason"
                 className="input"
                 value={rejectReason}
                 placeholder={`At least ${MIN_REASON} characters`}
                 onChange={(event) => setRejectReason(event.target.value)}
               />
-            </div>
-            <button className="btn btn-danger btn-sm" disabled={!reasonOk(rejectReason) || reject.isPending} onClick={() => reject.mutate()}>
+            </Field>
+            <button
+              className="btn btn-danger btn-sm"
+              disabled={!reasonOk(rejectReason) || reject.isPending}
+              onClick={() => reject.mutate()}
+              aria-busy={reject.isPending || undefined}
+            >
+              {reject.isPending ? <span className="spinner" /> : null}
               Reject with reason
             </button>
           </div>
         ) : null}
-        <div className="small muted mt-2">Nothing is written until you approve. Signing locks the encounter and escalates tasks that are still open.</div>
       </div>
-    </div>
+    </Panel>
   );
 }

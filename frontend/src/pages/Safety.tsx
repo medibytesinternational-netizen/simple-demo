@@ -12,6 +12,28 @@ import { DraftReview } from "../components/DraftReview";
 import { EvidenceChip } from "../components/Evidence";
 import { Modal } from "../components/Modal";
 import { PageHeader } from "../components/PageHeader";
+import type { Medication } from "../types";
+import { Icon } from "../components/icons";
+import { Banner, DataTable, EmptyState, MetaChip, Panel, Pill, Skeleton, SummaryPanel, Tabs, Toolbar } from "../components/ui";
+import type { Column } from "../components/ui";
+
+/** The demo rule file shown in the rail. Detection lives in the backend rule engine. */
+const RULES: { id: string; check: string; severity: "critical" | "warning" }[] = [
+  { id: "R1", check: "Metformin + eGFR < 30", severity: "critical" },
+  { id: "R2", check: "Penicillin allergy conflict", severity: "critical" },
+  { id: "R3", check: "Unreviewed abnormal result", severity: "warning" },
+  { id: "R4", check: "Interacting pair", severity: "critical" },
+  { id: "R5", check: "Contradicting allergy notes", severity: "critical" },
+  { id: "R6", check: "Unresolved plan action", severity: "warning" },
+];
+
+const MED_COLUMNS: Column<Medication>[] = [
+  { key: "drug", header: "Drug", sort: (med) => med.drug, cell: (med) => <span className="cell-strong">{med.drug}</span> },
+  { key: "dose", header: "Dose", cell: (med) => <span className="mono">{med.dose}</span> },
+  { key: "route", header: "Route", cell: (med) => med.route },
+  { key: "frequency", header: "Frequency", cell: (med) => med.frequency },
+  { key: "indication", header: "Indication", cell: (med) => med.indication || <span className="muted">not documented</span> },
+];
 
 export function SafetyPage() {
   const [params, setParams] = useSearchParams();
@@ -69,162 +91,209 @@ export function SafetyPage() {
   const closed = alerts.data?.alerts.filter((alert) => alert.status !== "open") || [];
   const latestRecon = reconDrafts.data?.drafts?.[0];
 
+  const criticalOpen = open.filter((alert) => alert.severity === "critical").length;
+  const discrepancyCount = reconciliation.data?.discrepancies.length ?? 0;
+
   return (
-    <>
+    <div className="page pg-safety">
       <PageHeader
         title={tab === "meds" ? "Medication reconciliation" : "Clinical alerts"}
         description={tab === "meds"
           ? "Medicines the patient takes at home compared with current hospital orders. Differences are found by fixed rules."
           : "Safety rules check medicines, results and records. Acknowledge an alert, or dismiss it with a category and a written reason. An alert closes by itself when the problem is no longer true."}
-        actions={<button className="btn" onClick={() => evaluate.mutate()} disabled={evaluate.isPending}>
-          {evaluate.isPending ? "Checking…" : "Re-run safety checks"}
-        </button>}
+        actions={tab === "meds" ? (
+          <button className="btn" onClick={() => evaluate.mutate()} disabled={evaluate.isPending} aria-busy={evaluate.isPending || undefined}>
+            {evaluate.isPending ? <><span className="spinner" /> Checking…</> : <><Icon name="refresh" size={15} /> Re-run safety checks</>}
+          </button>
+        ) : undefined}
       />
 
-      <div className="tabs">
-        <button className={`tab ${tab === "alerts" ? "active" : ""}`} onClick={() => setParams({ tab: "alerts" })}>
-          Clinical alerts {open.length ? <span className="badge badge-critical">{open.length}</span> : null}
-        </button>
-        <button className={`tab ${tab === "meds" ? "active" : ""}`} onClick={() => setParams({ tab: "meds" })}>
-          Medication reconciliation
-        </button>
-      </div>
+      <Tabs
+        label="Safety views"
+        value={tab}
+        onSelect={(key) => setParams({ tab: key })}
+        items={[
+          { key: "alerts", label: "Clinical alerts", count: open.length, countTone: "critical" },
+          { key: "meds", label: "Medication reconciliation" },
+        ]}
+      />
 
-      {error ? <div className="error-box mb-3">{error}</div> : null}
+      {error ? <Banner tone="danger" role="alert">{error}</Banner> : null}
 
       {tab === "alerts" ? (
-        <div className="split-main">
-          <div className="flex-col gap-3">
-            {alerts.isLoading ? <div className="loading">Loading alerts…</div> : null}
+        <div className="with-rail">
+          <div className="section">
+            <Toolbar bare label="Alert actions">
+              <Pill tone={open.length ? "critical" : "success"} dot>{open.length} open</Pill>
+              {criticalOpen ? <MetaChip icon="alert" tone="critical">{criticalOpen} critical</MetaChip> : null}
+              <span className="toolbar-spacer" />
+              <button className="btn" onClick={() => evaluate.mutate()} disabled={evaluate.isPending} aria-busy={evaluate.isPending || undefined}>
+                {evaluate.isPending ? <><span className="spinner" /> Checking…</> : <><Icon name="refresh" size={15} /> Re-run safety checks</>}
+              </button>
+            </Toolbar>
+
+            {alerts.isLoading ? <Skeleton variant="rows" count={3} /> : null}
             {!open.length && !alerts.isLoading ? (
-              <div className="card empty">
-                <div className="empty-title">No open alerts.</div>
-                <div>Run the safety rules after changing an order or confirming a result.</div>
+              <Panel>
+                <EmptyState icon="check" title="No open alerts.">
+                  Re-run the safety checks after changing an order or confirming a result.
+                </EmptyState>
+              </Panel>
+            ) : null}
+
+            {open.length ? (
+              <div className="alert-list">
+                {open.map((alert) => {
+                  const tone = alert.severity === "critical" ? "critical" : "warning";
+                  const acking = acknowledge.isPending && acknowledge.variables === alert.id;
+                  return (
+                    <article className={`alert-card ${tone}`} key={alert.id} aria-labelledby={`alert-${alert.id}`}>
+                      <span className="alert-icon" aria-hidden="true"><Icon name="alert" size={20} /></span>
+                      <div className="alert-head">
+                        <Pill tone={tone} dot>{alert.severity}</Pill>
+                        <MetaChip icon="safety" title="Safety rule">Rule {alert.rule_id}</MetaChip>
+                        <span className="alert-id mono">{alert.id}</span>
+                      </div>
+                      <h3 className="alert-title" id={`alert-${alert.id}`}>{alert.title}</h3>
+                      <p className="alert-explanation">{alert.explanation}</p>
+                      {alert.evidence_event_ids.length ? (
+                        <div className="pill-row">
+                          {alert.evidence_event_ids.map((id) => <EvidenceChip key={id} eventIds={[id]} label="evidence" />)}
+                        </div>
+                      ) : null}
+                      <div className="alert-action">
+                        <span className="alert-action-label">Recommended action</span>
+                        {alert.recommended_action}
+                      </div>
+                      <div className="button-row alert-buttons">
+                        <button className="btn btn-sm" onClick={() => acknowledge.mutate(alert.id)} disabled={acknowledge.isPending} aria-busy={acking || undefined}>
+                          {acking ? <span className="spinner" /> : <Icon name="check" size={14} />}
+                          Acknowledge
+                        </button>
+                        <button className="btn btn-danger btn-sm" onClick={() => { setDismissing(alert); setReason(""); setCategory(""); }}>
+                          Dismiss with reason
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             ) : null}
-            {open.map((alert) => (
-              <div className={`alert-card ${alert.severity === "critical" ? "critical" : ""}`} key={alert.id}>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className={`badge ${alert.severity === "critical" ? "badge-critical" : "badge-warning"}`}>
-                      {alert.severity}
-                    </span>
-                    <span className="alert-rule">{alert.rule_id}</span>
-                  </div>
-                  <span className="small muted mono">{alert.id}</span>
-                </div>
-                <div className="alert-title mt-1">{alert.title}</div>
-                <div className="alert-explanation">{alert.explanation}</div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {alert.evidence_event_ids.map((id) => <EvidenceChip key={id} eventIds={[id]} label="evidence" />)}
-                </div>
-                <div className="alert-action">{alert.recommended_action}</div>
-                <div className="button-row mt-3">
-                  <button className="btn btn-sm" onClick={() => acknowledge.mutate(alert.id)} disabled={acknowledge.isPending}>
-                    Acknowledge
-                  </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => { setDismissing(alert); setReason(""); setCategory(""); }}>
-                    Dismiss with reason
-                  </button>
-                </div>
-              </div>
-            ))}
 
             {closed.length ? (
-              <div className="card">
-                <div className="card-head"><div className="card-title">Resolved and dismissed</div><span className="badge badge-neutral">{closed.length}</span></div>
-                {closed.map((alert) => (
-                  <div className={`alert-card ${alert.status} m-0`} key={alert.id} style={{ border: 0, borderBottom: "1px solid var(--border)", borderRadius: 0 }}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className={`badge ${alert.status === "dismissed" ? "badge-warning" : "badge-success"}`}>
+              <Panel title="Resolved and dismissed" count={closed.length} sub="Closed automatically by the rules, acknowledged, or dismissed with a reason.">
+                <DataTable<AlertRow>
+                  caption="Resolved and dismissed alerts"
+                  rows={closed}
+                  rowKey={(alert) => alert.id}
+                  columns={[
+                    {
+                      key: "status", header: "Status", sort: (alert) => alert.status,
+                      cell: (alert) => (
+                        <Pill tone={alert.status === "dismissed" ? "warning" : "success"}>
                           {alert.status === "resolved" ? "closed automatically" : alert.status}
-                        </span>
-                        <span className="alert-rule">{alert.rule_id}</span>
-                      </div>
-                      <span className="small muted">{alert.dismissed_by || alert.acknowledged_by || (alert.status === "resolved" ? "Rules engine" : "")}</span>
-                    </div>
-                    <div className="alert-title mt-1">{alert.title}</div>
-                    {alert.status === "resolved" && alert.resolution ? <div className="small muted mt-1">{alert.resolution}</div> : null}
-                    {alert.dismissal_category ? <div className="small muted mt-1">Category: {CATEGORY_LABEL[alert.dismissal_category]}</div> : null}
-                    {alert.dismissal_reason ? <div className="small muted mt-1">Reason: {alert.dismissal_reason}</div> : null}
-                  </div>
-                ))}
-              </div>
+                        </Pill>
+                      ),
+                    },
+                    { key: "rule", header: "Rule", sort: (alert) => alert.rule_id, cell: (alert) => <span className="mono">{alert.rule_id}</span> },
+                    {
+                      key: "title", header: "Alert", sort: (alert) => alert.title,
+                      cell: (alert) => (
+                        <>
+                          <div className="cell-strong">{alert.title}</div>
+                          {alert.status === "resolved" && alert.resolution ? <div className="cell-sub">{alert.resolution}</div> : null}
+                        </>
+                      ),
+                    },
+                    {
+                      key: "by", header: "By",
+                      cell: (alert) => alert.dismissed_by || alert.acknowledged_by || (alert.status === "resolved" ? "Rules engine" : ""),
+                    },
+                    {
+                      key: "category", header: "Category",
+                      cell: (alert) => alert.dismissal_category ? CATEGORY_LABEL[alert.dismissal_category] : <span className="muted">None</span>,
+                    },
+                    {
+                      key: "reason", header: "Reason",
+                      cell: (alert) => alert.dismissal_reason ? <span className="cell-action-text">{alert.dismissal_reason}</span> : <span className="muted">None</span>,
+                    },
+                  ]}
+                />
+              </Panel>
             ) : null}
           </div>
 
-          <div className="flex-col gap-3">
-            <div className="card">
-              <div className="card-head"><div className="card-title">Why this boundary matters</div></div>
-              <div className="card-pad small muted" style={{ lineHeight: 1.7 }}>
-                The rule engine owns detection. The model receives the rule result and the evidence, and may not add a new alert or change severity.
-                That is the answer to "what if it hallucinates a warning?"
+          <aside className="rail rail-sticky">
+            <Panel title="How alerts work" padded>
+              <div className="rail-copy">
+                <p>The rule engine owns detection. The model receives the rule result and the evidence, and may not add a new alert or change severity.</p>
+                <p>That is the answer to "what if it hallucinates a warning?"</p>
               </div>
-            </div>
-            <div className="card">
-              <div className="card-head"><div className="card-title">Demo rule file</div><span className="badge badge-neutral">6 rules</span></div>
-              <div className="card-pad">
-                <div className="check-row"><span style={{ flex: 1 }}>R1 · Metformin + eGFR &lt; 30</span><span className="badge badge-critical">critical</span></div>
-                <div className="check-row"><span style={{ flex: 1 }}>R2 · Penicillin allergy conflict</span><span className="badge badge-critical">critical</span></div>
-                <div className="check-row"><span style={{ flex: 1 }}>R3 · Unreviewed abnormal result</span><span className="badge badge-warning">warning</span></div>
-                <div className="check-row"><span style={{ flex: 1 }}>R4 · Interacting pair</span><span className="badge badge-critical">critical</span></div>
-                <div className="check-row"><span style={{ flex: 1 }}>R5 · Contradicting allergy notes</span><span className="badge badge-critical">critical</span></div>
-                <div className="check-row"><span style={{ flex: 1 }}>R6 · Unresolved plan action</span><span className="badge badge-warning">warning</span></div>
-                <div className="small muted mt-2">The model receives this result and its evidence. It cannot add a rule, change severity or mark the alert resolved.</div>
-              </div>
-            </div>
-          </div>
+            </Panel>
+            <Panel
+              title="Demo rule file"
+              count={`${RULES.length} rules`}
+              footer="The model receives this result and its evidence. It cannot add a rule, change severity or mark the alert resolved."
+            >
+              <table className="table rule-table">
+                <caption className="sr-only">Safety rules in the demo rule file</caption>
+                <thead><tr><th>Rule</th><th>Checks</th><th>Severity</th></tr></thead>
+                <tbody>
+                  {RULES.map((rule) => (
+                    <tr key={rule.id}>
+                      <td className="mono">{rule.id}</td>
+                      <td>{rule.check}</td>
+                      <td><Pill tone={rule.severity}>{rule.severity}</Pill></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Panel>
+          </aside>
         </div>
       ) : (
-        <div className="flex-col gap-3">
-          <div className="grid-2">
-            <div className="card">
-              <div className="card-head"><div className="card-title">Home medications</div><span className="badge badge-neutral">{reconciliation.data?.home_medications.length ?? 0}</span></div>
-              <table className="table">
-                <thead><tr><th>Drug</th><th>Dose</th><th>Route</th><th>Frequency</th><th>Indication</th></tr></thead>
-                <tbody>
-                  {reconciliation.data?.home_medications.map((med) => (
-                    <tr key={med.event_id}>
-                      <td>{med.drug}</td>
-                      <td className="mono">{med.dose}</td>
-                      <td>{med.route}</td>
-                      <td>{med.frequency}</td>
-                      <td className="small">{med.indication || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="card">
-              <div className="card-head"><div className="card-title">Current inpatient plan</div><span className="badge badge-neutral">{reconciliation.data?.current_medications.length ?? 0}</span></div>
-              <table className="table">
-                <thead><tr><th>Drug</th><th>Dose</th><th>Route</th><th>Frequency</th><th>Indication</th></tr></thead>
-                <tbody>
-                  {reconciliation.data?.current_medications.map((med) => (
-                    <tr key={med.event_id}>
-                      <td>{med.drug}</td>
-                      <td className="mono">{med.dose}</td>
-                      <td>{med.route}</td>
-                      <td>{med.frequency}</td>
-                      <td className="small">{med.indication || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-head">
-              <div>
-                <div className="card-title">Deterministic discrepancies</div>
-                <div className="card-sub">{reconciliation.data?.summary || "Comparing home list with current orders"}</div>
-              </div>
-              <button className="btn btn-primary btn-sm" onClick={() => explain.mutate()} disabled={explain.isPending}>
-                {explain.isPending ? <><span className="spinner" /> Drafting…</> : "Generate explanation"}
+        <div className="meds-stack">
+          <SummaryPanel
+            id="safety-meds"
+            title={(
+              <span className="recon-summary">
+                <span>Deterministic discrepancies</span>
+                <span className="recon-summary-text">{reconciliation.data?.summary || "Comparing home list with current orders"}</span>
+              </span>
+            )}
+            items={[
+              { label: "Home medicines", value: reconciliation.data?.home_medications.length ?? 0, note: "Taken before admission" },
+              { label: "Current orders", value: reconciliation.data?.current_medications.length ?? 0, note: "Active in hospital" },
+              { label: "Differences found", value: discrepancyCount, tone: discrepancyCount ? "warning" : "success", note: "Found by fixed rules" },
+            ]}
+            actions={(
+              <button className="btn btn-primary btn-sm" onClick={() => explain.mutate()} disabled={explain.isPending} aria-busy={explain.isPending || undefined}>
+                {explain.isPending ? <><span className="spinner" /> Drafting…</> : <><Icon name="spark" size={14} /> Generate explanation</>}
               </button>
-            </div>
+            )}
+          />
+
+          <div className="split-even">
+            <Panel title="Home medicines" count={reconciliation.data?.home_medications.length ?? 0} sub="What the patient takes at home">
+              <DataTable<Medication>
+                caption="Home medicines"
+                columns={MED_COLUMNS}
+                rows={reconciliation.data?.home_medications ?? []}
+                rowKey={(med) => med.event_id}
+                loading={reconciliation.isLoading}
+                empty={<EmptyState icon="pill" title="No home medicines recorded." />}
+              />
+            </Panel>
+            <Panel title="Current inpatient plan" count={reconciliation.data?.current_medications.length ?? 0} sub="Active hospital orders">
+              <DataTable<Medication>
+                caption="Current inpatient plan"
+                columns={MED_COLUMNS}
+                rows={reconciliation.data?.current_medications ?? []}
+                rowKey={(med) => med.event_id}
+                loading={reconciliation.isLoading}
+                empty={<EmptyState icon="pill" title="No active orders.">Orders placed below appear here.</EmptyState>}
+              />
+            </Panel>
           </div>
 
           <ReconciliationQueue />
@@ -245,8 +314,9 @@ export function SafetyPage() {
                 className="btn btn-danger"
                 disabled={!dismissReady(category, reason) || dismiss.isPending}
                 onClick={() => category && dismiss.mutate({ id: dismissing.id, reason, category })}
+                aria-busy={dismiss.isPending || undefined}
               >
-                {dismiss.isPending ? "Dismissing…" : "Dismiss alert"}
+                {dismiss.isPending ? <><span className="spinner" /> Dismissing…</> : "Dismiss alert"}
               </button>
             </>
           }
@@ -255,6 +325,6 @@ export function SafetyPage() {
           <DismissFields category={category} reason={reason} onCategory={setCategory} onReason={setReason} />
         </Modal>
       ) : null}
-    </>
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import { EvidenceChip } from "../../components/Evidence";
+import { Panel, Pill } from "../../components/ui";
 import type { ClaimPrep } from "../../types";
 import { tpaLabel, type F12TpaReview } from "./types";
 
@@ -7,33 +8,31 @@ export function TpaState({ claim }: { claim?: ClaimPrep }) {
   const tpa = claim?.tpa_review as F12TpaReview | undefined;
   const blocked = tpa?.status === "needs_clarification";
   return (
-    <div className="card">
-      <div className="card-head">
-        <div>
-          <div className="card-title">TPA review state</div>
-          <div className="card-sub">Nothing is sent to the payer from here</div>
+    <Panel
+      title="TPA review state"
+      sub="Nothing is sent to the payer from here"
+      actions={<Pill tone={blocked ? "critical" : "success"} dot>{tpaLabel(tpa?.status)}</Pill>}
+      padded
+    >
+      <div className="checklist">
+        <div className="check-row">
+          <span className="check-label">Pack status</span>
+          <Pill>{tpaLabel(claim?.status)}</Pill>
         </div>
-        <span className={`badge ${blocked ? "badge-critical" : "badge-success"}`}>{tpaLabel(tpa?.status)}</span>
+        <div className="check-row">
+          <span className="check-label">Open contradictions</span>
+          <span className="mono small">{tpa?.contradiction_count ?? "unknown"}</span>
+        </div>
+        <div className="check-row">
+          <span className="check-label">Missing documents</span>
+          <span className="mono small">{claim?.missing_documents.length ?? "unknown"}</span>
+        </div>
       </div>
-      <div className="card-pad">
-        <div className="check-row">
-          <span style={{ flex: 1 }}>Pack status</span>
-          <span className="badge badge-neutral">{tpaLabel(claim?.status)}</span>
+      {tpa?.evidence_event_ids?.length ? (
+        <div className="mt-2">
+          <EvidenceChip eventIds={tpa.evidence_event_ids} label="TPA evidence" />
         </div>
-        <div className="check-row">
-          <span style={{ flex: 1 }}>Open contradictions</span>
-          <span className="mono small">{tpa?.contradiction_count ?? "—"}</span>
-        </div>
-        <div className="check-row">
-          <span style={{ flex: 1 }}>Missing documents</span>
-          <span className="mono small">{claim?.missing_documents.length ?? "—"}</span>
-        </div>
-        {tpa?.evidence_event_ids?.length ? (
-          <div className="mt-1">
-            <EvidenceChip eventIds={tpa.evidence_event_ids} label="TPA evidence" />
-          </div>
-        ) : null}
-      </div>
-    </div>
+      ) : null}
+    </Panel>
   );
 }

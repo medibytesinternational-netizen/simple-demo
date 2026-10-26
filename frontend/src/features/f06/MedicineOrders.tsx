@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, post } from "../../api";
 import { useCan } from "../../session";
+import { Banner, DataTable, EmptyState, Panel, Pill } from "../../components/ui";
 import { noteOk } from "./rules";
 import { MIN_NOTE } from "./types";
 import type { ActiveMedicine, Administration, DoseStatus, NewAlert, OrderAction } from "./types";
@@ -32,63 +33,64 @@ function OrderForm() {
     onError: (err: any) => setError(String(err?.message || err)),
   });
   return (
-    <div className="card">
-      <div className="card-head"><div className="card-title">Order a medicine</div></div>
-      <div className="card-pad">
-        <div className="small muted mb-2">Only a doctor can order. Ordering is not giving: a nurse records each dose.</div>
-        <div className="form-row">
-          <div>
-            <label className="field-label">Action</label>
-            <select className="input" value={action} onChange={(event) => setAction(event.target.value as OrderAction)}>
-              <option value="start">Start</option>
-              <option value="change">Change</option>
-              <option value="stop">Stop</option>
-            </select>
-          </div>
-          <div>
-            <label className="field-label">Medicine</label>
-            <input className="input" value={drug} onChange={(event) => setDrug(event.target.value)} />
-          </div>
-          {action !== "stop"
-            ? FIELDS.map((field) => (
-                <div key={field}>
-                  <label className="field-label">{field[0].toUpperCase() + field.slice(1)}</label>
-                  <input
-                    className="input"
-                    value={values[field] || ""}
-                    onChange={(event) => setValues({ ...values, [field]: event.target.value })}
-                  />
-                </div>
-              ))
-            : null}
+    <Panel title="Order a medicine" sub="Only a doctor can order. Ordering is not giving: a nurse records each dose." padded>
+      <div className="form-row">
+        <div className="form-field">
+          <label className="field-label">Action</label>
+          <select className="input" value={action} onChange={(event) => setAction(event.target.value as OrderAction)}>
+            <option value="start">Start</option>
+            <option value="change">Change</option>
+            <option value="stop">Stop</option>
+          </select>
         </div>
-        <div className="form-row mt-2" style={{ alignItems: "flex-end" }}>
-          <div style={{ flex: 1, minWidth: 260 }}>
-            <label className="field-label">Reason</label>
-            <input
-              className="input"
-              value={reason}
-              placeholder={`At least ${MIN_NOTE} characters`}
-              onChange={(event) => setReason(event.target.value)}
-            />
-          </div>
-          <button
-            className="btn btn-primary"
-            disabled={drug.trim().length < 2 || !noteOk(reason) || order.isPending}
-            onClick={() => order.mutate()}
-          >
-            Place order
-          </button>
+        <div className="form-field">
+          <label className="field-label">Medicine</label>
+          <input className="input" value={drug} onChange={(event) => setDrug(event.target.value)} />
         </div>
-        {error ? <div className="error-box mt-2">{error}</div> : null}
-        {alerts.map((alert) => (
-          <div className="alert-card critical mt-2" key={alert.id}>
-            <div className="alert-title">{alert.rule_id} · {alert.title}</div>
-            <div className="alert-explanation">{alert.explanation}</div>
-          </div>
-        ))}
+        {action !== "stop"
+          ? FIELDS.map((field) => (
+              <div className="form-field" key={field}>
+                <label className="field-label">{field[0].toUpperCase() + field.slice(1)}</label>
+                <input
+                  className="input"
+                  value={values[field] || ""}
+                  onChange={(event) => setValues({ ...values, [field]: event.target.value })}
+                />
+              </div>
+            ))
+          : null}
       </div>
-    </div>
+      <div className="form-row mt-3">
+        <div className="form-field order-reason">
+          <label className="field-label">Reason</label>
+          <input
+            className="input"
+            value={reason}
+            placeholder={`At least ${MIN_NOTE} characters`}
+            onChange={(event) => setReason(event.target.value)}
+          />
+        </div>
+        <button
+          className="btn btn-primary"
+          disabled={drug.trim().length < 2 || !noteOk(reason) || order.isPending}
+          onClick={() => order.mutate()}
+          aria-busy={order.isPending || undefined}
+        >
+          {order.isPending ? <span className="spinner" /> : null}
+          Place order
+        </button>
+      </div>
+      {error ? <div className="error-box mt-3" role="alert">{error}</div> : null}
+      {alerts.length ? (
+        <div className="flex-col gap-2 mt-3">
+          {alerts.map((alert) => (
+            <Banner tone="danger" key={alert.id} title={`${alert.rule_id} · ${alert.title}`}>
+              {alert.explanation}
+            </Banner>
+          ))}
+        </div>
+      ) : null}
+    </Panel>
   );
 }
 
@@ -108,15 +110,18 @@ function GiveForm({ med, onDone }: { med: ActiveMedicine; onDone: () => void }) 
     onError: (err: any) => setError(String(err?.message || err)),
   });
   return (
-    <div className="form-row" style={{ alignItems: "flex-end" }}>
-      <select className="input" value={status} onChange={(event) => setStatus(event.target.value as DoseStatus)}>
+    <div className="give-form">
+      <select className="input select-sm" aria-label="Dose outcome" value={status} onChange={(event) => setStatus(event.target.value as DoseStatus)}>
         <option value="given">Given</option>
         <option value="held">Held</option>
         <option value="refused">Refused</option>
       </select>
-      <input className="input" value={note} placeholder="Note (optional)" onChange={(event) => setNote(event.target.value)} />
-      <button className="btn btn-sm btn-primary" disabled={give.isPending} onClick={() => give.mutate()}>Record dose</button>
-      {error ? <span className="small" style={{ color: "var(--critical)" }}>{error}</span> : null}
+      <input className="input" aria-label="Dose note" value={note} placeholder="Note (optional)" onChange={(event) => setNote(event.target.value)} />
+      <button className="btn btn-sm btn-primary" disabled={give.isPending} onClick={() => give.mutate()} aria-busy={give.isPending || undefined}>
+        {give.isPending ? <span className="spinner" /> : null}
+        Record dose
+      </button>
+      {error ? <span className="give-error" role="alert">{error}</span> : null}
     </div>
   );
 }
@@ -135,63 +140,63 @@ export default function MedicineOrders() {
   });
 
   return (
-    <div className="flex-col gap-3">
-      <div className="card">
-        <div className="card-head">
-          <div className="card-title">Current orders</div>
-          <span className="badge badge-neutral">{meds.data?.current_medications.length ?? 0}</span>
-        </div>
-        <table className="table">
-          <thead><tr><th>Drug</th><th>Dose</th><th>Route</th><th>Frequency</th><th>Indication</th><th></th></tr></thead>
-          <tbody>
-            {meds.data?.current_medications.map((med) => (
-              <tr key={med.event_id}>
-                <td><strong>{med.drug}</strong></td>
-                <td>{med.dose}</td>
-                <td>{med.route}</td>
-                <td>{med.frequency}</td>
-                <td>{med.indication || <span className="muted">not documented</span>}</td>
-                <td>
-                  {canGive ? (
-                    giving === med.event_id ? (
-                      <GiveForm med={med} onDone={() => setGiving(null)} />
-                    ) : (
-                      <button className="btn btn-sm" onClick={() => setGiving(med.event_id)}>Record a dose</button>
-                    )
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <section className="section" aria-labelledby="orders-and-doses">
+      <div className="section-head">
+        <h2 className="section-title" id="orders-and-doses">Orders and doses</h2>
+        <span className="small muted">Ordering is not giving: a nurse records each dose.</span>
       </div>
+
+      <Panel title="Current orders" count={meds.data?.current_medications.length ?? 0}>
+        <DataTable<ActiveMedicine>
+          caption="Current medicine orders"
+          rows={meds.data?.current_medications ?? []}
+          rowKey={(med) => med.event_id}
+          loading={meds.isLoading}
+          empty={<EmptyState icon="pill" title="No active orders.">A doctor can start a medicine with the order form below.</EmptyState>}
+          columns={[
+            { key: "drug", header: "Drug", sort: (med) => med.drug, cell: (med) => <span className="cell-strong">{med.drug}</span> },
+            { key: "dose", header: "Dose", cell: (med) => med.dose },
+            { key: "route", header: "Route", cell: (med) => med.route },
+            { key: "frequency", header: "Frequency", cell: (med) => med.frequency },
+            { key: "indication", header: "Indication", cell: (med) => med.indication || <span className="muted">not documented</span> },
+            {
+              key: "give", header: <span className="sr-only">Record a dose</span>,
+              cell: (med) => canGive ? (
+                giving === med.event_id ? (
+                  <GiveForm med={med} onDone={() => setGiving(null)} />
+                ) : (
+                  <button className="btn btn-sm" onClick={() => setGiving(med.event_id)}>Record a dose</button>
+                )
+              ) : null,
+            },
+          ]}
+        />
+      </Panel>
 
       {canOrder ? <OrderForm /> : null}
 
-      <div className="card">
-        <div className="card-head">
-          <div className="card-title">Doses recorded by nurses</div>
-          <span className="badge badge-neutral">{doses.isError ? "—" : doses.data?.administrations.length ?? 0}</span>
-        </div>
+      <Panel title="Doses recorded by nurses" count={doses.isError ? undefined : doses.data?.administrations.length ?? 0}>
         {doses.isError ? (
-          <div className="card-pad small muted">The dose record is not available right now, so recorded doses cannot be shown.</div>
-        ) : doses.data && !doses.data.administrations.length ? (
-          <div className="card-pad small muted">No dose has been recorded yet.</div>
-        ) : null}
-        <table className="table">
-          <tbody>
-            {doses.data?.administrations.map((dose) => (
-              <tr key={dose.event_id}>
-                <td><span className={`badge ${dose.status === "given" ? "badge-success" : "badge-warning"}`}>{dose.status}</span></td>
-                <td>{dose.drug} {dose.dose}</td>
-                <td className="small muted">{new Date(dose.given_at).toLocaleString()}</td>
-                <td className="small muted">{dose.recorded_by}</td>
-                <td className="small">{dose.note}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          <div className="panel-body">
+            <Banner tone="warning">The dose record is not available right now, so recorded doses cannot be shown.</Banner>
+          </div>
+        ) : (
+          <DataTable<Administration>
+            caption="Doses recorded by nurses"
+            rows={doses.data?.administrations ?? []}
+            rowKey={(dose) => dose.event_id}
+            loading={doses.isLoading}
+            empty={<EmptyState icon="clock" title="No dose has been recorded yet.">A nurse records each dose from the current orders above.</EmptyState>}
+            columns={[
+              { key: "status", header: "Outcome", sort: (dose) => dose.status, cell: (dose) => <Pill tone={dose.status === "given" ? "success" : "warning"}>{dose.status}</Pill> },
+              { key: "drug", header: "Medicine", sort: (dose) => dose.drug, cell: (dose) => <span className="cell-strong">{dose.drug} {dose.dose}</span> },
+              { key: "given", header: "Recorded at", sort: (dose) => dose.given_at, cell: (dose) => <span className="small muted">{new Date(dose.given_at).toLocaleString()}</span> },
+              { key: "by", header: "By", cell: (dose) => <span className="small muted">{dose.recorded_by}</span> },
+              { key: "note", header: "Note", cell: (dose) => <span className="small">{dose.note}</span> },
+            ]}
+          />
+        )}
+      </Panel>
+    </section>
   );
 }

@@ -1,0 +1,107 @@
+/* =====================================================================
+   Real-data visualisations: bar lists, single-series trends and lab values
+   against their reference range. Exact numbers stay visible; bars are
+   supporting graphics and reveal once without delaying the value.
+   ===================================================================== */
+.chart { min-width: 0; }
+.chart-scope { margin: 0 0 8px; font-size: var(--fs-xs); color: var(--muted); line-height: 1.4; }
+.chart-caption { margin: 0 0 6px; font-size: var(--fs-sm); font-weight: 650; color: var(--text); }
+.chart-note { margin: -2px 0 8px; font-size: var(--fs-xs); color: var(--muted); }
+.chart-empty { padding: 18px 14px; border: 1px dashed var(--border-strong); border-radius: var(--radius); color: var(--muted); font-size: var(--fs-sm); text-align: center; background: var(--surface-2); }
+
+/* horizontal bar list */
+.bar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.bar-row {
+  display: flex; flex-direction: column; gap: 5px; width: 100%; border: 1px solid transparent;
+  padding: 8px 9px; border-radius: 10px; background: transparent; color: var(--text); text-align: left;
+  transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+a.bar-row:hover, button.bar-row:hover { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+.bar-row.is-selected { background: var(--gradient-selected); border-color: var(--accent-line); }
+.bar-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.bar-label { font-size: var(--fs-sm); font-weight: 600; min-width: 0; }
+.bar-value { font-size: var(--fs-sm); font-weight: 750; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bar-unit { font-size: 11px; font-weight: 600; color: var(--muted); }
+.bar-track { height: 7px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.bar-fill { display: block; height: 100%; border-radius: 999px; background: var(--chart-2); transform-origin: left; animation: bar-reveal var(--dur-chart) var(--ease-out) both; }
+.bar-fill.tone-accent { background: linear-gradient(90deg, var(--chart-1), var(--chart-2)); }
+.bar-fill.tone-critical { background: var(--critical); }
+.bar-fill.tone-warning { background: var(--warning-solid); }
+.bar-fill.tone-neutral { background: var(--muted-2); }
+.bar-note { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+@keyframes bar-reveal { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ICU / observations trend */
+.chart-trend { margin: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 12px; }
+.chart-trend svg { display: block; width: 100%; height: auto; max-height: 150px; overflow: visible; }
+.trend-grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 2 3; }
+.trend-band { fill: rgb(37 99 235 / .08); }
+.trend-line { fill: none; stroke: var(--chart-2); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.trend-point { fill: var(--surface); stroke: var(--chart-2); stroke-width: 2; }
+.trend-value { font-size: 9px; font-weight: 700; fill: var(--text); }
+.trend-axis { font-size: 8.5px; fill: var(--muted); }
+
+/* single lab value against reference */
+.ref-value { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.ref-value.is-abnormal { border-color: var(--warning-line); background: linear-gradient(180deg, var(--warning-soft), var(--surface) 70%); }
+.ref-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.ref-name { font-size: var(--fs-sm); font-weight: 650; }
+.ref-reading { font-size: var(--fs-lg); font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text); }
+.is-abnormal .ref-reading { color: var(--warning); }
+.ref-unit { font-size: var(--fs-xs); font-weight: 600; color: var(--muted); }
+.ref-scale { display: flex; flex-direction: column; gap: 3px; }
+.ref-track { position: relative; display: block; height: 8px; border-radius: 999px; background: var(--surface-3); overflow: visible; }
+.ref-band { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: var(--chart-4); }
+.ref-marker { position: absolute; top: -2px; width: 4px; height: 12px; margin-left: -2px; border-radius: 2px; background: var(--chart-1); box-shadow: 0 0 0 2px var(--surface); }
+.ref-marker.is-out { background: var(--warning-solid); }
+.ref-bounds { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted-2); font-variant-numeric: tabular-nums; }
+.ref-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--muted); }
+.ref-flag { color: var(--warning); font-weight: 650; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-fill { animation: none; }
+}
+
+/* vertical pill bars (filled share + hatched remainder) */
+.pill-bars { list-style: none; margin: 0; padding: 34px 0 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; align-items: end; }
+.pill-bar { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.pill-bar-track {
+  position: relative; width: min(54px, 100%); height: 150px; border-radius: 999px; overflow: visible; display: flex; align-items: flex-end;
+  background: repeating-linear-gradient(135deg, var(--hatch-a, #e6edf7) 0 5px, var(--hatch-b, #ffffff) 5px 10px);
+  border: 1px solid var(--border);
+}
+.pill-bar-fill { width: 100%; border-radius: 999px; transform-origin: bottom; animation: pill-grow var(--dur-3, .5s) var(--ease-out); }
+.pill-bar-fill.tone-accent { background: linear-gradient(180deg, #3b82f6, #1d4ed8); }
+.pill-bar-fill.tone-deep { background: linear-gradient(180deg, #1e4fa8, #0d1e3c); }
+.pill-bar-fill.tone-soft { background: linear-gradient(180deg, #93c5fd, #60a5fa); }
+.pill-bar-fill.tone-critical { background: linear-gradient(180deg, #f87171, #b91c1c); }
+.pill-bar-fill.tone-warning { background: linear-gradient(180deg, #fbbf24, #d97706); }
+.pill-bar-tip {
+  position: absolute; left: 50%; top: -30px; transform: translateX(-50%); white-space: nowrap; z-index: 1;
+  padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--surface); color: var(--text); border: 1px solid var(--accent-line, var(--border)); box-shadow: var(--shadow-sm);
+}
+.pill-bar.is-highlight .pill-bar-track { box-shadow: 0 0 0 3px var(--accent-soft); }
+.pill-bar-value { font-size: var(--fs-xs); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); white-space: nowrap; }
+.pill-bar-label { font-size: 11px; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: -4px; }
+@keyframes pill-grow { from { transform: scaleY(0); } to { transform: none; } }
+
+/* semicircle gauge */
+.half-gauge { margin: 0; display: flex; flex-direction: column; align-items: center; }
+.half-gauge svg { width: min(260px, 100%); height: auto; display: block; }
+.gauge-hatch-bg { fill: var(--hatch-b, #ffffff); }
+.gauge-hatch-line { stroke: var(--hatch-a, #d5e0ef); }
+.gauge-fill { transition: stroke-dasharray var(--dur-3, .5s) var(--ease-out); }
+.gauge-dial { position: relative; width: min(260px, 100%); }
+.gauge-value { position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-size: 38px; font-weight: 800; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.gauge-caption { margin-top: 8px; font-size: var(--fs-xs); color: var(--muted); text-align: center; }
+.gauge-legend { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; font-size: var(--fs-xs); color: var(--muted); }
+.gauge-legend strong { color: var(--text); margin-left: 2px; }
+.gauge-key { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.gauge-key.tone-fill { background: #2563eb; }
+.gauge-key.tone-deep { background: #153e75; }
+.gauge-key.tone-hatch { background: repeating-linear-gradient(135deg, var(--hatch-a, #d5e0ef) 0 2px, var(--hatch-b, #fff) 2px 4px); border: 1px solid var(--border); }
+
+:root[data-theme="dark"] { --hatch-a: #243a5c; --hatch-b: #16253d; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --hatch-a: #243a5c; --hatch-b: #16253d; } }
+@media (prefers-reduced-motion: reduce) { .pill-bar-fill { animation: none; } .gauge-fill { transition: none; } }
+.pill-bar-marker { position: absolute; left: -4px; right: -4px; height: 0; border-top: 2px dashed var(--text); opacity: .55; z-index: 1; pointer-events: none; }

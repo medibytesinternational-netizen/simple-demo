@@ -11,12 +11,14 @@ import { DashboardPage } from "./pages/Dashboard";
 import { PatientsPage } from "./pages/Patients";
 import { AdmissionPage } from "./pages/Admission";
 import { AuditPage } from "./pages/Audit";
+import { PatientOverviewPage } from "./pages/PatientOverview";
 
 export default function App() {
   return (
     <Routes>
       <Route element={<Shell />}>
-        <Route index element={<Navigate to="/timeline" replace />} />
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/patient" element={<PatientOverviewPage />} />
         <Route path="/timeline" element={<TimelinePage />} />
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/safety" element={<SafetyPage />} />

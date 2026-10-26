@@ -1,0 +1,39 @@
+/* Patient dashboard: page-specific pieces on top of the shared dashboard kit (dashkit.css). */
+.po-scroll { max-height: 316px; overflow-y: auto; }
+.dk-callout {
+  display: flex; align-items: center; gap: 8px; margin: -2px 0 10px; padding: 8px 10px; border-radius: 12px;
+  font-size: var(--fs-sm); font-weight: 650; background: var(--warning-soft); border: 1px solid var(--warning-line); color: var(--warning);
+}
+.dk-callout:hover { color: var(--warning); filter: brightness(1.03); }
+
+/* vitals on the dark card */
+.po-vitals-dark { margin: 4px 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.po-vitals-dark div { padding: 8px 10px; border-radius: 14px; background: rgb(255 255 255 / .08); border: 1px solid rgb(255 255 255 / .12); }
+.po-vitals-dark div:first-child { grid-column: span 2; }
+.po-vitals-dark dt { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #b9cbe6; }
+.po-vitals-dark dd { margin: 2px 0 0; font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: #fff; }
+.po-vitals-dark dd small { margin-left: 4px; font-size: 11px; font-weight: 600; color: #b9cbe6; }
+
+/* patient bar lives inside this page and uses the dashboard card look */
+.pg-patient-overview .patient-banner.glass {
+  margin: 0; padding: 16px 18px; gap: 14px; border-radius: 22px;
+  background: var(--surface); border: 1px solid var(--border); box-shadow: 0 1px 2px rgb(15 23 42 / .04);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  animation: dk-rise var(--dur-2) var(--ease-out) both;
+}
+.pg-patient-overview .patient-banner.glass::before { display: none; }
+.pg-patient-overview .pb-avatar {
+  width: 52px; height: 52px; font-size: 17px;
+  background: linear-gradient(135deg, #0d1e3c 0%, #153e75 55%, #1d4ed8 100%);
+  box-shadow: 0 10px 22px -12px rgb(21 62 117 / .8);
+}
+.pg-patient-overview .pb-name { font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+.pg-patient-overview .pb-record-tag { border-radius: 6px; font-size: 10.5px; font-weight: 700; }
+.pg-patient-overview .pb-facts { gap: 10px; }
+.pg-patient-overview .pb-facts > div { padding: 8px 14px 8px 8px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--border); }
+.pg-patient-overview .pb-facts > div > svg { width: 32px; height: 32px; border-radius: 50%; color: #fff; background: linear-gradient(140deg, #3b82f6, #153e75); }
+.pg-patient-overview .pb-facts > .pb-fact-flag { background: var(--critical-soft); border-color: var(--critical-line); }
+.pg-patient-overview .pb-facts > .pb-fact-flag > svg { background: linear-gradient(140deg, #f87171, #b91c1c); }
+.pg-patient-overview .pb-facts dd { font-size: var(--fs-md); }
+.pg-patient-overview .pb-allergy, .pg-patient-overview .pb-alerts { height: 40px; padding: 0 16px; border-radius: 999px; }
+.pg-patient-overview .pb-alerts { box-shadow: 0 10px 22px -12px rgb(185 28 28 / .9); }

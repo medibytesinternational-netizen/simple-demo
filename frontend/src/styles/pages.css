@@ -1,1 +1,15 @@
 /* Page-scoped layout only. Shared look lives in components.css. */
+@import "./pages/draft-review.css";
+@import "./pages/dashboard.css";
+@import "./pages/dashkit.css";
+@import "./pages/patient-overview.css";
+@import "./pages/patients.css";
+@import "./pages/audit.css";
+@import "./pages/timeline.css";
+@import "./pages/tasks.css";
+@import "./pages/safety.css";
+@import "./pages/discharge.css";
+@import "./pages/documents.css";
+@import "./pages/revenue.css";
+@import "./pages/admission.css";
+@import "./pages/notes.css";

@@ -1,0 +1,38 @@
+/* Documents: inbound inbox (queue, scan, extracted fields), requisitions, records follow-up. */
+.pg-documents { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+/* pane 1: queue */
+.pg-documents .doc-queue-body { display: flex; flex-direction: column; gap: 10px; padding: 12px; max-height: 72vh; overflow-y: auto; }
+.pg-documents .doc-queue .lrow { gap: 12px; padding: 10px 12px; }
+.pg-documents .doc-queue .lrow-title { white-space: nowrap; font-size: var(--fs-sm); }
+.pg-documents .doc-queue .empty { padding: 24px 8px; }
+.pg-documents .doc-reading { display: flex; align-items: center; gap: 8px; font-size: var(--fs-xs); font-weight: 600; color: var(--muted); }
+.pg-documents .doc-upload { position: relative; cursor: pointer; }
+.pg-documents .doc-upload:focus-within { box-shadow: var(--focus); }
+.pg-documents .doc-type-select { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-xs); font-weight: 650; color: var(--muted); }
+.pg-documents .doc-type-select .select { min-width: 150px; }
+
+/* pane 2: original scan */
+.pg-documents .doc-pdf { display: block; width: 100%; height: 520px; border: 0; }
+
+/* pane 3: extracted fields; visible overflow lets the save bar stick */
+.pg-documents .doc-fields { overflow: visible; }
+.pg-documents .doc-fields > .sticky-foot { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.pg-documents .doc-fields-body { display: flex; flex-direction: column; gap: 12px; }
+.pg-documents .doc-field-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pg-documents .doc-field-value { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.pg-documents .doc-field-confirm { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.pg-documents .doc-save-hint { flex: 1 1 160px; }
+
+/* manual entry (inline or inside a disclosure) */
+.pg-documents .manual-entry { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--border); }
+.pg-documents .disclosure .manual-entry { padding-top: 0; border-top: 0; }
+.pg-documents .manual-entry-grid { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
+.pg-documents .manual-entry-grid .input { width: auto; min-height: 34px; padding: 6px 10px; font-size: var(--fs-sm); flex: 1 1 110px; }
+.pg-documents .manual-entry-grid .manual-name { flex-basis: 160px; }
+.pg-documents .manual-entry-grid .manual-text { flex-basis: 100%; }
+.pg-documents .manual-entry-grid .manual-unit { flex: 0 1 80px; }
+
+/* follow-up actions cell */
+.pg-documents .doc-row-actions { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
+.pg-documents .doc-match-select { width: 170px; min-height: 32px; font-size: var(--fs-xs); }

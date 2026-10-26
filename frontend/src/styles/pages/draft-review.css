@@ -1,0 +1,39 @@
+/* DraftReview render: header, "Before you sign" checklist, paper body, task picker.
+   Base vocabulary (.draft-head, .draft-gates, .draft-gate, .draft-actions ...) lives in clinical.css. */
+
+.draft-shell .draft-head-text { min-width: 0; }
+.draft-shell .draft-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.draft-shell .draft-title { margin: 0; }
+.draft-shell .draft-meta { margin-top: 8px; }
+.draft-shell .draft-head .btn svg { flex: none; }
+
+.draft-shell .draft-error { margin: 14px 18px 0; }
+
+/* checklist */
+.draft-shell .draft-gates-count { margin-left: auto; font-size: var(--fs-xs); font-weight: 600; color: var(--muted); }
+.draft-shell .draft-gates-sub { padding: 0 14px 6px; font-size: var(--fs-xs); color: var(--muted); }
+.draft-shell .draft-gates.is-clear { border-color: var(--success-line); background: var(--success-soft); }
+.draft-shell .draft-gates.is-clear .draft-gates-title { color: var(--success); }
+.draft-shell .draft-gates.is-clear .draft-gate + .draft-gate { border-top-color: var(--success-line); }
+.draft-shell .draft-gate .check-mark { flex: none; }
+.draft-shell .draft-gate-text { flex: 1 1 220px; min-width: 0; }
+.draft-shell .draft-gate-label { font-weight: 650; }
+.draft-shell .draft-gate-hint { margin-top: 1px; font-size: var(--fs-xs); line-height: 1.45; color: var(--muted); }
+.draft-shell .draft-gate-body { flex-basis: 100%; display: grid; gap: 10px; padding: 2px 0 6px 30px; }
+
+/* paper document */
+.draft-shell .draft-section-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.draft-shell .draft-section-sub { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.draft-shell .draft-section .table-wrap { margin-top: 4px; }
+.draft-shell .draft-editing { margin-top: 12px; }
+.draft-shell .draft-med-note { max-width: 320px; color: var(--critical); }
+
+/* F3 task picker */
+.draft-shell .draft-tasks { margin-top: 20px; }
+.draft-shell .draft-task { cursor: pointer; }
+.draft-shell .draft-task:not(.selected):hover { border-color: var(--accent-line); }
+
+@media (max-width: 560px) {
+  .draft-shell .draft-body { padding: 10px 14px 16px; }
+  .draft-shell .draft-gate-body { padding-left: 0; }
+}

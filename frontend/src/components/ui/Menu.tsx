@@ -47,9 +47,11 @@ export function Menu({ label, icon, badge, align = "left", buttonClass = "btn bt
   );
 }
 
-export function MenuItem({ onSelect, checked, danger, disabled, title, icon, children }: {
+export function MenuItem({ onSelect, checked, checkbox, danger, disabled, title, icon, children }: {
   onSelect: () => void;
   checked?: boolean;
+  /** An on/off option (menuitemcheckbox) rather than one choice of several. */
+  checkbox?: boolean;
   danger?: boolean;
   disabled?: boolean;
   title?: string;
@@ -57,7 +59,7 @@ export function MenuItem({ onSelect, checked, danger, disabled, title, icon, chi
   children: ReactNode;
 }) {
   return (
-    <button type="button" className={`menu-item ${danger ? "danger" : ""}`} role={checked === undefined ? "menuitem" : "menuitemradio"}
+    <button type="button" className={`menu-item ${danger ? "danger" : ""}`} role={checked === undefined ? "menuitem" : checkbox ? "menuitemcheckbox" : "menuitemradio"}
       aria-checked={checked} disabled={disabled} title={title} onClick={onSelect}>
       {icon ? <Icon name={icon} size={15} /> : checked !== undefined ? <span style={{ width: 15, display: "inline-grid" }}>{checked ? <Icon name="check" size={15} /> : null}</span> : null}
       {children}

@@ -24,7 +24,7 @@ export function PatientStrip({ meta, openAlerts, egfr, stayDay }: { meta?: Meta;
   const { patient, encounter } = meta;
   return (
     <section className="patient-banner glass" aria-label="Current patient">
-      <span className="avatar avatar-lg" aria-hidden="true">{initials(patient.name)}</span>
+      <span className="avatar avatar-lg pb-avatar" aria-hidden="true">{initials(patient.name)}</span>
       <div className="pb-identity">
         <div className="pb-name">
           {patient.name}
@@ -33,14 +33,14 @@ export function PatientStrip({ meta, openAlerts, egfr, stayDay }: { meta?: Meta;
         <div className="pb-meta">{patient.age} y · {patient.sex} · MRN {patient.mrn}</div>
       </div>
       <dl className="pb-facts">
-        <div><dt>Location</dt><dd>{encounter.ward} · {encounter.bed}</dd></div>
-        <div><dt>Stay</dt><dd>{encounter.kind}{stayDay && encounter.status === "active" ? ` · day ${stayDay}` : ` · ${encounter.status}`}</dd></div>
-        <div><dt>Attending</dt><dd>{encounter.attending}</dd></div>
-        {egfr ? <div><dt>Latest eGFR</dt><dd className={egfr.flag === "low" || egfr.flag === "high" ? "pb-flag" : ""}>{egfr.value}{egfr.flag ? ` · ${egfr.flag}` : ""}</dd></div> : null}
+        <div><Icon name="bed" size={16} /><span><dt>Location</dt><dd>{encounter.ward} · {encounter.bed}</dd></span></div>
+        <div><Icon name="calendar" size={16} /><span><dt>Stay</dt><dd>{encounter.kind}{stayDay && encounter.status === "active" ? ` · day ${stayDay}` : ` · ${encounter.status}`}</dd></span></div>
+        <div><Icon name="user" size={16} /><span><dt>Attending</dt><dd>{encounter.attending}</dd></span></div>
+        {egfr ? <div className={egfr.flag === "low" || egfr.flag === "high" ? "pb-fact-flag" : ""}><Icon name="lab" size={16} /><span><dt>Latest eGFR</dt><dd className={egfr.flag === "low" || egfr.flag === "high" ? "pb-flag" : ""}>{egfr.value}{egfr.flag ? ` · ${egfr.flag}` : ""}</dd></span></div> : null}
       </dl>
       <div className="pb-status">
         <span className="pb-allergy"><Icon name="alert" size={15} /> Allergy: {patient.allergies.join(", ") || "none recorded"}</span>
-        {openAlerts ? <Link className="pb-alerts" to="/safety?tab=alerts">{openAlerts} open alert{openAlerts === 1 ? "" : "s"}</Link> : null}
+        {openAlerts ? <Link className="pb-alerts" to="/safety?tab=alerts"><Icon name="safety" size={15} /> {openAlerts} open alert{openAlerts === 1 ? "" : "s"}</Link> : null}
       </div>
     </section>
   );

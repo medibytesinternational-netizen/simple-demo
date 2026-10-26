@@ -9,6 +9,26 @@ import { ContradictionList } from "../features/f12/ContradictionList";
 import { TpaState } from "../features/f12/TpaState";
 import type { F12Contradiction } from "../features/f12/types";
 import { PageHeader } from "../components/PageHeader";
+import { Icon } from "../components/icons";
+import {
+  Banner,
+  DataTable,
+  Disclosure,
+  EmptyState,
+  ListRow,
+  Panel,
+  Pill,
+  Skeleton,
+  SummaryPanel,
+  Tabs,
+  Toolbar,
+  type SummaryItem,
+} from "../components/ui";
+
+type BilledItem = ClaimPrep["billed_items"][number];
+type UnderbilledItem = ClaimPrep["underbilled_items"][number];
+type UnbilledItem = ClaimPrep["unbilled_procedures"][number];
+type UnsupportedItem = ClaimPrep["unsupported_items"][number];
 
 function inr(value: number) {
   return `INR ${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -41,301 +61,377 @@ export function RevenuePage() {
   });
 
   const latest = drafts.data?.drafts?.[0];
+  const pendingValue = <span className="sk rev-sk" aria-label="Loading" />;
+  const missingCount = claim.data?.missing_documents.length ?? 0;
+  const contradictionCount = claim.data?.contradictions.length ?? 0;
+  const tpaBlocked = claim.data?.tpa_review.status === "needs_clarification";
+  const summaryItems: SummaryItem[] = [
+    {
+      label: "Bill total",
+      value: claim.data ? inr(claim.data.total_amount) : pendingValue,
+      note: claim.data
+        ? `${claim.data.billed_items.length} line items · expected ${inr(claim.data.expected_total_amount)}`
+        : "Loading the seeded bill",
+      share: claim.data && claim.data.expected_total_amount ? claim.data.total_amount / claim.data.expected_total_amount : undefined,
+    },
+    {
+      label: "Missing documents",
+      value: claim.data ? missingCount : pendingValue,
+      tone: claim.data ? (missingCount ? "critical" : "success") : undefined,
+      note: "Blocks review readiness",
+    },
+    {
+      label: "Underbilled",
+      value: claim.data ? inr(claim.data.underbilled_amount) : pendingValue,
+      tone: claim.data?.underbilled_items.length ? "warning" : undefined,
+      note: `${claim.data?.underbilled_items.length ?? 0} line items below the seeded expected value`,
+    },
+    {
+      label: "Contradictions",
+      value: claim.data ? contradictionCount : pendingValue,
+      tone: claim.data ? (contradictionCount ? "critical" : "success") : undefined,
+      note: claim.data ? (
+        <span className="rev-tpa-note">
+          TPA review <Pill tone={tpaBlocked ? "critical" : "success"}>{claim.data.tpa_review.status?.replaceAll("_", " ") || "unknown"}</Pill>
+        </span>
+      ) : "TPA review status",
+    },
+  ];
+  const tabItems = [
+    { key: "claim", label: "Claim review" },
+    { key: "leakage", label: "Revenue leakage" },
+  ];
+  const actionError = prepare.isError || explain.isError ? (
+    <Banner tone="danger" role="alert">{((prepare.error || explain.error) as Error).message}</Banner>
+  ) : null;
 
   return (
-    <>
+    <div className="pg-revenue">
       <PageHeader
         title={tab === "leakage" ? "Revenue leakage" : "Claim review"}
         description={tab === "leakage"
           ? "Care that was documented compared with what was billed. Findings are for review only."
           : "Checks the insurance claim for missing documents, underbilling and contradictions before anyone submits it."}
-        meta={<span className="tag tag-neutral">Review only — nothing is submitted or charged</span>}
+        meta={<Pill icon="info">Review only: nothing is submitted or charged</Pill>}
       />
 
-      <div className="tabs">
-        <button className={`tab ${tab === "claim" ? "active" : ""}`} onClick={() => setParams({ tab: "claim" })}>
-          Claim review
-        </button>
-        <button className={`tab ${tab === "leakage" ? "active" : ""}`} onClick={() => setParams({ tab: "leakage" })}>
-          Revenue leakage
-        </button>
-      </div>
+      <Tabs label="Revenue" items={tabItems} value={tab} onSelect={(key) => setParams({ tab: key })} />
 
       {tab === "claim" ? (
-        <div className="flex-col gap-3">
-          <div className="grid-4">
-            <div className="card stat">
-              <div className="stat-label">Seeded bill</div>
-              <div className="stat-value">{claim.data ? inr(claim.data.total_amount) : "—"}</div>
-              <div className="stat-note">
-                {claim.data?.billed_items.length || 0} line items · expected {claim.data ? inr(claim.data.expected_total_amount) : "—"}
-              </div>
-            </div>
-            <div className="card stat">
-              <div className="stat-label">Missing documents</div>
-              <div className="stat-value" style={{ color: claim.data?.missing_documents.length ? "var(--critical)" : "var(--success)" }}>
-                {claim.data?.missing_documents.length ?? "—"}
-              </div>
-              <div className="stat-note">Blocks review readiness</div>
-            </div>
-            <div className="card stat">
-              <div className="stat-label">Underbilled</div>
-              <div className="stat-value" style={{ color: claim.data?.underbilled_items.length ? "var(--warning)" : undefined }}>
-                {claim.data?.underbilled_items.length ?? "—"}
-              </div>
-              <div className="stat-note">
-                {claim.data ? inr(claim.data.underbilled_amount) : "—"} below seeded expected value
-              </div>
-            </div>
-            <div className="card stat">
-              <div className="stat-label">Contradictions</div>
-              <div className="stat-value" style={{ color: claim.data?.contradictions.length ? "var(--critical)" : "var(--success)" }}>
-                {claim.data?.contradictions.length ?? "—"}
-              </div>
-              <div className="stat-note">
-                TPA review: {claim.data?.tpa_review.status?.replaceAll("_", " ") || "—"}
-              </div>
-            </div>
-          </div>
+        <>
+          <SummaryPanel id="revenue-claim" title="Claim at a glance" items={summaryItems} />
 
-          <div className="split-main">
-            <div className="flex-col gap-3">
-              <div className="card">
-                <div className="card-head">
-                  <div>
-                    <div className="card-title">Required documents</div>
-                    <div className="card-sub">Deterministic checklist · {claim.data?.missing_documents.length ?? 0} missing</div>
-                  </div>
-                  <span className={`badge ${claim.data?.status === "review_ready" ? "badge-success" : "badge-warning"}`}>
+          <Toolbar bare label="Claim review actions">
+            {canWork ? (
+              <button className="btn btn-primary" onClick={() => prepare.mutate()} disabled={prepare.isPending} aria-busy={prepare.isPending || undefined}>
+                {prepare.isPending ? <><span className="spinner" /> Preparing…</> : "Prepare review pack"}
+              </button>
+            ) : null}
+            <button className="btn" onClick={() => openApiWindow("/revenue/claim-prep/pack.html")}>
+              <Icon name="link" size={15} />
+              Open review copy
+            </button>
+            {canWork ? (
+              <button className="btn" onClick={() => explain.mutate()} disabled={explain.isPending} aria-busy={explain.isPending || undefined}>
+                {explain.isPending ? <><span className="spinner" /> Drafting…</> : <><Icon name="spark" size={15} /> Explain gaps</>}
+              </button>
+            ) : null}
+            {!canWork ? (
+              <span className="small muted">Read only for your role. Billing and doctors prepare and explain the pack.</span>
+            ) : null}
+          </Toolbar>
+
+          {actionError}
+          {prepare.isSuccess ? (
+            <Banner tone="success" role="status">
+              Review {prepare.data.review.id} is {prepare.data.review.status}. Pack assembled; nothing was submitted.
+            </Banner>
+          ) : null}
+
+          <div className="with-rail">
+            <div className="rev-main">
+              <Panel
+                title="Required documents"
+                sub={`Deterministic checklist · ${missingCount} missing`}
+                actions={
+                  <Pill tone={claim.data?.status === "review_ready" ? "success" : "warning"} dot>
                     {claim.data?.status?.replaceAll("_", " ") || "loading"}
-                  </span>
-                </div>
-                <div className="card-pad">
+                  </Pill>
+                }
+                padded
+              >
+                {claim.isLoading ? <Skeleton count={4} /> : (
                   <div className="checklist">
                     {claim.data?.required_documents.map((item) => (
                       <div className="check-row" key={item.key}>
-                        <span className={`check-mark ${item.present ? "ok" : "bad"}`}>{item.present ? "✓" : "!"}</span>
-                        <span style={{ flex: 1 }}>{item.label}</span>
-                        <span className={`badge ${item.present ? "badge-success" : "badge-critical"}`}>{item.present ? "present" : "missing"}</span>
+                        <span className={`check-mark ${item.present ? "ok" : "bad"}`} aria-hidden="true">
+                          <Icon name={item.present ? "check" : "alert"} size={13} />
+                        </span>
+                        <span className="check-label">{item.label}</span>
+                        <Pill tone={item.present ? "success" : "critical"}>{item.present ? "present" : "missing"}</Pill>
                         {item.evidence_event_ids.length ? <EvidenceChip eventIds={item.evidence_event_ids} label="evidence" /> : null}
                       </div>
                     ))}
                   </div>
-                </div>
-              </div>
+                )}
+              </Panel>
 
-              <div className="card">
-                <div className="card-head">
-                  <div>
-                    <div className="card-title">Contradictions to resolve before review</div>
-                    <div className="card-sub">Deterministic conflicts across the clinical and billing record</div>
-                  </div>
-                  <span className={`badge ${claim.data?.contradictions.length ? "badge-critical" : "badge-success"}`}>
-                    {claim.data?.contradictions.length || 0} open
-                  </span>
-                </div>
-                <div className="card-pad">
+              <Panel
+                title="Contradictions to resolve before review"
+                sub="Deterministic conflicts across the clinical and billing record"
+                actions={<Pill tone={contradictionCount ? "critical" : "success"}>{contradictionCount} open</Pill>}
+                padded
+              >
+                {claim.isLoading ? <Skeleton count={3} /> : (
                   <ContradictionList items={(claim.data?.contradictions || []) as F12Contradiction[]} />
-                </div>
-              </div>
+                )}
+              </Panel>
 
-              <div className="card">
-                <div className="card-head">
-                  <div><div className="card-title">Seeded bill</div><div className="card-sub">Line items are seeded, not generated</div></div>
-                  <span className="badge badge-neutral">synthetic</span>
-                </div>
-                <table className="table">
-                  <thead><tr><th>Code</th><th>Description</th><th className="right">Amount</th><th>Documentation</th></tr></thead>
-                  <tbody>
-                    {claim.data?.billed_items.map((item) => (
-                      <tr key={item.id}>
-                        <td className="mono small">{item.code}</td>
-                        <td>{item.description}</td>
-                        <td className="num">{inr(item.amount)}</td>
-                        <td>
-                          {item.documentation_event_ids.length ? (
-                            <EvidenceChip eventIds={item.documentation_event_ids} label="documented" />
-                          ) : (
-                            <span className="badge badge-critical">unsupported</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Panel title="Seeded bill" sub="Line items are seeded, not generated" actions={<Pill>synthetic</Pill>}>
+                <DataTable<BilledItem>
+                  caption="Seeded bill line items"
+                  rows={claim.data?.billed_items || []}
+                  rowKey={(item) => item.id}
+                  loading={claim.isLoading}
+                  empty={<EmptyState icon="billing" title="No bill lines">The seeded bill has no line items for this stay.</EmptyState>}
+                  columns={[
+                    { key: "code", header: "Code", sort: (item) => item.code, cell: (item) => <span className="mono small">{item.code}</span> },
+                    { key: "description", header: "Description", sort: (item) => item.description, cell: (item) => item.description },
+                    { key: "amount", header: "Amount", align: "right", sort: (item) => item.amount, cell: (item) => inr(item.amount) },
+                    {
+                      key: "documentation",
+                      header: "Documentation",
+                      cell: (item) =>
+                        item.documentation_event_ids.length ? (
+                          <EvidenceChip eventIds={item.documentation_event_ids} label="documented" />
+                        ) : (
+                          <Pill tone="critical">unsupported</Pill>
+                        ),
+                    },
+                  ]}
+                />
+              </Panel>
 
-              <div className="card">
-                <div className="card-head">
-                  <div><div className="card-title">Underbilled line items</div><div className="card-sub">Billed amount is below the seeded expected amount</div></div>
-                  <span className="badge badge-warning">{claim.data?.underbilled_items.length || 0}</span>
-                </div>
-                <div className="card-pad">
-                  {claim.data?.underbilled_items.map((item) => (
-                    <div className="alert-card mb-2" key={item.id} style={{ borderLeftColor: "var(--warning)" }}>
-                      <div className="flex items-center justify-between gap-2">
-                        <strong className="fs-13">{item.description}</strong>
-                        <span className="badge badge-warning">{inr(item.variance)} below</span>
-                      </div>
-                      <div className="small muted">Billed {inr(item.billed_amount)} · expected {inr(item.expected_amount)}</div>
-                      <div className="mt-1"><EvidenceChip eventIds={item.evidence_event_ids} label="billing source" /></div>
-                    </div>
-                  ))}
-                  {!claim.data?.underbilled_items.length ? <div className="small muted">No underbilled line items.</div> : null}
-                </div>
-              </div>
+              <Panel
+                title="Underbilled line items"
+                sub="Billed amount is below the seeded expected amount"
+                actions={<Pill tone={claim.data?.underbilled_items.length ? "warning" : "neutral"}>{claim.data?.underbilled_items.length || 0}</Pill>}
+              >
+                <DataTable<UnderbilledItem>
+                  caption="Underbilled line items"
+                  rows={claim.data?.underbilled_items || []}
+                  rowKey={(item) => item.id}
+                  loading={claim.isLoading}
+                  empty={<EmptyState icon="check" title="No underbilled line items">Every bill line meets its seeded expected amount.</EmptyState>}
+                  columns={[
+                    {
+                      key: "item",
+                      header: "Line item",
+                      sort: (item) => item.description,
+                      cell: (item) => (
+                        <>
+                          <div className="cell-strong">{item.description}</div>
+                          <div className="cell-sub mono">{item.code}</div>
+                        </>
+                      ),
+                    },
+                    { key: "billed", header: "Billed", align: "right", sort: (item) => item.billed_amount, cell: (item) => inr(item.billed_amount) },
+                    { key: "expected", header: "Expected", align: "right", sort: (item) => item.expected_amount, cell: (item) => inr(item.expected_amount) },
+                    {
+                      key: "variance",
+                      header: "Gap",
+                      align: "right",
+                      sort: (item) => item.variance,
+                      cell: (item) => <Pill tone="warning">{inr(item.variance)} below</Pill>,
+                    },
+                    { key: "source", header: "Source", cell: (item) => <EvidenceChip eventIds={item.evidence_event_ids} label="billing source" /> },
+                  ]}
+                />
+              </Panel>
 
-              <div className="grid-2">
-                <div className="card">
-                  <div className="card-head"><div className="card-title">Documented but unbilled</div><span className="badge badge-warning">{claim.data?.unbilled_procedures.length || 0}</span></div>
-                  <div className="card-pad">
-                    {claim.data?.unbilled_procedures.map((item) => (
-                      <div className="alert-card mb-2" key={item.event_id}>
-                        <strong className="fs-13">{item.procedure}</strong>
-                        <div className="small muted">Code {item.code || "not coded"} · found in the clinical record</div>
-                        <div className="mt-1"><EvidenceChip eventIds={item.evidence_event_ids} /></div>
-                      </div>
-                    ))}
-                    {!claim.data?.unbilled_procedures.length ? <div className="small muted">No unbilled documented procedures.</div> : null}
-                  </div>
-                </div>
-                <div className="card">
-                  <div className="card-head"><div className="card-title">Billed without documentation</div><span className="badge badge-critical">{claim.data?.unsupported_items.length || 0}</span></div>
-                  <div className="card-pad">
-                    {claim.data?.unsupported_items.map((item) => (
-                      <div className="alert-card critical mb-2" key={item.id}>
-                        <strong className="fs-13">{item.description}</strong>
-                        <div className="small muted">{item.code} · {inr(item.amount)} · no supporting event</div>
-                        {item.evidence_event_ids?.length ? <div className="mt-1"><EvidenceChip eventIds={item.evidence_event_ids} label="billing source" /></div> : null}
-                      </div>
-                    ))}
-                    {!claim.data?.unsupported_items.length ? <div className="small muted">No unsupported billed items.</div> : null}
-                  </div>
-                </div>
+              <div className="split-even">
+                <Panel
+                  title="Documented but unbilled"
+                  actions={<Pill tone={claim.data?.unbilled_procedures.length ? "warning" : "neutral"}>{claim.data?.unbilled_procedures.length || 0}</Pill>}
+                >
+                  <DataTable<UnbilledItem>
+                    caption="Documented procedures with no bill line"
+                    rows={claim.data?.unbilled_procedures || []}
+                    rowKey={(item) => item.event_id}
+                    loading={claim.isLoading}
+                    empty={<EmptyState icon="check" title="Nothing unbilled">No unbilled documented procedures.</EmptyState>}
+                    columns={[
+                      {
+                        key: "procedure",
+                        header: "Procedure",
+                        sort: (item) => item.procedure,
+                        cell: (item) => (
+                          <>
+                            <div className="cell-strong">{item.procedure}</div>
+                            <div className="cell-sub">Code {item.code || "not coded"} · found in the clinical record</div>
+                          </>
+                        ),
+                      },
+                      { key: "source", header: "Source", cell: (item) => <EvidenceChip eventIds={item.evidence_event_ids} /> },
+                    ]}
+                  />
+                </Panel>
+                <Panel
+                  title="Billed without documentation"
+                  actions={<Pill tone={claim.data?.unsupported_items.length ? "critical" : "neutral"}>{claim.data?.unsupported_items.length || 0}</Pill>}
+                >
+                  <DataTable<UnsupportedItem>
+                    caption="Bill lines with no supporting event"
+                    rows={claim.data?.unsupported_items || []}
+                    rowKey={(item) => item.id}
+                    loading={claim.isLoading}
+                    empty={<EmptyState icon="check" title="Nothing unsupported">No unsupported billed items.</EmptyState>}
+                    columns={[
+                      {
+                        key: "item",
+                        header: "Line item",
+                        sort: (item) => item.description,
+                        cell: (item) => (
+                          <>
+                            <div className="cell-strong">{item.description}</div>
+                            <div className="cell-sub">{item.code} · no supporting event</div>
+                          </>
+                        ),
+                      },
+                      { key: "amount", header: "Amount", align: "right", sort: (item) => item.amount, cell: (item) => inr(item.amount) },
+                      {
+                        key: "source",
+                        header: "Source",
+                        cell: (item) =>
+                          item.evidence_event_ids?.length ? <EvidenceChip eventIds={item.evidence_event_ids} label="billing source" /> : null,
+                      },
+                    ]}
+                  />
+                </Panel>
               </div>
             </div>
 
-            <div className="flex-col gap-3">
-              <div className="card">
-                <div className="card-head"><div><div className="card-title">Review actions</div><div className="card-sub">Human-only queue</div></div></div>
-                <div className="card-pad">
-                  <div className="button-row">
-                    {canWork ? (
-                      <button className="btn btn-primary" onClick={() => prepare.mutate()} disabled={prepare.isPending}>
-                        {prepare.isPending ? <><span className="spinner" /> Preparing…</> : "Prepare review pack"}
-                      </button>
-                    ) : null}
-                    <button className="btn" onClick={() => openApiWindow("/revenue/claim-prep/pack.html")}>
-                      Open review copy
-                    </button>
-                    {canWork ? (
-                      <button className="btn" onClick={() => explain.mutate()} disabled={explain.isPending}>
-                        {explain.isPending ? <><span className="spinner" /> Drafting…</> : "Explain gaps"}
-                      </button>
-                    ) : null}
+            <aside className="rail" aria-label="Review status">
+              {claim.data ? (
+                claim.data.missing_documents.length ? (
+                  <Banner tone="warning" title="Not ready for review">
+                    {claim.data.discharge_signed
+                      ? "The signed discharge summary is already present. The remaining blocker is listed in Required documents. "
+                      : "Signing the discharge summary removes the other gap and makes the demo move. "}
+                    The app cannot invent a payer document; a human must resolve the missing item.
+                    <div className="mono small mt-1">Review queue only. Nothing is submitted.</div>
+                  </Banner>
+                ) : (
+                  <Banner tone="success" title="Ready for human review">
+                    All required documents are present. This pack is ready for human review; nothing is submitted.
+                  </Banner>
+                )
+              ) : null}
+
+              {claim.data?.reviews?.length ? (
+                <Panel title="Review history" sub="Human-only queue" padded>
+                  <div className="checklist">
+                    {claim.data.reviews.slice(0, 4).map((review) => (
+                      <div className="check-row" key={review.id}>
+                        <span className="mono small check-label">{review.id}</span>
+                        <Pill tone={review.status === "review_ready" ? "success" : "warning"}>{review.status.replaceAll("_", " ")}</Pill>
+                      </div>
+                    ))}
                   </div>
-                  {!canWork ? (
-                    <div className="small muted mt-2">Read only for your role. Billing and doctors prepare and explain the pack.</div>
-                  ) : null}
-                  {prepare.isError || explain.isError ? (
-                    <div className="error-box mt-3" role="alert">{((prepare.error || explain.error) as Error).message}</div>
-                  ) : null}
-                  {prepare.isSuccess ? (
-                    <div className="success-box mt-3">
-                      Review {prepare.data.review.id} is {prepare.data.review.status}. Pack assembled; nothing was submitted.
-                    </div>
-                  ) : null}
-                  {claim.data?.missing_documents.length ? (
-                    <div className="banner warning mt-3">
-                      {claim.data.discharge_signed
-                        ? "The signed discharge summary is already present. The remaining blocker is listed above. "
-                        : "Signing the discharge summary removes the other gap and makes the demo move. "}
-                      The app cannot invent a payer document; a human must resolve the missing item.<br />
-                      <span className="mono small">Review queue only. Nothing is submitted.</span>
-                    </div>
-                  ) : (
-                    <div className="banner success mt-3">
-                      All required documents are present. This pack is ready for human review; nothing is submitted.
-                    </div>
-                  )}
-                  {claim.data?.reviews?.length ? (
-                    <div className="mt-3">
-                      <div className="section-label">Review history</div>
-                      {claim.data.reviews.slice(0, 4).map((review) => (
-                        <div className="check-row" key={review.id}>
-                          <span className="mono small" style={{ flex: 1 }}>{review.id}</span>
-                          <span className={`badge ${review.status === "review_ready" ? "badge-success" : "badge-warning"}`}>{review.status.replaceAll("_", " ")}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
+                </Panel>
+              ) : null}
 
               <TpaState claim={claim.data} />
 
-              <div className="card">
-                <div className="card-head"><div className="card-title">Documented procedures</div><span className="badge badge-neutral">{claim.data?.documented_procedures.length || 0}</span></div>
-                <div className="card-pad">
-                  {claim.data?.documented_procedures.map((item) => (
-                    <div className="check-row" key={item.event_id}>
-                      <span style={{ flex: 1 }}>{item.procedure}</span>
-                      <span className="mono small muted">{item.code}</span>
-                      <EvidenceChip eventIds={item.evidence_event_ids} label="source" />
-                    </div>
-                  ))}
-                  {!claim.data?.documented_procedures.length ? <div className="small muted">No procedures documented.</div> : null}
-                </div>
-              </div>
+              <Panel title="Documented procedures" count={claim.data?.documented_procedures.length || 0} padded>
+                {claim.data?.documented_procedures.length ? (
+                  <div className="checklist">
+                    {claim.data.documented_procedures.map((item) => (
+                      <div className="check-row" key={item.event_id}>
+                        <span className="check-label">{item.procedure}</span>
+                        <span className="mono small muted">{item.code}</span>
+                        <EvidenceChip eventIds={item.evidence_event_ids} label="source" />
+                      </div>
+                    ))}
+                  </div>
+                ) : claim.isLoading ? <Skeleton count={3} /> : <div className="small muted">No procedures documented.</div>}
+              </Panel>
 
               {latest ? <DraftReview draft={latest} /> : (
-                <div className="card empty"><div className="empty-title">No claim explanation yet.</div><div>Explain gaps turns the deterministic checklist into a short review note.</div></div>
+                <Panel>
+                  <EmptyState icon="spark" title="No claim explanation yet">
+                    Explain gaps turns the deterministic checklist into a short review note you can edit and approve.
+                  </EmptyState>
+                </Panel>
               )}
-            </div>
+            </aside>
           </div>
-        </div>
+        </>
       ) : (
-        <div className="split-main">
-          <div className="flex-col gap-3">
-            <div className="card">
-              <div className="card-head">
-                <div><div className="card-title">Documentation-to-billing gaps</div><div className="card-sub">{leakage.data?.summary || "Comparing documented care with the seeded bill"}</div></div>
+        <>
+          {explain.isError ? (
+            <Banner tone="danger" role="alert">{(explain.error as Error).message}</Banner>
+          ) : null}
+          <div className="with-rail">
+            <Panel
+              title="Documentation-to-billing gaps"
+              sub={leakage.data?.summary || "Comparing documented care with the seeded bill"}
+            >
+              <Toolbar label="Leakage actions">
+                <span className="small muted">{leakage.data?.findings.length ?? 0} findings</span>
+                <span className="toolbar-spacer" />
                 {canWork ? (
-                  <button className="btn btn-primary btn-sm" onClick={() => explain.mutate()} disabled={explain.isPending}>
-                    {explain.isPending ? <><span className="spinner" /> Drafting…</> : "Explain findings"}
+                  <button className="btn btn-primary btn-sm" onClick={() => explain.mutate()} disabled={explain.isPending} aria-busy={explain.isPending || undefined}>
+                    {explain.isPending ? <><span className="spinner" /> Drafting…</> : <><Icon name="spark" size={15} /> Explain findings</>}
                   </button>
+                ) : (
+                  <span className="small muted">Read only for your role.</span>
+                )}
+              </Toolbar>
+              <div className="panel-body">
+                {leakage.isLoading ? <Skeleton variant="rows" count={3} /> : leakage.data?.findings.length ? (
+                  <div className="rows">
+                    {leakage.data.findings.map((finding) => (
+                      <ListRow
+                        key={finding.id}
+                        icon="leakage"
+                        tone={finding.billing_status === "unsupported" ? "critical" : "warning"}
+                        title={finding.procedure}
+                        body={finding.explanation}
+                        chips={
+                          <>
+                            <Pill tone={finding.billing_status === "unsupported" ? "critical" : "warning"} dot>{finding.billing_status}</Pill>
+                            <EvidenceChip eventIds={finding.evidence_event_ids} />
+                          </>
+                        }
+                      />
+                    ))}
+                  </div>
+                ) : leakage.data ? (
+                  <EmptyState icon="check" title="No leakage findings">
+                    Every documented procedure has a bill line, and every bill line has documentation.
+                  </EmptyState>
                 ) : null}
               </div>
-              <div className="card-pad">
-                {leakage.data?.findings.map((finding) => (
-                  <div className="alert-card mb-2" key={finding.id} style={{ borderLeftColor: finding.billing_status === "unsupported" ? "var(--critical)" : "var(--warning)" }}>
-                    <div className="flex items-center gap-2">
-                      <span className={`badge ${finding.billing_status === "unsupported" ? "badge-critical" : "badge-warning"}`}>{finding.billing_status}</span>
-                      <strong className="fs-13">{finding.procedure}</strong>
-                    </div>
-                    <div className="alert-explanation">{finding.explanation}</div>
-                    <EvidenceChip eventIds={finding.evidence_event_ids} />
-                  </div>
-                ))}
-                {leakage.data && !leakage.data.findings.length ? <div className="empty">No leakage findings.</div> : null}
-              </div>
-            </div>
-          </div>
-          <div className="flex-col gap-3">
-            <div className="card">
-              <div className="card-head"><div className="card-title">How this is computed</div></div>
-              <div className="card-pad small muted" style={{ lineHeight: 1.7 }}>
+            </Panel>
+
+            <aside className="rail" aria-label="About these findings">
+              <Disclosure title="How this is computed" defaultOpen>
                 Procedures are read from timeline events of type <span className="code">procedure</span>.
                 Billing lines are read from the seeded bill table. A procedure with no matching bill line is shown as unbilled; a bill line with no documentation event is shown as unsupported.
                 The model writes the explanation only.
-              </div>
-            </div>
-            {latest ? <DraftReview draft={latest} /> : (
-              <div className="card empty"><div className="empty-title">No leakage explanation yet.</div><div>Generate a review note from the deterministic findings.</div></div>
-            )}
+              </Disclosure>
+              {latest ? <DraftReview draft={latest} /> : (
+                <Panel>
+                  <EmptyState icon="spark" title="No leakage explanation yet">
+                    Explain findings drafts a short review note from the deterministic findings above.
+                  </EmptyState>
+                </Panel>
+              )}
+            </aside>
           </div>
-        </div>
+        </>
       )}
-    </>
+    </div>
   );
 }

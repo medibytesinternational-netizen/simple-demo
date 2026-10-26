@@ -1,0 +1,42 @@
+/* Safety: clinical alerts (cards + resolved table + rail) and medication reconciliation */
+
+/* alert cards: tone lives in the icon tile, the border tint and the pill (clinical.css) */
+.pg-safety .alert-list { display: flex; flex-direction: column; gap: 12px; }
+.pg-safety .alert-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pg-safety .alert-id { margin-left: auto; font-size: var(--fs-xs); color: var(--muted-2); }
+.pg-safety .alert-card .alert-title { margin: 6px 0 0; line-height: 1.35; }
+.pg-safety .alert-card .alert-explanation { margin: 4px 0 8px; }
+.pg-safety .alert-action-label { display: block; margin-bottom: 2px; font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.pg-safety .alert-buttons { margin-top: 12px; }
+
+/* rail */
+.pg-safety .rail-copy { display: flex; flex-direction: column; gap: 8px; font-size: var(--fs-sm); line-height: 1.6; color: var(--text-2); }
+.pg-safety .rail-copy p { margin: 0; }
+.pg-safety .rule-table th, .pg-safety .rule-table td { padding: 8px 12px; }
+.pg-safety .rule-table td:first-child { width: 44px; color: var(--muted); }
+
+/* medication reconciliation */
+.pg-safety .meds-stack { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.pg-safety .recon-summary { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pg-safety .recon-summary-text { font-size: var(--fs-xs); font-weight: 450; color: var(--muted); }
+
+.pg-safety .rows-flush .lrow { align-items: start; padding: 14px 18px; }
+.pg-safety .recon-arrow { color: var(--muted-2); font-weight: 500; }
+.pg-safety .recon-current { font-weight: 550; color: var(--text-2); }
+.pg-safety .recon-open, .pg-safety .recon-decided { padding-left: 52px; }
+.pg-safety .recon-open .alert-action { margin-top: 6px; }
+.pg-safety .recon-decided { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); color: var(--success); }
+.pg-safety .recon-decided span { color: var(--text-2); }
+.pg-safety .decision-form { margin-top: 10px; }
+.pg-safety .decision-why, .pg-safety .order-reason { flex: 1 1 240px; }
+
+/* dose recording inline in the orders table */
+.pg-safety .give-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 300px; }
+.pg-safety .give-form .input { width: auto; min-height: 32px; }
+.pg-safety .give-form .input:not(select) { flex: 1 1 140px; }
+.pg-safety .give-error { flex-basis: 100%; font-size: var(--fs-xs); color: var(--critical); }
+
+@media (max-width: 600px) {
+  .pg-safety .recon-open, .pg-safety .recon-decided { padding-left: 0; }
+  .pg-safety .alert-id { margin-left: 0; flex-basis: 100%; }
+}

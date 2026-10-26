@@ -1,0 +1,12 @@
+/* Revenue: claim review (summary, checklist, bill tables, rail) and leakage findings. */
+.pg-revenue { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.pg-revenue .rev-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.pg-revenue .rev-sk { width: 96px; height: 20px; margin: 4px 0; }
+.pg-revenue .rev-tpa-note { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.pg-revenue .check-label { flex: 1; min-width: 0; }
+.pg-revenue .panel .empty { padding: 24px 16px; }
+
+/* contradictions: tone lives in the tile and pill, sources listed under each row */
+.pg-revenue .contradictions { display: flex; flex-direction: column; gap: 12px; }
+.pg-revenue .contradiction-sources { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--border-soft); }
+.pg-revenue .contradiction-source { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

@@ -12,6 +12,8 @@ import ReferralRequestForm from "../features/f11/ReferralRequestForm";
 import { canAcknowledge, referralStatusLabel } from "../features/f11/rules";
 import { ConsultNoteStatus, type ConsultGenerateResult } from "../features/f01/ConsultNoteStatus";
 import { PageHeader } from "../components/PageHeader";
+import { Stepper } from "../components/ui";
+import type { StepState } from "../components/ui";
 
 const CONSULT_TRANSCRIPT = `Doctor: Mr Menon, what brings you in today?
 Ravi: My right leg has been swollen and red since Tuesday. It is warm and painful when I walk.
@@ -59,7 +61,7 @@ const TABS: Tab[] = [
   { key: "progress", label: "Progress note", feature: "F4", kind: "transcript", title: "Progress notes", description: "AI drafts what changed since the last note. Examination and plan must be written by the clinician before signing.", transcript: PROGRESS_TRANSCRIPT },
   { key: "icu", label: "ICU flow sheet", feature: "F7", kind: "icu", title: "ICU flow sheet", description: "Assembles device readings and structured observations into a flow sheet. It cannot add, estimate or silently round a value.", transcript: "" },
   { key: "referral", label: "Referral", feature: "F11", kind: "referral", title: "Referrals", description: "Drafts the right specialty, a specific clinical question and the documented history. A human approves before the demo status changes to sent.", transcript: "" },
-  { key: "labs", label: "Lab results", feature: "—", kind: "labs", title: "Lab results", description: "Support view: review abnormal results and close the unreviewed-result alert. This is not the F11 PRD module.", transcript: "" },
+  { key: "labs", label: "Lab results", feature: "—", kind: "labs", title: "Lab results", description: "Support view: review abnormal results and close the unreviewed-result alert.", transcript: "" },
 ];
 
 type ICUEntry = {
@@ -266,13 +268,32 @@ export function NotesPage() {
     return tab.description;
   }, [tab]);
 
+  const hasWorkflow = tab.kind === "transcript";
+
+  const flowStage = !hasDraft || !latest ? 0 : latest.status === "approved" ? 3 : latest.status === "generating" ? 1 : 2;
+  const flowSteps = ["Capture", "Draft", "Sign"].map((label, i) => ({
+    label,
+    state: (i < flowStage ? "done" : i === flowStage ? "current" : "todo") as StepState,
+  }));
+  const flowHint = [
+    "Paste, record or upload what was said, then generate a draft.",
+    "Drafting from the transcript. The draft appears on the right.",
+    "Review the draft on the right, then approve it to sign.",
+    "Signed and on the timeline. Generate again for a new version.",
+  ][flowStage];
+
   return (
     <>
       <PageHeader
         title={tab.title}
         description={intro}
-        meta={<span className="tag tag-ai">AI draft → clinician review → sign</span>}
-      />
+        meta={<span className="tag tag-ai">AI draft \→ clinician review \→ sign</span>} />
+      {hasWorkflow && (
+        <div className="notes-flow">
+          <Stepper steps={flowSteps} label="Note progress" />
+          <span className="small muted">{flowHint}</span>
+        </div>
+      )}
 
       <div className="tabs">
         {TABS.map((item) => (
@@ -524,7 +545,7 @@ export function NotesPage() {
           ) : (
             <div className="card empty">
               <div className="empty-title">{hasDraft ? "No draft for this module yet." : "Support view"}</div>
-              <div>{hasDraft ? "Generate one from the input panel. The draft will appear here with evidence attached." : "Laboratory review is kept as a support view; F11 is the referral workflow."}</div>
+              <div>{hasDraft ? "Generate one from the input panel. The draft will appear here with evidence attached." : "Review results in the table and mark abnormal ones as reviewed."}</div>
             </div>
           )}
           {latest?.status === "approved" && hasDraft ? (

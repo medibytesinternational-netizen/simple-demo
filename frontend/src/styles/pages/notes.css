@@ -1,0 +1,11 @@
+/* Clinical notes hub: grouped sub-nav, Capture / Draft / Sign workspace, ICU, referrals, labs. */
+.pg-notes .notes-nav { margin-top: -6px; }
+.pg-notes .notes-flow { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; }
+.pg-notes .banner > .flex { flex: 1; min-width: 0; }
+.pg-notes .icu-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px 14px; }
+.pg-notes .notes-referral-new { border-bottom: 1px solid var(--border); background: var(--surface-2); animation: fade-in var(--dur-2) var(--ease-out); }
+.pg-notes .notes-referral-response { display: block; margin-top: 4px; font-size: var(--fs-xs); color: var(--muted); }
+.pg-notes .panel-foot .pill-row { color: var(--text-2); }
+@media (max-width: 600px) {
+  .pg-notes .icu-form { grid-template-columns: minmax(0, 1fr); }
+}

@@ -1,0 +1,3 @@
+/* Audit log (pages/Audit.tsx). Shared look lives in components.css. */
+.pg-audit .audit-who { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.pg-audit .row-detail .kv { padding: 4px 0; }

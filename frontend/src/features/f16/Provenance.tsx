@@ -1,4 +1,5 @@
 import type { Provenance } from "./types";
+import { Pill } from "../../components/ui";
 
 type Facts = Provenance & { occurred_at: string; source: string; author_name: string };
 
@@ -6,11 +7,11 @@ type Facts = Provenance & { occurred_at: string; source: string; author_name: st
 export function ProvenanceFacts({ event }: { event: Facts }) {
   return (
     <div className="timeline-meta" data-testid="provenance">
-      <span className={`badge ${event.ai_drafted ? "badge-ai" : "badge-neutral"}`}>
+      <Pill tone={event.ai_drafted ? "ai" : "neutral"} icon={event.ai_drafted ? "spark" : "user"}>
         {event.ai_drafted ? "AI-drafted" : "Human-recorded"}
-      </span>
+      </Pill>
       <span>{event.authorship}</span>
-      <span>{new Date(event.occurred_at).toLocaleString()}</span>
+      <time dateTime={event.occurred_at}>{new Date(event.occurred_at).toLocaleString()}</time>
       <span title={event.source}>from {event.source_label}</span>
     </div>
   );

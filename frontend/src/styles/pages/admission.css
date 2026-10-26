@@ -1,0 +1,15 @@
+/* New admission: sticky patient panel, stay details, sticky action bar. */
+.pg-admission .adm-patient { position: sticky; top: 0; }
+.pg-admission .bed-grid.invalid .bed-chip:not(:disabled) { border-color: var(--critical-line); }
+.pg-admission .adm-actionbar {
+  position: sticky; bottom: 0; z-index: 2; display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--surface); box-shadow: var(--shadow);
+}
+.pg-admission .adm-actionbar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+@media (max-width: 1180px) {
+  .pg-admission .adm-patient { position: static; }
+}
+@media (max-width: 600px) {
+  .pg-admission .adm-actionbar-row .btn { width: 100%; }
+}

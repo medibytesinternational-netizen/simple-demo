@@ -18,6 +18,34 @@ import {
   type UploadResult,
 } from "../features/f08/types";
 import { PageHeader } from "../components/PageHeader";
+import { Icon } from "../components/icons";
+import {
+  Banner,
+  DataTable,
+  Disclosure,
+  EmptyState,
+  ListRow,
+  MetaChip,
+  Panel,
+  Pill,
+  Progress,
+  Skeleton,
+  Tabs,
+  Toolbar,
+  type Tone,
+} from "../components/ui";
+
+const DOC_ICON: Record<string, string> = {
+  lab_report: "lab",
+  prescription: "pill",
+  radiology_report: "scan",
+  discharge_summary: "discharge",
+};
+
+/** Same status colours as before: amber needs a person, green is saved, the rest neutral. */
+function statusTone(status: string): Tone {
+  return status === "needs_confirmation" ? "warning" : status === "confirmed" ? "success" : "neutral";
+}
 
 export function DocumentsPage() {
   const [params, setParams] = useSearchParams();
@@ -147,9 +175,16 @@ export function DocumentsPage() {
 
   const latestRequest = drafts.data?.drafts?.[0];
   const confirmedDocs = documents.data?.documents.filter((item) => ["confirmed", "reviewed"].includes(item.ocr_status)) || [];
+  const loadedFields = document.data?.extracted?.fields || [];
+  const confidentCount = loadedFields.filter((field) => field.confidence >= 0.8).length;
+  const tabItems = [
+    { key: "inbound", label: "Inbound reports" },
+    { key: "requisition", label: "Investigation requests" },
+    { key: "followup", label: "Records follow-up" },
+  ];
 
   return (
-    <>
+    <div className="pg-documents">
       <PageHeader
         title={tab === "requisition" ? "Investigation requests" : tab === "followup" ? "Records follow-up" : "Inbound reports"}
         description={tab === "requisition"
@@ -159,287 +194,413 @@ export function DocumentsPage() {
             : "Outside reports are read automatically. The original stays beside each value, and uncertain values must be confirmed by a person."}
       />
 
-      <div className="tabs">
-        <button className={`tab ${tab === "inbound" ? "active" : ""}`} onClick={() => setParams({ tab: "inbound" })}>Inbound reports</button>
-        <button className={`tab ${tab === "requisition" ? "active" : ""}`} onClick={() => setParams({ tab: "requisition" })}>Investigation requests</button>
-        <button className={`tab ${tab === "followup" ? "active" : ""}`} onClick={() => setParams({ tab: "followup" })}>Records follow-up</button>
-      </div>
+      <Tabs label="Documents" items={tabItems} value={tab} onSelect={(key) => setParams({ tab: key })} />
 
-      {error ? <div className="error-box mb-3">{error}</div> : null}
-      {success ? <div className="success-box mb-3">{success}</div> : null}
+      {error ? <Banner tone="danger" role="alert">{error}</Banner> : null}
+      {success ? <Banner tone="success" role="status">{success}</Banner> : null}
 
       {tab === "inbound" ? (
-        <div className="doc-layout">
-          <div className="flex-col gap-3">
-            <div className="card">
-              <div className="card-head">
-                <div><div className="card-title">Document queue</div><div className="card-sub">{documents.data?.documents.length || 0} documents</div></div>
-                <div className="flex items-center gap-2">
-                  <DocTypeSelect value={docType} onChange={setDocType} />
-                  <label className="btn btn-primary btn-sm" style={canUpload ? undefined : { opacity: 0.5, pointerEvents: "none" }}>
-                    Upload report
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      style={{ display: "none" }}
-                      disabled={!canUpload}
-                      onChange={(event) => {
-                        const file = event.target.files?.[0];
-                        if (file) upload.mutate(file);
-                        event.target.value = "";
-                      }}
-                    />
-                  </label>
-                </div>
-              </div>
-              {upload.isPending ? <div className="banner"><span className="spinner" /> Running extraction…</div> : null}
-              <div className="list">
-                {documents.data?.documents.map((item) => (
-                  <button
-                    key={item.id}
-                    className="list-row"
-                    style={{ background: item.id === selectedId ? "var(--accent-soft)" : undefined, border: 0, textAlign: "left", width: "100%" }}
-                    onClick={() => { setSelectedId(item.id); setSuccess(""); setError(""); }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <div className="fs-13" style={{ fontWeight: 600 }}>{item.filename}</div>
-                      <div className="small muted">{new Date(item.uploaded_at).toLocaleString()} · {docTypeLabel(item.doc_type)} · {item.field_count} fields</div>
-                    </div>
-                    <span className={`badge ${item.ocr_status === "needs_confirmation" ? "badge-warning" : item.ocr_status === "confirmed" ? "badge-success" : "badge-neutral"}`}>
-                      {item.ocr_status.replaceAll("_", " ")}
-                    </span>
-                  </button>
-                ))}
-                {!documents.data?.documents.length ? <div className="empty">No documents yet. Upload a report to read it.</div> : null}
-              </div>
-            </div>
-
-            {document.data ? (
-              <div className="card">
-                <div className="card-head">
-                  <div><div className="card-title">Original scan</div><div className="card-sub">{document.data.filename}</div></div>
-                  <span className="badge badge-neutral">{docTypeLabel(document.data.doc_type)} · {document.data.mime}</span>
-                </div>
-                <div className="scan-frame">
-                  {document.data.mime === "application/pdf" ? (
-                    <iframe src={document.data.image_url} title="Original PDF report" style={{ width: "100%", height: 520, border: 0 }} />
-                  ) : (
-                    <img src={document.data.image_url} alt="Scanned source document" />
-                  )}
-                </div>
-                <div className="card-pad small muted" style={{ borderTop: "1px solid var(--border)" }}>
-                  The original stays beside the extraction. Low-confidence fields cannot be committed until a human confirms them.
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="flex-col gap-3">
-            {document.data ? (
-              <div className="card">
-                <div className="card-head">
-                  <div>
-                    <div className="card-title">Extracted fields</div>
-                    <div className="card-sub">Amber fields require confirmation before commit</div>
-                  </div>
-                  <span className={`badge ${document.data.ocr_status === "needs_confirmation" ? "badge-warning" : document.data.ocr_status === "confirmed" ? "badge-success" : "badge-neutral"}`}>
-                    {document.data.ocr_status}
-                  </span>
-                </div>
-                <div className="card-pad">
-                  {document.data.ocr_status === "needs_manual_entry" ? (
-                    <div className="banner warning">
-                      No text could be read from this file. Nothing was filled in. Read the original beside this panel and type the values below.
-                    </div>
-                  ) : null}
-                  {document.data.extracted?.fields?.map((field, index) => (
-                    <div className="field-row" key={`${field.name}-${index}`}>
-                      <div className="flex items-center justify-between">
-                        <div className="field-name">{field.name}</div>
-                        <span className={`confidence ${field.confidence >= 0.8 ? "high" : "low"}`}>{Math.round(field.confidence * 100)}%</span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="field-value">{field.value} {field.unit}</span>
-                        {document.data.doc_type === "lab_report" ? (
-                          <span className="small muted">ref {field.reference_range || "—"}</span>
-                        ) : document.data.doc_type === "prescription" ? (
-                          <span className="small muted">{field.reference_range || "no frequency read"}</span>
-                        ) : null}
-                        {field.manual ? <span className="badge badge-neutral">typed by hand</span> : null}
-                      </div>
-                      {field.confidence < 0.8 ? (
-                        <div className="button-row mt-1">
-                          <button className="btn btn-sm" onClick={() => confirmField.mutate({ index })} disabled={confirmField.isPending || !canConfirm}>
-                            Confirm value
-                          </button>
-                          <span className="small muted">Low confidence — click to confirm the parsed text.</span>
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-                  {document.data.ocr_status !== "confirmed" ? (
-                    <ManualEntryForm
-                      documentId={document.data.id}
-                      docType={document.data.doc_type}
-                      allowed={canConfirm}
-                      onError={setError}
-                    />
-                  ) : null}
-                  <div className="button-row mt-3">
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => commit.mutate()}
-                      disabled={
-                        commit.isPending ||
-                        !canConfirm ||
-                        document.data.ocr_status === "confirmed" ||
-                        !document.data.extracted?.fields?.length
+        <div className="inbox">
+          <Panel
+            className="doc-queue"
+            title="Document queue"
+            count={documents.data?.documents.length || 0}
+            sub="Choose a report to check it against the original."
+          >
+            <Toolbar label="Upload a report">
+              <DocTypeSelect value={docType} onChange={setDocType} />
+              <span className="toolbar-spacer" />
+              <label
+                className="btn btn-primary btn-sm doc-upload"
+                style={canUpload ? undefined : { opacity: 0.5, pointerEvents: "none" }}
+                title={canUpload ? undefined : "Your role cannot upload documents."}
+                aria-busy={upload.isPending || undefined}
+              >
+                {upload.isPending ? <span className="spinner" /> : <Icon name="upload" size={15} />}
+                Upload report
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="sr-only"
+                  disabled={!canUpload}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) upload.mutate(file);
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+            </Toolbar>
+            <div className="doc-queue-body">
+              {upload.isPending ? (
+                <>
+                  <div className="doc-reading" role="status"><span className="spinner" /> Running extraction…</div>
+                  <Skeleton variant="rows" count={1} />
+                </>
+              ) : null}
+              {documents.isLoading ? (
+                <Skeleton variant="rows" count={4} />
+              ) : documents.data?.documents.length ? (
+                <div className="rows">
+                  {documents.data.documents.map((item) => (
+                    <ListRow
+                      key={item.id}
+                      icon={DOC_ICON[item.doc_type] || "scan"}
+                      tone={item.ocr_status === "needs_confirmation" ? "warning" : item.ocr_status === "confirmed" ? "success" : undefined}
+                      selected={item.id === selectedId}
+                      title={item.filename}
+                      meta={<>{docTypeLabel(item.doc_type)} · {new Date(item.uploaded_at).toLocaleString()}</>}
+                      chips={
+                        <>
+                          <Pill tone={statusTone(item.ocr_status)} dot>{item.ocr_status.replaceAll("_", " ")}</Pill>
+                          {typeof item.field_count === "number" ? <MetaChip>{item.field_count} field{item.field_count === 1 ? "" : "s"}</MetaChip> : null}
+                        </>
                       }
-                    >
-                      {commit.isPending ? <><span className="spinner" /> Saving…</> : "Save to timeline"}
-                    </button>
-                    <span className="small muted">
-                      {document.data.doc_type === "prescription"
-                        ? "Adds each confirmed medicine to the home medicines."
-                        : document.data.doc_type === "radiology_report" || document.data.doc_type === "discharge_summary"
-                          ? "Adds one review note holding the confirmed lines."
-                          : "Adds one sourced result per confirmed field."}
-                    </span>
+                      onClick={() => { setSelectedId(item.id); setSuccess(""); setError(""); }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState icon="upload" title="No documents yet">
+                  Choose the report type, then Upload report. The reader fills in the values and keeps the original beside them.
+                </EmptyState>
+              )}
+            </div>
+          </Panel>
+
+          {document.data ? (
+            <Panel
+              className="doc-scan"
+              title="Original scan"
+              sub={document.data.filename}
+              actions={<Pill>{docTypeLabel(document.data.doc_type)} · {document.data.mime}</Pill>}
+              footer="The original stays beside the extraction. Low-confidence fields cannot be committed until a human confirms them."
+              padded
+            >
+              <div className="scan-frame">
+                {document.data.mime === "application/pdf" ? (
+                  <iframe src={document.data.image_url} title="Original PDF report" className="doc-pdf" />
+                ) : (
+                  <img src={document.data.image_url} alt="Scanned source document" />
+                )}
+              </div>
+            </Panel>
+          ) : selectedId && document.isLoading ? (
+            <Panel title="Original scan">
+              <Skeleton count={8} />
+            </Panel>
+          ) : (
+            <Panel>
+              <EmptyState icon="scan" title="Select a document">
+                The scan and its extraction will appear side by side. Pick a report from the queue, or upload one.
+              </EmptyState>
+            </Panel>
+          )}
+
+          <div className="rail">
+            {document.data ? (
+              <Panel
+                className="doc-fields"
+                title="Extracted fields"
+                sub="Amber values are below 80% confidence and need a person to confirm them before saving."
+                actions={<Pill tone={statusTone(document.data.ocr_status)} dot>{document.data.ocr_status.replaceAll("_", " ")}</Pill>}
+              >
+                <div className="panel-body doc-fields-body">
+                  {loadedFields.length ? (
+                    <Progress
+                      value={confidentCount}
+                      max={loadedFields.length}
+                      label={`${confidentCount} of ${loadedFields.length} values confident`}
+                      tone={confidentCount === loadedFields.length ? "success" : "warning"}
+                    />
+                  ) : null}
+                  {document.data.ocr_status === "needs_manual_entry" ? (
+                    <Banner tone="warning">
+                      No text could be read from this file. Nothing was filled in. Read the original beside this panel and type the values below.
+                    </Banner>
+                  ) : null}
+                  <div className="doc-field-list">
+                    {document.data.extracted?.fields?.map((field, index) => (
+                      <div className="field-row" key={`${field.name}-${index}`}>
+                        <div className="doc-field-head">
+                          <div className="field-name">{field.name}</div>
+                          <span className={`confidence ${field.confidence >= 0.8 ? "high" : "low"}`}>{Math.round(field.confidence * 100)}%</span>
+                        </div>
+                        <div className="doc-field-value">
+                          <span className="field-value">{field.value} {field.unit}</span>
+                          {document.data.doc_type === "lab_report" ? (
+                            <span className="small muted">ref {field.reference_range || "not read"}</span>
+                          ) : document.data.doc_type === "prescription" ? (
+                            <span className="small muted">{field.reference_range || "no frequency read"}</span>
+                          ) : null}
+                          {field.manual ? <Pill>typed by hand</Pill> : null}
+                        </div>
+                        {field.confidence < 0.8 ? (
+                          <div className="doc-field-confirm">
+                            <button className="btn btn-sm" onClick={() => confirmField.mutate({ index })} disabled={confirmField.isPending || !canConfirm}>
+                              <Icon name="check" size={14} />
+                              Confirm value
+                            </button>
+                            <span className="small muted">Low confidence. Check the original, then confirm the parsed text.</span>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
                   </div>
+                  {document.data.ocr_status !== "confirmed" ? (
+                    document.data.ocr_status === "needs_manual_entry" ? (
+                      <ManualEntryForm
+                        documentId={document.data.id}
+                        docType={document.data.doc_type}
+                        allowed={canConfirm}
+                        onError={setError}
+                      />
+                    ) : (
+                      <Disclosure title="Add a value the reader missed">
+                        <ManualEntryForm
+                          documentId={document.data.id}
+                          docType={document.data.doc_type}
+                          allowed={canConfirm}
+                          onError={setError}
+                        />
+                      </Disclosure>
+                    )
+                  ) : null}
                   {document.data.ocr_status === "confirmed" ? (
-                    <div className="banner success mt-2">
+                    <Banner tone="success">
                       {document.data.confirmed_by === AUTO_ACTOR
                         ? "Saved automatically (clean lab report). The values are on the timeline with this document as their source and stay unreviewed until a doctor reviews them."
                         : "Saved. The values are on the timeline with this document as their source."}
-                    </div>
+                    </Banner>
                   ) : null}
                 </div>
-              </div>
-            ) : (
-              <div className="card empty"><div className="empty-title">Select a document.</div><div>The scan and its extraction will appear side by side.</div></div>
-            )}
+                <div className="sticky-foot">
+                  <span className="small muted doc-save-hint">
+                    {document.data.doc_type === "prescription"
+                      ? "Adds each confirmed medicine to the home medicines."
+                      : document.data.doc_type === "radiology_report" || document.data.doc_type === "discharge_summary"
+                        ? "Adds one review note holding the confirmed lines."
+                        : "Adds one sourced result per confirmed field."}
+                  </span>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => commit.mutate()}
+                    aria-busy={commit.isPending || undefined}
+                    disabled={
+                      commit.isPending ||
+                      !canConfirm ||
+                      document.data.ocr_status === "confirmed" ||
+                      !document.data.extracted?.fields?.length
+                    }
+                  >
+                    {commit.isPending ? <><span className="spinner" /> Saving…</> : "Save to timeline"}
+                  </button>
+                </div>
+              </Panel>
+            ) : selectedId && document.isLoading ? (
+              <Panel title="Extracted fields">
+                <Skeleton count={6} />
+              </Panel>
+            ) : null}
 
-            <div className="card">
-              <div className="card-head"><div className="card-title">What OCR does not decide</div></div>
-              <div className="card-pad small muted" style={{ lineHeight: 1.7 }}>
-                The reader copies text from the file and gives a confidence. It does not write to the record, with one exception: a clean lab report (every value read at 80% confidence or more) is saved on upload as unreviewed results, and a doctor still reviews them. For every other report, a person confirms uncertain values and saves; only then does anything reach the timeline. If no text can be read, nothing is filled in and you type the values.
-              </div>
-            </div>
+            <Disclosure title="What OCR does not decide">
+              The reader copies text from the file and gives a confidence. It does not write to the record, with one exception: a clean lab report (every value read at 80% confidence or more) is saved on upload as unreviewed results, and a doctor still reviews them. For every other report, a person confirms uncertain values and saves; only then does anything reach the timeline. If no text can be read, nothing is filled in and you type the values.
+            </Disclosure>
           </div>
         </div>
       ) : tab === "requisition" ? (
-        <div className="flex-col gap-3">
-          <div className="card">
-            <div className="card-head">
-              <div>
-                <div className="card-title">Investigation and radiology requisitions</div>
-                <div className="card-sub">Pre-filled from the documented record. Allergies are carried forward and must be verified before use.</div>
-              </div>
-              <button className="btn btn-primary btn-sm" onClick={() => generateInvestigation.mutate()} disabled={generateInvestigation.isPending}>
-                {generateInvestigation.isPending ? <><span className="spinner" /> Drafting…</> : "Draft requisition"}
+        <>
+          <Panel
+            title="Investigation and radiology requisitions"
+            sub="Pre-filled from the documented record. Allergies are carried forward and must be verified before use."
+          >
+            <Toolbar label="Requisition actions">
+              <span className="small muted">{investigations.data?.requests.length || 0} requests</span>
+              <span className="toolbar-spacer" />
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => generateInvestigation.mutate()}
+                disabled={generateInvestigation.isPending}
+                aria-busy={generateInvestigation.isPending || undefined}
+              >
+                {generateInvestigation.isPending ? <><span className="spinner" /> Drafting…</> : <><Icon name="plus" size={15} /> Draft requisition</>}
               </button>
+            </Toolbar>
+            <DataTable<InvestigationRequest>
+              caption="Investigation requests"
+              rows={investigations.data?.requests || []}
+              rowKey={(request) => request.id}
+              loading={investigations.isLoading}
+              empty={
+                <EmptyState icon="request" title="No investigation requests yet">
+                  Draft requisition pre-fills a request from the documented diagnosis, allergies and recent results.
+                </EmptyState>
+              }
+              columns={[
+                {
+                  key: "study",
+                  header: "Study",
+                  sort: (request) => request.study,
+                  cell: (request) => (
+                    <>
+                      <div className="cell-strong">{request.study}</div>
+                      <div className="cell-sub">{request.request_type} · {request.indication}</div>
+                    </>
+                  ),
+                },
+                {
+                  key: "priority",
+                  header: "Priority",
+                  sort: (request) => request.priority,
+                  cell: (request) => <Pill tone={request.priority === "routine" ? "neutral" : "warning"}>{request.priority}</Pill>,
+                },
+                {
+                  key: "allergy",
+                  header: "Allergy flag",
+                  cell: (request) =>
+                    request.allergies_to_verify?.length ? (
+                      <span className="pill-row">
+                        {request.allergies_to_verify.map((item) => (
+                          <Pill key={item.substance} tone={item.verified ? "success" : "warning"} icon={item.verified ? "check" : "alert"}>
+                            {item.substance}{item.verified ? "" : " (verify)"}
+                          </Pill>
+                        ))}
+                      </span>
+                    ) : (
+                      <span className="small muted">No documented allergy</span>
+                    ),
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  sort: (request) => request.status,
+                  cell: (request) => <Pill tone={request.status === "exported" ? "success" : "neutral"} dot>{request.status}</Pill>,
+                },
+                {
+                  key: "action",
+                  header: "Action",
+                  align: "right",
+                  cell: (request) =>
+                    request.status !== "exported" ? (
+                      <button className="btn btn-sm" onClick={() => exportInvestigation.mutate(request.id)} disabled={exportInvestigation.isPending}>
+                        Mark exported
+                      </button>
+                    ) : <span className="small muted">Demo export complete</span>,
+                },
+              ]}
+            />
+            <div className="panel-body">
+              <Banner tone="warning">Review-only workflow. No laboratory, radiology, fax or external transmission exists in this build.</Banner>
             </div>
-            <table className="table">
-              <thead><tr><th>Study</th><th>Priority</th><th>Allergy flag</th><th>Status</th><th className="right">Action</th></tr></thead>
-              <tbody>
-                {investigations.data?.requests.map((request) => (
-                  <tr key={request.id}>
-                    <td>
-                      <div style={{ fontWeight: 550 }}>{request.study}</div>
-                      <div className="small muted">{request.request_type} · {request.indication}</div>
-                    </td>
-                    <td><span className={`badge ${request.priority === "routine" ? "badge-neutral" : "badge-warning"}`}>{request.priority}</span></td>
-                    <td className="small">
-                      {request.allergies_to_verify?.length
-                        ? request.allergies_to_verify.map((item) => `${item.substance}${item.verified ? " ✓" : " (verify)"}`).join(", ")
-                        : "No documented allergy"}
-                    </td>
-                    <td><span className={`badge ${request.status === "exported" ? "badge-success" : "badge-neutral"}`}>{request.status}</span></td>
-                    <td className="right">
-                      {request.status !== "exported" ? (
-                        <button className="btn btn-sm" onClick={() => exportInvestigation.mutate(request.id)} disabled={exportInvestigation.isPending}>
-                          Mark exported
-                        </button>
-                      ) : <span className="small muted">Demo export complete</span>}
-                    </td>
-                  </tr>
-                ))}
-                {!investigations.data?.requests.length ? <tr><td colSpan={5}><div className="empty">No investigation requests yet.</div></td></tr> : null}
-              </tbody>
-            </table>
-            <div className="card-pad" style={{ borderTop: "1px solid var(--border)" }}>
-              <div className="banner warning">Review-only workflow. No laboratory, radiology, fax or external transmission exists in this build.</div>
-            </div>
-          </div>
+          </Panel>
 
           {latestRequest ? <DraftReview draft={latestRequest} /> : (
-            <div className="card empty"><div className="empty-title">No requisition draft.</div><div>Draft a requisition from the documented diagnosis, allergies and recent results.</div></div>
+            <Panel>
+              <EmptyState icon="request" title="No requisition draft yet">
+                Draft a requisition from the documented diagnosis, allergies and recent results. It appears here for review before approval.
+              </EmptyState>
+            </Panel>
           )}
-        </div>
+        </>
       ) : (
-        <div className="flex-col gap-3">
-          <div className="card">
-            <div className="card-head">
-              <div><div className="card-title">Missing-records and pre-authorization follow-up</div><div className="card-sub">Supporting workflow, kept separate from F10</div></div>
-              <button className="btn btn-primary btn-sm" onClick={() => generateRequest.mutate()} disabled={generateRequest.isPending}>
-                {generateRequest.isPending ? <><span className="spinner" /> Drafting…</> : "Create follow-up request"}
+        <>
+          <Panel title="Missing-records and pre-authorization follow-up" sub="Separate from the discharge summary">
+            <Toolbar label="Follow-up actions">
+              <span className="small muted">{requests.data?.requests.length || 0} requests</span>
+              <span className="toolbar-spacer" />
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => generateRequest.mutate()}
+                disabled={generateRequest.isPending}
+                aria-busy={generateRequest.isPending || undefined}
+              >
+                {generateRequest.isPending ? <><span className="spinner" /> Drafting…</> : <><Icon name="plus" size={15} /> Create follow-up request</>}
               </button>
+            </Toolbar>
+            <DataTable<DocumentRequest>
+              caption="Records follow-up requests"
+              rows={requests.data?.requests || []}
+              rowKey={(request) => request.id}
+              loading={requests.isLoading}
+              empty={
+                <EmptyState icon="folder" title="No outbound requests yet">
+                  Create follow-up request drafts a request for records that are missing from the chart. Match the report here when it arrives.
+                </EmptyState>
+              }
+              columns={[
+                {
+                  key: "request",
+                  header: "Request",
+                  cell: (request) => (
+                    <>
+                      <div className="cell-strong">{request.records_requested.join(", ")}</div>
+                      <div className="cell-sub">{request.request_type.replaceAll("_", " ")}</div>
+                    </>
+                  ),
+                },
+                { key: "recipient", header: "Recipient", sort: (request) => request.recipient, cell: (request) => request.recipient },
+                {
+                  key: "due",
+                  header: "Due",
+                  sort: (request) => request.due_at || null,
+                  cell: (request) => (
+                    <span className="mono small">{request.due_at ? new Date(request.due_at).toLocaleDateString() : "not set"}</span>
+                  ),
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  sort: (request) => request.status,
+                  cell: (request) => (
+                    <Pill tone={request.status === "overdue" ? "warning" : request.status === "matched" ? "success" : "neutral"} dot>
+                      {request.status}
+                    </Pill>
+                  ),
+                },
+                {
+                  key: "actions",
+                  header: "Actions",
+                  align: "right",
+                  cell: (request) => (
+                    <div className="doc-row-actions">
+                      {["approved", "overdue"].includes(request.status) ? (
+                        <button className="btn btn-sm" onClick={() => exportRequest.mutate(request.id)}>Mark exported</button>
+                      ) : null}
+                      {request.status !== "matched" ? (
+                        <>
+                          <select
+                            className="select select-sm doc-match-select"
+                            aria-label={`Document to match with ${request.records_requested.join(", ")}`}
+                            value={matchChoice[request.id] || ""}
+                            onChange={(event) => setMatchChoice((current) => ({ ...current, [request.id]: event.target.value }))}
+                          >
+                            <option value="">Match a document…</option>
+                            {confirmedDocs.map((item) => <option key={item.id} value={item.id}>{item.filename}</option>)}
+                          </select>
+                          <button
+                            className="btn btn-sm"
+                            disabled={!matchChoice[request.id]}
+                            onClick={() => matchRequest.mutate({ requestId: request.id, documentId: matchChoice[request.id] })}
+                          >
+                            Match
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                  ),
+                },
+              ]}
+            />
+            <div className="panel-body">
+              <Banner tone="warning">Demo export only. There is no fax, email or payer transmission in this build.</Banner>
             </div>
-            <table className="table">
-              <thead><tr><th>Request</th><th>Recipient</th><th>Due</th><th>Status</th><th className="right">Actions</th></tr></thead>
-              <tbody>
-                {requests.data?.requests.map((request) => (
-                  <tr key={request.id}>
-                    <td>
-                      <div style={{ fontWeight: 550 }}>{request.records_requested.join(", ")}</div>
-                      <div className="small muted">{request.request_type.replaceAll("_", " ")}</div>
-                    </td>
-                    <td className="small">{request.recipient}</td>
-                    <td className="mono small">{request.due_at ? new Date(request.due_at).toLocaleDateString() : "—"}</td>
-                    <td><span className={`badge ${request.status === "overdue" ? "badge-warning" : request.status === "matched" ? "badge-success" : "badge-neutral"}`}>{request.status}</span></td>
-                    <td className="right">
-                      <div className="button-row" style={{ justifyContent: "flex-end" }}>
-                        {["approved", "overdue"].includes(request.status) ? (
-                          <button className="btn btn-sm" onClick={() => exportRequest.mutate(request.id)}>Mark exported</button>
-                        ) : null}
-                        {request.status !== "matched" ? (
-                          <>
-                            <select
-                              className="select"
-                              style={{ width: 150, padding: "3px 6px", fontSize: 11 }}
-                              value={matchChoice[request.id] || ""}
-                              onChange={(event) => setMatchChoice((current) => ({ ...current, [request.id]: event.target.value }))}
-                            >
-                              <option value="">Match a document…</option>
-                              {confirmedDocs.map((item) => <option key={item.id} value={item.id}>{item.filename}</option>)}
-                            </select>
-                            <button
-                              className="btn btn-sm"
-                              disabled={!matchChoice[request.id]}
-                              onClick={() => matchRequest.mutate({ requestId: request.id, documentId: matchChoice[request.id] })}
-                            >
-                              Match
-                            </button>
-                          </>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {!requests.data?.requests.length ? <tr><td colSpan={5}><div className="empty">No outbound requests yet.</div></td></tr> : null}
-              </tbody>
-            </table>
-            <div className="card-pad" style={{ borderTop: "1px solid var(--border)" }}>
-              <div className="banner warning">Demo export only. There is no fax, email or payer transmission in this build.</div>
-            </div>
-          </div>
+          </Panel>
 
-          <div className="card empty">
-            <div className="empty-title">Supporting workflow, not a PRD module</div>
-            <div>Missing-record and pre-authorization follow-up stays available for revenue operations. F10 is the investigation and radiology requisition workflow.</div>
-          </div>
-        </div>
+          <Banner title="Supporting workflow">
+            Missing-record and pre-authorization follow-up stays available for revenue operations. F10 is the investigation and radiology requisition workflow.
+          </Banner>
+        </>
       )}
-    </>
+    </div>
   );
 }

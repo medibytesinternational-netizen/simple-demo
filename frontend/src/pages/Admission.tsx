@@ -6,6 +6,8 @@ import { usePatientDirectory } from "../components/patientDirectory";
 import { ATTENDING, WARDS, bedKey } from "../components/wards";
 import { ALLERGY_UNAVAILABLE, allergyGateError } from "../components/admissionRules";
 import { PageHeader } from "../components/PageHeader";
+import type { KeyboardEvent } from "react";
+import { Banner, Field, Panel } from "../components/ui";
 
 const TYPES = ["IPD", "ICU", "Day care"];
 const CHECKER = "Dr. Meera Shah";
@@ -60,30 +62,42 @@ export function AdmissionPage() {
 
   const err = (key: string) => (errors[key] ? <div className="field-error" role="alert">{errors[key]}</div> : null);
 
+  const errorCount = Object.keys(errors).length;
+  // Bed picker: radio chips over the same form.bed value the validation reads. Occupied beds cannot be chosen.
+  const freeBeds = beds.filter((b) => !directory.occupied.has(bedKey(form.ward, b)));
+  const tabBed = form.bed && freeBeds.includes(form.bed) ? form.bed : freeBeds[0];
+  const onBedKey = (e: KeyboardEvent<HTMLButtonElement>, bed: string) => {
+    const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+    if (!step || !freeBeds.length) return;
+    e.preventDefault();
+    const at = freeBeds.indexOf(bed);
+    const next = freeBeds[(at + step + freeBeds.length) % freeBeds.length];
+    set("bed", next);
+    e.currentTarget.parentElement?.querySelector<HTMLElement>(`[data-bed="${next}"]`)?.focus();
+  };
+
   return (
-    <div className="hms-page">
+    <div className="hms-page pg-admission">
       <PageHeader
         title="New admission"
         description="Admit an existing patient to a ward and bed. This creates the stay; the clinical admission note is written in Admission assessment."
         actions={<Link className="btn" to="/notes?tab=admission">Go to admission assessment</Link>}
       />
 
-      {DEMO_MODE ? <div className="banner warning mb-3">{PREVIEW_SESSION_NOTE}</div> : (
-        <div className="banner mb-3">Creating admissions needs the encounter API, which is not available yet. The form shows the planned workflow; submission is disabled. The existing AI-assisted admission assessment (F2) remains available for the current patient.</div>
+      {DEMO_MODE ? <Banner tone="warning">{PREVIEW_SESSION_NOTE}</Banner> : (
+        <Banner>Creating admissions needs the encounter API, which is not available yet. The form shows the planned workflow; submission is disabled. The AI-assisted admission assessment remains available for the current patient.</Banner>
       )}
-      {notice ? <div className="success-box mb-3" role="status">{notice}</div> : null}
-      {directory.error ? <div className="error-box mb-3">Could not load patients: {directory.error.message}</div> : null}
+      {directory.error ? <div className="error-box">Could not load patients: {directory.error.message}</div> : null}
 
       <div className="admission-grid">
-        <section className="card hms-card">
-          <div className="hms-card-head"><h2 className="hms-card-title">1 · Patient</h2></div>
-          <div className="card-pad flex-col gap-3">
+        <Panel title="Patient" sub="Who is being admitted, and their allergy record." className="adm-patient">
+          <div className="panel-body flex-col gap-3">
             <div className="form-field">
               <label className="field-label" htmlFor="adm-patient">Patient<span className="req"> *</span></label>
               <select id="adm-patient" className={`select ${errors.patient ? "invalid" : ""}`} value={patientId} onChange={(e) => { setParams(e.target.value ? { patient: e.target.value } : {}); setErrors({}); setNotice(null); }}>
                 <option value="">Select a patient…</option>
                 {directory.rows.map((r) => (
-                  <option key={r.id} value={r.id}>{r.name} · {r.mrn}{r.status === "active" ? " — already admitted" : ""}</option>
+                  <option key={r.id} value={r.id}>{r.name} · {r.mrn}{r.status === "active" ? " (already admitted)" : ""}</option>
                 ))}
               </select>
               {err("patient")}
@@ -91,7 +105,7 @@ export function AdmissionPage() {
             {patient ? (
               <dl className="kv">
                 <dt>MRN</dt><dd className="mono">{patient.mrn}</dd>
-                <dt>Age / sex</dt><dd>{patient.age ?? "—"} · {patient.sex}</dd>
+                <dt>Age / sex</dt><dd>{patient.age ?? "Not recorded"} · {patient.sex}</dd>
                 <dt>Current status</dt><dd>{patient.status === "active" ? `Active · ${patient.ward} · ${patient.bed}` : patient.status}</dd>
                 <dt>Problems</dt><dd>{patient.problems.join(" · ") || "None recorded"}</dd>
               </dl>
@@ -114,64 +128,81 @@ export function AdmissionPage() {
               </div>
             ) : null}
           </div>
-        </section>
+        </Panel>
 
-        <section className="card hms-card">
-          <div className="hms-card-head"><h2 className="hms-card-title">2 · Admission details</h2></div>
-          <div className="card-pad form-grid">
-            <div className="form-field">
-              <label className="field-label" htmlFor="adm-kind">Encounter type<span className="req"> *</span></label>
+        <Panel title="Stay details" sub="Where the patient stays, under whom, and why." className="adm-stay">
+          <div className="panel-body form-grid">
+            <Field label="Encounter type" htmlFor="adm-kind" required>
               <select id="adm-kind" className="select" value={form.kind} onChange={(e) => set("kind", e.target.value)}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select>
-            </div>
-            <div className="form-field">
-              <label className="field-label" htmlFor="adm-at">Admission date and time<span className="req"> *</span></label>
+            </Field>
+            <Field label="Admission date and time" htmlFor="adm-at" required error={errors.admittedAt}>
               <input id="adm-at" type="datetime-local" className={`input ${errors.admittedAt ? "invalid" : ""}`} value={form.admittedAt} onChange={(e) => set("admittedAt", e.target.value)} />
-              {err("admittedAt")}
-            </div>
-            <div className="form-field">
-              <label className="field-label" htmlFor="adm-ward">Ward<span className="req"> *</span></label>
+            </Field>
+            <Field label="Ward" htmlFor="adm-ward" required error={errors.ward}>
               <select id="adm-ward" className={`select ${errors.ward ? "invalid" : ""}`} value={form.ward} onChange={(e) => set("ward", e.target.value)}>
                 <option value="">Select a ward…</option>{wards.map((w) => <option key={w.name}>{w.name}</option>)}
               </select>
-              {err("ward")}
-            </div>
-            <div className="form-field">
-              <label className="field-label" htmlFor="adm-bed">Bed<span className="req"> *</span></label>
-              <select id="adm-bed" className={`select ${errors.bed ? "invalid" : ""}`} value={form.bed} onChange={(e) => set("bed", e.target.value)} disabled={!form.ward}>
-                <option value="">{form.ward ? "Select a bed…" : "Select a ward first"}</option>
-                {beds.map((b) => {
-                  const holder = directory.occupied.get(bedKey(form.ward, b));
-                  return <option key={b} value={b} disabled={!!holder}>{b}{holder ? ` — occupied (${holder})` : " — free"}</option>;
-                })}
-              </select>
-              {err("bed")}
-            </div>
-            <div className="form-field">
-              <label className="field-label" htmlFor="adm-att">Attending clinician<span className="req"> *</span></label>
+            </Field>
+            <Field label="Attending clinician" htmlFor="adm-att" required error={errors.attending}>
               <select id="adm-att" className={`select ${errors.attending ? "invalid" : ""}`} value={form.attending} onChange={(e) => set("attending", e.target.value)}>
                 <option value="">Select…</option>{ATTENDING.map((a) => <option key={a}>{a}</option>)}
               </select>
-              {err("attending")}
-            </div>
+            </Field>
             <div className="form-span form-field">
-              <label className="field-label" htmlFor="adm-reason">Reason for admission<span className="req"> *</span></label>
-              <textarea id="adm-reason" className={`textarea small ${errors.reason ? "invalid" : ""}`} value={form.reason} onChange={(e) => set("reason", e.target.value)} placeholder="Presenting problem and why admission is needed" />
-              {err("reason")}
+              <span className="field-label" id="adm-bed-label">Bed<span className="req"> *</span></span>
+              {form.ward ? (
+                <div className={`bed-grid ${errors.bed ? "invalid" : ""}`} role="radiogroup" aria-labelledby="adm-bed-label" aria-required="true">
+                  {beds.map((b) => {
+                    const holder = directory.occupied.get(bedKey(form.ward, b));
+                    return (
+                      <button
+                        key={b}
+                        type="button"
+                        role="radio"
+                        className="bed-chip"
+                        data-bed={b}
+                        aria-checked={form.bed === b}
+                        aria-label={holder ? `${b}, occupied by ${holder}` : `${b}, free`}
+                        title={holder ? `Occupied by ${holder}` : undefined}
+                        disabled={!!holder}
+                        tabIndex={b === tabBed ? 0 : -1}
+                        onClick={() => set("bed", b)}
+                        onKeyDown={(e) => onBedKey(e, b)}
+                      >
+                        {b}
+                        <small>{holder ? "Occupied" : "Free"}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : <div className="field-hint">Select a ward first. Its beds appear here, with occupied beds greyed out.</div>}
+              {err("bed")}
             </div>
-            <div className="form-span form-field">
-              <label className="field-label" htmlFor="adm-notes">Relevant clinical information</label>
-              <textarea id="adm-notes" className="textarea small" value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Optional. Entered by the clinician; nothing is generated." />
+            <div className="form-span">
+              <Field label="Reason for admission" htmlFor="adm-reason" required error={errors.reason}>
+                <textarea id="adm-reason" className={`textarea small ${errors.reason ? "invalid" : ""}`} value={form.reason} onChange={(e) => set("reason", e.target.value)} placeholder="Presenting problem and why admission is needed" />
+              </Field>
+            </div>
+            <div className="form-span">
+              <Field label="Relevant clinical information" htmlFor="adm-notes">
+                <textarea id="adm-notes" className="textarea small" value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Optional. Entered by the clinician; nothing is generated." />
+              </Field>
             </div>
           </div>
-          <div className="card-foot-actions">
-            {DEMO_MODE ? (
-              <button className="btn btn-primary" onClick={submit}>Record admission (preview)</button>
-            ) : (
-              <button className="btn btn-primary" disabled title="Needs the encounter API (planned)">Admit patient</button>
-            )}
-            <span className="small muted">Required: patient, ward, free bed, attending, time, reason and allergy verification.</span>
-          </div>
-        </section>
+        </Panel>
+      </div>
+
+      <div className="adm-actionbar">
+        {notice ? <Banner tone="success" role="status">{notice}</Banner> : null}
+        {errorCount ? <div className="error-box">{errorCount === 1 ? "1 item needs" : `${errorCount} items need`} attention before the patient can be admitted. Each one is marked above.</div> : null}
+        <div className="adm-actionbar-row">
+          <span className="small muted">Required: patient, ward, free bed, attending, time, reason and allergy verification.</span>
+          {DEMO_MODE ? (
+            <button className="btn btn-primary" onClick={submit}>Record admission (preview)</button>
+          ) : (
+            <button className="btn btn-primary" disabled title="Needs the encounter API (planned)">Admit patient</button>
+          )}
+        </div>
       </div>
     </div>
   );

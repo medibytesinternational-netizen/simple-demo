@@ -126,7 +126,7 @@ export function PatientForm({
           {field("allergies", "Allergies", true, (
             <>
               <label className="check-inline"><input type="checkbox" className="checkbox" checked={form.nkda} onChange={(e) => update("nkda", e.target.checked)} /> No known drug allergies</label>
-              <input id="pf-allergies" className={`input mt-1 ${errors.allergies ? "invalid" : ""}`} disabled={form.nkda} value={form.nkda ? "" : form.allergies} onChange={(e) => update("allergies", e.target.value)} placeholder="Substance — reaction, separated by commas" />
+              <input id="pf-allergies" className={`input mt-1 ${errors.allergies ? "invalid" : ""}`} disabled={form.nkda} value={form.nkda ? "" : form.allergies} onChange={(e) => update("allergies", e.target.value)} placeholder="Substance: reaction, separated by commas" />
             </>
           ))}
         </div>

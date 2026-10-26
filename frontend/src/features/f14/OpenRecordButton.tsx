@@ -28,7 +28,7 @@ export function OpenRecordButton({ patientId, browsable = true }: { patientId: s
       onClick={() => {
         session.setPatient(patientId);
         queryClient.clear();
-        navigate("/timeline");
+        navigate("/patient");
       }}
     >
       Open record
