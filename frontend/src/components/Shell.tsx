@@ -8,18 +8,21 @@ import { EvidenceDrawer } from "./Evidence";
 import { Modal } from "./Modal";
 import { Dock } from "./Dock";
 import { PatientSearch } from "./PatientSearch";
+import { PatientStrip, initials } from "./PatientStrip";
+import { ThemeToggle } from "./ThemeToggle";
 import { findActive } from "./modules";
 import { Icon } from "./icons";
 import { DEMO_MODE, PREVIEW_LABEL } from "../demo/config";
 
+// This file stays ASCII-only: a backend test reads it with the platform default encoding.
+const SEP = String.fromCharCode(183);
+
 // The clinical modules are scoped to the primary patient's encounter, so the
-// identity banner appears on exactly those screens and nowhere else.
+// identity strip appears on exactly those screens and nowhere else.
 const PATIENT_SCOPED = new Set(["/timeline", "/notes", "/safety", "/documents", "/discharge", "/revenue", "/tasks"]);
 
-function initials(name: string) {
-  const parts = name.replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, "").split(" ").filter(Boolean);
-  return parts.map((part) => part[0]).join("").slice(0, 2).toUpperCase();
-}
+// Documents still waiting for a person to confirm what OCR read.
+const AWAITING_REVIEW = new Set(["needs_confirmation", "pending", "needs_manual_entry"]);
 
 // One doctor and one browsable patient (Ravi). A browser that last ran when the app had roles or a
 // patient picker may still hold those ids; drop them once at load so the first request is not refused.
@@ -33,6 +36,7 @@ export function Shell() {
   const location = useLocation();
   const tab = new URLSearchParams(location.search).get("tab");
   const [resetOpen, setResetOpen] = useState(false);
+  const [launchpadOpen, setLaunchpadOpen] = useState(false);
 
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
   const patientId = meta.data?.patient.id;
@@ -63,16 +67,19 @@ export function Shell() {
 
   const active = findActive(location.pathname, tab);
   useEffect(() => {
-    document.title = `${active?.label || "MediBytes"} · MediBytes HMS`;
+    document.title = `${active?.label || "MediBytes"} ${SEP} MediBytes HMS`;
   }, [active?.label, location.pathname, location.search]);
 
   const openAlerts = state.data?.alerts.filter((alert) => alert.status === "open").length || 0;
   const overdue = state.data?.tasks.filter((t) => t.is_overdue && !["completed", "cancelled"].includes(t.status)).length || 0;
-  const counts = { alerts: openAlerts, overdue };
+  const documents = state.data?.documents.filter((d) => AWAITING_REVIEW.has(d.ocr_status)).length || 0;
+  const labs = state.data?.unreviewed_labs.length || 0;
+  const counts = { alerts: openAlerts, overdue, documents, labs };
   const demoClock = meta.data?.demo_now
     ? new Date(meta.data.demo_now).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
-    : "—";
+    : null;
   const user = meta.data?.user?.name || meta.data?.demo_user || "Dr. Meera Shah";
+  const role = meta.data?.demo_role || "Attending physician";
   const showPatient = PATIENT_SCOPED.has(location.pathname);
   const egfr = state.data?.latest_labs.find((lab) => lab.name.toLowerCase() === "egfr");
   const stayDay = meta.data?.encounter.admitted_at && meta.data.demo_now
@@ -84,9 +91,8 @@ export function Shell() {
       <a className="skip-link" href="#main-content">Skip to content</a>
 
       <div className="app-main">
-        <header className="topbar">
-          {/* All modules open from the dock's Modules button; the brand sits here now that there is no left navigation. */}
-          <Link to="/dashboard" className="sidenav-brand topbar-brand" aria-label="MediBytes — Hospital management, home">
+        <header className="topbar glass">
+          <Link to="/dashboard" className="topbar-brand" aria-label="MediBytes Hospital management, home">
             <span className="brand-mark" aria-hidden="true">MB</span>
             <span className="brand-text">
               <span className="brand-name">MediBytes</span>
@@ -98,7 +104,7 @@ export function Shell() {
             {active && active.id !== "dashboard" ? (
               <>
                 <Icon name="chevron" size={14} />
-                <span>{active.group}</span>
+                <span className="crumb-group">{active.group}</span>
                 <Icon name="chevron" size={14} />
                 <span aria-current="page" className="crumb-current">{active.label}</span>
               </>
@@ -111,72 +117,55 @@ export function Shell() {
           </nav>
           <PatientSearch />
           <div className="topbar-right">
+            <button type="button" className="chrome-btn icon-only chrome-btn-search" onClick={() => setLaunchpadOpen(true)} aria-label="Search modules and patients">
+              <Icon name="search" size={17} />
+            </button>
             {DEMO_MODE ? (
-              <span className="env-pill" role="status" title="All data is fictional. Nothing you do is saved.">
-                <span className="env-dot" aria-hidden="true" />{PREVIEW_LABEL}
+              <span className="env-pill" role="status" title={`${PREVIEW_LABEL}. All data is fictional. Nothing you do is saved.`}>
+                <span className="env-dot" aria-hidden="true" /><span>Demo<span className="env-text-long"> preview</span></span>
               </span>
             ) : (
               <>
                 <span className="env-pill" title="All data is fictional seed data.">
-                  <span className="env-dot" aria-hidden="true" />Synthetic data
+                  <span className="env-dot" aria-hidden="true" /><span>Synthetic<span className="env-text-long"> data</span></span>
                 </span>
                 <span className={`mode-pill ${meta.data?.llm_mode === "live" ? "live" : ""}`} title={meta.data?.live_available ? "OpenAI key detected" : "Drafts come from the cached demo set"}>
                   {meta.data?.llm_mode === "live" ? "Live drafts" : "Cached drafts"}
                 </span>
-                <span className="mode-pill" title={`Pack of ${credits.data?.pack_size ?? "—"} credits. Reading a report 1, voice note 2, medicine reconciliation 2, report analysis 4, discharge summary 5.`}>
-                  {credits.data ? `${credits.data.balance.toLocaleString()} credits` : "— credits"}
+                <span className="mode-pill" title={`Pack of ${credits.data?.pack_size ?? "?"} credits. Reading a report 1, voice note 2, medicine reconciliation 2, report analysis 4, discharge summary 5.`}>
+                  {credits.data ? `${credits.data.balance.toLocaleString()} credits` : "Credits loading"}
                 </span>
               </>
             )}
-            <span className="topbar-clock" title="Demo clock — the application's simulated time">
-              <Icon name="clock" size={15} /> {demoClock}
-            </span>
-            <button type="button" className="btn btn-sm" onClick={() => setResetOpen(true)}>Demo controls</button>
-            <span className="topbar-user" title={`${user} · ${meta.data?.demo_role || "Attending physician"}`}>
-              <span className="avatar">{initials(user)}</span>
+            {demoClock ? (
+              <span className="topbar-clock" title="Demo clock: the application's simulated time">
+                <Icon name="clock" size={15} /> {demoClock}
+              </span>
+            ) : null}
+            <ThemeToggle />
+            <button type="button" className="chrome-btn" onClick={() => setResetOpen(true)} aria-label="Demo controls">
+              <Icon name="refresh" size={16} /><span className="chrome-btn-label">Demo controls</span>
+            </button>
+            <span className="topbar-user" title={`${user} ${SEP} ${role}`}>
+              <span className="avatar" aria-hidden="true">{initials(user)}</span>
               <span className="topbar-user-text">
                 <span className="topbar-user-name">{user}</span>
-                <span className="topbar-user-role">{meta.data?.demo_role || "Attending physician"}</span>
+                <span className="topbar-user-role">{role}</span>
               </span>
             </span>
           </div>
         </header>
 
-        {showPatient ? (
-          <section className="patient-banner" aria-label="Current patient">
-            {meta.data ? (
-              <>
-                <span className="avatar avatar-lg">{initials(meta.data.patient.name)}</span>
-                <div className="pb-identity">
-                  <div className="pb-name">
-                    {meta.data.patient.name}
-                    <span className="pb-record-tag" title="This patient has a full clinical record in the demo data">Full record</span>
-                  </div>
-                  <div className="pb-meta">{meta.data.patient.age} y · {meta.data.patient.sex} · MRN {meta.data.patient.mrn}</div>
-                </div>
-                <dl className="pb-facts">
-                  <div><dt>Location</dt><dd>{meta.data.encounter.ward} · {meta.data.encounter.bed}</dd></div>
-                  <div><dt>Stay</dt><dd>{meta.data.encounter.kind}{stayDay && meta.data.encounter.status === "active" ? ` · day ${stayDay}` : ` · ${meta.data.encounter.status}`}</dd></div>
-                  <div><dt>Attending</dt><dd>{meta.data.encounter.attending}</dd></div>
-                  {egfr ? <div><dt>Latest eGFR</dt><dd className={egfr.flag === "low" || egfr.flag === "high" ? "pb-flag" : ""}>{egfr.value}{egfr.flag ? ` · ${egfr.flag}` : ""}</dd></div> : null}
-                </dl>
-                <div className="pb-status">
-                  <span className="pb-allergy"><Icon name="alert" size={15} /> Allergy: {meta.data.patient.allergies.join(", ") || "none recorded"}</span>
-                  {openAlerts ? <Link className="pb-alerts" to="/safety?tab=alerts">{openAlerts} open alert{openAlerts === 1 ? "" : "s"}</Link> : null}
-                </div>
-              </>
-            ) : <span className="muted">Loading patient…</span>}
-          </section>
-        ) : null}
+        {showPatient ? <PatientStrip meta={meta.data} openAlerts={openAlerts} egfr={egfr} stayDay={stayDay} /> : null}
 
         <main className="content-scroll" id="main-content" tabIndex={-1}>
           <div className="content">
-            {DEMO_MODE ? null : <div className="mb-3"><IntegrationBanner /></div>}
+            {DEMO_MODE ? null : <IntegrationBanner />}
             <Outlet />
           </div>
         </main>
 
-        <Dock counts={counts} />
+        <Dock counts={counts} launchpadOpen={launchpadOpen} setLaunchpadOpen={setLaunchpadOpen} />
       </div>
 
       <EvidenceDrawer />
@@ -202,7 +191,7 @@ export function Shell() {
               <span className="small muted mt-1">Pre-seeded admission, labs, medicines, tasks, alerts, bill and outside scan.</span>
             </button>
           </div>
-          {reset.isPending ? <div className="banner mt-3"><span className="spinner" /> Resetting…</div> : null}
+          {reset.isPending ? <div className="banner mt-3" role="status"><span className="spinner" /> Resetting the demo data...</div> : null}
           {reset.isError ? <div className="error-box mt-3" role="alert">The demo data was not reset: {(reset.error as Error).message}</div> : null}
         </Modal>
       ) : null}

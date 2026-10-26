@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { DOCK_ITEMS } from "./modules";
+import { COUNT_TONE, DOCK_ITEMS, type CountKey } from "./modules";
 import { Icon } from "./icons";
-import { ModulesPanel } from "./ModulesPanel";
+import { Launchpad } from "./Launchpad";
 
 const MAX_SCALE = 0.16;
 const REACH = 100;
@@ -23,27 +24,37 @@ function useMagnify() {
 }
 
 /**
- * Floating shortcut bar. It sits in its own reserved strip under the scrolling
- * page (not on top of it), so it never covers content, forms or buttons.
+ * macOS-style dock: the main navigation. It sits in its own strip under the
+ * paper canvas (not on top of it), so it never covers content. The last tile
+ * opens the Launchpad with every module; Ctrl/Cmd+K opens it from anywhere.
  */
-export function Dock({ counts }: { counts: { alerts: number; overdue: number } }) {
+export function Dock({ counts, launchpadOpen, setLaunchpadOpen }: {
+  counts: Record<CountKey, number>;
+  launchpadOpen: boolean;
+  setLaunchpadOpen: (open: boolean) => void;
+}) {
   const location = useLocation();
   const tab = new URLSearchParams(location.search).get("tab");
   const [scales, setScales] = useState<number[]>([]);
   const [focus, setFocus] = useState(0);
   const refs = useRef<(HTMLElement | null)[]>([]);
   const magnify = useMagnify();
-  // The five shortcuts plus the Modules button, which opens every module.
   const total = DOCK_ITEMS.length + 1;
-  const [modulesOpen, setModulesOpen] = useState(false);
-  const modulesIndex = DOCK_ITEMS.length;
-  const closeModules = useCallback((returnFocus: boolean) => {
-    setModulesOpen(false);
-    if (returnFocus) refs.current[modulesIndex]?.focus();
-  }, [modulesIndex]);
+  const launcherIndex = DOCK_ITEMS.length;
 
-  // Any route change (from the panel or elsewhere) closes the panel.
-  useEffect(() => { setModulesOpen(false); }, [location.pathname, location.search]);
+  // Any route change closes the launchpad.
+  useEffect(() => { setLaunchpadOpen(false); }, [location.pathname, location.search, setLaunchpadOpen]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setLaunchpadOpen(!launchpadOpen);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [launchpadOpen, setLaunchpadOpen]);
 
   const onMove = (e: ReactPointerEvent) => {
     if (!magnify) return;
@@ -64,8 +75,8 @@ export function Dock({ counts }: { counts: { alerts: number; overdue: number } }
 
   return (
     <div className="dock-strip">
-      <nav aria-label="Shortcuts">
-        <ul className={`dock ${magnify ? "can-magnify" : ""}`} onPointerMove={onMove} onPointerLeave={() => setScales([])} onKeyDown={onKey}>
+      <nav aria-label="Main">
+        <ul className={`dock glass ${magnify ? "can-magnify" : ""}`} onPointerMove={onMove} onPointerLeave={() => setScales([])} onKeyDown={onKey}>
           {DOCK_ITEMS.map((item, i) => {
             const active = item.match(location.pathname, tab);
             const count = item.count ? counts[item.count] : 0;
@@ -76,23 +87,24 @@ export function Dock({ counts }: { counts: { alerts: number; overdue: number } }
                   tabIndex={i === focus ? 0 : -1} onFocus={() => setFocus(i)} style={{ transform: `scale(${scales[i] || 1})` }}>
                   <span className="dock-icon"><Icon name={item.icon} size={21} /></span>
                   <span className="dock-label">{item.label}</span>
-                  {count ? <span className={`dock-badge ${item.count === "alerts" ? "critical" : "warning"}`} aria-hidden="true">{count}</span> : null}
+                  {count ? <span className={`dock-badge ${COUNT_TONE[item.count!]}`} aria-hidden="true">{count}</span> : null}
                 </Link>
               </li>
             );
           })}
+          <li aria-hidden="true"><span className="dock-sep" /></li>
           <li>
-            <button type="button" ref={(el) => { refs.current[modulesIndex] = el; }} className={`dock-item ${modulesOpen ? "active" : ""}`}
-              aria-haspopup="dialog" aria-expanded={modulesOpen} aria-controls="modules-panel" aria-label="Modules: all modules"
-              tabIndex={modulesIndex === focus ? 0 : -1} onFocus={() => setFocus(modulesIndex)} onClick={() => (modulesOpen ? closeModules(true) : setModulesOpen(true))}
-              style={{ transform: `scale(${scales[modulesIndex] || 1})` }}>
+            <button type="button" ref={(el) => { refs.current[launcherIndex] = el; }} className={`dock-item ${launchpadOpen ? "active" : ""}`}
+              aria-haspopup="dialog" aria-expanded={launchpadOpen} aria-label="All modules (Ctrl+K)"
+              tabIndex={launcherIndex === focus ? 0 : -1} onFocus={() => setFocus(launcherIndex)} onClick={() => setLaunchpadOpen(!launchpadOpen)}
+              style={{ transform: `scale(${scales[launcherIndex] || 1})` }}>
               <span className="dock-icon"><Icon name="launcher" size={21} /></span>
-              <span className="dock-label">Modules</span>
+              <span className="dock-label">All modules</span>
             </button>
           </li>
         </ul>
       </nav>
-      {modulesOpen ? <ModulesPanel counts={counts} onClose={closeModules} /> : null}
+      {launchpadOpen ? createPortal(<Launchpad counts={counts} onClose={() => setLaunchpadOpen(false)} />, document.body) : null}
     </div>
   );
 }

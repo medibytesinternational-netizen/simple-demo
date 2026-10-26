@@ -1,0 +1,17 @@
+/* Reduced motion and print. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; animation-iteration-count: 1 !important; }
+  .dock-item { transform: none !important; }
+  .sk, .skeleton-rows span { animation: none !important; }
+  .spinner { animation: spin 1.6s linear infinite !important; }
+}
+
+@media print {
+  .topbar, .dock-strip, .launchpad, .patient-banner, .page-header-actions, .draft-actions, .no-print, .drawer, .drawer-backdrop, .modal, .modal-backdrop { display: none !important; }
+  :root, body { background: oklch(1 0 0); }
+  .app { display: block; height: auto; overflow: visible; background: none; }
+  .content-scroll { overflow: visible; margin: 0; border: 0; box-shadow: none; border-radius: 0; background: none; }
+  .content { padding: 0; max-width: none; }
+  .print-only { display: block; }
+  .panel, .card, .draft-shell { box-shadow: none; break-inside: avoid; }
+}

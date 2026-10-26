@@ -1,0 +1,60 @@
+/* Reset, typography and utilities. */
+:root {
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  color: var(--text);
+  background: var(--backdrop-solid);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; }
+body { background: var(--backdrop-solid); font-size: var(--fs-md); line-height: 1.5; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--accent); text-decoration: none; transition: color var(--dur-1) var(--ease-out); }
+a:hover { color: var(--accent-strong); }
+:focus-visible { outline: none; box-shadow: var(--focus); border-radius: 6px; }
+h1, h2, h3 { color: var(--text); }
+::selection { background: var(--accent-soft); color: var(--text); }
+table { font-variant-numeric: tabular-nums; }
+
+/* utilities */
+.mono { font-family: var(--font-mono); font-size: .92em; }
+.muted { color: var(--muted); }
+.small { font-size: var(--fs-xs); }
+.fs-13 { font-size: var(--fs-sm); }
+.fs-20 { font-size: var(--fs-xl); }
+.strong { font-weight: 700; }
+.nowrap { white-space: nowrap; }
+.right { text-align: right; }
+.center { text-align: center; }
+.break { word-break: break-word; }
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-1 { gap: 4px; } .gap-2 { gap: 8px; } .gap-3 { gap: 12px; } .gap-4 { gap: 16px; }
+.mt-1 { margin-top: 4px; } .mt-2 { margin-top: 8px; } .mt-3 { margin-top: 12px; } .mt-4 { margin-top: 16px; }
+.mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 12px; } .mb-4 { margin-bottom: 16px; }
+.m-0 { margin: 0 !important; } .m-16 { margin: 16px; }
+.w-full { width: 100%; }
+.rot-90 { transform: rotate(90deg); } .rot-180 { transform: rotate(180deg); } .rot-270 { transform: rotate(270deg); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+.code { font-family: var(--font-mono); font-size: var(--fs-xs); background: var(--surface-3); padding: 1px 5px; border-radius: 4px; }
+.divider { border: 0; border-top: 1px solid var(--border); margin: 16px 0; }
+.print-only { display: none; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.kbd, kbd {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px;
+  border-radius: 6px; border: 1px solid var(--border-strong); background: var(--surface-2);
+  font: 600 11px/1 var(--font-sans); color: var(--muted);
+}
+.skip-link { position: absolute; left: 12px; top: -48px; z-index: 200; background: var(--ink); color: var(--ink-fg); padding: 8px 14px; border-radius: 8px; }
+.skip-link:focus { top: 12px; color: var(--ink-fg); }
+
+/* Scrollbars stay native in shape; only their colour follows the theme. */
+.content-scroll, .launchpad-body, .drawer-body, .modal-body { scrollbar-color: var(--border-strong) transparent; }

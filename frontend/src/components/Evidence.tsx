@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { get } from "../api";
 import type { EventDetail } from "../features/f16/types";
 import { ProvenanceFacts } from "../features/f16/Provenance";
+import { Drawer } from "./ui/Drawer";
+import { Skeleton } from "./ui/primitives";
 
 type EvidenceCtx = {
   selectedEventId: string | null;
@@ -77,21 +79,9 @@ export function EvidenceDrawer() {
   if (!selectedEventId) return null;
   const event = query.data;
   return (
-    <>
-      <div className="drawer-backdrop" onClick={close} />
-      <aside className="drawer">
-        <div className="drawer-head">
-          <div>
-            <div className="card-title">Source event</div>
-            <div className="small muted">{selectedEventId}</div>
-          </div>
-          <button className="btn btn-ghost btn-sm" onClick={close}>
-            Close
-          </button>
-        </div>
-        <div className="drawer-body">
-          {query.isLoading ? <div className="loading">Loading source…</div> : null}
-          {query.error ? <div className="error-box">{String(query.error)}</div> : null}
+    <Drawer title="Source event" sub={<span className="mono">{selectedEventId}</span>} onClose={close}>
+          {query.isLoading ? <Skeleton count={5} /> : null}
+          {query.error ? <div className="error-box" role="alert">This source could not be loaded: {String(query.error)}</div> : null}
           {event ? (
             <>
               <div className="flex items-center gap-2 mb-2">
@@ -156,8 +146,6 @@ export function EvidenceDrawer() {
               </dl>
             </>
           ) : null}
-        </div>
-      </aside>
-    </>
+    </Drawer>
   );
 }

@@ -1,0 +1,111 @@
+/* =====================================================================
+   Clinical components
+   ===================================================================== */
+
+/* timeline: day groups of event rows */
+.timeline { position: relative; }
+.timeline-scroll { max-height: 760px; overflow-y: auto; padding-right: 4px; }
+.day-group { display: flex; flex-direction: column; gap: 8px; }
+.day-group + .day-group { margin-top: 18px; }
+.day-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 6px 0; background: var(--bg); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.day-head::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.event-time { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
+/* legacy timeline classes kept for any remaining caller */
+.timeline-item { display: grid; grid-template-columns: 112px 26px minmax(0, 1fr); gap: 10px; padding: 8px 0; position: relative; }
+.timeline-time { font-size: var(--fs-xs); color: var(--muted); font-family: var(--font-mono); padding-top: 12px; text-align: right; }
+.timeline-rail { position: relative; display: flex; justify-content: center; }
+.timeline-rail::before { content: ""; position: absolute; top: 0; bottom: -16px; width: 2px; background: var(--border); }
+.timeline-item:last-child .timeline-rail::before { bottom: 50%; }
+.timeline-dot { width: 12px; height: 12px; margin-top: 14px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--muted-2); z-index: 1; }
+.timeline-dot.ai { border-color: var(--ai); }
+.timeline-dot.lab { border-color: var(--warning); }
+.timeline-dot.critical { border-color: var(--critical); }
+.timeline-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 12px 14px; cursor: pointer; transition: border-color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out); }
+.timeline-card:hover { border-color: var(--accent-line); box-shadow: var(--shadow); }
+.timeline-card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.timeline-title { font-size: var(--fs-md); font-weight: 650; }
+.timeline-body { color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.timeline-meta { font-size: 11.5px; color: var(--muted-2); margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* evidence / claims */
+.claim { padding: 7px 0; border-bottom: 1px dashed var(--border); line-height: 1.6; font-size: var(--fs-md); }
+.claim:last-child { border-bottom: 0; }
+.claim-text { color: var(--text); }
+.claim-meta { display: flex; gap: 6px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
+.evidence-chip {
+  display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 650; color: var(--ai); background: var(--ai-soft);
+  border: 1px solid var(--ai-line); border-radius: 999px; padding: 1px 9px; cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease-out);
+}
+.evidence-chip:hover { border-color: var(--ai); }
+.evidence-chip.unsourced { color: var(--critical); background: var(--critical-soft); border-color: var(--critical-line); }
+
+/* draft review: AI content carries a tinted header band and a status pill until approved */
+.draft-shell { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-sm); overflow: hidden; color: var(--text); }
+.draft-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--ai-line); background: var(--ai-soft); }
+.draft-approved .draft-head { background: var(--success-soft); border-bottom-color: var(--success-line); }
+.draft-rejected .draft-head { background: var(--critical-soft); border-bottom-color: var(--critical-line); }
+.draft-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.draft-meta { color: var(--muted); font-size: var(--fs-xs); margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.draft-body { padding: 10px 22px 18px; }
+.draft-paper { max-width: 78ch; }
+.draft-section-title { margin: 16px 0 4px; font-size: var(--fs-xs); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.draft-gates { margin: 14px 18px 0; border: 1px solid var(--warning-line); background: var(--warning-soft); border-radius: var(--radius); }
+.draft-gates-title { display: flex; align-items: center; gap: 8px; padding: 10px 14px 4px; font-size: var(--fs-sm); font-weight: 700; color: var(--warning); }
+.draft-gate { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 14px; font-size: var(--fs-sm); color: var(--text); }
+.draft-gate + .draft-gate { border-top: 1px dashed var(--warning-line); }
+.draft-gate .check-mark { width: 20px; height: 20px; }
+.draft-actions {
+  position: sticky; bottom: 0; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px 18px; border-top: 1px solid var(--border); background: var(--surface-2);
+}
+.draft-block-reason { font-size: var(--fs-xs); color: var(--warning); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.draft-editing textarea { width: 100%; min-height: 280px; font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.5; }
+.f09-review .draft-actions { display: none; }
+
+/* alerts: tone lives in the icon tile and the pill, never a side stripe */
+.alert-card {
+  position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 4px 14px;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 14px 16px; box-shadow: var(--shadow-sm); color: var(--text);
+}
+.alert-card > * { grid-column: 2; }
+.alert-card > .alert-icon { grid-column: 1; grid-row: 1 / span 6; width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: var(--warning-soft); color: var(--warning); }
+.alert-card:not(:has(> .alert-icon)) { grid-template-columns: minmax(0, 1fr); }
+.alert-card:not(:has(> .alert-icon)) > * { grid-column: 1; }
+.alert-card.warning { border-color: var(--warning-line); }
+.alert-card.critical { border-color: var(--critical-line); }
+.alert-card.critical > .alert-icon { background: var(--critical-soft); color: var(--critical); }
+.alert-card.dismissed, .alert-card.acknowledged { background: var(--surface-2); border-color: var(--border); box-shadow: none; }
+.alert-card.dismissed > .alert-icon, .alert-card.acknowledged > .alert-icon { background: var(--surface-3); color: var(--muted); }
+.alert-title { font-weight: 700; font-size: 15px; }
+.alert-rule { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+.alert-explanation { font-size: var(--fs-sm); line-height: 1.55; color: var(--text-2); margin: 6px 0; }
+.alert-action { font-size: var(--fs-sm); color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: 10px; padding: 9px 12px; margin-top: 8px; }
+
+/* documents / OCR */
+.scan-frame { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; min-height: 420px; display: grid; place-items: center; }
+.scan-frame img { max-width: 100%; max-height: 620px; background: oklch(0.99 0.002 250); box-shadow: var(--shadow); border-radius: 4px; }
+.field-row { padding: 11px 0; border-bottom: 1px dashed var(--border); }
+.field-row:last-child { border-bottom: 0; }
+.field-name { font-weight: 650; font-size: var(--fs-sm); }
+.field-value { font-family: var(--font-mono); font-size: var(--fs-md); }
+.confidence { font-size: 11.5px; font-weight: 700; padding: 1px 8px; border-radius: 999px; }
+.confidence.high { background: var(--success-soft); color: var(--success); }
+.confidence.low { background: var(--warning-soft); color: var(--warning); }
+.sticky-foot { position: sticky; bottom: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 18px; border-top: 1px solid var(--border); background: var(--surface-2); }
+
+/* patient management */
+.allergy-panel { border: 1.5px solid var(--critical-line); background: var(--critical-soft); color: var(--critical); border-radius: var(--radius); padding: 12px 14px; }
+.allergy-panel .section-label { color: var(--critical); }
+.allergy-panel.none { border-color: var(--border-strong); background: var(--surface-2); color: var(--text); }
+.allergy-panel.none .section-label { color: var(--muted); }
+.allergy-panel .check-inline { color: var(--text); }
+.preview-pill { display: inline-flex; padding: 4px 10px; border-radius: 999px; background: var(--warning-soft); color: var(--warning); border: 1px solid var(--warning-line); font-size: var(--fs-xs); font-weight: 700; }
+
+/* bed picker */
+.bed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
+.bed-chip { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 6px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: var(--fs-sm); font-weight: 650; transition: border-color var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out); }
+.bed-chip small { font-size: 10.5px; font-weight: 600; color: var(--muted); }
+.bed-chip:hover:not(:disabled) { border-color: var(--accent-line); }
+.bed-chip[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-strong); }
+.bed-chip:disabled { opacity: .55; cursor: not-allowed; background: var(--surface-3); }

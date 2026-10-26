@@ -8,6 +8,8 @@ type DocumentRecord = DocumentSummary & { image_url?: string | null };
 import { DEMO_MODE, PREVIEW_SESSION_NOTE } from "../demo/config";
 import { previewStore, usePreviewState } from "../demo/previewStore";
 import { Modal } from "./Modal";
+import { Drawer } from "./ui/Drawer";
+import { Tabs } from "./ui/Tabs";
 import type { DirectoryRow } from "./patientDirectory";
 import { CHART_PATIENT_ID } from "./patientDirectory";
 
@@ -27,33 +29,27 @@ function fmtDate(value?: string | null) {
 export function PatientDrawer({ row, onClose, onEdit }: { row: DirectoryRow; onClose: () => void; onEdit?: () => void }) {
   const [tab, setTab] = useState<"summary" | "documents" | "encounter">("summary");
   return (
-    <>
-      <div className="drawer-backdrop" onClick={onClose} />
-      <aside className="drawer drawer-wide" role="dialog" aria-modal="true" aria-label={`Patient details: ${row.name}`}>
-        <div className="drawer-head">
-          <div className="flex items-center gap-3">
-            <span className="avatar avatar-soft">{row.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}</span>
-            <div>
-              <div className="card-title">{row.name} {row.source === "preview" ? <span className="badge badge-warning">preview record</span> : null}</div>
-              <div className="small muted">{row.mrn} · {row.age ?? "—"} y · {row.sex}</div>
-            </div>
-          </div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}>Close</button>
+    <Drawer
+      wide
+      onClose={onClose}
+      leading={<span className="avatar avatar-soft">{row.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}</span>}
+      title={<>{row.name} {row.source === "preview" ? <span className="badge badge-warning">preview record</span> : null}</>}
+      sub={`${row.mrn} · ${row.age ?? "Age unknown"}${row.age != null ? " y" : ""} · ${row.sex}`}
+      tabs={
+        <div className="drawer-tabs">
+          <Tabs
+            label="Patient details"
+            value={tab}
+            onSelect={setTab}
+            items={[{ key: "summary", label: "Summary" }, { key: "documents", label: "Documents" }, { key: "encounter", label: "Encounter" }]}
+          />
         </div>
-        <div className="tabs drawer-tabs" role="tablist">
-          {(["summary", "documents", "encounter"] as const).map((key) => (
-            <button key={key} role="tab" aria-selected={tab === key} className={`tab ${tab === key ? "active" : ""}`} onClick={() => setTab(key)}>
-              {key === "summary" ? "Summary" : key === "documents" ? "Documents" : "Encounter"}
-            </button>
-          ))}
-        </div>
-        <div className="drawer-body">
-          {tab === "summary" ? <Summary row={row} onEdit={onEdit} /> : null}
-          {tab === "documents" ? <Documents row={row} /> : null}
-          {tab === "encounter" ? <Encounter row={row} /> : null}
-        </div>
-      </aside>
-    </>
+      }
+    >
+      {tab === "summary" ? <Summary row={row} onEdit={onEdit} /> : null}
+      {tab === "documents" ? <Documents row={row} /> : null}
+      {tab === "encounter" ? <Encounter row={row} /> : null}
+    </Drawer>
   );
 }
 

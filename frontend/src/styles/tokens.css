@@ -1,0 +1,163 @@
+/* =====================================================================
+   MediBytes HMS design tokens
+   Two themes share one set of names. The navy backdrop and the glass
+   chrome (top bar, patient strip, dock, launchpad) frame a paper canvas
+   where all clinical work happens. Status colour is always paired with
+   text or an icon.
+   ===================================================================== */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* backdrop and glass chrome */
+  --backdrop:
+    radial-gradient(1100px 620px at 8% -12%, oklch(0.46 0.13 252 / 0.55), transparent 62%),
+    radial-gradient(900px 520px at 100% 4%, oklch(0.42 0.11 228 / 0.42), transparent 60%),
+    linear-gradient(160deg, oklch(0.28 0.075 258), oklch(0.2 0.06 263) 55%, oklch(0.155 0.045 266));
+  --backdrop-solid: oklch(0.21 0.06 262);
+  --chrome-bg: oklch(0.3 0.06 258 / 0.52);
+  --chrome-bg-strong: oklch(0.23 0.05 260 / 0.8);
+  --chrome-solid: oklch(0.25 0.055 260);
+  --chrome-border: oklch(0.95 0.02 250 / 0.14);
+  --chrome-hover: oklch(0.95 0.02 250 / 0.1);
+  --chrome-active: oklch(0.95 0.02 250 / 0.18);
+  --chrome-fg: oklch(0.97 0.008 250);
+  --chrome-fg-muted: oklch(0.82 0.03 252);
+  --glass-blur: 18px;
+
+  /* paper canvas */
+  --bg: oklch(0.972 0.006 250);
+  --surface: oklch(0.995 0.002 250);
+  --surface-2: oklch(0.982 0.004 250);
+  --surface-3: oklch(0.955 0.009 250);
+  --border: oklch(0.915 0.012 250);
+  --border-soft: oklch(0.94 0.008 250);
+  --border-strong: oklch(0.84 0.018 250);
+  --text: oklch(0.24 0.035 258);
+  --text-2: oklch(0.38 0.03 258);
+  --muted: oklch(0.5 0.03 255);
+  --muted-2: oklch(0.63 0.025 255);
+
+  /* brand */
+  --accent: oklch(0.53 0.15 252);
+  --accent-strong: oklch(0.46 0.14 254);
+  --accent-soft: oklch(0.955 0.025 250);
+  --accent-line: oklch(0.86 0.055 250);
+  --on-accent: oklch(0.99 0.004 250);
+  --ink: oklch(0.22 0.04 262);
+  --ink-hover: oklch(0.31 0.05 262);
+  --ink-fg: oklch(0.985 0.004 250);
+
+  /* semantic */
+  --critical: oklch(0.53 0.19 27);
+  --critical-strong: oklch(0.46 0.17 27);
+  --critical-soft: oklch(0.965 0.02 25);
+  --critical-line: oklch(0.86 0.07 25);
+  --on-critical: oklch(0.99 0.004 25);
+  --danger: var(--critical);
+  --warning: oklch(0.52 0.12 62);
+  --warning-solid: oklch(0.72 0.15 70);
+  --warning-soft: oklch(0.975 0.03 80);
+  --warning-line: oklch(0.87 0.08 75);
+  --success: oklch(0.5 0.11 160);
+  --success-soft: oklch(0.965 0.03 160);
+  --success-line: oklch(0.86 0.06 160);
+  --ai: oklch(0.5 0.17 278);
+  --ai-soft: oklch(0.96 0.025 278);
+  --ai-line: oklch(0.87 0.06 278);
+
+  /* elevation */
+  --shadow-sm: 0 1px 2px oklch(0.2 0.05 260 / 0.06);
+  --shadow: 0 1px 2px oklch(0.2 0.05 260 / 0.05), 0 6px 18px oklch(0.2 0.05 260 / 0.07);
+  --shadow-lg: 0 24px 60px oklch(0.15 0.05 262 / 0.28);
+  --shadow-canvas: 0 30px 80px oklch(0.1 0.05 262 / 0.35);
+  --focus: 0 0 0 3px oklch(0.6 0.15 250 / 0.35);
+  --scrim: oklch(0.14 0.04 262 / 0.45);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --backdrop:
+    radial-gradient(1100px 620px at 8% -12%, oklch(0.36 0.11 254 / 0.45), transparent 62%),
+    radial-gradient(900px 520px at 100% 4%, oklch(0.32 0.09 230 / 0.32), transparent 60%),
+    linear-gradient(160deg, oklch(0.19 0.05 260), oklch(0.14 0.04 264) 55%, oklch(0.11 0.03 266));
+  --backdrop-solid: oklch(0.14 0.04 264);
+  --chrome-bg: oklch(0.24 0.04 258 / 0.55);
+  --chrome-bg-strong: oklch(0.18 0.035 260 / 0.85);
+  --chrome-solid: oklch(0.2 0.035 260);
+  --chrome-border: oklch(0.95 0.02 250 / 0.11);
+
+  --bg: oklch(0.185 0.022 258);
+  --surface: oklch(0.225 0.024 258);
+  --surface-2: oklch(0.25 0.025 258);
+  --surface-3: oklch(0.28 0.026 258);
+  --border: oklch(0.32 0.025 258);
+  --border-soft: oklch(0.28 0.024 258);
+  --border-strong: oklch(0.4 0.028 258);
+  --text: oklch(0.95 0.008 250);
+  --text-2: oklch(0.86 0.015 250);
+  --muted: oklch(0.73 0.02 252);
+  --muted-2: oklch(0.61 0.02 252);
+
+  --accent: oklch(0.72 0.13 250);
+  --accent-strong: oklch(0.81 0.1 250);
+  --accent-soft: oklch(0.3 0.06 252);
+  --accent-line: oklch(0.43 0.08 252);
+  --on-accent: oklch(0.18 0.03 258);
+  --ink: oklch(0.93 0.01 250);
+  --ink-hover: oklch(0.86 0.015 250);
+  --ink-fg: oklch(0.2 0.03 260);
+
+  --critical: oklch(0.72 0.15 25);
+  --critical-strong: oklch(0.8 0.12 25);
+  --critical-soft: oklch(0.29 0.06 25);
+  --critical-line: oklch(0.44 0.1 25);
+  --on-critical: oklch(0.18 0.03 25);
+  --warning: oklch(0.82 0.12 78);
+  --warning-solid: oklch(0.78 0.14 72);
+  --warning-soft: oklch(0.3 0.05 70);
+  --warning-line: oklch(0.45 0.08 70);
+  --success: oklch(0.77 0.12 160);
+  --success-soft: oklch(0.29 0.05 160);
+  --success-line: oklch(0.43 0.07 160);
+  --ai: oklch(0.76 0.12 278);
+  --ai-soft: oklch(0.3 0.06 278);
+  --ai-line: oklch(0.45 0.09 278);
+
+  --shadow-sm: 0 1px 2px oklch(0.05 0.02 260 / 0.4);
+  --shadow: 0 1px 2px oklch(0.05 0.02 260 / 0.35), 0 6px 18px oklch(0.05 0.02 260 / 0.35);
+  --shadow-lg: 0 24px 60px oklch(0.05 0.02 260 / 0.6);
+  --shadow-canvas: 0 30px 80px oklch(0.05 0.02 260 / 0.55);
+  --focus: 0 0 0 3px oklch(0.72 0.13 250 / 0.45);
+  --scrim: oklch(0.08 0.03 262 / 0.6);
+}
+
+:root {
+  /* shape */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  /* layout */
+  --topbar-h: 56px;
+  --frame-gap: 10px;
+
+  /* motion */
+  --dur-1: 150ms;
+  --dur-2: 200ms;
+  --dur-3: 250ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* type */
+  --font-sans: Inter, "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Cascadia Mono", "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-2xl: 26px;
+}

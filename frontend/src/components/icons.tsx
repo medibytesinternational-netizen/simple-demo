@@ -34,6 +34,23 @@ const PATHS: Record<string, string> = {
   filter: "M4 5h16l-6 7v6l-4 2v-8z",
   bed: "M3 19V6 M3 15h18v4 M21 15v-3a3 3 0 00-3-3h-8v6",
   launcher: "M4 4h4v4H4z M10 4h4v4h-4z M16 4h4v4h-4z M4 10h4v4H4z M10 10h4v4h-4z M16 10h4v4h-4z M4 16h4v4H4z M10 16h4v4h-4z M16 16h4v4h-4z",
+  sun: "M12 16a4 4 0 100-8 4 4 0 000 8z M12 2v2 M12 20v2 M4.9 4.9l1.4 1.4 M17.7 17.7l1.4 1.4 M2 12h2 M20 12h2 M4.9 19.1l1.4-1.4 M17.7 6.3l1.4-1.4",
+  moon: "M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z",
+  sort: "M8 4v16 M4 8l4-4 4 4 M16 20V4 M12 16l4 4 4-4",
+  "sort-asc": "M12 19V5 M6 11l6-6 6 6",
+  "sort-desc": "M12 5v14 M6 13l6 6 6-6",
+  list: "M8 6h12 M8 12h12 M8 18h12 M4 6h.01 M4 12h.01 M4 18h.01",
+  gallery: "M3 3h8v8H3z M13 3h8v8h-8z M3 13h8v8H3z M13 13h8v8h-8z",
+  more: "M5 12h.01 M12 12h.01 M19 12h.01",
+  info: "M12 21a9 9 0 100-18 9 9 0 000 18z M12 11v5 M12 8v.01",
+  spark: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z",
+  inbox: "M3 13l3-8h12l3 8 M3 13v6h18v-6 M3 13h5l1 3h6l1-3h5",
+  calendar: "M4 5h16v16H4z M4 10h16 M8 3v4 M16 3v4",
+  link: "M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1 M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1",
+  upload: "M12 16V4 M7 9l5-5 5 5 M4 16v4h16v-4",
+  play: "M7 4l13 8-13 8z",
+  edit: "M4 20h4L19 9l-4-4L4 16z",
+  user_check: "M9 11a4 4 0 100-8 4 4 0 000 8z M2 21c0-4 3-6 7-6 2 0 3.5.5 4.6 1.3 M15 19l2 2 4-4",
 };
 
 export function Icon({ name, size = 20, className }: { name: string; size?: number; className?: string }) {
