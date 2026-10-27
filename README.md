@@ -48,6 +48,20 @@ cd ..\backend
 
 Open **http://127.0.0.1:8000**. FastAPI serves the built React app.
 
+### Deploy on Railway
+
+The root `Dockerfile` builds the React app and serves it from FastAPI as one service; `railway.json` sets the health check (`/api/health`). Create a Railway service from this repo, mount a volume at `/data`, and set:
+
+```env
+DATABASE_URL=sqlite:////data/medibytes.db
+UPLOADS_DIR=/data/uploads
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o
+LLM_MODE=auto
+```
+
+Keep it at one replica (SQLite). Leave `VITE_DEMO_MODE` unset; it is only for the Netlify preview.
+
 ## Live GPT-4o and Whisper
 
 Copy `backend/.env.example` to `backend/.env` and set:

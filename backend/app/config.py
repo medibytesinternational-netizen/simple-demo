@@ -24,7 +24,7 @@ class Settings:
     database_url: str = os.getenv(
         "DATABASE_URL", f"sqlite:///{(BASE_DIR / 'medibytes.db').as_posix()}"
     )
-    uploads_dir: Path = BASE_DIR / "uploads"
+    uploads_dir: Path = Path(os.getenv("UPLOADS_DIR", BASE_DIR / "uploads"))
     demo_user: str = "Dr. Meera Shah"
     demo_role: str = "Attending physician"
 

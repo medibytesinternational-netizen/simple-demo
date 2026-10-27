@@ -1,0 +1,12 @@
+.git
+.hypothesis
+docs
+**/node_modules
+**/__pycache__
+frontend/dist
+frontend/.vite
+frontend/*.tsbuildinfo
+backend/.venv
+backend/.env
+backend/medibytes.db
+backend/uploads
