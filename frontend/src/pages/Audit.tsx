@@ -6,7 +6,7 @@ import { PageHeader } from "../components/PageHeader";
 import { Banner, DataTable, EmptyState, Panel, Pill, SearchInput, Toolbar } from "../components/ui";
 import type { Column, Tone } from "../components/ui";
 
-const ACTOR_LABEL: Record<string, string> = { user: "Person", model: "AI model", system: "System" };
+const ACTOR_LABEL: Record<string, string> = { user: "Person", model: "MediBytes", system: "System" };
 
 function describe(value: unknown) {
   if (value === null || value === undefined || value === "") return "Not recorded";
@@ -72,7 +72,7 @@ export function AuditPage() {
     <div className="page pg-audit">
       <PageHeader
         title="Audit log"
-        description="A read-only record of every change, approval, dismissal and AI draft. Entries cannot be edited."
+        description="A read-only record of every change, approval, dismissal and clinical analysis. Entries cannot be edited."
         meta={audit.data ? <span>{entries.length} most recent entries</span> : null}
       />
 
@@ -112,7 +112,7 @@ export function AuditPage() {
               </EmptyState>
             ) : (
               <EmptyState icon="audit" title="No entries yet">
-                Changes, approvals, dismissals and AI drafts are recorded here as they happen.
+                Changes, approvals, dismissals and clinical analyses are recorded here as they happen.
               </EmptyState>
             )}
           />

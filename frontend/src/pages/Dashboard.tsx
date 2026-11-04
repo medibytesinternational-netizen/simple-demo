@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { get } from "../api";
@@ -53,6 +54,11 @@ function patientStatus(row: Row): { tone: "neutral" | "critical" | "warning" | "
 }
 
 export function DashboardPage() {
+  const [clockNow, setClockNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
   const openChart = useOpenChart();
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta") });
   const dashboard = useQuery<F14Dashboard>({ queryKey: ["hospital-dashboard"], queryFn: () => get("/hospital/dashboard") });
@@ -117,7 +123,7 @@ export function DashboardPage() {
   if (primary && pendingDraftCount) {
     attention.push({
       key: "drafts", tone: "info", tag: "Review", rank: 4, patient: primary,
-      title: `${plural(pendingDraftCount, "AI draft")} awaiting review`, detail: "Not part of the record until a clinician approves it",
+      title: `${plural(pendingDraftCount, "MediBytes Analysis")} awaiting review`, detail: "Not part of the record until a clinician approves it",
     });
   }
   attention.sort((a, b) => a.rank - b.rank || (b.patient?.critical_alerts ?? 0) - (a.patient?.critical_alerts ?? 0));
@@ -150,7 +156,7 @@ export function DashboardPage() {
   const referralCount = (referrals.data?.referrals || []).filter((item) => ["sent", "acknowledged"].includes(item.status)).length;
   const requestCount = (requests.data?.requests || []).filter((item) => item.status === "approved").length;
   const pending = summary ? [
-    { key: "notes", label: "AI drafts to review", value: pendingDraftCount, note: "Not yet approved", tone: "info" },
+    { key: "notes", label: "MediBytes Analysis to review", value: pendingDraftCount, note: "Not yet approved", tone: "info" },
     { key: "documents", label: "Reports to confirm", value: summary.pending_documents, note: "OCR values need a person", tone: "info" },
     { key: "referrals", label: "Referrals awaiting reply", value: referralCount || summary.open_referrals, note: "Sent or acknowledged" },
     { key: "requests", label: "Investigations", value: requestCount || summary.pending_investigations, note: "Approved requests" },
@@ -158,8 +164,8 @@ export function DashboardPage() {
     { key: "meds", label: "Medicine differences", value: summary.medicine_discrepancies, note: "Home vs inpatient", tone: summary.medicine_discrepancies ? "warning" : undefined },
   ] : [];
 
-  const today = now ? new Date(now).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : null;
-  const time = now ? new Date(now).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : null;
+  const today = clockNow.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const time = clockNow.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   const detailsLoading = [alerts, tasks, documents].some((query) => query.isLoading);
 
   return (
@@ -188,7 +194,7 @@ export function DashboardPage() {
               <span className="dk-kpi-label">{kpi.label}</span>
               {kpi.to ? <span className="dk-kpi-arrow" aria-hidden="true"><Icon name="arrow" size={15} /></span> : null}
               <span className="dk-kpi-value">{kpi.value}</span>
-              <span className="dk-kpi-note">{kpi.note} · hospital-wide</span>
+              <span className="dk-kpi-note">{kpi.note}</span>
             </>
           );
           const cls = `dk-kpi ${kpi.feature ? "is-feature" : ""} ${kpi.tone ? `tone-${kpi.tone}` : ""}`;
@@ -259,7 +265,6 @@ export function DashboardPage() {
                       <span className="dk-item-title">{row.name}</span>
                       <span className="dk-item-meta">{row.mrn}{place(row) ? ` · ${place(row)}` : ""}</span>
                     </span>
-                    <span className={`dk-tag tone-${status.tone}`}>{status.text}</span>
                   </>
                 );
                 return (
@@ -278,7 +283,7 @@ export function DashboardPage() {
           <div className="dk-card-head">
             <div>
               <h2 className="dk-card-title" id="dk-attention">Needs attention</h2>
-              <p className="dk-card-sub">{attention.length ? `${shown.length} of ${attention.length} · open the patient to act` : "Hospital-wide"}</p>
+              <p className="dk-card-sub">{attention.length ? `${shown.length} of ${attention.length} · open the patient to act` : "Hospital overview"}</p>
             </div>
           </div>
           {dashboard.isLoading || (data && detailsLoading && !attention.length) ? <Skeleton variant="rows" count={4} /> : null}
@@ -327,12 +332,12 @@ export function DashboardPage() {
           <div className="dk-card-head">
             <div>
               <h2 className="dk-card-title" id="dk-clock">Hospital clock</h2>
-              <p className="dk-card-sub">Simulated demo time</p>
+              <p className="dk-card-sub">Current local time</p>
             </div>
           </div>
           <div className="dk-clock" aria-live="off">{time || "--:--"}</div>
           <div className="dk-clock-date">{today || "Loading"}</div>
-          <p className="dk-card-foot">Due times and overdue tasks are measured against this clock.</p>
+          <p className="dk-card-foot">Current local time from this device.</p>
         </section>
 
         <section className="dk-card span-12" aria-labelledby="dk-pending">

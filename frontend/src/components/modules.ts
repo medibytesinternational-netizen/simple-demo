@@ -112,7 +112,6 @@ export const isPatientRoute = (path: string) => PATIENT_ROUTES.has(path);
 export const HOSPITAL_DOCK: DockItem[] = [
   { id: "dashboard", label: "Dashboard", to: "/dashboard", icon: "overview", match: (p) => p === "/dashboard" },
   { id: "patients", label: "Patients", to: "/patients", icon: "patients", match: (p) => p === "/patients" },
-  { id: "new-admission", label: "Admit", to: "/admission", icon: "admission", match: (p) => p === "/admission" },
   { id: "audit", label: "Audit", to: "/audit", icon: "audit", match: (p) => p === "/audit", optional: true },
 ];
 

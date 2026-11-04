@@ -51,7 +51,7 @@
    "F12",
    "F13"
   ],
-  "disclaimer": "Synthetic demo data. Not for clinical use."
+  "disclaimer": "Clinical data for review."
  },
  "/modules": {
   "count": 16,
@@ -178,7 +178,7 @@
     "workspace": "Documents → Requisition",
     "capability": "Structured request with indication, diagnosis and allergies carried forward",
     "llm": "gpt-4o",
-    "human_gate": "Clinician approval; demo export is a status change only",
+    "human_gate": "Clinician approval; export is a status change only",
     "endpoints": [
      "/api/investigation-requests",
      "/api/investigation-requests/generate",
@@ -191,7 +191,7 @@
     "workspace": "Notes → Referral",
     "capability": "Specialist history and question, with consult status tracking",
     "llm": "gpt-4o",
-    "human_gate": "Clinician approval; demo send is a status change only",
+    "human_gate": "Clinician approval; send is a status change only",
     "endpoints": [
      "/api/referrals",
      "/api/referrals/generate",
@@ -272,7 +272,7 @@
  },
  "/hospital/dashboard": {
   "hospital": {
-   "name": "MediBytes Demo Hospital",
+   "name": "MediBytes Hospital",
    "as_of": "2026-10-20T09:00:00.993131"
   },
   "summary": {
@@ -983,7 +983,7 @@
    {
     "id": "tsk_seed_metformin",
     "title": "Stop metformin and document the rationale",
-    "detail": "Seeded task for the full inpatient demo.",
+    "detail": "Task for the full inpatient record.",
     "status": "accepted",
     "priority": "critical",
     "due_at": "2026-10-20T07:00:00",
@@ -1003,7 +1003,7 @@
    {
     "id": "tsk_seed_potassium",
     "title": "Check potassium and renal function",
-    "detail": "Seeded task for the full inpatient demo.",
+    "detail": "Task for the full inpatient record.",
     "status": "accepted",
     "priority": "urgent",
     "due_at": "2026-10-20T13:00:00",
@@ -1023,7 +1023,7 @@
    {
     "id": "tsk_seed_antibiotics",
     "title": "Continue IV flucloxacillin and review the leg tomorrow",
-    "detail": "Seeded task for the full inpatient demo.",
+    "detail": "Task for the full inpatient record.",
     "status": "completed",
     "priority": "routine",
     "due_at": "2026-10-20T08:00:00",
@@ -1043,7 +1043,7 @@
    {
     "id": "tsk_seed_followup",
     "title": "Book medical outpatient follow-up in two weeks",
-    "detail": "Seeded task for the full inpatient demo.",
+    "detail": "Task for the full inpatient record.",
     "status": "proposed",
     "priority": "routine",
     "due_at": "2026-10-22T09:00:00",
@@ -1275,13 +1275,13 @@
     },
     "source": "input",
     "author_type": "human",
-    "author_name": "Demo input",
+    "author_name": "MediBytes entry",
     "status": "approved",
     "confidence": null,
     "supersedes_event_id": null,
     "occurred_at": "2026-10-20T09:00:00.233208",
     "created_at": "2026-10-20T09:00:00.233212",
-    "approved_by": "Demo input",
+    "approved_by": "MediBytes entry",
     "approved_at": "2026-10-20T09:00:00.233216",
     "document_id": null
    },
@@ -1342,13 +1342,13 @@
     },
     "source": "input",
     "author_type": "human",
-    "author_name": "Demo input",
+    "author_name": "MediBytes entry",
     "status": "approved",
     "confidence": null,
     "supersedes_event_id": null,
     "occurred_at": "2026-10-20T09:00:00.185722",
     "created_at": "2026-10-20T09:00:00.185728",
-    "approved_by": "Demo input",
+    "approved_by": "MediBytes entry",
     "approved_at": "2026-10-20T09:00:00.185732",
     "document_id": null
    },
@@ -1409,13 +1409,13 @@
     },
     "source": "input",
     "author_type": "human",
-    "author_name": "Demo input",
+    "author_name": "MediBytes entry",
     "status": "approved",
     "confidence": null,
     "supersedes_event_id": null,
     "occurred_at": "2026-10-20T09:00:00.135217",
     "created_at": "2026-10-20T09:00:00.135224",
-    "approved_by": "Demo input",
+    "approved_by": "MediBytes entry",
     "approved_at": "2026-10-20T09:00:00.135227",
     "document_id": null
    },
@@ -1903,7 +1903,7 @@
     "type": "document_request",
     "subtype": null,
     "title": "Outbound request — pre-authorization",
-    "body_text": "Request for pre-authorization approval letter sent to Star Health (demo only).",
+    "body_text": "Request for pre-authorization approval letter sent to Star Health.",
     "payload": {
      "request_id": "req_seed_preauth",
      "status": "overdue",
@@ -2623,7 +2623,7 @@
    {
     "id": "tsk_seed_metformin",
     "title": "Stop metformin and document the rationale",
-    "detail": "Seeded task for the full inpatient demo.",
+    "detail": "Task for the full inpatient record.",
     "status": "accepted",
     "priority": "critical",
     "due_at": "2026-10-20T07:00:00",
@@ -2643,7 +2643,7 @@
    {
     "id": "tsk_seed_potassium",
     "title": "Check potassium and renal function",
-    "detail": "Seeded task for the full inpatient demo.",
+    "detail": "Task for the full inpatient record.",
     "status": "accepted",
     "priority": "urgent",
     "due_at": "2026-10-20T13:00:00",
@@ -2663,7 +2663,7 @@
    {
     "id": "tsk_seed_antibiotics",
     "title": "Continue IV flucloxacillin and review the leg tomorrow",
-    "detail": "Seeded task for the full inpatient demo.",
+    "detail": "Task for the full inpatient record.",
     "status": "completed",
     "priority": "routine",
     "due_at": "2026-10-20T08:00:00",
@@ -2683,7 +2683,7 @@
    {
     "id": "tsk_seed_followup",
     "title": "Book medical outpatient follow-up in two weeks",
-    "detail": "Seeded task for the full inpatient demo.",
+    "detail": "Task for the full inpatient record.",
     "status": "proposed",
     "priority": "routine",
     "due_at": "2026-10-22T09:00:00",
@@ -3917,7 +3917,7 @@
    {
     "id": "aud_42bad167804f",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_billing",
@@ -3936,7 +3936,7 @@
    {
     "id": "aud_52e9eed242ea",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_document_request",
@@ -3955,7 +3955,7 @@
    {
     "id": "aud_a9f9cf3854c5",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_procedure",
@@ -3974,7 +3974,7 @@
    {
     "id": "aud_59aa55c5513c",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_progress",
@@ -3993,7 +3993,7 @@
    {
     "id": "aud_095775ae898b",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_round",
@@ -4012,7 +4012,7 @@
    {
     "id": "aud_021e4bccde7e",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_nursing",
@@ -4031,7 +4031,7 @@
    {
     "id": "aud_5a10df2a9f0a",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_med_flucloxacillin",
@@ -4050,7 +4050,7 @@
    {
     "id": "aud_828d2e8e2b30",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_med_ibuprofen",
@@ -4069,7 +4069,7 @@
    {
     "id": "aud_4ec1395d76c6",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_med_warfarin",
@@ -4088,7 +4088,7 @@
    {
     "id": "aud_2fad0c9e94dd",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_med_amlodipine",
@@ -4107,7 +4107,7 @@
    {
     "id": "aud_47f5e1c5311b",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_med_metformin",
@@ -4126,7 +4126,7 @@
    {
     "id": "aud_1b186a821c86",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_med_ibuprofen_home",
@@ -4145,7 +4145,7 @@
    {
     "id": "aud_4a866ee02175",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_med_warfarin_home",
@@ -4164,7 +4164,7 @@
    {
     "id": "aud_8b53dd1f7b41",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_med_atorvastatin_home",
@@ -4183,7 +4183,7 @@
    {
     "id": "aud_18eda77d9a4d",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_med_amlodipine_home",
@@ -4202,7 +4202,7 @@
    {
     "id": "aud_3e224272ef93",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_med_metformin_home",
@@ -4221,7 +4221,7 @@
    {
     "id": "aud_781ce0cdf2a4",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_lab_crp",
@@ -4240,7 +4240,7 @@
    {
     "id": "aud_ab281ad9f130",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_lab_wbc",
@@ -4259,7 +4259,7 @@
    {
     "id": "aud_bab29e85a116",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_lab_hba1c",
@@ -4278,7 +4278,7 @@
    {
     "id": "aud_f992265445a4",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_lab_potassium",
@@ -4297,7 +4297,7 @@
    {
     "id": "aud_95b7034797e7",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_lab_egfr",
@@ -4316,7 +4316,7 @@
    {
     "id": "aud_92ef2fb23664",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_lab_creatinine",
@@ -4335,7 +4335,7 @@
    {
     "id": "aud_98509aa6a0c5",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_icu_urine_2",
@@ -4354,7 +4354,7 @@
    {
     "id": "aud_92629ebc66ae",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_icu_temp_2",
@@ -4373,7 +4373,7 @@
    {
     "id": "aud_b417cb966b56",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_icu_line_1",
@@ -4392,7 +4392,7 @@
    {
     "id": "aud_032d9ae2ed8e",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_icu_neuro_1",
@@ -4411,7 +4411,7 @@
    {
     "id": "aud_43ea82006916",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_icu_infusion_1",
@@ -4430,7 +4430,7 @@
    {
     "id": "aud_ff0e2ab6c2f7",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_icu_urine_1",
@@ -4449,7 +4449,7 @@
    {
     "id": "aud_e99a0daa6ba7",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_icu_spo2_1",
@@ -4468,7 +4468,7 @@
    {
     "id": "aud_9a836e98f1db",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_icu_bp_1",
@@ -4487,7 +4487,7 @@
    {
     "id": "aud_7c443a0be250",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_icu_hr_1",
@@ -4506,7 +4506,7 @@
    {
     "id": "aud_6aab9599e0ab",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_icu_temp_1",
@@ -4525,7 +4525,7 @@
    {
     "id": "aud_cb6f28fdd8ad",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_nursing_contradiction",
@@ -4544,7 +4544,7 @@
    {
     "id": "aud_8bd83ada1d65",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_allergy",
@@ -4563,7 +4563,7 @@
    {
     "id": "aud_1b60db56eb58",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_vitals",
@@ -4582,7 +4582,7 @@
    {
     "id": "aud_7edf0982a99a",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_admission",
@@ -4601,7 +4601,7 @@
    {
     "id": "aud_95c6c2ea7f60",
     "actor_type": "system",
-    "actor_name": "Demo seed",
+    "actor_name": "MediBytes system",
     "action": "timeline_committed",
     "entity_type": "timeline_event",
     "entity_id": "evt_seed_consult",

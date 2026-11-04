@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { get } from "../api";
-import type { AppState } from "../types";
 import { useEvidence } from "../components/Evidence";
 import { usePatientId } from "../session";
 import { buildTimelineQuery, hasFilters } from "../features/f16/filters";
@@ -29,11 +28,6 @@ function fmt(value: string) {
 export function TimelinePage() {
   const { showEvent } = useEvidence();
   const patientId = usePatientId();
-  const state = useQuery<AppState>({
-    queryKey: ["state", patientId],
-    queryFn: () => get<AppState>(`/patients/${patientId}/state`),
-    enabled: !!patientId,
-  });
   const [filters, setFilters] = useState<TimelineFilters>(NO_FILTERS);
   const timeline = useQuery<TimelineResponse>({
     queryKey: ["timeline", patientId, filters],
@@ -42,20 +36,16 @@ export function TimelinePage() {
     placeholderData: (previous) => previous,
   });
   const facets = timeline.data?.facets;
-  const toggleType = (type: string) =>
-    setFilters((current) => ({
-      ...current,
-      types: current.types.includes(type) ? current.types.filter((item) => item !== type) : [...current.types, type],
-    }));
-
-  const data = state.data;
   const events = (timeline.data?.events || []).filter((event) => event.type !== "transcript");
-  const egfr = data?.latest_labs.find((lab) => lab.name.toLowerCase() === "egfr");
-  const openAlerts = data?.alerts.filter((alert) => alert.status === "open").length || 0;
-  const overdue = data?.tasks.filter((task) => task.is_overdue).length || 0;
   const days = groupByDay(events);
   const activeFilterCount = (filters.source ? 1 : 0) + (filters.after ? 1 : 0) + (filters.before ? 1 : 0);
   const typeFacets = (facets?.types || []).filter((type) => type !== "transcript");
+  const quickTypes = typeFacets.slice(0, 2);
+  const toggleType = (type: string) =>
+    setFilters((current) => ({
+      ...current,
+      types: current.types.includes(type) ? current.types.filter((item) => item !== type) : [type],
+    }));
 
   return (
     <>
@@ -77,8 +67,8 @@ export function TimelinePage() {
         >
           <div data-testid="timeline-filters">
             <Toolbar label="Timeline filters">
-              <div className="toolbar-group tl-types" role="group" aria-label="Event types">
-                {typeFacets.map((type) => (
+              <div className="toolbar-group tl-types" role="group" aria-label="Quick event filters">
+                {quickTypes.map((type) => (
                   <button
                     key={type}
                     type="button"
@@ -96,6 +86,19 @@ export function TimelinePage() {
                 {(close) => (
                   <>
                     <div className="menu-body">
+                      <Field label="Event type" htmlFor="tl-type">
+                        <select
+                          id="tl-type"
+                          className="select"
+                          value={filters.types[0] || ""}
+                          onChange={(event) => setFilters({ ...filters, types: event.target.value ? [event.target.value] : [] })}
+                        >
+                          <option value="">All event types</option>
+                          {typeFacets.map((type) => (
+                            <option key={type} value={type}>{type.replaceAll("_", " ")}</option>
+                          ))}
+                        </select>
+                      </Field>
                       <Field label="Source" htmlFor="tl-source">
                         <select
                           id="tl-source"
@@ -145,7 +148,7 @@ export function TimelinePage() {
                 title="No events yet."
                 action={<Link className="btn btn-primary" to="/notes?tab=consult">Start consultation</Link>}
               >
-                Start a consultation to write the first note, or load rehearsal data from Demo controls.
+                Start a consultation to write the first note, or load rehearsal data from Workspace controls.
               </EmptyState>
             ) : null}
             {events.length ? (
@@ -191,7 +194,6 @@ export function TimelinePage() {
                           side={
                             <span className="tl-when">
                               <time className="event-time" dateTime={event.occurred_at} title={fmt(event.occurred_at)}>{timeOf(event.occurred_at)}</time>
-                              <span className="mono tl-id">{event.id}</span>
                             </span>
                           }
                         />
@@ -205,43 +207,6 @@ export function TimelinePage() {
         </Panel>
 
         <aside className="rail rail-sticky" aria-label="Patient summary">
-          <Panel title="Current state" sub="Resolved from the timeline" padded>
-            {state.isLoading ? <Skeleton count={6} /> : (
-              <>
-                <div className="section-label tl-first">Problems</div>
-                <div className="pill-row">
-                  {data?.patient.problems.map((problem) => <Pill key={problem}>{problem}</Pill>)}
-                  {data && !data.patient.problems.length ? <span className="small muted">None recorded</span> : null}
-                </div>
-                <div className="section-label">Allergies</div>
-                <div className="pill-row">
-                  {data?.patient.allergies.map((allergy) => <Pill tone="critical" icon="alert" key={allergy}>{allergy}</Pill>)}
-                  {data && !data.patient.allergies.length ? <span className="small muted">None recorded</span> : null}
-                </div>
-                <div className="section-label">Active medications</div>
-                {data?.active_meds.map((med) => (
-                  <div className="check-row" key={med.event_id}>
-                    <span className="tl-grow">{med.drug}</span>
-                    <span className="mono small">{med.dose} {med.frequency}</span>
-                    <button type="button" className="btn btn-ghost btn-sm" aria-label={`Source of ${med.drug}`} onClick={() => showEvent(med.event_id)}>Source</button>
-                  </div>
-                ))}
-                {data && !data.active_meds.length ? <div className="small muted">No active orders</div> : null}
-                <div className="section-label">Latest results</div>
-                {data?.latest_labs.map((lab) => (
-                  <div className="check-row" key={lab.event_id}>
-                    <span className="tl-grow">{lab.name}</span>
-                    <span className="mono small">{lab.value} {lab.unit}</span>
-                    <Pill tone={lab.review_status === "unreviewed" ? "warning" : lab.flag === "high" || lab.flag === "low" ? "neutral" : "success"}>
-                      {lab.review_status === "unreviewed" ? "unreviewed" : lab.flag}
-                    </Pill>
-                  </div>
-                ))}
-                {data && !data.latest_labs.length ? <div className="small muted">No results yet</div> : null}
-              </>
-            )}
-          </Panel>
-
           <Panel title="Care pathway" sub="Each step ends in an approval that writes to this timeline.">
             <ol className="tl-path">
               {PATHWAY.map((step) => (

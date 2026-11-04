@@ -3,7 +3,6 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, get, post, session } from "../api";
 import type { AppState, Credits, Meta } from "../types";
-import IntegrationBanner from "../features/s17/IntegrationBanner";
 import { EvidenceDrawer } from "./Evidence";
 import { Modal } from "./Modal";
 import { Dock } from "./Dock";
@@ -33,6 +32,11 @@ export function Shell() {
   const location = useLocation();
   const tab = new URLSearchParams(location.search).get("tab");
   const [resetOpen, setResetOpen] = useState(false);
+  const [clockNow, setClockNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
   const patientId = meta.data?.patient.id;
@@ -71,9 +75,7 @@ export function Shell() {
   const documents = state.data?.documents.filter((d) => AWAITING_REVIEW.has(d.ocr_status)).length || 0;
   const labs = state.data?.unreviewed_labs.length || 0;
   const counts = { alerts: openAlerts, overdue, documents, labs };
-  const demoClock = meta.data?.demo_now
-    ? new Date(meta.data.demo_now).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
-    : null;
+  const currentClock = clockNow.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   const user = meta.data?.user?.name || meta.data?.demo_user || "Dr. Meera Shah";
   const role = meta.data?.demo_role || "Attending physician";
 
@@ -112,28 +114,21 @@ export function Shell() {
               <Icon name="search" size={17} />
             </button>
             {DEMO_MODE ? (
-              <span className="env-pill" role="status" title={`${PREVIEW_LABEL}. All data is fictional. Nothing you do is saved.`}>
-                <span className="env-dot" aria-hidden="true" /><span>Demo<span className="env-text-long"> preview</span></span>
+              <span className="env-pill" role="status" title={`${PREVIEW_LABEL}. Changes are not saved.`}>
+                <span className="env-dot" aria-hidden="true" /><span>MediBytes<span className="env-text-long"> preview</span></span>
               </span>
             ) : (
               <>
-                <span className="env-pill" title="All data is fictional seed data.">
-                  <span className="env-dot" aria-hidden="true" /><span>Synthetic<span className="env-text-long"> data</span></span>
-                </span>
-                <span className={`mode-pill ${meta.data?.llm_mode === "live" ? "live" : ""}`} title={meta.data?.live_available ? "OpenAI key detected" : "Drafts come from the cached demo set"}>
-                  {meta.data?.llm_mode === "live" ? "Live drafts" : "Cached drafts"}
-                </span>
-                <IntegrationBanner />
               </>
             )}
-            {demoClock ? (
-              <span className="topbar-clock" title="Demo clock: the application's simulated time">
-                <Icon name="clock" size={15} /> {demoClock}
+            {currentClock ? (
+              <span className="topbar-clock" title="Application time">
+                <Icon name="clock" size={15} /> {currentClock}
               </span>
             ) : null}
             <ThemeToggle />
-            <button type="button" className="chrome-btn" onClick={() => setResetOpen(true)} aria-label="Demo controls">
-              <Icon name="refresh" size={16} /><span className="chrome-btn-label">Demo controls</span>
+            <button type="button" className="chrome-btn" onClick={() => setResetOpen(true)} aria-label="Workspace controls">
+              <Icon name="refresh" size={16} /><span className="chrome-btn-label">Workspace controls</span>
             </button>
             <span className="topbar-user" title={`${user} ${SEP} ${role}`}>
               <span className="avatar" aria-hidden="true">{initials(user)}</span>
@@ -158,18 +153,18 @@ export function Shell() {
 
       {resetOpen ? (
         <Modal
-          title="Demo controls"
+          title="Workspace controls"
           onClose={() => setResetOpen(false)}
           footer={<button className="btn" onClick={() => setResetOpen(false)}>Close</button>}
         >
           <p className="fs-13 muted" style={{ marginTop: 0 }}>
             {DEMO_MODE
-              ? "Demo reset is not available in the UI preview: there is no backend. Refresh the page to clear anything added in this tab."
-              : "Reset the synthetic patient. All drafts, tasks, alerts, documents and audit entries are replaced."}
+              ? "Workspace reset is not available in the preview environment. Refresh the page to clear anything added in this tab."
+              : "Reset the patient workspace. All reports, tasks, alerts, documents and audit entries are replaced."}
           </p>
           {!DEMO_MODE ? (
             <p className="small muted" style={{ marginTop: 0 }}>
-              Draft mode: {meta.data?.llm_mode === "live" ? "live model" : "cached demo drafts"}.
+              Analysis mode: {meta.data?.llm_mode === "live" ? "MediBytes Analysis" : "saved reports"}.
               {credits.data ? ` ${credits.data.balance.toLocaleString()} of ${credits.data.pack_size.toLocaleString()} credits remaining.` : ""}
             </p>
           ) : null}
@@ -180,11 +175,11 @@ export function Shell() {
             </button>
             <button className="choice-card" onClick={() => reset.mutate("rehearsal")} disabled={reset.isPending || DEMO_MODE}>
               <span className="card-title">Rehearsal data</span>
-              <span className="small muted mt-1">Pre-seeded admission, labs, medicines, tasks, alerts, bill and outside scan.</span>
+              <span className="small muted mt-1">Existing admission, labs, medicines, tasks, alerts, bill and outside scan.</span>
             </button>
           </div>
-          {reset.isPending ? <div className="banner mt-3" role="status"><span className="spinner" /> Resetting the demo data...</div> : null}
-          {reset.isError ? <div className="error-box mt-3" role="alert">The demo data was not reset: {(reset.error as Error).message}</div> : null}
+          {reset.isPending ? <div className="banner mt-3" role="status"><span className="spinner" /> Resetting the patient workspace...</div> : null}
+          {reset.isError ? <div className="error-box mt-3" role="alert">The patient workspace was not reset: {(reset.error as Error).message}</div> : null}
         </Modal>
       ) : null}
     </div>

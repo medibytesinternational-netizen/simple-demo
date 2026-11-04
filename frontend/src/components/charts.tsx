@@ -140,7 +140,7 @@ export function TrendChart({ points, unit, title, reference, height = 128 }: {
         <text x={pad.left - 5} y={y(max) + 3} textAnchor="end" className="trend-axis">{max.toFixed(1)}</text>
         <text x={pad.left - 5} y={y(min) + 3} textAnchor="end" className="trend-axis">{min.toFixed(1)}</text>
       </svg>
-      <p className="chart-scope">Unit: {unit}. {reference?.text ? `Reference: ${reference.text}.` : "Reference range not supplied."} Times shown in the demo clock.</p>
+      <p className="chart-scope">Unit: {unit}. {reference?.text ? `Reference: ${reference.text}.` : "Reference range not supplied."} Times shown in application time.</p>
       <table className="sr-only">
         <caption>{title}</caption>
         <thead><tr><th>Recorded</th><th>Value ({unit})</th></tr></thead>

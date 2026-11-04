@@ -226,17 +226,17 @@ export function SafetyPage() {
           <aside className="rail rail-sticky">
             <Panel title="How alerts work" padded>
               <div className="rail-copy">
-                <p>The rule engine owns detection. The model receives the rule result and the evidence, and may not add a new alert or change severity.</p>
-                <p>That is the answer to "what if it hallucinates a warning?"</p>
+                <p>The rule engine owns detection. MediBytes Analysis receives the rule result and evidence, and may not add a new alert or change severity.</p>
+                <p>Alerts remain grounded in documented clinical rules and evidence.</p>
               </div>
             </Panel>
             <Panel
-              title="Demo rule file"
+              title="Clinical safety rules"
               count={`${RULES.length} rules`}
-              footer="The model receives this result and its evidence. It cannot add a rule, change severity or mark the alert resolved."
+              footer="MediBytes Analysis receives this result and its evidence. It cannot add a rule, change severity or mark the alert resolved."
             >
               <table className="table rule-table">
-                <caption className="sr-only">Safety rules in the demo rule file</caption>
+                <caption className="sr-only">Clinical safety rules</caption>
                 <thead><tr><th>Rule</th><th>Checks</th><th>Severity</th></tr></thead>
                 <tbody>
                   {RULES.map((rule) => (

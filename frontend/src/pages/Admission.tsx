@@ -85,7 +85,7 @@ export function AdmissionPage() {
       />
 
       {DEMO_MODE ? <Banner tone="warning">{PREVIEW_SESSION_NOTE}</Banner> : (
-        <Banner>Creating admissions needs the encounter API, which is not available yet. The form shows the planned workflow; submission is disabled. The AI-assisted admission assessment remains available for the current patient.</Banner>
+        <Banner>Creating admissions needs the encounter API, which is not available yet. The form shows the planned workflow; submission is disabled. The MediBytes admission assessment remains available for the current patient.</Banner>
       )}
       {directory.error ? <div className="error-box">Could not load patients: {directory.error.message}</div> : null}
 

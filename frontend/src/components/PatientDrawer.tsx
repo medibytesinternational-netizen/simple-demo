@@ -76,13 +76,13 @@ function Summary({ row, onEdit }: { row: DirectoryRow; onEdit?: () => void }) {
       ) : (
         <div className="banner">
           {row.source === "preview"
-            ? "Preview patient: no clinical records exist. Notes, medications, labs and alerts are not shown because none have been documented."
+            ? "No clinical records exist for this patient. Notes, medications, labs and alerts are not shown because none have been documented."
             : "Summary only. A full clinical chart for this patient needs patient-scoped APIs, which are not available yet."}
         </div>
       )}
       <div className="button-row">
         {onEdit ? <button className="btn" onClick={onEdit}>Edit patient details</button> : (
-          <button className="btn" disabled title={DEMO_MODE ? "Only preview records can be edited in the UI preview" : "Patient editing needs the patient API (planned)"}>Edit patient details</button>
+          <button className="btn" disabled title={DEMO_MODE ? "Only preview records can be edited in this environment" : "Patient editing needs the patient API (planned)"}>Edit patient details</button>
         )}
         <Link className="btn" to={`/admission?patient=${encodeURIComponent(row.id)}`}>Admission…</Link>
       </div>

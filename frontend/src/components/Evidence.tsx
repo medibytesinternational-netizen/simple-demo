@@ -79,7 +79,7 @@ export function EvidenceDrawer() {
   if (!selectedEventId) return null;
   const event = query.data;
   return (
-    <Drawer title="Source event" sub={<span className="mono">{selectedEventId}</span>} onClose={close}>
+    <Drawer title="Source event" onClose={close}>
           {query.isLoading ? <Skeleton count={5} /> : null}
           {query.error ? <div className="error-box" role="alert">This source could not be loaded: {String(query.error)}</div> : null}
           {event ? (
@@ -88,7 +88,7 @@ export function EvidenceDrawer() {
                 <span className={`badge ${event.status === "approved" ? "badge-success" : "badge-neutral"}`}>
                   {event.status}
                 </span>
-                <span className="badge badge-ai" title={event.source}>{event.source_label}</span>
+                <span className="badge badge-ai">Clinical record</span>
                 <span className="badge badge-neutral">{event.type}</span>
               </div>
               <div className="fs-20" style={{ fontWeight: 650, marginBottom: 4 }}>
@@ -98,10 +98,6 @@ export function EvidenceDrawer() {
                 <ProvenanceFacts event={event} />
               </div>
               {event.body_text ? <p className="fs-13" style={{ lineHeight: 1.6 }}>{event.body_text}</p> : null}
-              <div className="section-label">Raw payload</div>
-              <pre className="code" style={{ whiteSpace: "pre-wrap", padding: 10, maxHeight: 360, overflow: "auto" }}>
-                {JSON.stringify(event.payload, null, 2)}
-              </pre>
               <div className="section-label">Provenance</div>
               <dl className="kv">
                 <dt>Author type</dt>
@@ -113,9 +109,7 @@ export function EvidenceDrawer() {
                 <dt>Approved by</dt>
                 <dd>{event.approved_by || "Not recorded"}</dd>
                 <dt>Source</dt>
-                <dd>{event.source_label} <span className="mono small">({event.source})</span></dd>
-                <dt>Event id</dt>
-                <dd className="mono">{event.id}</dd>
+                <dd>Clinical record</dd>
                 <dt>Encounter</dt>
                 <dd className="mono">{event.encounter_id || "Not recorded"}</dd>
                 {event.superseded_by ? (

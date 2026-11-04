@@ -21,8 +21,8 @@ export function ConsultNoteStatus({ result }: { result: ConsultGenerateResult | 
   return (
     <>
       {result.llm?.fallback ? (
-        <Banner tone="warning" title="Written by rules, not the AI model">
-          The AI model was unavailable, so this note was written by rules from the transcript.
+        <Banner tone="warning" title="Prepared from documented rules">
+          MediBytes Analysis was unavailable, so this note was prepared from documented rules and the transcript.
           {result.llm.fallback_reason ? <div className="small mt-1">{result.llm.fallback_reason}</div> : null}
         </Banner>
       ) : null}

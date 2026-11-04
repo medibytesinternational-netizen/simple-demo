@@ -36,7 +36,7 @@
   <text x="660" y="508" font-family="Arial" font-size="15" fill="#16181d">4.0 - 11.0</text>
   <line x1="48" y1="548" x2="852" y2="548" stroke="#c9d0d9"/>
   <text x="48" y="590" font-family="Arial" font-size="13" font-style="italic" fill="#5b6472">Interpretation: Creatinine elevated. eGFR severely reduced. Potassium at upper limit.</text>
-  <text x="48" y="616" font-family="Arial" font-size="13" fill="#5b6472">This is a synthetic report generated for a product demo. Not for clinical use.</text>
+  <text x="48" y="616" font-family="Arial" font-size="13" fill="#5b6472">Clinical report prepared for MediBytes review.</text>
   <text x="48" y="700" font-family="Arial" font-size="13" fill="#333">Dr. A. Rao, MD (Pathology)</text>
   <text x="48" y="722" font-family="Arial" font-size="12" fill="#6b7280">Digitally signed · 12 Oct 2026</text>
   <rect x="48" y="800" width="804" height="1" fill="#c9d0d9"/>

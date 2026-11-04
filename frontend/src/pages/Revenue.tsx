@@ -71,7 +71,7 @@ export function RevenuePage() {
       value: claim.data ? inr(claim.data.total_amount) : pendingValue,
       note: claim.data
         ? `${claim.data.billed_items.length} line items · expected ${inr(claim.data.expected_total_amount)}`
-        : "Loading the seeded bill",
+        : "Loading the patient bill",
       share: claim.data && claim.data.expected_total_amount ? claim.data.total_amount / claim.data.expected_total_amount : undefined,
     },
     {
@@ -84,7 +84,7 @@ export function RevenuePage() {
       label: "Underbilled",
       value: claim.data ? inr(claim.data.underbilled_amount) : pendingValue,
       tone: claim.data?.underbilled_items.length ? "warning" : undefined,
-      note: `${claim.data?.underbilled_items.length ?? 0} line items below the seeded expected value`,
+      note: `${claim.data?.underbilled_items.length ?? 0} line items below the expected value`,
     },
     {
       label: "Contradictions",
@@ -187,13 +187,13 @@ export function RevenuePage() {
                 )}
               </Panel>
 
-              <Panel title="Seeded bill" sub="Line items are seeded, not generated" actions={<Pill>synthetic</Pill>}>
+              <Panel title="Patient bill" sub="Line items are recorded in the patient account" actions={<Pill>clinical record</Pill>}>
                 <DataTable<BilledItem>
-                  caption="Seeded bill line items"
+                  caption="Patient bill line items"
                   rows={claim.data?.billed_items || []}
                   rowKey={(item) => item.id}
                   loading={claim.isLoading}
-                  empty={<EmptyState icon="billing" title="No bill lines">The seeded bill has no line items for this stay.</EmptyState>}
+                  empty={<EmptyState icon="billing" title="No bill lines">The patient bill has no line items for this stay.</EmptyState>}
                   columns={[
                     { key: "code", header: "Code", sort: (item) => item.code, cell: (item) => <span className="mono small">{item.code}</span> },
                     { key: "description", header: "Description", sort: (item) => item.description, cell: (item) => item.description },
@@ -214,7 +214,7 @@ export function RevenuePage() {
 
               <Panel
                 title="Underbilled line items"
-                sub="Billed amount is below the seeded expected amount"
+                sub="Billed amount is below the expected amount"
                 actions={<Pill tone={claim.data?.underbilled_items.length ? "warning" : "neutral"}>{claim.data?.underbilled_items.length || 0}</Pill>}
               >
                 <DataTable<UnderbilledItem>
@@ -222,7 +222,7 @@ export function RevenuePage() {
                   rows={claim.data?.underbilled_items || []}
                   rowKey={(item) => item.id}
                   loading={claim.isLoading}
-                  empty={<EmptyState icon="check" title="No underbilled line items">Every bill line meets its seeded expected amount.</EmptyState>}
+                  empty={<EmptyState icon="check" title="No underbilled line items">Every bill line meets its expected amount.</EmptyState>}
                   columns={[
                     {
                       key: "item",
@@ -317,7 +317,7 @@ export function RevenuePage() {
                   <Banner tone="warning" title="Not ready for review">
                     {claim.data.discharge_signed
                       ? "The signed discharge summary is already present. The remaining blocker is listed in Required documents. "
-                      : "Signing the discharge summary removes the other gap and makes the demo move. "}
+                      : "Signing the discharge summary removes the other gap and advances the review. "}
                     The app cannot invent a payer document; a human must resolve the missing item.
                     <div className="mono small mt-1">Review queue only. Nothing is submitted.</div>
                   </Banner>
@@ -375,7 +375,7 @@ export function RevenuePage() {
           <div className="with-rail">
             <Panel
               title="Documentation-to-billing gaps"
-              sub={leakage.data?.summary || "Comparing documented care with the seeded bill"}
+              sub={leakage.data?.summary || "Comparing documented care with the patient bill"}
             >
               <Toolbar label="Leakage actions">
                 <span className="small muted">{leakage.data?.findings.length ?? 0} findings</span>
@@ -418,8 +418,8 @@ export function RevenuePage() {
             <aside className="rail" aria-label="About these findings">
               <Disclosure title="How this is computed" defaultOpen>
                 Procedures are read from timeline events of type <span className="code">procedure</span>.
-                Billing lines are read from the seeded bill table. A procedure with no matching bill line is shown as unbilled; a bill line with no documentation event is shown as unsupported.
-                The model writes the explanation only.
+                Billing lines are read from the patient account. A procedure with no matching bill line is shown as unbilled; a bill line with no documentation event is shown as unsupported.
+                MediBytes Analysis writes the explanation only.
               </Disclosure>
               {latest ? <DraftReview draft={latest} /> : (
                 <Panel>

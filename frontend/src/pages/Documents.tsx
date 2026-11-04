@@ -148,7 +148,7 @@ export function DocumentsPage() {
   const exportInvestigation = useMutation({
     mutationFn: (id: string) => post(`/investigation-requests/${id}/export`),
     onSuccess: () => {
-      setSuccess("Request marked exported in the demo. No laboratory or radiology transmission occurred.");
+      setSuccess("Request marked exported for review. No laboratory or radiology transmission occurred.");
       queryClient.invalidateQueries();
     },
     onError: (err: any) => setError(String(err?.message || err)),
@@ -485,7 +485,7 @@ export function DocumentsPage() {
                       <button className="btn btn-sm" onClick={() => exportInvestigation.mutate(request.id)} disabled={exportInvestigation.isPending}>
                         Mark exported
                       </button>
-                    ) : <span className="small muted">Demo export complete</span>,
+                    ) : <span className="small muted">Export complete</span>,
                 },
               ]}
             />
@@ -592,7 +592,7 @@ export function DocumentsPage() {
               ]}
             />
             <div className="panel-body">
-              <Banner tone="warning">Demo export only. There is no fax, email or payer transmission in this build.</Banner>
+              <Banner tone="warning">Export records the request for review. There is no fax, email or payer transmission.</Banner>
             </div>
           </Panel>
 

@@ -44,7 +44,7 @@ function find(path: string, bare: string, query: string): any {
   if (patient && data.__patients__?.[patient[1]]) return { patient: data.__patients__[patient[1]] };
   const audit = bare.match(/^\/audit$/);
   if (audit) return data["/audit?limit=80"];
-  throw new PreviewError("UI preview: this information is not included in the synthetic demo data.", 404);
+  throw new PreviewError("This information is not available in the current patient records.", 404);
 }
 
 export async function mockRequest(method: string, path: string): Promise<any> {

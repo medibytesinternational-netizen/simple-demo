@@ -183,13 +183,13 @@ export function DraftReview({ draft }: { draft: Draft }) {
       : draft.feature === "F10"
         ? "Approve request"
         : draft.feature === "F11"
-          ? "Approve & queue referral (demo)"
+          ? "Approve & queue referral"
           : "Approve & sign";
 
   // UI-only derived values for the render below (no new gating logic: every flag comes from the values above).
   const isClosed = isApproved || isRejected;
   const statusTone = isApproved ? "success" : isRejected ? "critical" : "ai";
-  const statusLabel = isApproved ? "Approved" : isRejected ? "Rejected" : draft.status === "human_edited" ? "Human edited" : "AI draft";
+  const statusLabel = isApproved ? "Approved" : isRejected ? "Rejected" : draft.status === "human_edited" ? "Human edited" : "MediBytes Analysis";
   const allergyItems: any[] = verifiesAllergies ? draft.content?.allergies_to_verify || [] : [];
   const showConsentGate = draft.feature === "F1";
   const showAllergyGate = verifiesAllergies && allergyItems.length > 0;
@@ -204,7 +204,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
   const blockReason = f4Incomplete
     ? "Examination and plan are required. Document them under Before you sign."
     : f2Unverified
-      ? "Verify the documented allergy under Before you sign. A model may not mark an allergy as verified."
+      ? "Verify the documented allergy under Before you sign. MediBytes Analysis may not mark an allergy as verified."
       : f1NoConsent
         ? "Record the patient's consent for consultation capture before signing."
         : "";
@@ -218,11 +218,6 @@ export function DraftReview({ draft }: { draft: Draft }) {
             <Pill tone={statusTone} icon={isApproved ? "check" : isRejected ? "close" : "spark"}>{statusLabel}</Pill>
           </div>
           <div className="draft-meta">
-            <MetaChip icon="spark" title="Model">{draft.model}</MetaChip>
-            <MetaChip title="Prompt version">prompt {draft.prompt_version}</MetaChip>
-            <MetaChip icon="link" title="Timeline events this draft cites">
-              {draft.evidence_event_ids.length} source{draft.evidence_event_ids.length === 1 ? "" : "s"}
-            </MetaChip>
             {draft.edited_by ? <MetaChip icon="user">edited by {draft.edited_by}</MetaChip> : null}
           </div>
         </div>
@@ -243,7 +238,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
             {isClosed ? "Sign-off checks" : "Before you sign"}
             <span className="draft-gates-count">{gatesDone} of {gateStates.length} done</span>
           </div>
-          <div className="draft-gates-sub">Explicit clinician actions. The model cannot complete these for you.</div>
+          <div className="draft-gates-sub">Explicit clinician actions. MediBytes Analysis cannot complete these for you.</div>
 
           {showConsentGate ? (
             <div className="draft-gate">
@@ -252,7 +247,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
                 <div className="draft-gate-label">Consent for consultation capture</div>
                 <div className="draft-gate-hint">
                   {f1NoConsent
-                    ? "Not recorded yet. The model cannot record it for you."
+                    ? "Not recorded yet. MediBytes Analysis cannot record it for you."
                     : "Recorded and audited."}
                 </div>
               </div>
@@ -822,7 +817,7 @@ function DraftContent({
             )}
           </Section>
           <div className="mt-3">
-            <Banner tone="warning">Demo export only. No laboratory, radiology or external transmission exists in this build.</Banner>
+            <Banner tone="warning">Export records the request for review. No laboratory, radiology or external transmission occurs.</Banner>
           </div>
         </>
       );
@@ -841,7 +836,7 @@ function DraftContent({
           <Section title="Relevant results"><ClaimList claims={content.relevant_results} emptyLabel="No abnormal results were attached" /></Section>
           <div className="mt-3">
             <Banner tone="warning">
-              The model does not invent a specialist, appointment or response. Approval changes the demo status to sent; no external transmission occurs.
+              MediBytes Analysis does not invent a specialist, appointment or response. Approval changes the request status to sent; no external transmission occurs.
             </Banner>
           </div>
         </>

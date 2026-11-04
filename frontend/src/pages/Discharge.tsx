@@ -35,7 +35,7 @@ export function DischargePage() {
     <div className="page pg-discharge">
       <PageHeader
         title="Discharge"
-        description="Check the record is complete, review the discharge summary, then sign. Signing locks the stay. The medicine list is built from active orders, not written by AI."
+        description="Check the record is complete, review the discharge summary, then sign. Signing locks the stay. The medicine list is built from active orders, not written by MediBytes Analysis."
         meta={<Stepper label="Discharge steps" steps={steps} />}
         actions={<>
           {draft?.status === "approved" ? (
@@ -59,7 +59,7 @@ export function DischargePage() {
 
       {signed ? (
         <Banner tone="success" role="status">
-          Encounter discharged and the summary signed. The record is locked for this demo; reset to walk it again.
+          Encounter discharged and the summary signed. The record is now locked.
         </Banner>
       ) : null}
 
@@ -91,9 +91,9 @@ export function DischargePage() {
 
           <Disclosure title="What signing does">
             <p>
-              Approving writes a discharge summary event, marks the encounter discharged, escalates tasks that are still open, and records an audit entry with the model, prompt version, and evidence count. Open critical alerts, open tasks or undecided medicine differences need a written reason.
+              Approving writes a discharge summary event, marks the encounter discharged, escalates tasks that are still open, and records an audit entry with the MediBytes Analysis and evidence count. Open critical alerts, open tasks or undecided medicine differences need a written reason.
             </p>
-            <p>The medication table comes from current active orders; the model never invents a discharge prescription.</p>
+            <p>The medication table comes from current active orders; MediBytes Analysis does not create an unsupported discharge prescription.</p>
           </Disclosure>
         </div>
 

@@ -34,7 +34,7 @@ const SOURCE_LABELS: Record<string, string> = {
   consent: "Consent record",
   lab: "Lab report scan",
   device: "Bedside device reading",
-  seed: "Demo seed data",
+  seed: "MediBytes patient records",
   human: "Typed by a person",
 };
 

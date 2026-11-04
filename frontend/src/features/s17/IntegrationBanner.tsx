@@ -45,7 +45,7 @@ export default function IntegrationBanner() {
             <dt>Failed</dt><dd>{status.data.failed}</dd>
             <dt>Not configured</dt><dd>{status.data.not_configured}</dd>
           </dl>
-          <p className="small muted mt-3">This demo does not send records to an external hospital system.</p>
+          <p className="small muted mt-3">This workspace does not send records to an external hospital system.</p>
         </Modal>
       ) : null}
     </>

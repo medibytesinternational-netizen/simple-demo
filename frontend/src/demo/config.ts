@@ -1,10 +1,10 @@
 // Frontend-only UI preview (Netlify). Enabled only when the build sets VITE_DEMO_MODE=true.
 export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
 
-export const PREVIEW_LABEL = "Synthetic Demo — UI Preview Only";
+export const PREVIEW_LABEL = "MediBytes Preview";
 
 export const PREVIEW_WRITE_MESSAGE =
-  "UI preview: this action is disabled. Nothing is saved, approved or sent — there is no backend or hospital database in this demo.";
+  "This action is unavailable in the preview environment. Nothing is saved, approved or sent.";
 
 export const PREVIEW_SESSION_NOTE =
-  "Preview only — kept in this browser tab and cleared on refresh. Not saved to any database.";
+  "Preview environment — changes remain in this browser tab and are cleared on refresh.";

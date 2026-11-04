@@ -28,7 +28,7 @@ export function PatientStrip({ meta, openAlerts, egfr, stayDay }: { meta?: Meta;
       <div className="pb-identity">
         <div className="pb-name">
           {patient.name}
-          <span className="pb-record-tag" title="This patient has a full clinical record in the demo data">Full record</span>
+          <span className="pb-record-tag" title="This patient has a full clinical record">Full record</span>
         </div>
         <div className="pb-meta">{patient.age} y · {patient.sex} · MRN {patient.mrn}</div>
       </div>

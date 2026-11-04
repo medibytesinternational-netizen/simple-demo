@@ -150,14 +150,14 @@ export function PatientsPage() {
         <div>
           <h1 className="dk-title">Patient list</h1>
           <p className="dk-sub">Find a patient, see their summary, or open their dashboard.</p>
-          {!DEMO_MODE ? <p className="dk-card-foot" id="registration-note">Registration needs the patient API, which this demo build does not include.</p> : null}
+          {!DEMO_MODE ? <p className="dk-card-foot" id="registration-note">Registration needs the patient API, which is not enabled in this workspace.</p> : null}
         </div>
         <div className="dk-actions">
           <button type="button" className="dk-btn dk-btn-primary"
             onClick={() => setForm({ mode: "add" })}
             disabled={!DEMO_MODE}
             aria-describedby={!DEMO_MODE ? "registration-note" : undefined}
-            title={DEMO_MODE ? "Register a patient in this preview tab" : "Registration needs the patient API, which this demo build does not include"}>
+            title={DEMO_MODE ? "Register a patient in this preview tab" : "Registration needs the patient API, which is not enabled in this workspace"}>
             <Icon name="plus" size={16} /> Register patient
           </button>
         </div>
@@ -294,7 +294,7 @@ export function PatientsPage() {
         )}
         <p className="dk-card-foot pt-foot">
           {DEMO_MODE
-            ? "UI preview: patients you add are kept in this browser tab only and are never saved. Only Ravi Menon has a full clinical chart in the synthetic data."
+            ? "Preview environment: patients you add are kept in this browser tab only and are never saved. Only Ravi Menon has a full clinical chart in the available patient records."
             : "Only Ravi Menon has a full clinical chart. Other patients have summary records with alerts, tasks and medicine information."}
         </p>
       </section>

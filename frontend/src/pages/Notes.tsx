@@ -56,11 +56,11 @@ type Tab = {
 
 const TABS: Tab[] = [
   { key: "consult", label: "OPD consultation", feature: "F1", kind: "transcript", title: "OPD consultation", description: "Record or upload the consultation audio (with the patient's consent), or paste a transcript. The note drafts itself; you review, edit and sign it.", transcript: CONSULT_TRANSCRIPT },
-  { key: "admission", label: "Admission assessment", feature: "F2", kind: "transcript", title: "Admission assessment", description: "AI drafts the admission note from the interview. Verify the allergy record before approving; proposed orders stay as drafts.", transcript: ADMISSION_TRANSCRIPT },
+  { key: "admission", label: "Admission assessment", feature: "F2", kind: "transcript", title: "Admission assessment", description: "MediBytes Analysis prepares the admission note from the interview. Verify the allergy record before approving; proposed orders stay as reports.", transcript: ADMISSION_TRANSCRIPT },
   { key: "round", label: "Ward round", feature: "F3", kind: "transcript", title: "Ward round", description: "Dictate the round. The note, nursing-chart entries and proposed tasks are drafted; you choose which tasks to create.", transcript: ROUND_TRANSCRIPT },
-  { key: "progress", label: "Progress note", feature: "F4", kind: "transcript", title: "Progress notes", description: "AI drafts what changed since the last note. Examination and plan must be written by the clinician before signing.", transcript: PROGRESS_TRANSCRIPT },
+  { key: "progress", label: "Progress note", feature: "F4", kind: "transcript", title: "Progress notes", description: "MediBytes Analysis identifies what changed since the last note. Examination and plan must be written by the clinician before signing.", transcript: PROGRESS_TRANSCRIPT },
   { key: "icu", label: "ICU flow sheet", feature: "F7", kind: "icu", title: "ICU flow sheet", description: "Assembles device readings and structured observations into a flow sheet. It cannot add, estimate or silently round a value.", transcript: "" },
-  { key: "referral", label: "Referral", feature: "F11", kind: "referral", title: "Referrals", description: "Drafts the right specialty, a specific clinical question and the documented history. A human approves before the demo status changes to sent.", transcript: "" },
+  { key: "referral", label: "Referral", feature: "F11", kind: "referral", title: "Referrals", description: "Prepares the right specialty, a specific clinical question and the documented history. A human approves before the referral status changes to sent.", transcript: "" },
   { key: "labs", label: "Lab results", feature: "—", kind: "labs", title: "Lab results", description: "Support view: review abnormal results and close the unreviewed-result alert.", transcript: "" },
 ];
 
@@ -287,7 +287,7 @@ export function NotesPage() {
       <PageHeader
         title={tab.title}
         description={intro}
-        meta={<span className="tag tag-ai">AI draft \→ clinician review \→ sign</span>} />
+        meta={<span className="tag tag-ai">MediBytes Analysis \→ clinician review \→ sign</span>} />
       {hasWorkflow && (
         <div className="notes-flow">
           <Stepper steps={flowSteps} label="Note progress" />
@@ -370,13 +370,13 @@ export function NotesPage() {
                   <button className="btn btn-primary" onClick={() => generate.mutate()} disabled={generate.isPending || transcript.trim().length < 10}>
                     {generate.isPending ? <><span className="spinner" /> Generating draft…</> : "Generate draft"}
                   </button>
-                  <button className="btn" onClick={() => setTranscript(tab.transcript)}>Load seeded transcript</button>
+                  <button className="btn" onClick={() => setTranscript(tab.transcript)}>Load consultation transcript</button>
                   {tab.feature === "F1" ? <span className="small muted">Paste text, record, or upload an audio file.</span> : <span className="small muted">Paste or type the text; this tab has no voice input.</span>}
                 </div>
                 {tab.feature === "F1" ? <ConsultNoteStatus result={consultResult} /> : null}
                 {tab.feature === "F1" || tab.feature === "F2" ? (
                   <div className="banner mt-3">
-                    Consent and allergy verification are captured separately below the draft. The model cannot mark either as complete.
+                    Consent and allergy verification are captured separately below the draft. MediBytes Analysis cannot mark either as complete.
                   </div>
                 ) : null}
               </>
@@ -434,7 +434,7 @@ export function NotesPage() {
                         ) : null}
                         {referral.status === "acknowledged" ? (
                           <button className="btn btn-sm" onClick={() => {
-                            const summary = window.prompt("Specialist response summary (demo)");
+                            const summary = window.prompt("Specialist response summary");
                             if (summary) completeReferral.mutate({ referralId: referral.id, summary });
                           }} disabled={completeReferral.isPending}>Record response</button>
                         ) : null}
