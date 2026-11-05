@@ -108,6 +108,11 @@ class Task(Base):
     escalation_level = Column(Integer, default=0)
     escalated_at = Column(DateTime)
     escalation_reason = Column(Text)
+    # Ward-round tasking: what kind of work, which role it is for, and its place in the queue.
+    category = Column(String, default="general")
+    assignee_role = Column(String)
+    queue_rank = Column(Integer, default=0)
+    completion_event_id = Column(String)
 
 
 class Alert(Base):

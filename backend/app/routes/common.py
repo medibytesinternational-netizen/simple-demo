@@ -66,6 +66,8 @@ class TaskCreateRequest(BaseModel):
     priority: Literal["routine", "urgent", "critical"] = "routine"
     due_in_hours: int = 24
     owner: str | None = None
+    category: Literal["general", "lab", "ct", "mri", "xray", "ultrasound", "ecg"] = "general"
+    assignee_role: Literal["senior_doctor", "nurse"] | None = None
 
 
 class TaskUpdateRequest(BaseModel):
@@ -179,6 +181,10 @@ def _task_dict(task: Task) -> dict[str, Any]:
         "escalated_at": task.escalated_at.isoformat() if task.escalated_at else None,
         "escalation_reason": task.escalation_reason,
         "is_overdue": is_overdue,
+        "category": task.category or "general",
+        "assignee_role": task.assignee_role,
+        "queue_rank": task.queue_rank or 0,
+        "completion_event_id": task.completion_event_id,
     }
 
 

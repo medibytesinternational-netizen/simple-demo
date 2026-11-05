@@ -26,8 +26,14 @@ class User:
 
 
 USERS = [
+    # The chief doctor ("doctor" role) walks the ward and hands out tasks.
     User("u_meera", "Dr. Meera Shah", "doctor", "/timeline"),
+    # Staff who receive tasks. They see and work only the tasks given to their role.
+    User("u_arjun", "Dr. Arjun Rao", "senior_doctor", "/tasks"),
+    User("u_anita", "Nurse Anita Rao", "nurse", "/tasks"),
 ]
+ROLE_LABELS = {"doctor": "Chief doctor", "senior_doctor": "Senior doctor", "nurse": "Nurse"}
+TASK_ROLES = ("senior_doctor", "nurse")
 DIRECTORY = {user.id: user for user in USERS}
 DEFAULT_USER_ID = "u_meera"
 DEFAULT_PATIENT_ID = "pat_ravi"
@@ -59,7 +65,7 @@ PERMISSIONS: dict[str, set[str]] = {
     "dismiss_alert": {"doctor"},
     "reconcile": {"doctor"},
     "manage_task": {"doctor"},
-    "work_task": {"doctor"},
+    "work_task": {"doctor", "senior_doctor", "nurse"},
     "upload_document": {"doctor"},
     "confirm_document": {"doctor"},
     "send_request": {"doctor"},

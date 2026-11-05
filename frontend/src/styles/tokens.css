@@ -6,7 +6,8 @@
    paired with text or an icon.
    ===================================================================== */
 :root,
-:root[data-theme="light"] {
+:root[data-theme="light"],
+:root[data-theme="dark"] {
   color-scheme: light;
 
   /* app canvas and chrome */
@@ -88,79 +89,6 @@
   --scrim: rgb(15 35 64 / 0.45);
 }
 
-:root[data-theme="dark"] {
-  color-scheme: dark;
-
-  --backdrop: linear-gradient(135deg, #0d1728 0%, #101d33 52%, #12223c 100%);
-  --backdrop-solid: #101d33;
-  --chrome-bg: rgb(20 34 57 / 0.82);
-  --chrome-bg-strong: rgb(20 34 57 / 0.94);
-  --chrome-solid: #142239;
-  --chrome-border: #2b405f;
-  --chrome-hover: #1b2d4a;
-  --chrome-active: #22395d;
-  --chrome-fg: #eef5ff;
-  --chrome-fg-muted: #a9bdd6;
-
-  --bg: #0f1b2e;
-  --surface: #16253d;
-  --surface-2: #1a2c47;
-  --surface-3: #203552;
-  --border: #2b405f;
-  --border-soft: #223552;
-  --border-strong: #3c5678;
-  --text: #eef5ff;
-  --text-2: #c5d6ea;
-  --muted: #9db2cc;
-  --muted-2: #7d94b1;
-
-  --accent: #60a5fa;
-  --accent-strong: #93c5fd;
-  --accent-soft: #1c3152;
-  --accent-line: #335585;
-  --on-accent: #0b1a2e;
-  --ink: #dbeafe;
-  --ink-hover: #bfdbfe;
-  --ink-fg: #10233d;
-  --gradient-feature: linear-gradient(135deg, #153e75 0%, #1d4ed8 100%);
-  --gradient-action: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-  --gradient-selected: linear-gradient(135deg, #1c3152 0%, #24406b 100%);
-  --gradient-dock-active: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-  --chart-1: #93c5fd;
-  --chart-2: #60a5fa;
-  --chart-3: #3b82f6;
-  --chart-4: #1e3a5f;
-
-  --critical: #f87171;
-  --critical-strong: #fca5a5;
-  --critical-soft: #3a1d22;
-  --critical-line: #6b2c33;
-  --on-critical: #1b0c0e;
-  --warning: #fbbf24;
-  --warning-solid: #f59e0b;
-  --warning-soft: #382c15;
-  --warning-line: #5c4720;
-  --success: #4ade80;
-  --success-soft: #143125;
-  --success-line: #28563c;
-  --ai: #a5b4fc;
-  --ai-soft: #26244a;
-  --ai-line: #40407a;
-
-  --dock-bg: rgb(20 34 57 / 0.88);
-  --dock-border: #335585;
-  --dock-hover: #1b2d4a;
-  --dock-fg: #eef5ff;
-  --dock-fg-muted: #a9bdd6;
-  --dock-shadow: 0 14px 38px rgb(0 0 0 / 0.45), 0 2px 8px rgb(0 0 0 / 0.3);
-
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.25), 0 8px 24px rgb(0 0 0 / 0.28);
-  --shadow-lg: 0 24px 64px rgb(0 0 0 / 0.55);
-  --shadow-canvas: none;
-  --focus: 0 0 0 3px rgb(96 165 250 / 0.35);
-  --scrim: rgb(3 10 20 / 0.65);
-}
 
 :root {
   /* shape */

@@ -52,7 +52,8 @@ def tasks_list(
         stmt = stmt.where(Task.encounter_id == current.id)
     if status:
         stmt = stmt.where(Task.status == status)
-    rows = list(db.scalars(stmt))
+    rows = [task for task in db.scalars(stmt) if engine.visible_to_actor(task)]
+    rows.sort(key=engine.queue_key)
     return {"tasks": [_task_dict(task) for task in rows]}
 
 
@@ -71,6 +72,9 @@ def task_create(body: TaskCreateRequest, db: Session = Depends(get_db)):
         due_at=utcnow() + timedelta(hours=body.due_in_hours),
         owner=body.owner or acting_name(),
         assigned_to=body.owner or acting_name(),
+        category=body.category,
+        assignee_role=body.assignee_role or engine.role_for_assignee(body.owner),
+        queue_rank=0,
         assigned_at=utcnow(),
         assigned_by=acting_name(),
         created_by=acting_name(),
@@ -83,8 +87,26 @@ def task_create(body: TaskCreateRequest, db: Session = Depends(get_db)):
         "task",
         task.id,
         patient.id,
-        after={"title": task.title, "priority": task.priority, "due_at": task.due_at.isoformat()},
+        after={
+            "title": task.title,
+            "priority": task.priority,
+            "due_at": task.due_at.isoformat(),
+            "category": task.category,
+            "assigned_to": task.assigned_to,
+            "assignee_role": task.assignee_role,
+        },
     )
+    db.commit()
+    return _task_dict(task)
+
+
+@router.post("/tasks/{task_id}/urgent", dependencies=[Depends(require("manage_task"))])
+def task_mark_urgent(task_id: str, db: Session = Depends(get_db)):
+    """Urgent button: the task turns urgent and jumps to the head of the queue."""
+    task = db.get(Task, task_id)
+    if not task:
+        raise HTTPException(404, "Task not found")
+    engine.bump_urgent(db, task)
     db.commit()
     return _task_dict(task)
 
@@ -98,6 +120,7 @@ def task_assign(task_id: str, body: TaskAssignRequest, db: Session = Depends(get
     assigned = body.assigned_to.strip() or None
     task.assigned_to = assigned
     task.owner = assigned
+    task.assignee_role = engine.role_for_assignee(assigned)
     task.assigned_at = utcnow() if assigned else None
     task.assigned_by = acting_name() if assigned else None
     add_audit(
@@ -119,6 +142,7 @@ def task_acknowledge(task_id: str, db: Session = Depends(get_db)):
     task = db.get(Task, task_id)
     if not task:
         raise HTTPException(404, "Task not found")
+    engine.require_own_task(task)
     engine.acknowledge(db, task)
     db.commit()
     return _task_dict(task)
@@ -146,6 +170,7 @@ def task_reopen(task_id: str, body: ReopenRequest, db: Session = Depends(get_db)
     task = db.get(Task, task_id)
     if not task:
         raise HTTPException(404, "Task not found")
+    engine.require_own_task(task)
     engine.reopen(db, task, body.reason)
     db.commit()
     return _task_dict(task)
@@ -156,6 +181,7 @@ def task_update(task_id: str, body: TaskUpdateRequest, db: Session = Depends(get
     task = db.get(Task, task_id)
     if not task:
         raise HTTPException(404, "Task not found")
+    engine.require_own_task(task)
     engine.change_status(db, task, body.status)
     db.commit()
     return _task_dict(task)

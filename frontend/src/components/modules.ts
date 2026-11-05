@@ -38,6 +38,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: "patients", label: "Patient list", to: "/patients", icon: "patients", hint: "Find, register and view patients", match: (p) => p === "/patients", keywords: ["register", "directory", "mrn"] },
       { id: "overview-patient", label: "Patient dashboard", to: "/patient", icon: "overview", hint: "Summary of the open patient: alerts, labs, medicines and next steps", match: (p) => p === "/patient", keywords: ["summary", "overview", "ravi"] },
       { id: "timeline", label: "Patient chart", to: "/timeline", icon: "chart", hint: "Timeline of everything recorded for the patient", match: (p) => p === "/timeline", keywords: ["timeline", "history", "events", "ravi"] },
+      { id: "patient-progress", label: "Patient progress", to: "/progress", icon: "chart", hint: "Overall progress from OPD to discharge, and daily task and note progress", match: (p) => p === "/progress", keywords: ["daily", "overall", "verified", "complete"] },
     ],
   },
   {
@@ -45,8 +46,6 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Clinical care",
     items: [
       { id: "consult", label: "OPD consultation", to: "/notes?tab=consult", icon: "consult", hint: "Record a consultation and review the draft note", match: tabIs("/notes", "consult", true), keywords: ["opd", "voice", "transcript", "outpatient"] },
-      { id: "new-admission", label: "New admission", to: "/admission", icon: "admission", hint: "Admit a patient to a ward and bed", match: (p) => p === "/admission", keywords: ["bed", "ward", "admit"] },
-      { id: "admission", label: "Admission assessment", to: "/notes?tab=admission", icon: "progress", hint: "Review the admission note and verify allergies", match: tabIs("/notes", "admission") },
       { id: "round", label: "Ward round", to: "/notes?tab=round", icon: "round", hint: "Round note, nursing entries and proposed tasks", match: tabIs("/notes", "round"), keywords: ["nursing", "handover"] },
       { id: "progress", label: "Progress notes", to: "/notes?tab=progress", icon: "progress", hint: "Daily note; examination and plan written by the clinician", match: tabIs("/notes", "progress") },
       { id: "icu", label: "ICU flow sheet", to: "/notes?tab=icu", icon: "icu", hint: "Device readings assembled into a chart", match: tabIs("/notes", "icu"), keywords: ["vitals", "device", "monitor"] },
@@ -89,9 +88,9 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     id: "admin",
-    title: "Administration",
+    title: "Monitoring",
     items: [
-      { id: "audit", label: "Audit log", to: "/audit", icon: "audit", hint: "Every write, approval and model call", match: (p) => p === "/audit" },
+      { id: "audit", label: "Audit & monitoring logs", to: "/audit", icon: "audit", hint: "Monitoring log of every write, approval and model call", match: (p) => p === "/audit" },
     ],
   },
 ];
@@ -105,7 +104,7 @@ export function findActive(path: string, tab: string | null) {
 export type DockItem = { id: string; label: string; to: string; icon: string; match: (p: string, t: string | null) => boolean; count?: CountKey; optional?: boolean };
 
 /** Pages that act on the open patient: the patient bar and the patient dock show on exactly these. */
-export const PATIENT_ROUTES = new Set(["/patient", "/timeline", "/notes", "/safety", "/documents", "/discharge", "/revenue", "/tasks"]);
+export const PATIENT_ROUTES = new Set(["/patient", "/timeline", "/progress", "/notes", "/safety", "/documents", "/discharge", "/revenue", "/tasks"]);
 export const isPatientRoute = (path: string) => PATIENT_ROUTES.has(path);
 
 /** Dock outside a patient: hospital-wide pages. Every module is in the launchpad. */

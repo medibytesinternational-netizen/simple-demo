@@ -1,4 +1,5 @@
-"""T2: one staff role. The doctor does everything; task assignees are data, not logins.
+"""Staff roles. The chief doctor does everything; a senior doctor and a nurse can sign in to
+work the tasks given to them (ward-round tasking), and nothing else.
 
 ``ingest`` is the one action the doctor does not hold: it belongs to the hospital system link,
 which is not a person and is chosen by ``X-System-Id`` on the ingest routes only.
@@ -16,15 +17,16 @@ from app.db import SessionLocal, utcnow
 from app.models import Task
 from app.services import identity
 
-REMOVED = ["u_anita", "u_dev", "u_billing", "u_mgmt", "u_hms"]
+REMOVED = ["u_dev", "u_billing", "u_mgmt", "u_hms"]
 ROUTES = Path(identity.__file__).resolve().parents[1] / "routes"
 SHELL = Path(__file__).resolve().parents[2] / "frontend" / "src" / "components" / "Shell.tsx"
 NURSE_NAME = "Nurse Anita Rao"
 
 
-def test_users_returns_exactly_one_user(client):
+def test_users_are_the_chief_a_senior_doctor_and_a_nurse(client):
     body = client.get("/api/users").json()
-    assert [u["id"] for u in body["users"]] == ["u_meera"]
+    assert [u["id"] for u in body["users"]] == ["u_meera", "u_arjun", "u_anita"]
+    assert [u["role"] for u in body["users"]] == ["doctor", "senior_doctor", "nurse"]
     assert body["users"][0]["name"] == "Dr. Meera Shah"
     assert body["acting"]["id"] == "u_meera"
 
@@ -42,7 +44,10 @@ def test_the_doctor_holds_every_action_except_ingest(client):
     assert set(me["allowed_actions"]) == set(identity.PERMISSIONS) - {"ingest"}
     assert me["user"]["role"] == "doctor"
     roles = set().union(*identity.PERMISSIONS.values())
-    assert roles == {"doctor", identity.SYSTEM_ROLE}
+    assert roles == {"doctor", "senior_doctor", "nurse", identity.SYSTEM_ROLE}
+    # Staff roles hold task work only.
+    for role in ("senior_doctor", "nurse"):
+        assert {a for a, allowed in identity.PERMISSIONS.items() if role in allowed} == {"work_task"}
     assert identity.PERMISSIONS["ingest"] == {identity.SYSTEM_ROLE}
     assert not identity.can("ingest")
 

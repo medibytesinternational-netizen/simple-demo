@@ -20,3 +20,6 @@ Thumbs.db
 .vscode/
 .idea/
 /.hypothesis/
+
+.playwright-mcp/
+backend/.vite/

@@ -21,8 +21,8 @@ from sqlalchemy.orm import Session
 from .. import background
 from ..db import utcnow
 from ..models import Task
-from .identity import acting_name
-from .timeline import add_audit
+from .identity import TASK_ROLES, acting_name, acting_user
+from .timeline import add_audit, add_event
 
 MIN_REASON = 10
 CLOSED = {"completed", "cancelled"}
@@ -34,6 +34,16 @@ TRANSITIONS: dict[str, set[str]] = {
     "in_progress": {"completed", "cancelled"},
     "completed": set(),
     "cancelled": set(),
+}
+
+CATEGORY_LABELS = {
+    "general": "General",
+    "lab": "Lab report",
+    "ct": "CT scan",
+    "mri": "MRI",
+    "xray": "X-ray",
+    "ultrasound": "Ultrasound",
+    "ecg": "ECG",
 }
 
 LEVEL_ONE_HOURS = 2
@@ -77,6 +87,84 @@ def check_transition(task: Task, new_status: str) -> None:
         409,
         f"Task is {task.status}; it cannot move to {new_status}. {hint}",
     )
+
+
+def role_for_assignee(name: str | None) -> str | None:
+    """Infer the receiving role from an assignee name when the caller did not give one."""
+    if not name:
+        return None
+    lowered = name.lower()
+    if lowered.startswith("nurse"):
+        return "nurse"
+    if lowered.startswith("dr.") and name != "Dr. Meera Shah":
+        return "senior_doctor"
+    return None
+
+
+def visible_to_actor(task: Task) -> bool:
+    """Role-based viewing: the chief sees every task; staff see only work given to their role."""
+    user = acting_user()
+    if user.role not in TASK_ROLES:
+        return True
+    return task.assignee_role == user.role or task.assigned_to == user.name
+
+
+def require_own_task(task: Task) -> None:
+    """Senior doctors and nurses may work only tasks given to them (403 otherwise)."""
+    if not visible_to_actor(task):
+        raise HTTPException(403, f"{acting_name()} may only work tasks assigned to their role")
+
+
+def queue_key(task: Task) -> tuple:
+    """Queue order: bumped tasks first, then urgent before normal, then the earliest due."""
+    urgent = 0 if task.priority in {"urgent", "critical"} else 1
+    due = task.due_at.isoformat() if task.due_at else "9999"
+    return (-(task.queue_rank or 0), urgent, due)
+
+
+def bump_urgent(db: Session, task: Task) -> Task:
+    """Mark a task urgent and move it to the head of the queue."""
+    if task.status in CLOSED:
+        raise HTTPException(409, f"Task is {task.status}; reopen it before moving it up the queue")
+    top = max((t.queue_rank or 0) for t in db.scalars(select(Task).where(Task.encounter_id == task.encounter_id))) if task.encounter_id else 0
+    before = {"priority": task.priority, "queue_rank": task.queue_rank or 0}
+    task.priority = "urgent"
+    task.queue_rank = top + 1
+    add_audit(
+        db,
+        "task_marked_urgent",
+        "task",
+        task.id,
+        task.patient_id,
+        actor_name=acting_name(),
+        before=before,
+        after={"priority": task.priority, "queue_rank": task.queue_rank, "title": task.title},
+    )
+    return task
+
+
+def _record_in_chart(db: Session, task: Task) -> None:
+    """A finished task becomes part of the patient chart."""
+    label = CATEGORY_LABELS.get(task.category or "general", "General")
+    event = add_event(
+        db,
+        patient_id=task.patient_id,
+        encounter_id=task.encounter_id,
+        type="task_completed",
+        subtype=task.category or "general",
+        title=f"{label} task completed: {task.title}",
+        body_text=(task.detail or "").strip() or f"{task.title} completed by {acting_name()}.",
+        payload={
+            "task_id": task.id,
+            "category": task.category or "general",
+            "priority": task.priority,
+            "assigned_to": task.assigned_to,
+            "assignee_role": task.assignee_role,
+            "completed_by": acting_name(),
+        },
+        source="task",
+    )
+    task.completion_event_id = event.id
 
 
 def _behalf(task: Task) -> dict:
@@ -127,6 +215,8 @@ def change_status(db: Session, task: Task, new_status: str) -> Task:
         task.completed_at = utcnow()
         if task.assigned_to:
             after["completed_by"] = task.assigned_to
+        _record_in_chart(db, task)
+        after["chart_event_id"] = task.completion_event_id
     add_audit(
         db,
         "task_status_changed",

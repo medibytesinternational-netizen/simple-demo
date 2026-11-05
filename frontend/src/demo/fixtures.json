@@ -5739,5 +5739,230 @@
     "Atrial fibrillation"
    ]
   }
+ },
+ "/patients/pat_ravi/progress": {
+  "patient_id": "pat_ravi",
+  "overall": {
+   "stages": [
+    {
+     "key": "opd",
+     "title": "OPD consultation",
+     "status": "done",
+     "checks": [
+      {
+       "key": "consult_note",
+       "label": "Consultation note",
+       "status": "done",
+       "detail": "Approved by a clinician",
+       "link": "/notes?tab=consult"
+      }
+     ]
+    },
+    {
+     "key": "admission",
+     "title": "Admission",
+     "status": "pending",
+     "checks": [
+      {
+       "key": "admission_note",
+       "label": "Admission assessment",
+       "status": "done",
+       "detail": "Approved by a clinician",
+       "link": "/notes?tab=admission"
+      },
+      {
+       "key": "allergy",
+       "label": "Allergy history verified",
+       "status": "pending",
+       "detail": "Allergy not yet verified by a clinician",
+       "link": "/notes?tab=admission"
+      }
+     ]
+    },
+    {
+     "key": "ward",
+     "title": "Ward care",
+     "status": "done",
+     "checks": [
+      {
+       "key": "round_note",
+       "label": "Ward round note",
+       "status": "done",
+       "detail": "Approved by a clinician",
+       "link": "/notes?tab=round"
+      },
+      {
+       "key": "progress_note",
+       "label": "Progress note",
+       "status": "done",
+       "detail": "Approved by a clinician",
+       "link": "/notes?tab=progress"
+      }
+     ]
+    },
+    {
+     "key": "investigations",
+     "title": "Investigations",
+     "status": "pending",
+     "checks": [
+      {
+       "key": "labs",
+       "label": "Lab results reviewed",
+       "status": "pending",
+       "detail": "1 result(s) not reviewed",
+       "link": "/notes?tab=labs"
+      },
+      {
+       "key": "requests",
+       "label": "Investigation requests sent",
+       "status": "pending",
+       "detail": "1 request(s) not yet sent",
+       "link": "/documents?tab=requisition"
+      }
+     ]
+    },
+    {
+     "key": "documents",
+     "title": "Documents & records",
+     "status": "pending",
+     "checks": [
+      {
+       "key": "documents",
+       "label": "Outside reports confirmed",
+       "status": "pending",
+       "detail": "1 report(s) need a person to confirm the values",
+       "link": "/documents?tab=inbound"
+      },
+      {
+       "key": "procedure",
+       "label": "Procedures documented",
+       "status": "done",
+       "detail": "Documented",
+       "link": "/timeline"
+      }
+     ]
+    },
+    {
+     "key": "medicines",
+     "title": "Medicines",
+     "status": "pending",
+     "checks": [
+      {
+       "key": "meds",
+       "label": "Home and inpatient medicines reconciled",
+       "status": "pending",
+       "detail": "3 difference(s) undecided",
+       "link": "/safety?tab=meds"
+      }
+     ]
+    },
+    {
+     "key": "safety",
+     "title": "Safety",
+     "status": "pending",
+     "checks": [
+      {
+       "key": "alerts",
+       "label": "Critical alerts resolved",
+       "status": "pending",
+       "detail": "4 critical alert(s) open",
+       "link": "/safety?tab=alerts"
+      }
+     ]
+    },
+    {
+     "key": "tasks",
+     "title": "Tasks",
+     "status": "pending",
+     "checks": [
+      {
+       "key": "tasks",
+       "label": "Tasks completed",
+       "status": "pending",
+       "detail": "3 open, 1 overdue",
+       "link": "/tasks"
+      }
+     ]
+    },
+    {
+     "key": "discharge",
+     "title": "Discharge",
+     "status": "missing",
+     "checks": [
+      {
+       "key": "discharge_summary",
+       "label": "Discharge summary",
+       "status": "missing",
+       "detail": "Not generated",
+       "link": "/discharge"
+      }
+     ]
+    }
+   ],
+   "done": 5,
+   "total": 13,
+   "percent": 38
+  },
+  "daily": {
+   "date": "2026-10-20",
+   "tasks": [
+    {
+     "id": "tsk_seed_metformin",
+     "title": "Stop metformin and document the rationale",
+     "category": "general",
+     "priority": "critical",
+     "assigned_to": "Nurse Anita Rao",
+     "assignee_role": "nurse",
+     "due_at": "2026-10-20T07:00:00",
+     "status": "accepted",
+     "state": "overdue",
+     "completion_event_id": null
+    },
+    {
+     "id": "tsk_seed_antibiotics",
+     "title": "Continue IV flucloxacillin and review the leg tomorrow",
+     "category": "general",
+     "priority": "routine",
+     "assigned_to": "Dr. Meera Shah",
+     "assignee_role": null,
+     "due_at": "2026-10-20T08:00:00",
+     "status": "completed",
+     "state": "done",
+     "completion_event_id": null
+    },
+    {
+     "id": "tsk_seed_potassium",
+     "title": "Check potassium and renal function",
+     "category": "lab",
+     "priority": "urgent",
+     "assigned_to": "Nurse Anita Rao",
+     "assignee_role": "nurse",
+     "due_at": "2026-10-20T13:00:00",
+     "status": "accepted",
+     "state": "open",
+     "completion_event_id": null
+    }
+   ],
+   "notes": [
+    {
+     "id": "evt_seed_vitals",
+     "kind": "Vitals",
+     "title": "Overnight observations",
+     "author": "Dr. Meera Shah",
+     "at": "2026-10-20T06:00:00",
+     "state": "verified"
+    }
+   ],
+   "tasks_done": 1,
+   "tasks_total": 3,
+   "notes_verified": 1,
+   "notes_total": 1,
+   "complete": false
+  },
+  "days": [
+   "2026-10-18",
+   "2026-10-19",
+   "2026-10-20"
+  ]
  }
 }

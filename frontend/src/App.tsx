@@ -9,9 +9,9 @@ import { DischargePage } from "./pages/Discharge";
 import { RevenuePage } from "./pages/Revenue";
 import { DashboardPage } from "./pages/Dashboard";
 import { PatientsPage } from "./pages/Patients";
-import { AdmissionPage } from "./pages/Admission";
 import { AuditPage } from "./pages/Audit";
 import { PatientOverviewPage } from "./pages/PatientOverview";
+import { ProgressPage } from "./pages/Progress";
 
 export default function App() {
   return (
@@ -20,6 +20,7 @@ export default function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/patient" element={<PatientOverviewPage />} />
         <Route path="/timeline" element={<TimelinePage />} />
+        <Route path="/progress" element={<ProgressPage />} />
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/safety" element={<SafetyPage />} />
         <Route path="/tasks" element={<TasksPage />} />
@@ -28,7 +29,6 @@ export default function App() {
         <Route path="/revenue" element={<RevenuePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/patients" element={<PatientsPage />} />
-        <Route path="/admission" element={<AdmissionPage />} />
         <Route path="/audit" element={<AuditPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>

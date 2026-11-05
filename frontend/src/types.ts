@@ -89,6 +89,10 @@ export type AppTask = {
   escalation_level?: number;
   escalated_at?: string | null;
   escalation_reason?: string | null;
+  category?: string;
+  assignee_role?: string | null;
+  queue_rank?: number;
+  completion_event_id?: string | null;
 };
 
 export type Alert = {

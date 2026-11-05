@@ -568,6 +568,8 @@ def seed_rehearsal(db: Session) -> None:
                 due_at=due,
                 owner=assigned_to,
                 assigned_to=assigned_to,
+                assignee_role="nurse" if assigned_to.startswith("Nurse") else None,
+                category="lab" if task_id == "tsk_seed_potassium" else "general",
                 assigned_at=datetime(2026, 10, 19, 9, 5),
                 assigned_by=acting_name(),
                 acknowledged_at=datetime(2026, 10, 19, 9, 10)

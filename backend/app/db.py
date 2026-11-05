@@ -58,6 +58,10 @@ def _ensure_sqlite_columns() -> None:
             "escalation_level": "INTEGER DEFAULT 0",
             "escalated_at": "DATETIME",
             "escalation_reason": "TEXT",
+            "category": "VARCHAR DEFAULT 'general'",
+            "assignee_role": "VARCHAR",
+            "queue_rank": "INTEGER DEFAULT 0",
+            "completion_event_id": "VARCHAR",
         },
         "bill_line_items": {
             "expected_amount": "FLOAT",

@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, get, post, session } from "../api";
 import type { AppState, Credits, Meta } from "../types";
 import { EvidenceDrawer } from "./Evidence";
 import { Modal } from "./Modal";
-import { Dock } from "./Dock";
-import { PatientSearch } from "./PatientSearch";
-import { initials } from "./PatientStrip";
-import { ThemeToggle } from "./ThemeToggle";
+import { FooterBar, MenuBar, StatusBar } from "./legacy/HisChrome";
 import { findActive } from "./modules";
-import { Icon } from "./icons";
 import { DEMO_MODE, PREVIEW_LABEL } from "../demo/config";
 
 // This file stays ASCII-only: a backend test reads it with the platform default encoding.
@@ -22,7 +18,8 @@ const AWAITING_REVIEW = new Set(["needs_confirmation", "pending", "needs_manual_
 
 // One doctor and one browsable patient (Ravi). A browser that last ran when the app had roles or a
 // patient picker may still hold those ids; drop them once at load so the first request is not refused.
-session.setUser(null);
+// Known staff accounts: the chief doctor, a senior doctor and a nurse. Anything else is stale.
+if (!["u_meera", "u_arjun", "u_anita"].includes(session.user() || "u_meera")) session.setUser(null);
 if (session.patient() !== "pat_ravi") session.setPatient(null);
 
 
@@ -32,11 +29,6 @@ export function Shell() {
   const location = useLocation();
   const tab = new URLSearchParams(location.search).get("tab");
   const [resetOpen, setResetOpen] = useState(false);
-  const [clockNow, setClockNow] = useState(() => new Date());
-  useEffect(() => {
-    const timer = window.setInterval(() => setClockNow(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
   const patientId = meta.data?.patient.id;
@@ -75,70 +67,37 @@ export function Shell() {
   const documents = state.data?.documents.filter((d) => AWAITING_REVIEW.has(d.ocr_status)).length || 0;
   const labs = state.data?.unreviewed_labs.length || 0;
   const counts = { alerts: openAlerts, overdue, documents, labs };
-  const currentClock = clockNow.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   const user = meta.data?.user?.name || meta.data?.demo_user || "Dr. Meera Shah";
-  const role = meta.data?.demo_role || "Attending physician";
+  const hospital = "MediBytes Hospital";
 
   return (
     <div className="app">
       <a className="skip-link" href="#main-content">Skip to content</a>
 
       <div className="app-main">
-        <header className="topbar glass">
-          <Link to="/dashboard" className="topbar-brand" aria-label="MediBytes Hospital management, home">
-            <span className="brand-mark" aria-hidden="true">MB</span>
-            <span className="brand-text">
-              <span className="brand-name">MediBytes</span>
-              <span className="brand-sub">Hospital management</span>
-            </span>
-          </Link>
-          <nav className="breadcrumbs" aria-label="Breadcrumb">
-            <Link to="/dashboard">Home</Link>
-            {active && active.id !== "dashboard" ? (
-              <>
-                <Icon name="chevron" size={14} />
-                <span className="crumb-group">{active.group}</span>
-                <Icon name="chevron" size={14} />
-                <span aria-current="page" className="crumb-current">{active.label}</span>
-              </>
-            ) : (
-              <>
-                <Icon name="chevron" size={14} />
-                <span aria-current="page" className="crumb-current">Dashboard</span>
-              </>
-            )}
-          </nav>
-          <PatientSearch />
-          <div className="topbar-right">
-            <button type="button" className="chrome-btn icon-only chrome-btn-search" onClick={() => navigate("/patients")} aria-label="Find a patient">
-              <Icon name="search" size={17} />
-            </button>
-            {DEMO_MODE ? (
-              <span className="env-pill" role="status" title={`${PREVIEW_LABEL}. Changes are not saved.`}>
-                <span className="env-dot" aria-hidden="true" /><span>MediBytes<span className="env-text-long"> preview</span></span>
-              </span>
-            ) : (
-              <>
-              </>
-            )}
-            {currentClock ? (
-              <span className="topbar-clock" title="Application time">
-                <Icon name="clock" size={15} /> {currentClock}
-              </span>
-            ) : null}
-            <ThemeToggle />
-            <button type="button" className="chrome-btn" onClick={() => setResetOpen(true)} aria-label="Workspace controls">
-              <Icon name="refresh" size={16} /><span className="chrome-btn-label">Workspace controls</span>
-            </button>
-            <span className="topbar-user" title={`${user} ${SEP} ${role}`}>
-              <span className="avatar" aria-hidden="true">{initials(user)}</span>
-              <span className="topbar-user-text">
-                <span className="topbar-user-name">{user}</span>
-                <span className="topbar-user-role">{role}</span>
-              </span>
-            </span>
-          </div>
-        </header>
+        <StatusBar
+          loginId={(meta.data?.user as { id?: string } | undefined)?.id?.replace(/\D/g, "") || "22149"}
+          user={user}
+          hospital={hospital}
+          screen={active?.label || "Dashboard"}
+          onControls={() => setResetOpen(true)}
+          userId={meta.data?.user?.id || "u_meera"}
+          onSwitchUser={(id) => {
+            session.setUser(id === "u_meera" ? null : id);
+            queryClient.clear();
+          }}
+        />
+        <MenuBar
+          counts={counts}
+          patient={meta.data ? {
+            name: meta.data.patient.name,
+            mrn: meta.data.patient.mrn,
+            age: meta.data.patient.age,
+            sex: meta.data.patient.sex,
+            place: [meta.data.encounter?.ward, meta.data.encounter?.bed].filter(Boolean).join(" / "),
+            allergies: meta.data.patient.allergies || [],
+          } : null}
+        />
 
         <main className="content-scroll" id="main-content" tabIndex={-1}>
           <div className="content">
@@ -146,7 +105,7 @@ export function Shell() {
           </div>
         </main>
 
-        <Dock counts={counts} />
+        <FooterBar hospital={hospital} status={DEMO_MODE ? PREVIEW_LABEL : `${openAlerts} open alerts ${SEP} ${overdue} overdue tasks`} />
       </div>
 
       <EvidenceDrawer />

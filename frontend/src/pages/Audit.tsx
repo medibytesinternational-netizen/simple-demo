@@ -10,7 +10,8 @@ const ACTOR_LABEL: Record<string, string> = { user: "Person", model: "MediBytes"
 
 function describe(value: unknown) {
   if (value === null || value === undefined || value === "") return "Not recorded";
-  return typeof value === "object" ? JSON.stringify(value) : String(value);
+  const text = typeof value === "object" ? JSON.stringify(value) : String(value);
+  return text.replace(/gpt[-\w.]*/gi, "MediBytes");
 }
 
 export function AuditPage() {
@@ -23,11 +24,12 @@ export function AuditPage() {
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     return entries.filter((e) => (actor === "all" || e.actor_type === actor)
-      && (!q || `${e.action} ${e.actor_name} ${e.entity_type} ${e.entity_id}`.toLowerCase().includes(q)));
+      && (!q || `${e.action} ${e.actor_type === "model" ? "MediBytes" : e.actor_name} ${e.entity_type} ${e.entity_id}`.toLowerCase().includes(q)));
   }, [entries, actor, query]);
 
   // ---------- Render-only values ----------
-  const actorTone = (type: string): Tone => (type === "model" ? "ai" : type === "system" ? "neutral" : "info");
+  // Model calls are shown under the product name, never the underlying model.
+  const whoName = (e: AuditEntry) => (e.actor_type === "model" ? "MediBytes" : e.actor_name);
   const actionTone = (type: string): Tone => (type === "model" ? "ai" : type === "system" ? "neutral" : "success");
   const changesOf = (e: AuditEntry) => (e.after && typeof e.after === "object" ? Object.entries(e.after) : []);
   const columns: Column<AuditEntry>[] = [
@@ -40,12 +42,9 @@ export function AuditPage() {
       ),
     },
     {
-      key: "who", header: "Who", sort: (e) => e.actor_name,
+      key: "who", header: "Who", sort: (e) => whoName(e),
       cell: (e) => (
-        <div className="audit-who">
-          <span className="cell-strong">{e.actor_name}</span>
-          <Pill tone={actorTone(e.actor_type)}>{ACTOR_LABEL[e.actor_type] || e.actor_type}</Pill>
-        </div>
+        <span className="cell-strong">{whoName(e)}</span>
       ),
     },
     { key: "action", header: "Action", sort: (e) => e.action, cell: (e) => <Pill tone={actionTone(e.actor_type)}>{e.action.replaceAll("_", " ")}</Pill> },

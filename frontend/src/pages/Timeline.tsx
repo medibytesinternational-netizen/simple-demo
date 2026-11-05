@@ -10,6 +10,7 @@ import { NO_FILTERS, type TimelineFilters, type TimelineResponse } from "../feat
 import { PageHeader } from "../components/PageHeader";
 import { EmptyState, Field, ListRow, Menu, MenuItem, Panel, Pill, Skeleton, Toolbar } from "../components/ui";
 import type { TimelineEventF16 } from "../features/f16/types";
+import type { Meta } from "../types";
 import { Icon } from "../components/icons";
 
 function eventTone(type: string) {
@@ -28,6 +29,8 @@ function fmt(value: string) {
 export function TimelinePage() {
   const { showEvent } = useEvidence();
   const patientId = usePatientId();
+  const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta") });
+  const patient = meta.data?.patient;
   const [filters, setFilters] = useState<TimelineFilters>(NO_FILTERS);
   const timeline = useQuery<TimelineResponse>({
     queryKey: ["timeline", patientId, filters],
@@ -58,9 +61,9 @@ export function TimelinePage() {
         </>}
       />
 
-      <div className="pg-timeline with-rail">
+      <div className="pg-timeline tl-full">
         <Panel
-          title="Clinical event stream"
+          title={patient ? `Clinical event stream: ${patient.name.toUpperCase()} (${patient.mrn})` : "Clinical event stream"}
           count={events.length}
           sub="Approved events, newest first. Select a title to inspect its source."
           actions={<Pill icon="audit">Append-only</Pill>}
@@ -206,35 +209,10 @@ export function TimelinePage() {
           </div>
         </Panel>
 
-        <aside className="rail rail-sticky" aria-label="Patient summary">
-          <Panel title="Care pathway" sub="Each step ends in an approval that writes to this timeline.">
-            <ol className="tl-path">
-              {PATHWAY.map((step) => (
-                <li key={step.to}>
-                  <Link className="tl-path-link" to={step.to}>
-                    <Icon name={step.icon} size={16} />
-                    <span>{step.label}</span>
-                    <Icon name="chevron" size={14} className="tl-path-chev" />
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          </Panel>
-        </aside>
       </div>
     </>
   );
 }
-
-const PATHWAY = [
-  { label: "Consultation", to: "/notes?tab=consult", icon: "consult" },
-  { label: "Admission", to: "/admission", icon: "admission" },
-  { label: "Safety alerts", to: "/safety?tab=alerts", icon: "safety" },
-  { label: "Ward round", to: "/notes?tab=round", icon: "round" },
-  { label: "Documents", to: "/documents?tab=inbound", icon: "scan" },
-  { label: "Discharge", to: "/discharge", icon: "discharge" },
-  { label: "Claim review", to: "/revenue?tab=claim", icon: "billing" },
-];
 
 const EVENT_ICONS: Record<string, string> = {
   lab_result: "lab",
