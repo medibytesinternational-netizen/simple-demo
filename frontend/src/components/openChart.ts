@@ -10,9 +10,9 @@ import { session } from "../api";
 export function useOpenChart() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  return (patientId: string) => {
+  return (patientId: string, destination = "/patient") => {
     session.setPatient(patientId);
     queryClient.clear();
-    navigate("/patient");
+    navigate(destination);
   };
 }

@@ -93,10 +93,14 @@ export function MenuBar({ counts, patient }: { counts: Record<CountKey, number>;
         ) : (
           <span className="his-ws-hint">{onList ? "Choose a patient and click Open patient to see their dashboard." : "Hospital-wide view and monitoring."}</span>
         )}
-        <Link to="/discharge" className="his-menu-item primary his-quick">Discharge Summary</Link>
-        <Link to="/safety?tab=alerts" className="his-menu-item primary his-quick">
-          Emergency {SEP} Alerts {ARROW}{counts.alerts ? <span className="his-menu-count critical">{counts.alerts}</span> : null}
-        </Link>
+        {!opened ? (
+          <>
+            <Link to="/discharge" className="his-menu-item primary his-quick">Discharge Summary</Link>
+            <Link to="/safety?tab=alerts" className="his-menu-item primary his-quick">
+              Emergency {SEP} Alerts {ARROW}{counts.alerts ? <span className="his-menu-count critical">{counts.alerts}</span> : null}
+            </Link>
+          </>
+        ) : null}
       </div>
       <div className="his-menu-groups" role="tablist" aria-label="Sections">
         {groups.map((g) => {

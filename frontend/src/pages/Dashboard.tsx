@@ -18,6 +18,11 @@ const openChartAvailable = (row: Row) => row.browsable ?? row.patient_id === CHA
 const PENDING_DRAFT = new Set(["draft_ready", "human_edited", "model_unavailable"]);
 // Draft-producing modules; the hospital view only counts them; review happens inside the patient.
 const DRAFT_FEATURES = ["F1", "F2", "F3", "F4", "F7", "F11", "F6", "F9", "F10"];
+const DRAFT_DESTINATIONS: Record<string, string> = {
+  F1: "/notes?tab=consult", F2: "/notes?tab=admission", F3: "/notes?tab=round",
+  F4: "/notes?tab=progress", F7: "/notes?tab=icu", F11: "/notes?tab=referral",
+  F6: "/safety?tab=meds", F9: "/discharge", F10: "/documents?tab=requisition",
+};
 
 type Attention = {
   key: string;
@@ -27,6 +32,8 @@ type Attention = {
   detail: string;
   patient?: Row;
   rank: number;
+  actionLabel: string;
+  actionTo: string;
 };
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -69,6 +76,7 @@ export function DashboardPage() {
   const firstCritical = (alerts.data?.alerts || []).find((alert) => alert.status === "open" && alert.severity === "critical");
   const draftsPending = DRAFT_FEATURES.filter((_, i) => drafts[i].data?.drafts?.some((draft) => PENDING_DRAFT.has(draft.status))).length;
   const pendingDraftCount = (summary?.pending_drafts ?? 0) || draftsPending;
+  const pendingDraftFeature = DRAFT_FEATURES.find((_, i) => drafts[i].data?.drafts?.some((draft) => PENDING_DRAFT.has(draft.status)));
 
   // Opening a patient is the only way into clinical tabs from here.
   const openPatient = (row?: Row) => {
@@ -85,6 +93,7 @@ export function DashboardPage() {
     if (row.critical_alerts) {
       attention.push({
         key: `critical-${row.patient_id}`, tone: "critical", tag: "Critical", rank: 0, patient: row,
+        actionLabel: "Review safety alert", actionTo: "/safety?tab=alerts",
         title: plural(row.critical_alerts, "critical alert"),
         detail: [isPrimary && firstCritical ? firstCritical.title : `${plural(row.open_alerts, "alert")} open`, row.overdue_tasks ? plural(row.overdue_tasks, "overdue task") : ""].filter(Boolean).join(" · "),
       });
@@ -92,13 +101,21 @@ export function DashboardPage() {
       const overdueTask = isPrimary ? (tasks.data?.tasks || []).find((task) => task.is_overdue && !["completed", "cancelled"].includes(task.status)) : undefined;
       attention.push({
         key: `overdue-${row.patient_id}`, tone: "warning", tag: "Overdue", rank: 1, patient: row,
+        actionLabel: "Review overdue task", actionTo: "/tasks",
         title: plural(row.overdue_tasks, "overdue task"),
         detail: overdueTask ? [overdueBy(overdueTask.due_at, now), overdueTask.title].filter(Boolean).join(" · ") : `${plural(row.open_alerts, "alert")} open`,
       });
     } else if (row.open_alerts) {
       attention.push({
         key: `alerts-${row.patient_id}`, tone: "warning", tag: "Check", rank: 2, patient: row,
+        actionLabel: "Review open alerts", actionTo: "/safety?tab=alerts",
         title: plural(row.open_alerts, "alert") + " to check", detail: `${plural(row.pending_tasks, "task")} pending`,
+      });
+    } else if (row.pending_tasks) {
+      attention.push({
+        key: `tasks-${row.patient_id}`, tone: "warning", tag: "Pending", rank: 3, patient: row,
+        actionLabel: "Continue pending tasks", actionTo: "/tasks",
+        title: plural(row.pending_tasks, "task"), detail: "Work queue needs review",
       });
     }
   });
@@ -106,6 +123,7 @@ export function DashboardPage() {
     const doc = (documents.data?.documents || []).find((item) => ["needs_confirmation", "pending", "needs_manual_entry"].includes(item.ocr_status));
     attention.push({
       key: "documents", tone: "info", tag: "Confirm", rank: 3, patient: primary,
+      actionLabel: "Confirm extracted report", actionTo: "/documents?tab=inbound",
       title: `${plural(summary?.pending_documents || 1, "report")} to confirm`,
       detail: doc ? `${doc.filename} · read automatically, check before use` : "A person must confirm the values",
     });
@@ -113,10 +131,33 @@ export function DashboardPage() {
   if (primary && pendingDraftCount) {
     attention.push({
       key: "drafts", tone: "info", tag: "Review", rank: 4, patient: primary,
+      actionLabel: "Review clinical draft", actionTo: DRAFT_DESTINATIONS[pendingDraftFeature || "F1"],
       title: `${plural(pendingDraftCount, "MediBytes Analysis")} awaiting review`, detail: "Not part of the record until a clinician approves it",
     });
   }
+  const dischargePatient = rows.find((row) => row.encounter_status !== "discharged" && row.draft_discharges > 0);
+  if (dischargePatient) {
+    attention.push({
+      key: `discharge-${dischargePatient.patient_id}`, tone: "info", tag: "Discharge", rank: 5, patient: dischargePatient,
+      actionLabel: "Review discharge summary", actionTo: "/discharge",
+      title: plural(dischargePatient.draft_discharges, "discharge summary"), detail: "Reviewed items await authorized signing",
+    });
+  }
+  const claimPatient = rows.find((row) => row.encounter_status !== "discharged" && row.claim_gaps > 0);
+  if (claimPatient) {
+    attention.push({
+      key: `claim-${claimPatient.patient_id}`, tone: "info", tag: "Billing", rank: 6, patient: claimPatient,
+      actionLabel: "Review claim gaps", actionTo: "/revenue?tab=claim",
+      title: plural(claimPatient.claim_gaps, "claim item"), detail: "Claim review needs attention",
+    });
+  }
   attention.sort((a, b) => a.rank - b.rank || (b.patient?.critical_alerts ?? 0) - (a.patient?.critical_alerts ?? 0));
+  const recommended = attention[0];
+  const recommendedAction = recommended?.patient
+    ? openChartAvailable(recommended.patient)
+      ? { label: recommended.actionLabel, onClick: () => openChart(recommended.patient!.patient_id, recommended.actionTo) }
+      : { label: "View patient summary", to: `/patients?patient=${encodeURIComponent(recommended.patient.patient_id)}` }
+    : null;
 
   // ---------- Patients by urgency ----------
   const urgency = (row: Row) => row.critical_alerts * 100 + row.open_alerts * 10 + row.overdue_tasks + (row.encounter_status === "discharged" ? -1000 : 0);
@@ -160,7 +201,13 @@ export function DashboardPage() {
           <p className="page-desc">What needs attention across the hospital today. Open a patient to act.</p>
         </div>
         <div className="page-header-actions button-row">
-          <Link className="btn" to="/patients">Patient list</Link>
+          {recommendedAction?.onClick ? (
+            <button type="button" className="btn btn-primary" onClick={recommendedAction.onClick}>
+              {recommendedAction.label}
+            </button>
+          ) : recommendedAction?.to ? (
+            <Link className="btn btn-primary" to={recommendedAction.to}>{recommendedAction.label}</Link>
+          ) : null}
         </div>
       </header>
 
@@ -213,21 +260,23 @@ export function DashboardPage() {
         <h2 className="his-box-title">Needs attention</h2>
         {dashboard.isLoading || (data && detailsLoading && !attention.length) ? <Skeleton variant="rows" count={3} /> : attention.length ? (
           <table className="table">
-            <thead><tr><th>Patient</th><th>Ward / Bed</th><th>Type</th><th>Issue</th><th>Detail</th><th /></tr></thead>
+            <thead><tr><th>Patient</th><th>Ward / Bed</th><th>Type</th><th>Issue</th><th>Detail</th></tr></thead>
             <tbody>
               {attention.map((item) => {
                 const action = openPatient(item.patient);
                 return (
                   <tr key={item.key}>
-                    <td>{item.patient?.name || "-"}</td>
+                    <td>
+                      {item.patient?.name ? action?.onClick ? (
+                        <button type="button" className="his-table-link" aria-label={`Open ${item.patient.name}`} onClick={action.onClick}>{item.patient.name}</button>
+                      ) : action?.to ? (
+                        <Link className="his-table-link" to={action.to}>{item.patient.name}</Link>
+                      ) : item.patient.name : "-"}
+                    </td>
                     <td>{place(item.patient) || "-"}</td>
                     <td className={`strong his-tone-${item.tone}`}>{item.tag}</td>
                     <td>{item.title}</td>
                     <td className="muted">{item.detail}</td>
-                    <td className="right">
-                      {action?.onClick ? <button type="button" className="btn btn-sm" onClick={action.onClick}>{action.label}</button>
-                        : action?.to ? <Link className="btn btn-sm" to={action.to}>{action.label}</Link> : null}
-                    </td>
                   </tr>
                 );
               })}
@@ -240,7 +289,7 @@ export function DashboardPage() {
         <h2 className="his-box-title">Patients</h2>
         {dashboard.isLoading ? <Skeleton variant="rows" count={5} /> : patients.length ? (
           <table className="table">
-            <thead><tr><th>MRN</th><th>Name</th><th>Ward / Bed</th><th>Status</th><th className="right">Alerts</th><th className="right">Overdue</th><th /></tr></thead>
+            <thead><tr><th>MRN</th><th>Name</th><th>Ward / Bed</th><th>Status</th><th className="right">Alerts</th><th className="right">Overdue</th></tr></thead>
             <tbody>
               {patients.map((row) => {
                 const status = patientStatus(row);
@@ -248,15 +297,17 @@ export function DashboardPage() {
                 return (
                   <tr key={row.patient_id}>
                     <td className="mono">{row.mrn}</td>
-                    <td>{row.name}</td>
+                    <td>
+                      {action.onClick ? (
+                        <button type="button" className="his-table-link" aria-label={`Open ${row.name}`} onClick={action.onClick}>{row.name}</button>
+                      ) : (
+                        <Link className="his-table-link" to={action.to!}>{row.name}</Link>
+                      )}
+                    </td>
                     <td>{place(row) || "-"}</td>
                     <td className={`strong his-tone-${status.tone}`}>{status.text}</td>
                     <td className="right">{row.open_alerts}</td>
                     <td className="right">{row.overdue_tasks}</td>
-                    <td className="right">
-                      {action.onClick ? <button type="button" className="btn btn-sm" onClick={action.onClick}>{action.label}</button>
-                        : <Link className="btn btn-sm" to={action.to!}>{action.label}</Link>}
-                    </td>
                   </tr>
                 );
               })}

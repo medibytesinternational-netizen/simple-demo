@@ -37,6 +37,25 @@ npm run dev
 
 Open **http://localhost:5173**.
 
+### Validation on macOS/Linux
+
+The browser suite runs against the synthetic cached preview and does not call the backend or OpenAI. Install the local toolchain once, then run the checks:
+
+```bash
+cd backend
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m compileall -q app
+.venv/bin/python contract_check.py
+.venv/bin/python -m pytest -q
+
+cd ../frontend
+npm install
+npx playwright install chromium
+npm run build
+npm run test:e2e
+```
+
 ### Production-style single server
 
 ```powershell
