@@ -1,0 +1,124 @@
+.row {
+  padding-block: var(--space-2);
+}
+
+.row + .row {
+  border-top: 1px solid var(--hairline);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.summary:hover {
+  background: var(--surface-sunken);
+}
+
+.main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nameLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.name {
+  display: inline-block;
+  font-size: var(--text-md);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.name::first-letter {
+  text-transform: uppercase;
+}
+
+.negated .name {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  color: var(--ink-muted);
+}
+
+.regimen {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.missing {
+  font-style: italic;
+}
+
+.tag {
+  padding: 0 0.5em;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+  border: 1px solid transparent;
+}
+
+.tagNegated {
+  background: var(--ink);
+  color: var(--ink-on-accent);
+}
+
+.tagAllergen {
+  background: var(--red-solid);
+  color: var(--ink-on-accent);
+}
+
+.tagInfo {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  color: var(--accent-ink);
+}
+
+.chevron {
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.summary[aria-expanded="true"] .chevron {
+  transform: rotate(90deg);
+}
+
+@media (max-width: 520px) {
+  .summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .summary > :first-child {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .moreText {
+    display: none;
+  }
+}

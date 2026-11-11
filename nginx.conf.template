@@ -1,0 +1,15 @@
+server {
+  listen ${PORT};
+  server_name _;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location ^~ /api {
+    default_type application/json;
+    return 404 '{"detail":"This frontend-only deployment does not include an API server."}';
+  }
+
+  location / {
+    try_files $uri $uri/ $uri.html /index.html;
+  }
+}

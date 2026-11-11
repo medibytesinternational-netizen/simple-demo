@@ -1,0 +1,25 @@
+.app {
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: 0 var(--gutter) var(--space-12);
+}
+
+.main {
+  display: grid;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.upload {
+  max-width: 480px;
+  min-width: 0;
+}
+
+.notice {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  background: var(--yellow-bg);
+  color: var(--yellow-ink);
+  font-weight: 600;
+}

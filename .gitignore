@@ -1,11 +1,6 @@
-# Python
-backend/.venv/
-backend/__pycache__/
-backend/app/**/__pycache__/
+# Python/editor artifacts from local tooling
+__pycache__/
 *.pyc
-backend/medibytes.db
-backend/uploads/
-backend/.env
 
 # Node
 frontend/node_modules/
@@ -22,4 +17,3 @@ Thumbs.db
 /.hypothesis/
 
 .playwright-mcp/
-backend/.vite/

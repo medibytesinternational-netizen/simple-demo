@@ -1,0 +1,66 @@
+.card {
+  composes: card from "../styles/surface.module.css";
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.title {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.code {
+  margin: 0;
+  max-height: 70vh;
+  overflow: auto;
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--code-bg);
+  color: var(--code-ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+
+.key {
+  color: var(--code-key);
+}
+
+.string {
+  color: var(--code-string);
+}
+
+.number {
+  color: var(--code-number);
+}
+
+.boolean {
+  color: var(--code-boolean);
+}
+
+.null {
+  color: var(--code-null);
+}
+
+.punct {
+  color: var(--code-punct);
+}

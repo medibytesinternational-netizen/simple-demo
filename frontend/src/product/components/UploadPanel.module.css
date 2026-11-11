@@ -1,0 +1,113 @@
+.panel {
+  composes: card from "../styles/surface.module.css";
+  padding: var(--space-5);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  margin-bottom: var(--space-4);
+}
+
+.drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  border: 2px dashed var(--hairline-strong);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  text-align: center;
+  transition:
+    border-color var(--duration) var(--ease-out),
+    background-color var(--duration) var(--ease-out);
+}
+
+.dragging {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.invalid {
+  border-color: var(--red-border);
+}
+
+.dropIcon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface-strong);
+  color: var(--accent);
+  margin-bottom: var(--space-1);
+}
+
+.prompt {
+  font-weight: 650;
+}
+
+.fileName {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+}
+
+.name {
+  max-width: 100%;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.size {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.hint {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  margin-bottom: var(--space-2);
+}
+
+.drop label:focus-within {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--red-bg);
+  color: var(--red-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.error svg {
+  flex-shrink: 0;
+  margin-top: 0.2em;
+}
+
+.submit {
+  width: 100%;
+  margin-top: var(--space-4);
+  min-height: 46px;
+  font-size: var(--text-base);
+}
+
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

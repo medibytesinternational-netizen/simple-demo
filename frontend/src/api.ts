@@ -36,7 +36,7 @@ export const session = {
 };
 
 const BACKEND_UNREACHABLE =
-  "Cannot reach the backend API. Start the FastAPI server (uvicorn app.main:app --port 8000) and refresh.";
+  "This frontend-only build has no backend API. Connect a compatible API service to use live features.";
 
 // UI-preview builds answer from bundled synthetic fixtures and never reach the network.
 async function previewRequest<T>(path: string, options: RequestInit): Promise<T> {
@@ -77,7 +77,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     } catch {
       // keep status text
     }
-    // A non-JSON 5xx comes from the dev proxy when the FastAPI server is not running.
+    // Keep a readable message if a static host or external API returns non-JSON content.
     if (!fromBackend && response.status >= 500) detail = BACKEND_UNREACHABLE;
     throw new ApiError(String(detail), response.status);
   }

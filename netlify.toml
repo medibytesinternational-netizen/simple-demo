@@ -1,5 +1,4 @@
-# Netlify configuration for the MediBytes HMS React frontend (frontend/).
-# The FastAPI backend is NOT deployed by Netlify; see the /api/* rule below.
+# Netlify configuration for the frontend-only MediBytes demos (frontend/).
 
 [build]
   base = "frontend"
@@ -8,30 +7,20 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  # Frontend-only UI preview: answers from bundled synthetic data and sends no
-  # backend requests. Remove (or set to "false") once a real backend is connected.
+  # The Simple Demo UI runs against bundled synthetic data by default.
   VITE_DEMO_MODE = "true"
 
-# --- API --------------------------------------------------------------------
-# The app calls relative /api/... URLs. The Vite dev proxy (vite.config.ts) only
-# exists in local development; on Netlify those requests must be handled here.
-#
-# Until a public FastAPI URL exists, /api/* returns an explicit JSON 404 so the
-# UI shows "backend not configured" instead of parsing index.html as data.
-#
-# When the backend is public, replace this rule with a proxy (same-origin, so the
-# backend's localhost-only CORS list does not need to change):
-#
-#   [[redirects]]
-#     from = "/api/*"
-#     to = "https://YOUR-BACKEND-HOST/api/:splat"
-#     status = 200
-#     force = true
+# The Product-main page is frontend-only; keep its missing API response explicit.
 [[redirects]]
   from = "/api/*"
   to = "/api-not-configured.json"
   status = 404
   force = true
+
+[[redirects]]
+  from = "/product"
+  to = "/product.html"
+  status = 200
 
 # --- SPA fallback -------------------------------------------------------------
 # React Router owns every other path (/dashboard, /patients, /notes?tab=…).

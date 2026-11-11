@@ -1,1 +1,0 @@
-"""MediBytes ARD demo backend."""

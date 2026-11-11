@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  /** "true" builds the frontend-only UI preview (no backend requests). */
+  /** "false" connects to an externally hosted compatible API; preview mode is the default. */
   readonly VITE_DEMO_MODE?: string;
 }
 
