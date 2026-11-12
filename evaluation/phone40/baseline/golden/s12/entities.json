@@ -1,0 +1,496 @@
+{
+  "job_id": "s12-none",
+  "drugs": [
+    {
+      "name": "prednisolone",
+      "dose": 40.0,
+      "unit": "mg",
+      "frequency": "daily",
+      "duration": "5 days",
+      "confidence": 0.96,
+      "color": "GREEN",
+      "source_sentence": "Nebulized salbuutamol, prednisolone 40 mg daily five days.",
+      "negated": false,
+      "start_char": 383,
+      "end_char": 395,
+      "span_status": "exact"
+    },
+    {
+      "name": "albuterol",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Nebulized salbuutamol, prednisolone 40 mg daily five days.",
+      "negated": false,
+      "raw_token": "salbuutamol",
+      "candidates": [
+        {
+          "name": "albuterol",
+          "kind": "substance",
+          "substances": [
+            "albuterol"
+          ],
+          "units": [
+            "mcg",
+            "mg",
+            "ml"
+          ],
+          "strengths": [
+            {
+              "form": "spray",
+              "unit": "mcg",
+              "value": 50.0
+            },
+            {
+              "form": "powder",
+              "unit": "mcg",
+              "value": 95.0
+            },
+            {
+              "form": "solution",
+              "unit": "mcg",
+              "value": 100.0
+            },
+            {
+              "form": "powder",
+              "unit": "mcg",
+              "value": 100.0
+            },
+            {
+              "form": "injection",
+              "unit": "mcg",
+              "value": 100.0
+            },
+            {
+              "form": "suspension",
+              "unit": "mcg",
+              "value": 100.0
+            },
+            {
+              "form": "solution",
+              "unit": "mcg",
+              "value": 200.0
+            },
+            {
+              "form": "powder",
+              "unit": "mcg",
+              "value": 200.0
+            },
+            {
+              "form": "solution",
+              "unit": "mcg",
+              "value": 210.0
+            },
+            {
+              "form": "powder",
+              "unit": "mcg",
+              "value": 400.0
+            },
+            {
+              "form": "solution",
+              "unit": "mcg",
+              "value": 400.0
+            },
+            {
+              "form": "solution",
+              "unit": "mcg",
+              "value": 417.0
+            }
+          ],
+          "forms": [
+            "capsule",
+            "injection",
+            "powder",
+            "solution",
+            "spray",
+            "suspension"
+          ],
+          "mass_mg": [
+            0.05,
+            8.0
+          ],
+          "score": 0.952,
+          "matched_name": "salbutamol"
+        }
+      ],
+      "matcher_pick": "salbutamol",
+      "note": "fuzzy salbuutamol->salbutamol (0.95), no dose dictated - physician must confirm | validator salbuutamol->albuterol (overrules matcher)",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "validation": {
+        "status": "corrected",
+        "original_sentence": "Nebulized salbuutamol, prednisolone 40 mg daily five days.",
+        "final_output_sentence": "Nebulized albuterol, prednisolone 40 mg daily five days.",
+        "applied_corrections": [
+          {
+            "replaced_token": "salbuutamol",
+            "substituted_with": "albuterol"
+          }
+        ],
+        "semantic_confidence_score": 1.0,
+        "reason": "nebulized route and context support albuterol for asthma",
+        "overrules_matcher": true,
+        "engine": "llm:gpt-4.1"
+      }
+    },
+    {
+      "name": "budesonide",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Continue budesonide with spacer check diet.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm",
+      "start_char": 425,
+      "end_char": 435,
+      "span_status": "exact"
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "cough",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "26-year-old known asthmatic with one day of wheeze, dry cough, chest tightness, and baitlessness after dusst.",
+      "negated": false,
+      "start_char": 54,
+      "end_char": 59,
+      "span_status": "exact"
+    },
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies fever and chest pain.",
+      "negated": false,
+      "start_char": 115,
+      "end_char": 120,
+      "span_status": "exact"
+    },
+    {
+      "text": "chest pain",
+      "confidence": 0.91,
+      "color": "GREEN",
+      "source_sentence": "Denies fever and chest pain.",
+      "negated": true,
+      "note": "DENIED - excluded",
+      "start_char": 125,
+      "end_char": 135,
+      "span_status": "exact"
+    },
+    {
+      "text": "cold",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "No cold drinks.",
+      "negated": false,
+      "start_char": 476,
+      "end_char": 480,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Respiratory rate 26",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Respiratory rate 26, saturation 93% on room air, pulse 100 104 beats per minute, blood pressure 112/70 mmHg, temperature 99 degrees Fahrenheit.",
+      "start_char": 198,
+      "end_char": 217,
+      "span_status": "exact"
+    },
+    {
+      "text": "93% on room air",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Respiratory rate 26, saturation 93% on room air, pulse 100 104 beats per minute, blood pressure 112/70 mmHg, temperature 99 degrees Fahrenheit.",
+      "start_char": 230,
+      "end_char": 245,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 100",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Respiratory rate 26, saturation 93% on room air, pulse 100 104 beats per minute, blood pressure 112/70 mmHg, temperature 99 degrees Fahrenheit.",
+      "start_char": 247,
+      "end_char": 256,
+      "span_status": "exact"
+    },
+    {
+      "text": "blood pressure 112/70",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Respiratory rate 26, saturation 93% on room air, pulse 100 104 beats per minute, blood pressure 112/70 mmHg, temperature 99 degrees Fahrenheit.",
+      "start_char": 279,
+      "end_char": 300,
+      "span_status": "exact"
+    },
+    {
+      "text": "temperature 99 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Respiratory rate 26, saturation 93% on room air, pulse 100 104 beats per minute, blood pressure 112/70 mmHg, temperature 99 degrees Fahrenheit.",
+      "start_char": 307,
+      "end_char": 340,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "Follow up in two days",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Follow up in two days",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 2.465,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "prednisolone",
+        "dose": 40.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mcg/mg/ml; listed strengths: 10 mcg solution, 30 mcg solution, 100 mcg solution, 300 mcg solution; 40 mg is plausible for this drug]",
+        "confidence": 0.96,
+        "source_sentence": "Nebulized salbuutamol, prednisolone 40 mg daily five days."
+      },
+      {
+        "kind": "drug",
+        "name": "albuterol",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: albuterol; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Nebulized salbuutamol, prednisolone 40 mg daily five days."
+      },
+      {
+        "kind": "drug",
+        "name": "budesonide",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Continue budesonide with spacer check diet."
+      },
+      {
+        "kind": "vital",
+        "text": "Respiratory rate 26",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Respiratory rate 26, saturation 93% on room air, pulse 100 104 beats per minute, blood pressure 112/70 mmHg, temperature 99 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "93% on room air",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Respiratory rate 26, saturation 93% on room air, pulse 100 104 beats per minute, blood pressure 112/70 mmHg, temperature 99 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 100",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Respiratory rate 26, saturation 93% on room air, pulse 100 104 beats per minute, blood pressure 112/70 mmHg, temperature 99 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "blood pressure 112/70",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Respiratory rate 26, saturation 93% on room air, pulse 100 104 beats per minute, blood pressure 112/70 mmHg, temperature 99 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "temperature 99 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Respiratory rate 26, saturation 93% on room air, pulse 100 104 beats per minute, blood pressure 112/70 mmHg, temperature 99 degrees Fahrenheit."
+      },
+      {
+        "kind": "symptom",
+        "text": "cough",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "26-year-old known asthmatic with one day of wheeze, dry cough, chest tightness, and baitlessness after dusst."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies fever and chest pain."
+      },
+      {
+        "kind": "symptom",
+        "text": "chest pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.91,
+        "source_sentence": "Denies fever and chest pain."
+      },
+      {
+        "kind": "symptom",
+        "text": "cold",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "No cold drinks."
+      },
+      {
+        "kind": "followup",
+        "text": "Follow up in two days",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Follow up in two days"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "5",
+          "26",
+          "40",
+          "70",
+          "93",
+          "99",
+          "100",
+          "104",
+          "112"
+        ],
+        "count": 11
+      },
+      "total": 13,
+      "drug_verified": 1,
+      "drug_needs_review": 2,
+      "vital_verified": 5,
+      "symptom_verified": 4,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

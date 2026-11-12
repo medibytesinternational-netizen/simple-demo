@@ -1,0 +1,280 @@
+{
+  "job_id": "s17-none",
+  "drugs": [
+    {
+      "name": "metformin",
+      "dose": 500.0,
+      "unit": "mg",
+      "frequency": "twice daily",
+      "duration": "",
+      "confidence": 0.96,
+      "color": "GREEN",
+      "source_sentence": "Metformin 500 mg twice daily after food.",
+      "negated": false,
+      "start_char": 292,
+      "end_char": 301,
+      "span_status": "exact"
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies fever.",
+      "negated": false,
+      "start_char": 92,
+      "end_char": 97,
+      "span_status": "exact"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Return for vomiting, pain or way high readings.",
+      "negated": false,
+      "start_char": 476,
+      "end_char": 484,
+      "span_status": "exact"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Return for vomiting, pain or way high readings.",
+      "negated": false,
+      "start_char": 486,
+      "end_char": 490,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "glucose 286",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Random glucose 286 mg/dL.",
+      "start_char": 187,
+      "end_char": 198,
+      "span_status": "exact"
+    },
+    {
+      "text": "Blood pressure 136/86",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 136/86 mmHg, pulse 88.",
+      "start_char": 206,
+      "end_char": 227,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 88",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 136/86 mmHg, pulse 88.",
+      "start_char": 234,
+      "end_char": 242,
+      "span_status": "exact"
+    },
+    {
+      "text": "99%",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 99%.",
+      "start_char": 255,
+      "end_char": 258,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "Follow up in two weeks",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Follow up in two weeks",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "metformin",
+        "dose": 500.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mg; listed strengths: 1 g tablet, 15 g tablet, 1.25 mg tablet, 2.5 mg tablet; 500 mg is plausible for this drug]",
+        "confidence": 0.96,
+        "source_sentence": "Metformin 500 mg twice daily after food."
+      },
+      {
+        "kind": "vital",
+        "text": "glucose 286",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Random glucose 286 mg/dL."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 136/86",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 136/86 mmHg, pulse 88."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 88",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 136/86 mmHg, pulse 88."
+      },
+      {
+        "kind": "vital",
+        "text": "99%",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 99%."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies fever."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Return for vomiting, pain or way high readings."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Return for vomiting, pain or way high readings."
+      },
+      {
+        "kind": "followup",
+        "text": "Follow up in two weeks",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Follow up in two weeks"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "30",
+          "45",
+          "86",
+          "88",
+          "99",
+          "136",
+          "286",
+          "500"
+        ],
+        "count": 10
+      },
+      "total": 9,
+      "drug_verified": 1,
+      "vital_verified": 4,
+      "symptom_verified": 3,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

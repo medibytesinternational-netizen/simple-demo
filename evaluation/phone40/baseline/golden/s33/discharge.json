@@ -1,0 +1,133 @@
+{
+  "sections": {
+    "present_illness": {
+      "items": [
+        {
+          "text": "pain",
+          "source_sentence": "39-year-old female with two weeks upper abdominal burning, nausea, and bloating after knee pain clears plus one vomit.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F5",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pain",
+          "source_sentence": "Self-medicated knee pain.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F6",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pain",
+          "source_sentence": "General, no pain killers.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F7",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pain",
+          "source_sentence": "and advised return to written for blood vomit, black stools or severe pain.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F8",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "examination_findings": {
+      "items": [
+        {
+          "text": "Blood pressure 120/78",
+          "source_sentence": "Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F2",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pulse 86",
+          "source_sentence": "Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F3",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "temperature 98.4 degrees Fahrenheit",
+          "source_sentence": "Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F4",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "previous_diagnosis": {
+      "items": []
+    },
+    "plan_of_management": {
+      "items": [
+        {
+          "text": "Follow up in one week",
+          "source_sentence": "Follow up in one week",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F9",
+          "verified_kind": "followup",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pantoprazole 40 mg",
+          "source_sentence": "Pantoprazole 40 mg daily before food, antaside as needed.",
+          "seg_id": null,
+          "confidence": 0.88,
+          "verified_kind": "drug",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "diet_instructions": {
+      "items": []
+    },
+    "general_instructions": {
+      "items": []
+    }
+  },
+  "provenance": {
+    "llm_engine": "discharge:gpt-4.1",
+    "dropped_unproven": 1,
+    "verified_summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "39",
+          "40",
+          "78",
+          "86",
+          "98.4",
+          "120"
+        ],
+        "count": 8
+      },
+      "total": 9,
+      "drug_verified": 1,
+      "vital_verified": 3,
+      "symptom_verified": 4,
+      "followup_verified": 1
+    },
+    "canonicalized": 0,
+    "llm_extractive": 0,
+    "prefilled": 1,
+    "schema": "valid"
+  }
+}

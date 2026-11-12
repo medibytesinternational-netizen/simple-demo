@@ -1,0 +1,182 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "water",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "fuzzy top-candidate agreement; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "31-year-old male with one day of six watery motions, cramps, two vomits, and mild fever after outside food."
+    },
+    {
+      "kind": "drug",
+      "name": "ondansetron",
+      "dose": 4.0,
+      "unit": "mg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mcg/mg/ml; listed strengths: 800 mcg solution, 2 mg injection, 2 mg spray, 2 mg solution; 4 mg is plausible for this drug]",
+      "confidence": 0.96,
+      "source_sentence": "Ondansetron 4 mg if vomiting."
+    },
+    {
+      "kind": "drug",
+      "name": "levothyroxine",
+      "dose": 4.0,
+      "unit": "mg",
+      "negated": true,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:needs_review",
+        "polarity:negated-preserved"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mcg; listed strengths: 5 mcg solution, 9 mcg tablet, 10 mcg solution, 12.5 mcg tablet; 4 mg is plausible for this drug]; source_sentence not verbatim in transcript",
+      "confidence": 0.7,
+      "source_sentence": "31 year old male with one day of six watery motions, cramps, two vomits and mild fever after outside foot, denies blood in stools, no known drug allergy, no past major illness, diagnosis gastroenteritis with mild dehydration, examination, temperature 99.4 degrees Fahrenheit, pulse 100 beats per minute, dead pressure 110 over 70 millimetres of mercury, saturation 99% dry tongue, plan, oral rehydration salts each motion, on dense electron 4 milligrams if vomiting, no routine antibiotics, diet ORS, coconut water, curd dyes, banana, soft kitchty, no oily or street food, general hand washing, report blood, high fever, severe pain or no urine 8 hours, follow up in two days."
+    },
+    {
+      "kind": "vital",
+      "text": "Temperature 99.4 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 99.4 degrees Fahrenheit."
+    },
+    {
+      "kind": "vital",
+      "text": "Pulse 100",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Pulse 100 beats per minute."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 110/70",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 110/70 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "99%",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Saturation 99%."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "31-year-old male with one day of six watery motions, cramps, two vomits, and mild fever after outside food."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Ondansetron 4 mg if vomiting."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Report blood, high fever, severe pain, or no urineas."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Report blood, high fever, severe pain, or no urineas."
+    },
+    {
+      "kind": "followup",
+      "text": "Follow up in two days",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "Follow up in two days"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "2",
+        "4",
+        "6",
+        "31",
+        "70",
+        "99",
+        "99.4",
+        "100",
+        "110"
+      ],
+      "count": 10
+    },
+    "total": 12,
+    "drug_needs_review": 2,
+    "drug_verified": 1,
+    "vital_verified": 4,
+    "symptom_verified": 4,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

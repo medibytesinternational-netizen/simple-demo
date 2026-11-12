@@ -1,0 +1,317 @@
+{
+  "job_id": "s18-none",
+  "drugs": [
+    {
+      "name": "levothyroxine",
+      "dose": 75.0,
+      "unit": "mcg",
+      "frequency": "daily",
+      "duration": "30 minutes",
+      "confidence": 0.96,
+      "color": "GREEN",
+      "source_sentence": "Levothyroxine 75 mcg daily, empty stomach, nothing for 30 minutes.",
+      "negated": false,
+      "start_char": 347,
+      "end_char": 360,
+      "span_status": "exact"
+    },
+    {
+      "name": "iodine",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Iodines dis salt, protein and fiber.",
+      "negated": false,
+      "raw_token": "iodines",
+      "candidates": [
+        {
+          "name": "iodine",
+          "kind": "substance",
+          "substances": [
+            "iodine"
+          ],
+          "units": [
+            "mg"
+          ],
+          "strengths": [
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 25.0
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 50.0
+            }
+          ],
+          "forms": [
+            "solution"
+          ],
+          "mass_mg": [
+            25.0,
+            50.0
+          ],
+          "score": 0.923,
+          "matched_name": "iodine"
+        }
+      ],
+      "matcher_pick": "iodine",
+      "note": "fuzzy iodines->iodine (0.92), no dose dictated - physician must confirm | ambiguous: no drug context or dose present",
+      "start_char": 450,
+      "end_char": 456,
+      "span_status": "exact",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "Iodines dis salt, protein and fiber.",
+        "final_output_sentence": "Iodines dis salt, protein and fiber.",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.1,
+        "reason": "no drug context or dose present",
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies neck pain and fever.",
+      "negated": false,
+      "start_char": 136,
+      "end_char": 141,
+      "span_status": "exact"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies neck pain and fever.",
+      "negated": false,
+      "start_char": 127,
+      "end_char": 131,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Pulse 64",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Pulse 64 beats per minute.",
+      "start_char": 221,
+      "end_char": 229,
+      "span_status": "exact"
+    },
+    {
+      "text": "Blood pressure 112/72",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 112/72 mmHg.",
+      "start_char": 248,
+      "end_char": 269,
+      "span_status": "exact"
+    },
+    {
+      "text": "temperature 97.8 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "temperature 97.8 degrees Fahrenheit.",
+      "start_char": 276,
+      "end_char": 311,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "Follow up in six weeks",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Follow up in six weeks",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 2.377,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "levothyroxine",
+        "dose": 75.0,
+        "unit": "mcg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mcg; listed strengths: 5 mcg solution, 9 mcg tablet, 10 mcg solution, 12.5 mcg tablet; 75 mcg is plausible for this drug]",
+        "confidence": 0.96,
+        "source_sentence": "Levothyroxine 75 mcg daily, empty stomach, nothing for 30 minutes."
+      },
+      {
+        "kind": "drug",
+        "name": "iodine",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: iodine; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Iodines dis salt, protein and fiber."
+      },
+      {
+        "kind": "vital",
+        "text": "Pulse 64",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Pulse 64 beats per minute."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 112/72",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 112/72 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "temperature 97.8 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "temperature 97.8 degrees Fahrenheit."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies neck pain and fever."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies neck pain and fever."
+      },
+      {
+        "kind": "followup",
+        "text": "Follow up in six weeks",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Follow up in six weeks"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "3",
+          "4",
+          "6",
+          "30",
+          "38",
+          "64",
+          "68",
+          "72",
+          "75",
+          "97.8",
+          "112"
+        ],
+        "count": 11
+      },
+      "total": 8,
+      "drug_verified": 1,
+      "drug_needs_review": 1,
+      "vital_verified": 3,
+      "symptom_verified": 2,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

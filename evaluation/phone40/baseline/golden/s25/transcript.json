@@ -1,0 +1,490 @@
+{
+  "job_id": "s25-none",
+  "text": "7-year-old female with three days low urine, face swelling, tiredness, and breathlessness after lose motion and poor intake. Denies chest pain. No known drug allergy. Hypertension and diabetes. Acute kidney injury with dehydration. Blood pressure 150/90 mmHg, pulse 90 beats per minute, saturation 96%. Mild edema. Low output. Kidney function, electrolytes, urine test, ultrasound. Careful IV fluids. Stop nephrotoxins. Harly intake output. Furosemide only is advised. Diet, low-salt, lowpotassium. Measured fluids, avoid bananas until reports general. Urine chart, daily weight, emergency for no urine ight hos or severe breathlessness. Folup tomorrow.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "7-year-old female with three days low urine, face swelling, tiredness, and breathlessness after lose motion and poor intake. Denies chest pain. No known drug allergy. Hypertension and diabetes. Acute kidney injury with dehydration. Blood pressure 150/90 mmHg, pulse 90 beats per minute, saturation 96%. Mild edema. Low output. Kidney function, electrolytes, urine test, ultrasound. Careful IV fluids. Stop nephrotoxins. Harly intake output. Furosemide only is advised. Diet, low-salt, lowpotassium. Measured fluids, avoid bananas until reports general. Urine chart, daily weight, emergency for no urine ight hos or severe breathlessness. Folup tomorrow.",
+      "start": 0.0,
+      "end": 62.74,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "7-year-old",
+          "s": 0.0,
+          "e": 0.69
+        },
+        {
+          "w": "female",
+          "s": 0.69,
+          "e": 1.38
+        },
+        {
+          "w": "with",
+          "s": 1.38,
+          "e": 2.07
+        },
+        {
+          "w": "three",
+          "s": 2.07,
+          "e": 2.76
+        },
+        {
+          "w": "days",
+          "s": 2.76,
+          "e": 3.45
+        },
+        {
+          "w": "low",
+          "s": 3.45,
+          "e": 4.14
+        },
+        {
+          "w": "urine,",
+          "s": 4.14,
+          "e": 4.83
+        },
+        {
+          "w": "face",
+          "s": 4.83,
+          "e": 5.52
+        },
+        {
+          "w": "swelling,",
+          "s": 5.52,
+          "e": 6.21
+        },
+        {
+          "w": "tiredness,",
+          "s": 6.21,
+          "e": 6.89
+        },
+        {
+          "w": "and",
+          "s": 6.89,
+          "e": 7.58
+        },
+        {
+          "w": "breathlessness",
+          "s": 7.58,
+          "e": 8.27
+        },
+        {
+          "w": "after",
+          "s": 8.27,
+          "e": 8.96
+        },
+        {
+          "w": "lose",
+          "s": 8.96,
+          "e": 9.65
+        },
+        {
+          "w": "motion",
+          "s": 9.65,
+          "e": 10.34
+        },
+        {
+          "w": "and",
+          "s": 10.34,
+          "e": 11.03
+        },
+        {
+          "w": "poor",
+          "s": 11.03,
+          "e": 11.72
+        },
+        {
+          "w": "intake.",
+          "s": 11.72,
+          "e": 12.41
+        },
+        {
+          "w": "Denies",
+          "s": 12.41,
+          "e": 13.1
+        },
+        {
+          "w": "chest",
+          "s": 13.1,
+          "e": 13.79
+        },
+        {
+          "w": "pain.",
+          "s": 13.79,
+          "e": 14.48
+        },
+        {
+          "w": "No",
+          "s": 14.48,
+          "e": 15.17
+        },
+        {
+          "w": "known",
+          "s": 15.17,
+          "e": 15.86
+        },
+        {
+          "w": "drug",
+          "s": 15.86,
+          "e": 16.55
+        },
+        {
+          "w": "allergy.",
+          "s": 16.55,
+          "e": 17.24
+        },
+        {
+          "w": "Hypertension",
+          "s": 17.24,
+          "e": 17.93
+        },
+        {
+          "w": "and",
+          "s": 17.93,
+          "e": 18.62
+        },
+        {
+          "w": "diabetes.",
+          "s": 18.62,
+          "e": 19.31
+        },
+        {
+          "w": "Acute",
+          "s": 19.31,
+          "e": 19.99
+        },
+        {
+          "w": "kidney",
+          "s": 19.99,
+          "e": 20.68
+        },
+        {
+          "w": "injury",
+          "s": 20.68,
+          "e": 21.37
+        },
+        {
+          "w": "with",
+          "s": 21.37,
+          "e": 22.06
+        },
+        {
+          "w": "dehydration.",
+          "s": 22.06,
+          "e": 22.75
+        },
+        {
+          "w": "Blood",
+          "s": 22.75,
+          "e": 23.44
+        },
+        {
+          "w": "pressure",
+          "s": 23.44,
+          "e": 24.13
+        },
+        {
+          "w": "150/90",
+          "s": 24.13,
+          "e": 24.82
+        },
+        {
+          "w": "mmHg,",
+          "s": 24.82,
+          "e": 25.51
+        },
+        {
+          "w": "pulse",
+          "s": 25.51,
+          "e": 26.2
+        },
+        {
+          "w": "90",
+          "s": 26.2,
+          "e": 26.89
+        },
+        {
+          "w": "beats",
+          "s": 26.89,
+          "e": 27.58
+        },
+        {
+          "w": "per",
+          "s": 27.58,
+          "e": 28.27
+        },
+        {
+          "w": "minute,",
+          "s": 28.27,
+          "e": 28.96
+        },
+        {
+          "w": "saturation",
+          "s": 28.96,
+          "e": 29.65
+        },
+        {
+          "w": "96%.",
+          "s": 29.65,
+          "e": 30.34
+        },
+        {
+          "w": "Mild",
+          "s": 30.34,
+          "e": 31.03
+        },
+        {
+          "w": "edema.",
+          "s": 31.03,
+          "e": 31.72
+        },
+        {
+          "w": "Low",
+          "s": 31.72,
+          "e": 32.4
+        },
+        {
+          "w": "output.",
+          "s": 32.4,
+          "e": 33.09
+        },
+        {
+          "w": "Kidney",
+          "s": 33.09,
+          "e": 33.78
+        },
+        {
+          "w": "function,",
+          "s": 33.78,
+          "e": 34.47
+        },
+        {
+          "w": "electrolytes,",
+          "s": 34.47,
+          "e": 35.16
+        },
+        {
+          "w": "urine",
+          "s": 35.16,
+          "e": 35.85
+        },
+        {
+          "w": "test,",
+          "s": 35.85,
+          "e": 36.54
+        },
+        {
+          "w": "ultrasound.",
+          "s": 36.54,
+          "e": 37.23
+        },
+        {
+          "w": "Careful",
+          "s": 37.23,
+          "e": 37.92
+        },
+        {
+          "w": "IV",
+          "s": 37.92,
+          "e": 38.61
+        },
+        {
+          "w": "fluids.",
+          "s": 38.61,
+          "e": 39.3
+        },
+        {
+          "w": "Stop",
+          "s": 39.3,
+          "e": 39.99
+        },
+        {
+          "w": "nephrotoxins.",
+          "s": 39.99,
+          "e": 40.68
+        },
+        {
+          "w": "Harly",
+          "s": 40.68,
+          "e": 41.37
+        },
+        {
+          "w": "intake",
+          "s": 41.37,
+          "e": 42.06
+        },
+        {
+          "w": "output.",
+          "s": 42.06,
+          "e": 42.75
+        },
+        {
+          "w": "Furosemide",
+          "s": 42.75,
+          "e": 43.44
+        },
+        {
+          "w": "only",
+          "s": 43.44,
+          "e": 44.13
+        },
+        {
+          "w": "is",
+          "s": 44.13,
+          "e": 44.82
+        },
+        {
+          "w": "advised.",
+          "s": 44.82,
+          "e": 45.5
+        },
+        {
+          "w": "Diet,",
+          "s": 45.5,
+          "e": 46.19
+        },
+        {
+          "w": "low-salt,",
+          "s": 46.19,
+          "e": 46.88
+        },
+        {
+          "w": "lowpotassium.",
+          "s": 46.88,
+          "e": 47.57
+        },
+        {
+          "w": "Measured",
+          "s": 47.57,
+          "e": 48.26
+        },
+        {
+          "w": "fluids,",
+          "s": 48.26,
+          "e": 48.95
+        },
+        {
+          "w": "avoid",
+          "s": 48.95,
+          "e": 49.64
+        },
+        {
+          "w": "bananas",
+          "s": 49.64,
+          "e": 50.33
+        },
+        {
+          "w": "until",
+          "s": 50.33,
+          "e": 51.02
+        },
+        {
+          "w": "reports",
+          "s": 51.02,
+          "e": 51.71
+        },
+        {
+          "w": "general.",
+          "s": 51.71,
+          "e": 52.4
+        },
+        {
+          "w": "Urine",
+          "s": 52.4,
+          "e": 53.09
+        },
+        {
+          "w": "chart,",
+          "s": 53.09,
+          "e": 53.78
+        },
+        {
+          "w": "daily",
+          "s": 53.78,
+          "e": 54.47
+        },
+        {
+          "w": "weight,",
+          "s": 54.47,
+          "e": 55.16
+        },
+        {
+          "w": "emergency",
+          "s": 55.16,
+          "e": 55.85
+        },
+        {
+          "w": "for",
+          "s": 55.85,
+          "e": 56.54
+        },
+        {
+          "w": "no",
+          "s": 56.54,
+          "e": 57.23
+        },
+        {
+          "w": "urine",
+          "s": 57.23,
+          "e": 57.92
+        },
+        {
+          "w": "ight",
+          "s": 57.92,
+          "e": 58.6
+        },
+        {
+          "w": "hos",
+          "s": 58.6,
+          "e": 59.29
+        },
+        {
+          "w": "or",
+          "s": 59.29,
+          "e": 59.98
+        },
+        {
+          "w": "severe",
+          "s": 59.98,
+          "e": 60.67
+        },
+        {
+          "w": "breathlessness.",
+          "s": 60.67,
+          "e": 61.36
+        },
+        {
+          "w": "Folup",
+          "s": 61.36,
+          "e": 62.05
+        },
+        {
+          "w": "tomorrow.",
+          "s": 62.05,
+          "e": 62.74
+        }
+      ]
+    }
+  ],
+  "normalized_en": "7-year-old female with 3 days low urine, face swelling, tiredness, and breathlessness after lose motion and poor intake. Denies chest pain. No known drug allergy. Hypertension and diabetes. Acute kidney injury with dehydration. Blood pressure 150/90 mmHg, pulse 90 beats per minute, saturation 96%. Mild edema. Low output. Kidney function, electrolytes, urine test, ultrasound. Careful IV fluids. Stop nephrotoxins. Harly intake output. Furosemide only is advised. Diet, low-salt, lowpotassium. Measured fluids, avoid bananas until reports general. Urine chart, daily weight, emergency for no urine ight hos or severe breathlessness. Folup tomorrow.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s25-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

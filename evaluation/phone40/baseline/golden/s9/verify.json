@@ -1,0 +1,103 @@
+{
+  "facts": [
+    {
+      "kind": "vital",
+      "text": "Temperature 101.4 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 106",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "blood pressure 100/65",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "96% on room air",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Saturation 96% on room air."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Severe anemic female, bedven, one unit red cells, started 40 minutes, now sudden chills, back pain and feeling veryo."
+    },
+    {
+      "kind": "symptom",
+      "text": "breathlessness",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.91,
+      "source_sentence": "No breathlessness."
+    },
+    {
+      "kind": "symptom",
+      "text": "chest pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "General, report hypotension, peze, chest pain or ure fa."
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "40",
+        "65",
+        "96",
+        "100",
+        "101.4",
+        "106"
+      ],
+      "count": 7
+    },
+    "total": 7,
+    "vital_verified": 4,
+    "symptom_verified": 3
+  },
+  "brand_mentions": []
+}

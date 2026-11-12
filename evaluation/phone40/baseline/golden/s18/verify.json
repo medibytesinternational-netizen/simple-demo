@@ -1,0 +1,131 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "levothyroxine",
+      "dose": 75.0,
+      "unit": "mcg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mcg; listed strengths: 5 mcg solution, 9 mcg tablet, 10 mcg solution, 12.5 mcg tablet; 75 mcg is plausible for this drug]",
+      "confidence": 0.96,
+      "source_sentence": "Levothyroxine 75 mcg daily, empty stomach, nothing for 30 minutes."
+    },
+    {
+      "kind": "drug",
+      "name": "iodine",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: iodine; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Iodines dis salt, protein and fiber."
+    },
+    {
+      "kind": "vital",
+      "text": "Pulse 64",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Pulse 64 beats per minute."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 112/72",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 112/72 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "temperature 97.8 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "temperature 97.8 degrees Fahrenheit."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Denies neck pain and fever."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Denies neck pain and fever."
+    },
+    {
+      "kind": "followup",
+      "text": "Follow up in six weeks",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "Follow up in six weeks"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "3",
+        "4",
+        "6",
+        "30",
+        "38",
+        "64",
+        "68",
+        "72",
+        "75",
+        "97.8",
+        "112"
+      ],
+      "count": 11
+    },
+    "total": 8,
+    "drug_verified": 1,
+    "drug_needs_review": 1,
+    "vital_verified": 3,
+    "symptom_verified": 2,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

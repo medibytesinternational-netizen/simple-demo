@@ -40,6 +40,8 @@ from .llm.discharge import (
 )
 from .llm.term_validation import apply_validation
 from .ports import AudioPreprocessor, LLMClient, ProgressSink, SpeechRecognizer
+from .templates import NoteTemplate
+from .templates import get as get_template
 from .reference import drug_reference
 from .verify import verify
 
@@ -83,8 +85,9 @@ class _Tracker:
         self._sink(event)
 
 
-def _empty_note(reason: str) -> dict:
-    return {"sections": {k: {"items": []} for k in DISCHARGE_SECTIONS},
+def _empty_note(reason: str, template: NoteTemplate | None = None) -> dict:
+    keys = template.keys if template is not None else DISCHARGE_SECTIONS
+    return {"sections": {k: {"items": []} for k in keys},
             "provenance": {"llm_engine": reason}}
 
 
@@ -97,7 +100,9 @@ class Pipeline:
         self.llm = llm
 
     def run(self, audio: Path, out_dir: Path, *, job_id: str,
-            sink: ProgressSink = _ignore) -> ClipResult:
+            sink: ProgressSink = _ignore, template: str | NoteTemplate = "discharge") -> ClipResult:
+        """`template` picks the note format stage 7 writes (see medibytes/templates)."""
+        tpl = get_template(template)
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         cleaned = out_dir / "cleaned.wav"
@@ -165,30 +170,34 @@ class Pipeline:
             st.detail = f"{summary.get('total', 0)} facts checked"
 
         with track.stage(StageName.DISCHARGE) as st:
-            entities["discharge"] = self._discharge(transcript, entities["verify"], st)
+            entities["discharge"] = self._discharge(transcript, entities["verify"], st, tpl)
 
         return ClipResult(clean_meta=meta, transcript=transcript, entities=entities,
                           stages=track.events)
 
-    def _discharge(self, transcript: dict, verified: dict, st: _Stage) -> dict:
+    def _discharge(self, transcript: dict, verified: dict, st: _Stage,
+                   tpl: NoteTemplate | None = None) -> dict:
+        tpl = tpl or get_template(None)
         text, norm = transcript.get("text", ""), transcript.get("normalized_en", "")
         # The checklist of dictated parts; without it, coverage falls back to cues.
         parts, analysis_error = None, ""
         try:
-            parts = analyse_transcript(text, llm=self.llm)
+            parts = analyse_transcript(text, llm=self.llm, template=tpl)
         except (LLMError, ValueError, LookupError) as exc:
             analysis_error = f"analysis skipped ({type(exc).__name__})"
         try:
             raw = extract_discharge(text, norm, transcript.get("segments", []), verified,
-                                    llm=self.llm, parts=parts)
+                                    llm=self.llm, parts=parts, template=tpl)
         except LLMError as exc:
             st.degrade(f"gpt-4.1 note not written: {exc}")
-            return stamp_schema(_empty_note(f"discharge-skipped ({type(exc).__name__}: {exc})"))
-        gated = gate_discharge(raw, text, norm, verified)
-        locked = canonicalize_discharge(gated, verified)
-        merged = merge_discharge(verified, locked, text, norm)
+            return _stamp_template(stamp_schema(
+                _empty_note(f"{tpl.name}-skipped ({type(exc).__name__}: {exc})", tpl), tpl), tpl)
+        gated = gate_discharge(raw, text, norm, verified, tpl)
+        locked = canonicalize_discharge(gated, verified, tpl)
+        merged = merge_discharge(verified, locked, text, norm, tpl)
         note = stamp_schema(complete_coverage(merged, text, norm, verified, llm=self.llm,
-                                              parts=parts))
+                                              parts=parts, template=tpl), tpl)
+        note = _stamp_template(note, tpl)
         items = sum(len(s["items"]) for s in note["sections"].values())
         coverage = note["provenance"]["coverage"]
         unused = sum(len(v) for v in coverage["unused"].values())
@@ -199,6 +208,13 @@ class Pipeline:
         if analysis_error:
             st.degrade(f"{st.detail}; {analysis_error}")
         return note
+
+
+def _stamp_template(note: dict, tpl: NoteTemplate) -> dict:
+    """Record which format was written; the discharge note stays exactly as measured."""
+    if tpl.name == "discharge":
+        return note
+    return {**note, "provenance": {**note.get("provenance", {}), "template": tpl.name}}
 
 
 def _llm_review_summary(ent: dict) -> tuple[str, str]:

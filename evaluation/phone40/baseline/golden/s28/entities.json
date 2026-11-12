@@ -1,0 +1,681 @@
+{
+  "job_id": "s28-none",
+  "drugs": [
+    {
+      "name": "ceftriaxone",
+      "dose": 1.0,
+      "unit": "g",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.96,
+      "color": "GREEN",
+      "source_sentence": "Ceftriaxone 1 g as advised.",
+      "negated": false,
+      "start_char": 395,
+      "end_char": 406,
+      "span_status": "exact"
+    },
+    {
+      "name": "pantoprazole",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Pantoprazole, surgery surgical review, diet, then low-fat small frequent meals.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm",
+      "start_char": 423,
+      "end_char": 435,
+      "span_status": "exact"
+    },
+    {
+      "name": "aspirin",
+      "dose": 1.0,
+      "unit": "g",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "47 year old female with one day right upper abdominal pain after fatty foot vomiting and fever radiating to shoulder denies jaundice no known drug allergy past history gallstone provisional diagnosis acute caulic eyes status examination temperature 106 degrees Fahrenheit pulse 98 beats per minute blood pressure 126 over 90 millimeters of mercury right upper tenderness Murphy positive investigations blood count liver function ultrasound plan nil by mouth IV fluids sephraxion 1 gram as advised panto-prazole surgery surgical review diet then low fat small frequent meals no fried food or ghee general avoid fatty food report join this persistent vomiting or severe pain surgery follow up in two days",
+      "negated": true,
+      "note": "fuzzy sephraxion->aspirin (0.59); dose implausible for adrenaline, salbutamol, levothyroxine | heard only by small-int8, not by the primary decoder | ambiguous: matcher tie: aspirin, ceftriaxone",
+      "raw_token": "sephraxion",
+      "candidates": [
+        {
+          "name": "aspirin",
+          "score": 0.588,
+          "matched_alias": "aspirin",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "aspirin",
+            "substances": [
+              "aspirin"
+            ],
+            "units": [
+              "mg"
+            ],
+            "mass_mg": [
+              1.5,
+              975.0
+            ],
+            "forms": [
+              "capsule",
+              "solution",
+              "suppository",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 1.5
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 2.25
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 2.5
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 4.5
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 8.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 15.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "ceftriaxone",
+          "score": 0.571,
+          "matched_alias": "ceftriaxone",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "ceftriaxone",
+            "substances": [
+              "ceftriaxone"
+            ],
+            "units": [
+              "g",
+              "mg"
+            ],
+            "mass_mg": [
+              125.0,
+              10000.0
+            ],
+            "forms": [
+              "injection",
+              "solution"
+            ],
+            "strengths": [
+              {
+                "form": "injection",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 2.0
+              },
+              {
+                "form": "injection",
+                "unit": "g",
+                "value": 2.0
+              },
+              {
+                "form": "injection",
+                "unit": "g",
+                "value": 10.0
+              },
+              {
+                "form": "injection",
+                "unit": "mg",
+                "value": 125.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "adrenaline",
+          "score": 0.571,
+          "matched_alias": "epinephrine",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "epinephrine",
+            "substances": [
+              "epinephrine"
+            ],
+            "units": [
+              "mcg",
+              "mg"
+            ],
+            "mass_mg": [
+              0.001,
+              10.0
+            ],
+            "forms": [
+              "drops",
+              "injection",
+              "patch",
+              "solution"
+            ],
+            "strengths": [
+              {
+                "form": "patch",
+                "unit": "mcg",
+                "value": 1.0
+              },
+              {
+                "form": "injection",
+                "unit": "mcg",
+                "value": 2.0
+              },
+              {
+                "form": "injection",
+                "unit": "mcg",
+                "value": 5.0
+              },
+              {
+                "form": "injection",
+                "unit": "mcg",
+                "value": 10.0
+              },
+              {
+                "form": "injection",
+                "unit": "mcg",
+                "value": 12.5
+              },
+              {
+                "form": "injection",
+                "unit": "mcg",
+                "value": 100.0
+              }
+            ]
+          },
+          "dose_implausible": true
+        },
+        {
+          "name": "salbutamol",
+          "score": 0.556,
+          "matched_alias": "asthalin",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "albuterol",
+            "substances": [
+              "albuterol"
+            ],
+            "units": [
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.05,
+              8.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "powder",
+              "solution",
+              "spray",
+              "suspension"
+            ],
+            "strengths": [
+              {
+                "form": "spray",
+                "unit": "mcg",
+                "value": 50.0
+              },
+              {
+                "form": "powder",
+                "unit": "mcg",
+                "value": 95.0
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 100.0
+              },
+              {
+                "form": "powder",
+                "unit": "mcg",
+                "value": 100.0
+              },
+              {
+                "form": "injection",
+                "unit": "mcg",
+                "value": 100.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mcg",
+                "value": 100.0
+              }
+            ]
+          },
+          "dose_implausible": true
+        },
+        {
+          "name": "levothyroxine",
+          "score": 0.526,
+          "matched_alias": "thyroxine",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "levothyroxine",
+            "substances": [
+              "levothyroxine"
+            ],
+            "units": [
+              "mcg"
+            ],
+            "mass_mg": [
+              0.005,
+              0.3
+            ],
+            "forms": [
+              "capsule",
+              "solution",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 5.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mcg",
+                "value": 9.0
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 10.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mcg",
+                "value": 12.5
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 20.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mcg",
+                "value": 25.0
+              }
+            ]
+          },
+          "dose_implausible": true
+        }
+      ],
+      "matcher_pick": "aspirin",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "second_pass": "small-int8",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "47 year old female with one day right upper abdominal pain after fatty foot vomiting and fever radiating to shoulder denies jaundice no known drug allergy past history gallstone provisional diagnosis acute caulic eyes status examination temperature 106 degrees Fahrenheit pulse 98 beats per minute blood pressure 126 over 90 millimeters of mercury right upper tenderness Murphy positive investigations blood count liver function ultrasound plan nil by mouth IV fluids sephraxion 1 gram as advised panto-prazole surgery surgical review diet then low fat small frequent meals no fried food or ghee general avoid fatty food report join this persistent vomiting or severe pain surgery follow up in two days",
+        "final_output_sentence": "47 year old female with one day right upper abdominal pain after fatty foot vomiting and fever radiating to shoulder denies jaundice no known drug allergy past history gallstone provisional diagnosis acute caulic eyes status examination temperature 106 degrees Fahrenheit pulse 98 beats per minute blood pressure 126 over 90 millimeters of mercury right upper tenderness Murphy positive investigations blood count liver function ultrasound plan nil by mouth IV fluids sephraxion 1 gram as advised panto-prazole surgery surgical review diet then low fat small frequent meals no fried food or ghee general avoid fatty food report join this persistent vomiting or severe pain surgery follow up in two days",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.0,
+        "reason": "matcher tie: aspirin, ceftriaxone",
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder.",
+      "negated": false,
+      "start_char": 91,
+      "end_char": 96,
+      "span_status": "exact"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "General, avoid fatty food, report jaundice, persistent vomiting or severe pain, surgery followup in two days.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "General, avoid fatty food, report jaundice, persistent vomiting or severe pain, surgery followup in two days.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Temperature 106 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg.",
+      "start_char": 194,
+      "end_char": 228,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 98",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg.",
+      "start_char": 230,
+      "end_char": 238,
+      "span_status": "exact"
+    },
+    {
+      "text": "blood pressure 126/90",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg.",
+      "start_char": 257,
+      "end_char": 278,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "followup in two days",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "followup in two days",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "drug_second_pass": {
+    "model": "small-int8",
+    "added": [
+      "aspirin"
+    ]
+  },
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 0.0,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "ceftriaxone",
+        "dose": 1.0,
+        "unit": "g",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mg; listed strengths: 1 g injection, 1 g solution, 2 g solution, 2 g injection; 1 g is plausible for this drug]",
+        "confidence": 0.96,
+        "source_sentence": "Ceftriaxone 1 g as advised."
+      },
+      {
+        "kind": "drug",
+        "name": "pantoprazole",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Pantoprazole, surgery surgical review, diet, then low-fat small frequent meals."
+      },
+      {
+        "kind": "drug",
+        "name": "aspirin",
+        "dose": 1.0,
+        "unit": "g",
+        "negated": true,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:needs_review",
+          "polarity:negated-preserved"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 1.5 mg solution, 2.25 mg tablet, 2.5 mg solution, 4.5 mg tablet; 1 g is plausible for this drug]; source_sentence not verbatim in transcript",
+        "confidence": 0.7,
+        "source_sentence": "47 year old female with one day right upper abdominal pain after fatty foot vomiting and fever radiating to shoulder denies jaundice no known drug allergy past history gallstone provisional diagnosis acute caulic eyes status examination temperature 106 degrees Fahrenheit pulse 98 beats per minute blood pressure 126 over 90 millimeters of mercury right upper tenderness Murphy positive investigations blood count liver function ultrasound plan nil by mouth IV fluids sephraxion 1 gram as advised panto-prazole surgery surgical review diet then low fat small frequent meals no fried food or ghee general avoid fatty food report join this persistent vomiting or severe pain surgery follow up in two days"
+      },
+      {
+        "kind": "vital",
+        "text": "Temperature 106 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 98",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "blood pressure 126/90",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "General, avoid fatty food, report jaundice, persistent vomiting or severe pain, surgery followup in two days."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "General, avoid fatty food, report jaundice, persistent vomiting or severe pain, surgery followup in two days."
+      },
+      {
+        "kind": "followup",
+        "text": "followup in two days",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "followup in two days"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "47",
+          "90",
+          "98",
+          "106",
+          "126"
+        ],
+        "count": 7
+      },
+      "total": 12,
+      "drug_verified": 1,
+      "drug_needs_review": 2,
+      "vital_verified": 3,
+      "symptom_verified": 5,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

@@ -1,0 +1,275 @@
+{
+  "job_id": "s26-none",
+  "drugs": [
+    {
+      "name": "furosemide",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm",
+      "start_char": 388,
+      "end_char": 398,
+      "span_status": "exact"
+    },
+    {
+      "name": "lactulose",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm (national drug list, not this pipeline's own)",
+      "start_char": 412,
+      "end_char": 421,
+      "span_status": "exact"
+    },
+    {
+      "name": "thiamine",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm (national drug list, not this pipeline's own)",
+      "start_char": 423,
+      "end_char": 431,
+      "span_status": "exact"
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Report bleeding, confusion, fever or low urine followup in one week.",
+      "negated": false,
+      "start_char": 597,
+      "end_char": 602,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Blood pressure 110/68",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit.",
+      "start_char": 246,
+      "end_char": 267,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 88",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit.",
+      "start_char": 274,
+      "end_char": 282,
+      "span_status": "exact"
+    },
+    {
+      "text": "temperature 98.6 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit.",
+      "start_char": 284,
+      "end_char": 319,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "followup in one week",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "followup in one week",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "furosemide",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated."
+      },
+      {
+        "kind": "drug",
+        "name": "lactulose",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: lactulose; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated."
+      },
+      {
+        "kind": "drug",
+        "name": "thiamine",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: thiamine; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 110/68",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 88",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "temperature 98.6 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Report bleeding, confusion, fever or low urine followup in one week."
+      },
+      {
+        "kind": "followup",
+        "text": "followup in one week",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "followup in one week"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "55",
+          "68",
+          "88",
+          "98.6",
+          "110"
+        ],
+        "count": 6
+      },
+      "total": 8,
+      "drug_needs_review": 3,
+      "vital_verified": 3,
+      "symptom_verified": 1,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

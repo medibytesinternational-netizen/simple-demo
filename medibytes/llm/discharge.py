@@ -26,16 +26,13 @@ from ..reference import drug_reference
 from ..verify import _sentences
 from .json_reply import extract_json_object
 
-DISCHARGE_SECTIONS = ("present_illness", "examination_findings",
-                      "previous_diagnosis", "plan_of_management",
-                      "diet_instructions", "general_instructions")
+from ..templates import DISCHARGE, NoteTemplate
+from ..templates.discharge import PREFILL_SECTION, SECTION_EXAMPLES, SECTION_RULES  # noqa: F401
 
-
-# Verified fact kind -> discharge section. The prompt states this map so the
-# model does not have to guess where a fact belongs.
-PREFILL_SECTION = {"symptom": "present_illness", "vital": "examination_findings",
-                   "diagnosis": "previous_diagnosis", "drug": "plan_of_management",
-                   "followup": "plan_of_management", "allergy": "general_instructions"}
+# Every function below takes ``template`` (default: the measured discharge note).
+# A feature template's section is hardened by the rules of the discharge section it
+# ``behaves_like``; see medibytes/templates/base.py.
+DISCHARGE_SECTIONS = DISCHARGE.keys
 
 
 def _seg_hint(source_sentence, segments):
@@ -64,7 +61,7 @@ def _fact_index(verified):
     return [(f"F{i}", f) for i, f in enumerate(facts[:MAX_PROMPT_FACTS], 1)]
 
 
-def _verified_lines(verified, segments=None):
+def _verified_lines(verified, segments=None, template: NoteTemplate = DISCHARGE):
     """Verified-fact lines with FULL proof sentences and seg hints.
 
     Proof is never truncated: the authenticity gate requires a verbatim
@@ -75,7 +72,7 @@ def _verified_lines(verified, segments=None):
         src = str(f.get("source_sentence", "") or "")
         seg = _seg_hint(src, segments)
         tag = f"seg={seg}" if isinstance(seg, int) else "seg=?"
-        target = PREFILL_SECTION.get(f.get("kind", ""), "?")
+        target = template.prefill.get(f.get("kind", ""), "?")
         if f["kind"] == "drug":
             dose = f"{f['dose']} {f.get('unit') or ''}".strip() if f.get("dose") not in (None, "") else "no dose"
             neg = "NOT GIVEN " if f.get("negated") else ""
@@ -91,54 +88,6 @@ def _verified_lines(verified, segments=None):
             lines.append(f"- {fid} {f['kind']} -> {target}: {neg}{f.get('text', '')} [{f['status']}, {tag}] <<{src}>>")
     return "\n".join(lines)
 
-
-# What each section holds; stated in the note prompt and the coverage retry.
-SECTION_RULES = {
-    "present_illness": "each symptom the patient has, with its duration, one per item "
-                       "(prefix DENIED: if marked DENIED)",
-    "examination_findings": "vital-sign readings and other examination findings "
-                            "(e.g. breath sounds, tenderness, swelling, reflexes)",
-    "previous_diagnosis": "past history and diagnosis statements",
-    "plan_of_management": "prescribed drugs with dose/unit/frequency PLUS follow-up plans, "
-                          'referrals and therapy (prefix "NOT GIVEN: " if marked NOT GIVEN)',
-    "diet_instructions": "ONLY diet/food/fluid advice actually spoken, else []",
-    "general_instructions": "allergy statements (prefix DENIED if denied) and other spoken advice",
-}
-
-
-# One good item per section: (sentence the doctor said, item written from it).
-# A different patient, shown for style only. Each sentence is real dictation -
-# filler, the doctor talking to the patient, asides - and its item keeps only
-# the words that state the fact, in the order said. Every item word is a word
-# of its sentence, so the example teaches trimming, not paraphrase (a
-# paraphrased item fails canonicalize). A copied example can never reach a
-# note: its sentence is not in the transcript, so the verbatim gate drops it.
-SECTION_EXAMPLES = {
-    "present_illness": (
-        "So she tells me she has been getting this burning chest discomfort and a sour taste, "
-        "mostly after meals, for about one month now.",
-        "Burning chest discomfort and sour taste after meals for one month."),
-    "examination_findings": (
-        "When I examined her today the abdomen was soft and non-tender, no distension, "
-        "and honestly no acute findings at all.",
-        "Abdomen soft and non-tender; no distension; no acute findings."),
-    "previous_diagnosis": (
-        "And just so you know, she was previously diagnosed with Gastroesophageal Reflux "
-        "Disease, GERD, a couple of years back.",
-        "Gastroesophageal Reflux Disease (GERD)."),
-    "plan_of_management": (
-        "So the plan is, we are going to go ahead and increase her Omeprazole to 20 mg daily, "
-        "before breakfast, and I would like to review her in 4 weeks.",
-        "Increase Omeprazole to 20 mg daily before breakfast; review in 4 weeks."),
-    "diet_instructions": (
-        "Diet-wise, um, I want you to eliminate acidic and spicy triggers, cut out late meals, "
-        "and remain upright for 3 hours post-meal, okay?",
-        "Eliminate acidic and spicy triggers; cut out late meals; remain upright for 3 hours post-meal."),
-    "general_instructions": (
-        "Also, try to elevate the head of your bed, avoid tight waistwear, and please report "
-        "any dysphagia to us immediately.",
-        "Elevate head of bed; avoid tight waistwear; report any dysphagia immediately."),
-}
 
 # Small talk states no fact: the example that yields no item at all.
 SMALL_TALK_EXAMPLE = "Okay, thank you for coming in today, it was good to see you."
@@ -156,16 +105,16 @@ def _left_out(sentence, item):
     return [" ".join(said[i1:i2]) for tag, i1, i2, _, _ in ops if tag in ("delete", "replace")]
 
 
-def _example_line(key):
-    sentence, item = SECTION_EXAMPLES[key]
+def _example_line(key, template: NoteTemplate = DISCHARGE):
+    sentence, item = template.example(key)
     return (f'- {key}: "{item}"\n'
             f'    heard as: "{sentence}"\n'
             f'    left out: {" | ".join(_left_out(sentence, item))}\n')
 
 
-def _examples_block(keys):
+def _examples_block(keys, template: NoteTemplate = DISCHARGE):
     return ("Example items (a DIFFERENT patient - shows the style only; never copy its content):\n"
-            + "".join(_example_line(k) for k in keys)
+            + "".join(_example_line(k, template) for k in keys)
             + f'- no item: heard as: "{SMALL_TALK_EXAMPLE}" - nothing clinical, leave it out\n\n')
 
 
@@ -196,23 +145,26 @@ def _parts_block(parts):
             f"{lines}\n")
 
 
-def _discharge_prompt(transcript_text, normalized_en, verified, segments, parts=None):
+def _has_diet(template):
+    return any(template.base(k) == "diet_instructions" for k in template.keys)
+
+
+def _discharge_prompt(transcript_text, normalized_en, verified, segments, parts=None,
+                      template: NoteTemplate = DISCHARGE):
     return (
-        "You are a clinical scribe structuring a dictated note.\n"
+        template.intro + "\n"
         "Copy EVERY fact from the VERIFIED list into its mapped section below.\n"
         "Return STRICT JSON only (no prose, no markdown).\n"
         "Schema:\n"
-        '{"present_illness": {"items": [{"fact_id": "F1", "text": "...", "source_sentence": "exact sentence heard", "seg_id": 0, "confidence": 0.9}]},\n'
-        ' "examination_findings": {"items": [...]}, "previous_diagnosis": {"items": [...]},\n'
-        ' "plan_of_management": {"items": [...]}, "diet_instructions": {"items": [...]},\n'
-        ' "general_instructions": {"items": [...]}}\n\n'
+        + template.schema_line +
         "Section map (follow exactly):\n"
-        + "".join(f"- {k}: {SECTION_RULES[k]}\n" for k in DISCHARGE_SECTIONS) + "\n"
-        + _examples_block(DISCHARGE_SECTIONS) +
+        + "".join(f"- {k}: {template.rule(k)}\n" for k in template.keys) + "\n"
+        + _examples_block(template.keys, template) +
         "Rules (must follow):\n"
         "- Output ONLY values heard in the transcript. NEVER invent vitals, drugs, doses, diagnoses, or advice.\n"
         "- Cover every VERIFIED fact below: verified and needs_review facts MUST appear; rejected ones are absent.\n"
-        "- If a section has no dictated facts, use empty items []. Diet stays EMPTY unless diet was spoken.\n"
+        "- If a section has no dictated facts, use empty items []."
+        + (" Diet stays EMPTY unless diet was spoken." if _has_diet(template) else "") + "\n"
         "- Drug names, doses and units MUST match the VERIFIED list verbatim (verified values win any conflict).\n"
         "- source_sentence MUST be copied EXACTLY as shown in <<...>> (verbatim transcript substring).\n"
         "- seg_id: copy the seg=N hint from the fact line; use null only for seg=? items.\n"
@@ -230,34 +182,39 @@ def _discharge_prompt(transcript_text, normalized_en, verified, segments, parts=
         "misspelled. In item text, use only the speaker's words, and only those that state the "
         "fact; you may fix an obvious misspelling of a single word, but never add words that "
         "were not said.\n"
-        + TRIM_RULE + "\n"
-        f"VERIFIED FACTS:\n{_verified_lines(verified, segments) or '(none)'}\n\n"
+        + TRIM_RULE + template.extra_rules + "\n"
+        f"VERIFIED FACTS:\n{_verified_lines(verified, segments, template) or '(none)'}\n\n"
         + _parts_block(parts) +
         f"Transcript:\n{transcript_text[:PROMPT_TRANSCRIPT_CHARS]}\n\n"
         f"Normalized:\n{normalized_en[:PROMPT_TRANSCRIPT_CHARS]}"
     )
 
 
-def _analyse_prompt(transcript_text):
+_COUNT = {2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight",
+          9: "nine", 10: "ten"}
+
+
+def _analyse_prompt(transcript_text, template: NoteTemplate = DISCHARGE):
     return (
-        "You are a clinical scribe reading a dictated discharge note. List EVERY clinical\n"
+        f"You are a clinical scribe reading a dictated {template.document}. List EVERY clinical\n"
         "statement the speaker makes, in the order spoken, with the note section it belongs to.\n"
         "Return STRICT JSON only (no prose, no markdown):\n"
         '{"parts": [{"quote": "...", "section": "..."}]}\n\n'
         "Sections:\n"
-        + "".join(f"- {k}: {SECTION_RULES[k]}\n" for k in DISCHARGE_SECTIONS) + "\n"
+        + "".join(f"- {k}: {template.rule(k)}\n" for k in template.keys) + "\n"
         "Rules (must follow):\n"
         "- quote MUST be copied EXACTLY from the transcript - a verbatim substring, misspellings\n"
         "  included - and be the shortest stretch that states one fact.\n"
         "- One fact per part: split a list (\"avoid X, take Y, call Z\") into separate parts.\n"
         "- Skip small talk, greetings, section headings (\"for the plan\") and statements that\n"
         "  only deny something (\"no fever\", \"denies chest pain\").\n"
-        "- section MUST be one of the six names above.\n\n"
+        f"- section MUST be one of the {_COUNT.get(len(template.keys), len(template.keys))} names above.\n\n"
         f"Transcript:\n{transcript_text[:PROMPT_TRANSCRIPT_CHARS]}"
     )
 
 
-def analyse_transcript(transcript_text, llm: LLMClient, timeout=None):
+def analyse_transcript(transcript_text, llm: LLMClient, timeout=None,
+                       template: NoteTemplate = DISCHARGE):
     """gpt-4.1 lists the dictated parts: [{"quote", "section"}], in spoken order.
 
     The checklist the note is written and checked against, so a section is
@@ -270,7 +227,7 @@ def analyse_transcript(transcript_text, llm: LLMClient, timeout=None):
     ok, reason = llm.available()
     if not ok:
         raise LLMUnavailable(reason)
-    out = llm.complete_json(_analyse_prompt(transcript_text),
+    out = llm.complete_json(_analyse_prompt(transcript_text, template),
                             timeout=timeout or C1.llm.discharge_timeout_s,
                             max_tokens=C1.llm.discharge_max_tokens, stage="discharge_analyse")
     json_str = extract_json_object(out)
@@ -283,7 +240,7 @@ def analyse_transcript(transcript_text, llm: LLMClient, timeout=None):
             continue
         quote = str(p.get("quote", "") or "").strip()
         section = str(p.get("section", "") or "").strip()
-        if len(quote) < 3 or section not in DISCHARGE_SECTIONS or quote not in transcript_text:
+        if len(quote) < 3 or section not in template.keys or quote not in transcript_text:
             continue
         if (section, quote) not in seen:
             seen.add((section, quote))
@@ -292,7 +249,8 @@ def analyse_transcript(transcript_text, llm: LLMClient, timeout=None):
 
 
 def extract_discharge(transcript_text, normalized_en, segments, verified,
-                      llm: LLMClient, timeout=None, parts=None):
+                      llm: LLMClient, timeout=None, parts=None,
+                      template: NoteTemplate = DISCHARGE):
     """Author the 6-section note with gpt-4.1.
 
     Up to three attempts when the reply is not usable JSON. A timeout is not
@@ -307,7 +265,7 @@ def extract_discharge(transcript_text, normalized_en, segments, verified,
     for _ in range(3):
         try:
             out = llm.complete_json(
-                _discharge_prompt(transcript_text, normalized_en, verified, segments, parts),
+                _discharge_prompt(transcript_text, normalized_en, verified, segments, parts, template),
                 timeout=timeout, max_tokens=C1.llm.discharge_max_tokens, stage="discharge")
         except (LLMTimeout, LLMUnavailable):
             raise
@@ -323,17 +281,19 @@ def extract_discharge(transcript_text, normalized_en, segments, verified,
         except Exception as e:
             last_error = ValueError(f"LLM discharge JSON unparsable: {e}")
             continue
-        if not isinstance(j, dict) or not any(k in j for k in DISCHARGE_SECTIONS):
+        if not isinstance(j, dict) or not any(k in j for k in template.keys):
             last_error = ValueError("LLM discharge JSON missing section keys")
             continue
-        return {"sections": _parse_sections(j), "provenance": {"llm_engine": f"discharge:{llm.model}"}}
+        return {"sections": _parse_sections(j, template=template),
+                "provenance": {"llm_engine": f"{template.name}:{llm.model}"}}
     raise last_error or ValueError("LLM discharge failed after retries")
 
 
-def _parse_sections(j, keys=DISCHARGE_SECTIONS):
+def _parse_sections(j, keys=None, template: NoteTemplate = DISCHARGE):
     """{section: {"items": [...]}} from a model reply, every item normalised."""
+    keys = template.keys if keys is None else keys
     sections = {}
-    for key in DISCHARGE_SECTIONS:
+    for key in template.keys:
         block = (j.get(key) or {}) if key in keys else {}
         items = block.get("items", []) if isinstance(block, dict) else []
         clean = []
@@ -351,6 +311,9 @@ def _parse_sections(j, keys=DISCHARGE_SECTIONS):
                    "seg_id": seg, "confidence": conf}
             if isinstance(it.get("fact_id"), str) and it["fact_id"].strip():
                 row["fact_id"] = it["fact_id"].strip()
+            for extra in template.item_extras:
+                if it.get(extra) not in (None, ""):
+                    row[extra] = it[extra]
             clean.append(row)
         sections[key] = {"items": clean}
     return sections
@@ -370,7 +333,8 @@ def _containing_sentence(source, transcript_text, normalized_en):
     return source
 
 
-def gate_discharge(discharge, transcript_text, normalized_en, verified):
+def gate_discharge(discharge, transcript_text, normalized_en, verified,
+                   template: NoteTemplate = DISCHARGE):
     """Authenticity gate: drop unproven items, cap the rest. Deterministic.
 
     An item survives only if (a) its source_sentence is a verbatim transcript
@@ -387,7 +351,7 @@ def gate_discharge(discharge, transcript_text, normalized_en, verified):
                       if f.get("kind") == "drug" and f.get("status") != "rejected"}
     dropped = 0
     out_sections = {}
-    for key in DISCHARGE_SECTIONS:
+    for key in template.keys:
         items = (discharge.get("sections", {}).get(key, {}) or {}).get("items", []) or []
         kept = []
         for it in items:
@@ -430,15 +394,16 @@ def gate_discharge(discharge, transcript_text, normalized_en, verified):
 _SCHEMA_CACHE: dict = {}
 
 
-def _discharge_schema():
-    """Load discharge.schema.json once (Draft7, self-checked)."""
-    if "schema" not in _SCHEMA_CACHE:
-        with open(SCHEMAS_DIR / "discharge.schema.json", encoding="utf-8") as fh:
-            _SCHEMA_CACHE["schema"] = json.load(fh)
-    return _SCHEMA_CACHE["schema"]
+def _discharge_schema(template: NoteTemplate = DISCHARGE):
+    """Load the template's schema file once (Draft7, self-checked)."""
+    name = template.schema_file
+    if name not in _SCHEMA_CACHE:
+        with open(SCHEMAS_DIR / name, encoding="utf-8") as fh:
+            _SCHEMA_CACHE[name] = json.load(fh)
+    return _SCHEMA_CACHE[name]
 
 
-def validate_discharge(discharge):
+def validate_discharge(discharge, template: NoteTemplate = DISCHARGE):
     """(ok, errors): Draft7 conformance of a discharge note.
 
     Pure function — no LLM, no I/O beyond the cached schema file. Errors
@@ -446,7 +411,7 @@ def validate_discharge(discharge):
     Raises nothing for unusable input: reports it as an error instead.
     """
     try:
-        schema = _discharge_schema()
+        schema = _discharge_schema(template)
         Draft7Validator.check_schema(schema)
     except Exception as err:
         return False, [f"schema file invalid: {type(err).__name__}: {err}"]
@@ -457,7 +422,7 @@ def validate_discharge(discharge):
     return (True, []) if not errors else (False, errors[:10])
 
 
-def stamp_schema(discharge):
+def stamp_schema(discharge, template: NoteTemplate = DISCHARGE):
     """Flag-still-ship: record conformance in provenance, never raise.
 
     Valid notes get ``provenance.schema = "valid"``; invalid ones keep
@@ -466,7 +431,7 @@ def stamp_schema(discharge):
     always write the file either way.
     """
     try:
-        ok, errors = validate_discharge(discharge)
+        ok, errors = validate_discharge(discharge, template)
     except Exception as err:  # validation must never break a run
         ok, errors = False, [f"validator crashed: {type(err).__name__}: {err}"]
     prov = dict(discharge.get("provenance", {}))
@@ -513,9 +478,9 @@ def _prefill_text(fact):
 _LEAD_PREP = re.compile(r"^\s*(?:of|with|for)\s+", re.I)
 
 
-def _prefill_eligible(fact, transcript_text, normalized_en):
+def _prefill_eligible(fact, transcript_text, normalized_en, template: NoteTemplate = DISCHARGE):
     """Gate-identical eligibility: proof verbatim + digits present + mapped."""
-    if fact.get("status") == "rejected" or fact.get("kind") not in PREFILL_SECTION:
+    if fact.get("status") == "rejected" or fact.get("kind") not in template.prefill:
         return False
     if fact.get("kind") == "drug" and (fact.get("dose") is None or fact.get("dose") == ""):
         pass  # doseless rows still surface (RED review), proof decides
@@ -571,7 +536,8 @@ def _covered(fact, fact_text, item):
     return bool(core) and core in have
 
 
-def merge_discharge(verified, discharge, transcript_text="", normalized_en=""):
+def merge_discharge(verified, discharge, transcript_text="", normalized_en="",
+                    template: NoteTemplate = DISCHARGE):
     """Deterministic pre-fill: every gate-passable verified fact surfaces once.
 
     Runs after the gate over the gated sections: for each eligible verified
@@ -581,13 +547,13 @@ def merge_discharge(verified, discharge, transcript_text="", normalized_en=""):
     only the LLM may assert diet advice, and only with proof).
     """
     sections = {k: {"items": list((discharge.get("sections", {}).get(k, {}) or {}).get("items", []) or [])}
-                for k in DISCHARGE_SECTIONS}
+                for k in template.keys}
     prefilled = 0
     for fact in (verified or {}).get("facts", []):
-        target = PREFILL_SECTION.get(fact.get("kind", ""), "")
-        if not target or target == "diet_instructions":
+        target = template.prefill.get(fact.get("kind", ""), "")
+        if not target or template.base(target) == "diet_instructions":
             continue
-        if not _prefill_eligible(fact, transcript_text, normalized_en):
+        if not _prefill_eligible(fact, transcript_text, normalized_en, template):
             continue
         text = _prefill_text(fact)
         src = str(fact.get("source_sentence", "") or "")
@@ -778,7 +744,7 @@ def _near_heard(word, heard):
                for h in heard)
 
 
-def _extractive_ok(item, section, context=None):
+def _extractive_ok(item, section, context=None, template: NoteTemplate = DISCHARGE):
     """May an LLM item with no verified fact stay? "exact", "corrected" or None.
 
     The extractor has no rule for most symptoms and history ("chest
@@ -800,6 +766,7 @@ def _extractive_ok(item, section, context=None):
     ("greens" for "greins"). Such an item is "corrected" - the model's guess
     at what was said - and is held lower than an exact copy, never higher.
     """
+    section = template.base(section)
     if section not in _EXTRACTIVE_SECTIONS:
         return None
     text = str(item.get("text", "") or "").lower()
@@ -865,11 +832,11 @@ def _adds_detail(item_text, fact):
     return len(extra) >= 2
 
 
-def _as_extractive(it, key, how):
+def _as_extractive(it, key, how, template: NoteTemplate = DISCHARGE):
     """The item as an LLM-only line: capped, tagged, held for review where due."""
     it = dict(it)
     it.pop("fact_id", None)
-    review = how == "corrected" or key in _REVIEW_SECTIONS
+    review = how == "corrected" or template.base(key) in _REVIEW_SECTIONS
     it["confidence"] = min(float(it.get("confidence", 0.9)), 0.70 if review else 0.80)
     tags = " llm-extractive" + (" llm-corrected" if how == "corrected" else "")
     it["note"] = (str(it.get("note", "") or "") + tags).strip()
@@ -878,7 +845,7 @@ def _as_extractive(it, key, how):
     return it
 
 
-def canonicalize_discharge(discharge, verified):
+def canonicalize_discharge(discharge, verified, template: NoteTemplate = DISCHARGE):
     """Entity lock-in: LLM lines keep their shape, verified facts own entities.
 
     For each surviving item, looks up verified facts sharing its proof
@@ -891,10 +858,10 @@ def canonicalize_discharge(discharge, verified):
     """
     groups = _proof_group(verified)
     by_id = dict(_fact_index(verified))
-    out_sections: dict[str, dict] = {k: {"items": []} for k in DISCHARGE_SECTIONS}
+    out_sections: dict[str, dict] = {k: {"items": []} for k in template.keys}
     canonicalized = extractive = 0
     dropped = int((discharge.get("provenance", {}) or {}).get("dropped_unproven", 0) or 0)
-    for key in DISCHARGE_SECTIONS:
+    for key in template.keys:
         items = (discharge.get("sections", {}).get(key, {}) or {}).get("items", []) or []
         for it in items:
             it = dict(it)
@@ -914,17 +881,17 @@ def canonicalize_discharge(discharge, verified):
                     if target is None:
                         target = _vital_by_numbers(it.get("text", ""), cands)
                     if target is None:
-                        same_kind = [c for c in cands if PREFILL_SECTION.get(c.get("kind")) == key]
+                        same_kind = [c for c in cands if template.prefill.get(c.get("kind")) == key]
                         target = same_kind[0] if len(same_kind) == 1 else None
                 # Sharing a sentence is not being the same fact: "wheezing" in
                 # the sentence that holds the SpO2 reading is its own finding.
                 if target is not None and not _shares_fact(it.get("text", ""), target) \
-                        and _extractive_ok(it, key, context):
+                        and _extractive_ok(it, key, context, template):
                     target = None
             if target is None:
-                how = _extractive_ok(it, key, context)
+                how = _extractive_ok(it, key, context, template)
                 if how:
-                    out_sections[key]["items"].append(_as_extractive(it, key, how))
+                    out_sections[key]["items"].append(_as_extractive(it, key, how, template))
                     extractive += 1
                 else:
                     dropped += 1
@@ -933,12 +900,12 @@ def canonicalize_discharge(discharge, verified):
             # resolves to the verified "cough"; substituting it would lose the
             # rest. A heard symptom/history line that adds detail stays too.
             if target.get("kind") in _NARRATIVE_KINDS and _adds_detail(it.get("text", ""), target):
-                how = _extractive_ok(it, key, context)
+                how = _extractive_ok(it, key, context, template)
                 if how:
-                    out_sections[key]["items"].append(_as_extractive(it, key, how))
+                    out_sections[key]["items"].append(_as_extractive(it, key, how, template))
                     extractive += 1
             # A verified fact lives in its mapped section, whatever the model chose.
-            home = PREFILL_SECTION.get(target.get("kind"), key)
+            home = template.prefill.get(target.get("kind"), key)
             dest = out_sections[home]["items"]
             canon = _prefill_text(target)
             # Two lines from one sentence can both resolve to the same fact
@@ -991,7 +958,7 @@ SECTION_CUES = {
 }
 
 
-def _cue_parts(transcript_text):
+def _cue_parts(transcript_text, template: NoteTemplate = DISCHARGE):
     """The keyword checklist: [{"quote": sentence, "section"}].
 
     A sentence counts unless a negation comes before its cue word: "No dietary
@@ -1000,11 +967,21 @@ def _cue_parts(transcript_text):
     """
     parts = []
     for s in _sentences(transcript_text):
-        for k in DISCHARGE_SECTIONS:
-            m = SECTION_CUES[k].search(s)
+        for k in _cue_keys(template):
+            m = SECTION_CUES[template.base(k)].search(s)
             if m and not negated_before(s[:m.start()]):
                 parts.append({"quote": s, "section": k})
     return parts
+
+
+def _cue_keys(template):
+    """One section per discharge cue: the first section that behaves like it."""
+    seen, keys = set(), []
+    for k in template.keys:
+        if template.base(k) not in seen:
+            seen.add(template.base(k))
+            keys.append(k)
+    return keys
 
 
 def _content_words(text):
@@ -1039,7 +1016,7 @@ def _part_used(part, sections):
     return hit * 2 >= len(want)
 
 
-def check_coverage(note, transcript_text, parts=None):
+def check_coverage(note, transcript_text, parts=None, template: NoteTemplate = DISCHARGE):
     """Record which dictated parts the note left out. Never edits items.
 
     ``stamp_schema`` only proves the note has the right shape: an empty plan
@@ -1048,14 +1025,14 @@ def check_coverage(note, transcript_text, parts=None):
     item came from; ``coverage.missing`` the sections with parts but no item.
     """
     source = "analysis" if parts is not None else "cues"
-    checklist = parts if parts is not None else _cue_parts(transcript_text)
+    checklist = parts if parts is not None else _cue_parts(transcript_text, template)
     sections = note.get("sections", {})
     unused: dict[str, list[str]] = {}
     for p in checklist:
         if not _part_used(p, sections):
             unused.setdefault(p["section"], []).append(p["quote"])
-    dictated = {k: sum(p["section"] == k for p in checklist) for k in DISCHARGE_SECTIONS}
-    missing = [k for k in DISCHARGE_SECTIONS
+    dictated = {k: sum(p["section"] == k for p in checklist) for k in template.keys}
+    missing = [k for k in template.keys
                if dictated[k] and not (sections.get(k, {}) or {}).get("items")]
     prov = dict(note.get("provenance", {}))
     coverage = dict(prov.get("coverage") or {})
@@ -1065,9 +1042,9 @@ def check_coverage(note, transcript_text, parts=None):
     return {"sections": sections, "provenance": prov}
 
 
-def _coverage_prompt(unused, transcript_text):
+def _coverage_prompt(unused, transcript_text, template: NoteTemplate = DISCHARGE):
     blocks = "\n".join(
-        f"{k}: {SECTION_RULES[k]}\n"
+        f"{k}: {template.rule(k)}\n"
         + "".join(f'  part: "{q}"\n    in sentence: <<{_containing_sentence(q, transcript_text, "")}>>\n'
                   for q in quotes)
         for k, quotes in unused.items())
@@ -1085,13 +1062,13 @@ def _coverage_prompt(unused, transcript_text):
         "- Never write a drug name, dose or number the sentence does not state.\n"
         "- A part may not belong to the section it is listed under: if nothing in it\n"
         "  fits, use empty items [].\n\n"
-        + _examples_block(list(unused)) +
+        + _examples_block(list(unused), template) +
         f"Sections:\n{blocks}\n"
     )
 
 
 def complete_coverage(note, transcript_text, normalized_en, verified, llm: LLMClient,
-                      timeout=None, parts=None):
+                      timeout=None, parts=None, template: NoteTemplate = DISCHARGE):
     """Check coverage; ask gpt-4.1 once for every dictated part left out.
 
     The reply runs the same gate and canonicalize as the main note and lands
@@ -1099,7 +1076,7 @@ def complete_coverage(note, transcript_text, normalized_en, verified, llm: LLMCl
     is not added twice. What is still left out stays in ``coverage.unused``.
     A failed call is recorded, never raised.
     """
-    note = check_coverage(note, transcript_text, parts)
+    note = check_coverage(note, transcript_text, parts, template)
     unused = note["provenance"]["coverage"]["unused"]
     if not unused:
         return note
@@ -1109,22 +1086,22 @@ def complete_coverage(note, transcript_text, normalized_en, verified, llm: LLMCl
         if not ok:
             raise LLMUnavailable(reason)
         out = llm.complete_json(
-            _coverage_prompt(unused, transcript_text),
+            _coverage_prompt(unused, transcript_text, template),
             timeout=timeout or C1.llm.discharge_timeout_s,
             max_tokens=C1.llm.discharge_max_tokens, stage="discharge_coverage")
         json_str = extract_json_object(out)
         reply = json.loads(json_str) if json_str else None
         if not isinstance(reply, dict):
             raise ValueError("no JSON object in the coverage reply")
-        gated = gate_discharge({"sections": _parse_sections(reply, keys=list(unused))},
-                               transcript_text, normalized_en, verified)
-        locked = canonicalize_discharge(gated, verified)
+        gated = gate_discharge({"sections": _parse_sections(reply, keys=list(unused), template=template)},
+                               transcript_text, normalized_en, verified, template)
+        locked = canonicalize_discharge(gated, verified, template)
     except (LLMError, ValueError, LookupError) as exc:
         retry["error"] = f"{type(exc).__name__}: {exc}"[:200]
         note["provenance"]["coverage"]["retry"] = retry
         return note
     sections = {k: {"items": list((note["sections"].get(k, {}) or {}).get("items", []))}
-                for k in DISCHARGE_SECTIONS}
+                for k in template.keys}
     added = 0
     for k in unused:
         have = {str(it.get("text", "")).strip().lower() for it in sections[k]["items"]}
@@ -1139,4 +1116,4 @@ def complete_coverage(note, transcript_text, normalized_en, verified, llm: LLMCl
     prov = dict(note["provenance"])
     prov["coverage"] = {**prov["coverage"], "retry": retry}
     return check_coverage({"sections": _drop_restatements(sections), "provenance": prov},
-                          transcript_text, parts)
+                          transcript_text, parts, template)

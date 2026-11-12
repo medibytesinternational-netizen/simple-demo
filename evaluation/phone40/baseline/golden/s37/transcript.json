@@ -1,0 +1,495 @@
+{
+  "job_id": "s37-none",
+  "text": "A1-year-old female with three months neck pain to right shoulder, headache, finger tingling, and morning stiffness. Denies injury, fever, and weakness. No known drug allergy. Hypertension. Cervical spondylosis with tension headache. Blood pressure 132/84 mmHg. Pulse 80 beats per minute. Temperature 98.2 degrees Fahrenheit. Stiff neck, normal part. Neck x-ray. Parasitamol as needed. Physiotherapy. Postcorrection calcium, vitamin D. Diet, balanced diet, milk, vegetables 2 L water, da weight control genteral. No prolonged mobile use. Thin pillow. Daily exercise. Return for week. worsening num- numbness or severe headache. Follow up in two weeks.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "A1-year-old female with three months neck pain to right shoulder, headache, finger tingling, and morning stiffness. Denies injury, fever, and weakness. No known drug allergy. Hypertension. Cervical spondylosis with tension headache. Blood pressure 132/84 mmHg. Pulse 80 beats per minute. Temperature 98.2 degrees Fahrenheit. Stiff neck, normal part. Neck x-ray. Parasitamol as needed. Physiotherapy. Postcorrection calcium, vitamin D. Diet, balanced diet, milk, vegetables 2 L water, da weight control genteral. No prolonged mobile use. Thin pillow. Daily exercise. Return for week. worsening num- numbness or severe headache. Follow up in two weeks.",
+      "start": 0.0,
+      "end": 57.24,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "A1-year-old",
+          "s": 0.0,
+          "e": 0.62
+        },
+        {
+          "w": "female",
+          "s": 0.62,
+          "e": 1.24
+        },
+        {
+          "w": "with",
+          "s": 1.24,
+          "e": 1.87
+        },
+        {
+          "w": "three",
+          "s": 1.87,
+          "e": 2.49
+        },
+        {
+          "w": "months",
+          "s": 2.49,
+          "e": 3.11
+        },
+        {
+          "w": "neck",
+          "s": 3.11,
+          "e": 3.73
+        },
+        {
+          "w": "pain",
+          "s": 3.73,
+          "e": 4.36
+        },
+        {
+          "w": "to",
+          "s": 4.36,
+          "e": 4.98
+        },
+        {
+          "w": "right",
+          "s": 4.98,
+          "e": 5.6
+        },
+        {
+          "w": "shoulder,",
+          "s": 5.6,
+          "e": 6.22
+        },
+        {
+          "w": "headache,",
+          "s": 6.22,
+          "e": 6.84
+        },
+        {
+          "w": "finger",
+          "s": 6.84,
+          "e": 7.47
+        },
+        {
+          "w": "tingling,",
+          "s": 7.47,
+          "e": 8.09
+        },
+        {
+          "w": "and",
+          "s": 8.09,
+          "e": 8.71
+        },
+        {
+          "w": "morning",
+          "s": 8.71,
+          "e": 9.33
+        },
+        {
+          "w": "stiffness.",
+          "s": 9.33,
+          "e": 9.95
+        },
+        {
+          "w": "Denies",
+          "s": 9.95,
+          "e": 10.58
+        },
+        {
+          "w": "injury,",
+          "s": 10.58,
+          "e": 11.2
+        },
+        {
+          "w": "fever,",
+          "s": 11.2,
+          "e": 11.82
+        },
+        {
+          "w": "and",
+          "s": 11.82,
+          "e": 12.44
+        },
+        {
+          "w": "weakness.",
+          "s": 12.44,
+          "e": 13.07
+        },
+        {
+          "w": "No",
+          "s": 13.07,
+          "e": 13.69
+        },
+        {
+          "w": "known",
+          "s": 13.69,
+          "e": 14.31
+        },
+        {
+          "w": "drug",
+          "s": 14.31,
+          "e": 14.93
+        },
+        {
+          "w": "allergy.",
+          "s": 14.93,
+          "e": 15.55
+        },
+        {
+          "w": "Hypertension.",
+          "s": 15.55,
+          "e": 16.18
+        },
+        {
+          "w": "Cervical",
+          "s": 16.18,
+          "e": 16.8
+        },
+        {
+          "w": "spondylosis",
+          "s": 16.8,
+          "e": 17.42
+        },
+        {
+          "w": "with",
+          "s": 17.42,
+          "e": 18.04
+        },
+        {
+          "w": "tension",
+          "s": 18.04,
+          "e": 18.66
+        },
+        {
+          "w": "headache.",
+          "s": 18.66,
+          "e": 19.29
+        },
+        {
+          "w": "Blood",
+          "s": 19.29,
+          "e": 19.91
+        },
+        {
+          "w": "pressure",
+          "s": 19.91,
+          "e": 20.53
+        },
+        {
+          "w": "132/84",
+          "s": 20.53,
+          "e": 21.15
+        },
+        {
+          "w": "mmHg.",
+          "s": 21.15,
+          "e": 21.78
+        },
+        {
+          "w": "Pulse",
+          "s": 21.78,
+          "e": 22.4
+        },
+        {
+          "w": "80",
+          "s": 22.4,
+          "e": 23.02
+        },
+        {
+          "w": "beats",
+          "s": 23.02,
+          "e": 23.64
+        },
+        {
+          "w": "per",
+          "s": 23.64,
+          "e": 24.26
+        },
+        {
+          "w": "minute.",
+          "s": 24.26,
+          "e": 24.89
+        },
+        {
+          "w": "Temperature",
+          "s": 24.89,
+          "e": 25.51
+        },
+        {
+          "w": "98.2",
+          "s": 25.51,
+          "e": 26.13
+        },
+        {
+          "w": "degrees",
+          "s": 26.13,
+          "e": 26.75
+        },
+        {
+          "w": "Fahrenheit.",
+          "s": 26.75,
+          "e": 27.37
+        },
+        {
+          "w": "Stiff",
+          "s": 27.37,
+          "e": 28.0
+        },
+        {
+          "w": "neck,",
+          "s": 28.0,
+          "e": 28.62
+        },
+        {
+          "w": "normal",
+          "s": 28.62,
+          "e": 29.24
+        },
+        {
+          "w": "part.",
+          "s": 29.24,
+          "e": 29.86
+        },
+        {
+          "w": "Neck",
+          "s": 29.86,
+          "e": 30.49
+        },
+        {
+          "w": "x-ray.",
+          "s": 30.49,
+          "e": 31.11
+        },
+        {
+          "w": "Parasitamol",
+          "s": 31.11,
+          "e": 31.73
+        },
+        {
+          "w": "as",
+          "s": 31.73,
+          "e": 32.35
+        },
+        {
+          "w": "needed.",
+          "s": 32.35,
+          "e": 32.97
+        },
+        {
+          "w": "Physiotherapy.",
+          "s": 32.97,
+          "e": 33.6
+        },
+        {
+          "w": "Postcorrection",
+          "s": 33.6,
+          "e": 34.22
+        },
+        {
+          "w": "calcium,",
+          "s": 34.22,
+          "e": 34.84
+        },
+        {
+          "w": "vitamin",
+          "s": 34.84,
+          "e": 35.46
+        },
+        {
+          "w": "D.",
+          "s": 35.46,
+          "e": 36.08
+        },
+        {
+          "w": "Diet,",
+          "s": 36.08,
+          "e": 36.71
+        },
+        {
+          "w": "balanced",
+          "s": 36.71,
+          "e": 37.33
+        },
+        {
+          "w": "diet,",
+          "s": 37.33,
+          "e": 37.95
+        },
+        {
+          "w": "milk,",
+          "s": 37.95,
+          "e": 38.57
+        },
+        {
+          "w": "vegetables",
+          "s": 38.57,
+          "e": 39.2
+        },
+        {
+          "w": "2",
+          "s": 39.2,
+          "e": 39.82
+        },
+        {
+          "w": "L",
+          "s": 39.82,
+          "e": 40.44
+        },
+        {
+          "w": "water,",
+          "s": 40.44,
+          "e": 41.06
+        },
+        {
+          "w": "da",
+          "s": 41.06,
+          "e": 41.68
+        },
+        {
+          "w": "weight",
+          "s": 41.68,
+          "e": 42.31
+        },
+        {
+          "w": "control",
+          "s": 42.31,
+          "e": 42.93
+        },
+        {
+          "w": "genteral.",
+          "s": 42.93,
+          "e": 43.55
+        },
+        {
+          "w": "No",
+          "s": 43.55,
+          "e": 44.17
+        },
+        {
+          "w": "prolonged",
+          "s": 44.17,
+          "e": 44.79
+        },
+        {
+          "w": "mobile",
+          "s": 44.79,
+          "e": 45.42
+        },
+        {
+          "w": "use.",
+          "s": 45.42,
+          "e": 46.04
+        },
+        {
+          "w": "Thin",
+          "s": 46.04,
+          "e": 46.66
+        },
+        {
+          "w": "pillow.",
+          "s": 46.66,
+          "e": 47.28
+        },
+        {
+          "w": "Daily",
+          "s": 47.28,
+          "e": 47.91
+        },
+        {
+          "w": "exercise.",
+          "s": 47.91,
+          "e": 48.53
+        },
+        {
+          "w": "Return",
+          "s": 48.53,
+          "e": 49.15
+        },
+        {
+          "w": "for",
+          "s": 49.15,
+          "e": 49.77
+        },
+        {
+          "w": "week.",
+          "s": 49.77,
+          "e": 50.39
+        },
+        {
+          "w": "worsening",
+          "s": 50.39,
+          "e": 51.02
+        },
+        {
+          "w": "num-",
+          "s": 51.02,
+          "e": 51.64
+        },
+        {
+          "w": "numbness",
+          "s": 51.64,
+          "e": 52.26
+        },
+        {
+          "w": "or",
+          "s": 52.26,
+          "e": 52.88
+        },
+        {
+          "w": "severe",
+          "s": 52.88,
+          "e": 53.5
+        },
+        {
+          "w": "headache.",
+          "s": 53.5,
+          "e": 54.13
+        },
+        {
+          "w": "Follow",
+          "s": 54.13,
+          "e": 54.75
+        },
+        {
+          "w": "up",
+          "s": 54.75,
+          "e": 55.37
+        },
+        {
+          "w": "in",
+          "s": 55.37,
+          "e": 55.99
+        },
+        {
+          "w": "two",
+          "s": 55.99,
+          "e": 56.62
+        },
+        {
+          "w": "weeks.",
+          "s": 56.62,
+          "e": 57.24
+        }
+      ]
+    }
+  ],
+  "normalized_en": "A1-year-old female with 3 months neck pain to right shoulder, headache, finger tingling, and morning stiffness. Denies injury, fever, and weakness. No known drug allergy. Hypertension. Cervical spondylosis with tension headache. Blood pressure 132/84 mmHg. Pulse 80 beats per minute. Temperature 98.2 degrees Fahrenheit. Stiff neck, normal part. Neck x-ray. Parasitamol as needed. Physiotherapy. Postcorrection calcium, vitamin D. Diet, balanced diet, milk, vegetables 2 L water, da weight control genteral. No prolonged mobile use. Thin pillow. Daily exercise. Return for week. worsening num- numbness or severe headache. Follow up in 2 weeks.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s37-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

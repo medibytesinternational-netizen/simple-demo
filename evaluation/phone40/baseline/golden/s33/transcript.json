@@ -1,0 +1,505 @@
+{
+  "job_id": "s33-none",
+  "text": "39-year-old female with two weeks upper abdominal burning, nausea, and bloating after knee pain clears plus one vomit. Denies blood vomit and black stools. No known drug allergy. Self-medicated knee pain. Acute NSAID gastritis. Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit. Tender epigastrium. No gouting. Stop NSAIDs. Pantoprazole 40 mg daily before food, antaside as needed. Diet, Bland cauterized banana, butter milk. No spicy oilly tha coffee empty stomach. General, no pain killers. and advised return to written for blood vomit, black stools or severe pain. Follow up in one week.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "39-year-old female with two weeks upper abdominal burning, nausea, and bloating after knee pain clears plus one vomit. Denies blood vomit and black stools. No known drug allergy. Self-medicated knee pain. Acute NSAID gastritis. Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit. Tender epigastrium. No gouting. Stop NSAIDs. Pantoprazole 40 mg daily before food, antaside as needed. Diet, Bland cauterized banana, butter milk. No spicy oilly tha coffee empty stomach. General, no pain killers. and advised return to written for blood vomit, black stools or severe pain. Follow up in one week.",
+      "start": 0.0,
+      "end": 65.22,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "39-year-old",
+          "s": 0.0,
+          "e": 0.69
+        },
+        {
+          "w": "female",
+          "s": 0.69,
+          "e": 1.39
+        },
+        {
+          "w": "with",
+          "s": 1.39,
+          "e": 2.08
+        },
+        {
+          "w": "two",
+          "s": 2.08,
+          "e": 2.78
+        },
+        {
+          "w": "weeks",
+          "s": 2.78,
+          "e": 3.47
+        },
+        {
+          "w": "upper",
+          "s": 3.47,
+          "e": 4.16
+        },
+        {
+          "w": "abdominal",
+          "s": 4.16,
+          "e": 4.86
+        },
+        {
+          "w": "burning,",
+          "s": 4.86,
+          "e": 5.55
+        },
+        {
+          "w": "nausea,",
+          "s": 5.55,
+          "e": 6.24
+        },
+        {
+          "w": "and",
+          "s": 6.24,
+          "e": 6.94
+        },
+        {
+          "w": "bloating",
+          "s": 6.94,
+          "e": 7.63
+        },
+        {
+          "w": "after",
+          "s": 7.63,
+          "e": 8.33
+        },
+        {
+          "w": "knee",
+          "s": 8.33,
+          "e": 9.02
+        },
+        {
+          "w": "pain",
+          "s": 9.02,
+          "e": 9.71
+        },
+        {
+          "w": "clears",
+          "s": 9.71,
+          "e": 10.41
+        },
+        {
+          "w": "plus",
+          "s": 10.41,
+          "e": 11.1
+        },
+        {
+          "w": "one",
+          "s": 11.1,
+          "e": 11.79
+        },
+        {
+          "w": "vomit.",
+          "s": 11.79,
+          "e": 12.49
+        },
+        {
+          "w": "Denies",
+          "s": 12.49,
+          "e": 13.18
+        },
+        {
+          "w": "blood",
+          "s": 13.18,
+          "e": 13.88
+        },
+        {
+          "w": "vomit",
+          "s": 13.88,
+          "e": 14.57
+        },
+        {
+          "w": "and",
+          "s": 14.57,
+          "e": 15.26
+        },
+        {
+          "w": "black",
+          "s": 15.26,
+          "e": 15.96
+        },
+        {
+          "w": "stools.",
+          "s": 15.96,
+          "e": 16.65
+        },
+        {
+          "w": "No",
+          "s": 16.65,
+          "e": 17.34
+        },
+        {
+          "w": "known",
+          "s": 17.34,
+          "e": 18.04
+        },
+        {
+          "w": "drug",
+          "s": 18.04,
+          "e": 18.73
+        },
+        {
+          "w": "allergy.",
+          "s": 18.73,
+          "e": 19.43
+        },
+        {
+          "w": "Self-medicated",
+          "s": 19.43,
+          "e": 20.12
+        },
+        {
+          "w": "knee",
+          "s": 20.12,
+          "e": 20.81
+        },
+        {
+          "w": "pain.",
+          "s": 20.81,
+          "e": 21.51
+        },
+        {
+          "w": "Acute",
+          "s": 21.51,
+          "e": 22.2
+        },
+        {
+          "w": "NSAID",
+          "s": 22.2,
+          "e": 22.89
+        },
+        {
+          "w": "gastritis.",
+          "s": 22.89,
+          "e": 23.59
+        },
+        {
+          "w": "Blood",
+          "s": 23.59,
+          "e": 24.28
+        },
+        {
+          "w": "pressure",
+          "s": 24.28,
+          "e": 24.98
+        },
+        {
+          "w": "120/78",
+          "s": 24.98,
+          "e": 25.67
+        },
+        {
+          "w": "mmHg,",
+          "s": 25.67,
+          "e": 26.36
+        },
+        {
+          "w": "pulse",
+          "s": 26.36,
+          "e": 27.06
+        },
+        {
+          "w": "86,",
+          "s": 27.06,
+          "e": 27.75
+        },
+        {
+          "w": "temperature",
+          "s": 27.75,
+          "e": 28.45
+        },
+        {
+          "w": "98.4",
+          "s": 28.45,
+          "e": 29.14
+        },
+        {
+          "w": "degrees",
+          "s": 29.14,
+          "e": 29.83
+        },
+        {
+          "w": "Fahrenheit.",
+          "s": 29.83,
+          "e": 30.53
+        },
+        {
+          "w": "Tender",
+          "s": 30.53,
+          "e": 31.22
+        },
+        {
+          "w": "epigastrium.",
+          "s": 31.22,
+          "e": 31.91
+        },
+        {
+          "w": "No",
+          "s": 31.91,
+          "e": 32.61
+        },
+        {
+          "w": "gouting.",
+          "s": 32.61,
+          "e": 33.3
+        },
+        {
+          "w": "Stop",
+          "s": 33.3,
+          "e": 34.0
+        },
+        {
+          "w": "NSAIDs.",
+          "s": 34.0,
+          "e": 34.69
+        },
+        {
+          "w": "Pantoprazole",
+          "s": 34.69,
+          "e": 35.38
+        },
+        {
+          "w": "40",
+          "s": 35.38,
+          "e": 36.08
+        },
+        {
+          "w": "mg",
+          "s": 36.08,
+          "e": 36.77
+        },
+        {
+          "w": "daily",
+          "s": 36.77,
+          "e": 37.46
+        },
+        {
+          "w": "before",
+          "s": 37.46,
+          "e": 38.16
+        },
+        {
+          "w": "food,",
+          "s": 38.16,
+          "e": 38.85
+        },
+        {
+          "w": "antaside",
+          "s": 38.85,
+          "e": 39.55
+        },
+        {
+          "w": "as",
+          "s": 39.55,
+          "e": 40.24
+        },
+        {
+          "w": "needed.",
+          "s": 40.24,
+          "e": 40.93
+        },
+        {
+          "w": "Diet,",
+          "s": 40.93,
+          "e": 41.63
+        },
+        {
+          "w": "Bland",
+          "s": 41.63,
+          "e": 42.32
+        },
+        {
+          "w": "cauterized",
+          "s": 42.32,
+          "e": 43.01
+        },
+        {
+          "w": "banana,",
+          "s": 43.01,
+          "e": 43.71
+        },
+        {
+          "w": "butter",
+          "s": 43.71,
+          "e": 44.4
+        },
+        {
+          "w": "milk.",
+          "s": 44.4,
+          "e": 45.1
+        },
+        {
+          "w": "No",
+          "s": 45.1,
+          "e": 45.79
+        },
+        {
+          "w": "spicy",
+          "s": 45.79,
+          "e": 46.48
+        },
+        {
+          "w": "oilly",
+          "s": 46.48,
+          "e": 47.18
+        },
+        {
+          "w": "tha",
+          "s": 47.18,
+          "e": 47.87
+        },
+        {
+          "w": "coffee",
+          "s": 47.87,
+          "e": 48.57
+        },
+        {
+          "w": "empty",
+          "s": 48.57,
+          "e": 49.26
+        },
+        {
+          "w": "stomach.",
+          "s": 49.26,
+          "e": 49.95
+        },
+        {
+          "w": "General,",
+          "s": 49.95,
+          "e": 50.65
+        },
+        {
+          "w": "no",
+          "s": 50.65,
+          "e": 51.34
+        },
+        {
+          "w": "pain",
+          "s": 51.34,
+          "e": 52.03
+        },
+        {
+          "w": "killers.",
+          "s": 52.03,
+          "e": 52.73
+        },
+        {
+          "w": "and",
+          "s": 52.73,
+          "e": 53.42
+        },
+        {
+          "w": "advised",
+          "s": 53.42,
+          "e": 54.12
+        },
+        {
+          "w": "return",
+          "s": 54.12,
+          "e": 54.81
+        },
+        {
+          "w": "to",
+          "s": 54.81,
+          "e": 55.5
+        },
+        {
+          "w": "written",
+          "s": 55.5,
+          "e": 56.2
+        },
+        {
+          "w": "for",
+          "s": 56.2,
+          "e": 56.89
+        },
+        {
+          "w": "blood",
+          "s": 56.89,
+          "e": 57.58
+        },
+        {
+          "w": "vomit,",
+          "s": 57.58,
+          "e": 58.28
+        },
+        {
+          "w": "black",
+          "s": 58.28,
+          "e": 58.97
+        },
+        {
+          "w": "stools",
+          "s": 58.97,
+          "e": 59.67
+        },
+        {
+          "w": "or",
+          "s": 59.67,
+          "e": 60.36
+        },
+        {
+          "w": "severe",
+          "s": 60.36,
+          "e": 61.05
+        },
+        {
+          "w": "pain.",
+          "s": 61.05,
+          "e": 61.75
+        },
+        {
+          "w": "Follow",
+          "s": 61.75,
+          "e": 62.44
+        },
+        {
+          "w": "up",
+          "s": 62.44,
+          "e": 63.13
+        },
+        {
+          "w": "in",
+          "s": 63.13,
+          "e": 63.83
+        },
+        {
+          "w": "one",
+          "s": 63.83,
+          "e": 64.52
+        },
+        {
+          "w": "week.",
+          "s": 64.52,
+          "e": 65.22
+        }
+      ]
+    }
+  ],
+  "normalized_en": "39-year-old female with 2 weeks upper abdominal burning, nausea, and bloating after knee pain clears plus 1 vomit. Denies blood vomit and black stools. No known drug allergy. Self-medicated knee pain. Acute NSAID gastritis. Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit. Tender epigastrium. No gouting. Stop NSAIDs. Pantoprazole 40 mg daily before food, antaside as needed. Diet, Bland cauterized banana, butter milk. No spicy oilly tha coffee empty stomach. General, no pain killers. and advised return to written for blood vomit, black stools or severe pain. Follow up in 1 week.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s33-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

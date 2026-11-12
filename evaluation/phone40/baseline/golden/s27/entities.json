@@ -1,0 +1,431 @@
+{
+  "job_id": "s27-none",
+  "drugs": [
+    {
+      "name": "human menopausal gonadotropin",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Menopause.",
+      "negated": false,
+      "raw_token": "menopause",
+      "candidates": [
+        {
+          "name": "human menopausal gonadotropin",
+          "kind": "substance",
+          "substances": [
+            "human menopausal gonadotropin"
+          ],
+          "units": [
+            "U"
+          ],
+          "strengths": [
+            {
+              "form": "injection",
+              "unit": "U",
+              "value": 75.0
+            }
+          ],
+          "forms": [
+            "injection"
+          ],
+          "mass_mg": null,
+          "score": 0.842,
+          "matched_name": "menopausal"
+        }
+      ],
+      "matcher_pick": "human menopausal gonadotropin",
+      "note": "fuzzy menopause->human menopausal gonadotropin (0.84), no dose dictated - physician must confirm | ambiguous: no drug, dose, or indication for a medication present",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "Menopause.",
+        "final_output_sentence": "Menopause.",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.0,
+        "reason": "no drug, dose, or indication for a medication present",
+        "engine": "llm:gpt-4.1"
+      }
+    },
+    {
+      "name": "calcium",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Briast x-ray, calcium,/vitamin D.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm (national drug list, not this pipeline's own)",
+      "start_char": 362,
+      "end_char": 369,
+      "span_status": "exact"
+    },
+    {
+      "name": "vitamin",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Briast x-ray, calcium,/vitamin D.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm (national drug list, not this pipeline's own)",
+      "start_char": 371,
+      "end_char": 378,
+      "span_status": "exact"
+    },
+    {
+      "name": "paracetamol",
+      "dose": 650.0,
+      "unit": "mg",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.88,
+      "color": "YELLOW",
+      "source_sentence": "Planslab elevation paracetamole 650 mg, ortho paortic reduction review.",
+      "negated": false,
+      "note": "fuzzy paracetamole->paracetamol (0.96) | validator paracetamole->paracetamol",
+      "raw_token": "paracetamole",
+      "candidates": [
+        {
+          "name": "paracetamol",
+          "score": 0.957,
+          "matched_alias": "paracetamol",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "acetaminophen",
+            "substances": [
+              "acetaminophen"
+            ],
+            "units": [
+              "g",
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.3,
+              1000.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "solution",
+              "suppository",
+              "suspension",
+              "syrup"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mcg",
+                "value": 300.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 2.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 2.5
+              }
+            ]
+          }
+        }
+      ],
+      "matcher_pick": "paracetamol",
+      "start_char": 401,
+      "end_char": 412,
+      "span_status": "exact",
+      "validation": {
+        "status": "corrected",
+        "original_sentence": "Planslab elevation paracetamole 650 mg, ortho paortic reduction review.",
+        "final_output_sentence": "Planslab elevation paracetamol 650 mg, ortho paortic reduction review.",
+        "applied_corrections": [
+          {
+            "replaced_token": "paracetamole",
+            "substituted_with": "paracetamol"
+          }
+        ],
+        "semantic_confidence_score": 1.0,
+        "reason": "650 mg dose matches paracetamol standard dosing",
+        "overrules_matcher": false,
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "60-year-old female, slipped six hours ago, injuring right wrist, now swelling, deformity, severe pain.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Rriettenn to wri return for numbness, blow fingers or rising pain.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Blood pressure 130/80",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 130/80 mmHg.",
+      "start_char": 291,
+      "end_char": 312,
+      "span_status": "exact"
+    },
+    {
+      "text": "Pulse 88",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Pulse 88.",
+      "start_char": 319,
+      "end_char": 327,
+      "span_status": "exact"
+    },
+    {
+      "text": "Glucose 140",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Glucose 140 mg/dL.",
+      "start_char": 329,
+      "end_char": 340,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {},
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 5.471,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "human menopausal gonadotropin",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: human menopausal gonadotropin; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Menopause."
+      },
+      {
+        "kind": "drug",
+        "name": "calcium",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: calcium; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Briast x-ray, calcium,/vitamin D."
+      },
+      {
+        "kind": "drug",
+        "name": "vitamin",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: vitamin; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Briast x-ray, calcium,/vitamin D."
+      },
+      {
+        "kind": "drug",
+        "name": "paracetamol",
+        "dose": 650.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mcg/mg/ml; listed strengths: 1 g solution, 1 g tablet, 300 mcg suspension, 1 mg solution; 650 mg is plausible for this drug]",
+        "confidence": 0.88,
+        "source_sentence": "Planslab elevation paracetamole 650 mg, ortho paortic reduction review."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 130/80",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 130/80 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "Pulse 88",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Pulse 88."
+      },
+      {
+        "kind": "vital",
+        "text": "Glucose 140",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Glucose 140 mg/dL."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "60-year-old female, slipped six hours ago, injuring right wrist, now swelling, deformity, severe pain."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Rriettenn to wri return for numbness, blow fingers or rising pain."
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "2",
+          "6",
+          "60",
+          "80",
+          "88",
+          "130",
+          "140",
+          "650"
+        ],
+        "count": 8
+      },
+      "total": 9,
+      "drug_needs_review": 3,
+      "drug_verified": 1,
+      "vital_verified": 3,
+      "symptom_verified": 2
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

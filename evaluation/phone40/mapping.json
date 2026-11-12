@@ -1,0 +1,328 @@
+{
+  "source": "C:/Users/hp/Downloads/dataset/dataset/Markdown to PDF (6).md",
+  "scripts_found": 40,
+  "words_per_script": {
+    "1": 123,
+    "2": 111,
+    "3": 112,
+    "4": 106,
+    "5": 104,
+    "6": 103,
+    "7": 106,
+    "8": 105,
+    "9": 114,
+    "10": 106,
+    "11": 107,
+    "12": 103,
+    "13": 113,
+    "14": 106,
+    "15": 108,
+    "16": 110,
+    "17": 100,
+    "18": 99,
+    "19": 99,
+    "20": 108,
+    "21": 107,
+    "22": 98,
+    "23": 109,
+    "24": 107,
+    "25": 105,
+    "26": 104,
+    "27": 108,
+    "28": 106,
+    "29": 103,
+    "30": 100,
+    "31": 101,
+    "32": 102,
+    "33": 99,
+    "34": 100,
+    "35": 104,
+    "36": 98,
+    "37": 102,
+    "38": 110,
+    "39": 103,
+    "40": 85
+  },
+  "clips": {
+    "s1": {
+      "script": 1,
+      "score": 0.85,
+      "margin": 0.461,
+      "check": false,
+      "title": "Community-acquired pneumonia, 52M"
+    },
+    "s2": {
+      "script": 2,
+      "score": 0.856,
+      "margin": 0.505,
+      "check": false,
+      "title": "Essential hypertension, 48F"
+    },
+    "s3": {
+      "script": 3,
+      "score": 0.906,
+      "margin": 0.587,
+      "check": false,
+      "title": "Acute ischemic stroke, 60M"
+    },
+    "s4": {
+      "script": 4,
+      "score": 0.891,
+      "margin": 0.499,
+      "check": false,
+      "title": "Acute coronary syndrome, 58M"
+    },
+    "s5": {
+      "script": 5,
+      "score": 0.821,
+      "margin": 0.617,
+      "check": false,
+      "title": "Suspected amoxicillin allergy, young adult F"
+    },
+    "s6": {
+      "script": 6,
+      "score": 0.796,
+      "margin": 0.62,
+      "check": false,
+      "title": "Hypoglycaemia on insulin, elderly M"
+    },
+    "s7": {
+      "script": 7,
+      "score": 0.838,
+      "margin": 0.557,
+      "check": false,
+      "title": "Post-operative wound infection, appendectomy"
+    },
+    "s8": {
+      "script": 8,
+      "score": 0.845,
+      "margin": 0.569,
+      "check": false,
+      "title": "ICU severe pneumonia, 65F"
+    },
+    "s9": {
+      "script": 9,
+      "score": 0.704,
+      "margin": 0.428,
+      "check": false,
+      "title": "Transfusion reaction, severe anaemia"
+    },
+    "s10": {
+      "script": 10,
+      "score": 0.768,
+      "margin": 0.48,
+      "check": false,
+      "title": "Post-seizure epilepsy, 34M"
+    },
+    "s11": {
+      "script": 12,
+      "score": 0.89,
+      "margin": 0.52,
+      "check": false,
+      "title": "COPD exacerbation, 68M"
+    },
+    "s12": {
+      "script": 11,
+      "score": 0.851,
+      "margin": 0.495,
+      "check": false,
+      "title": "Asthma exacerbation, 26F"
+    },
+    "s13": {
+      "script": 13,
+      "score": 0.868,
+      "margin": 0.535,
+      "check": false,
+      "title": "Dengue with warning signs, 29M"
+    },
+    "s14": {
+      "script": 14,
+      "score": 0.808,
+      "margin": 0.43,
+      "check": false,
+      "title": "Enteric fever, 22F"
+    },
+    "s15": {
+      "script": 15,
+      "score": 0.851,
+      "margin": 0.506,
+      "check": false,
+      "title": "Acute pyelonephritis, 35F"
+    },
+    "s16": {
+      "script": 16,
+      "score": 0.854,
+      "margin": 0.498,
+      "check": false,
+      "title": "Heart failure, 62M"
+    },
+    "s17": {
+      "script": 17,
+      "score": 0.785,
+      "margin": 0.511,
+      "check": false,
+      "title": "New type 2 diabetes, 45M"
+    },
+    "s18": {
+      "script": 18,
+      "score": 0.875,
+      "margin": 0.567,
+      "check": false,
+      "title": "Hypothyroidism, 38F"
+    },
+    "s19": {
+      "script": 19,
+      "score": 0.728,
+      "margin": 0.482,
+      "check": false,
+      "title": "Iron deficiency anaemia, 28F"
+    },
+    "s20": {
+      "script": 20,
+      "score": 0.846,
+      "margin": 0.384,
+      "check": false,
+      "title": "Acute gastroenteritis, 31M"
+    },
+    "s21": {
+      "script": 21,
+      "score": 0.843,
+      "margin": 0.535,
+      "check": false,
+      "title": "Migraine, 33F"
+    },
+    "s22": {
+      "script": 22,
+      "score": 0.776,
+      "margin": 0.481,
+      "check": false,
+      "title": "Pulmonary tuberculosis, 40M"
+    },
+    "s23": {
+      "script": 23,
+      "score": 0.879,
+      "margin": 0.522,
+      "check": false,
+      "title": "Diabetic leg cellulitis, 50M"
+    },
+    "s24": {
+      "script": 24,
+      "score": 0.879,
+      "margin": 0.597,
+      "check": false,
+      "title": "Diabetic ketoacidosis, 19M"
+    },
+    "s25": {
+      "script": 25,
+      "score": 0.846,
+      "margin": 0.522,
+      "check": false,
+      "title": "Kidney injury with dehydration, 70F"
+    },
+    "s26": {
+      "script": 26,
+      "score": 0.812,
+      "margin": 0.535,
+      "check": false,
+      "title": "Cirrhosis with ascites, 55M"
+    },
+    "s27": {
+      "script": 29,
+      "score": 0.724,
+      "margin": 0.461,
+      "check": false,
+      "title": "Distal radius fracture, 60F"
+    },
+    "s28": {
+      "script": 28,
+      "score": 0.836,
+      "margin": 0.44,
+      "check": false,
+      "title": "Acute cholecystitis, 47F"
+    },
+    "s29": {
+      "script": 27,
+      "score": 0.864,
+      "margin": 0.46,
+      "check": false,
+      "title": "Acute pancreatitis, 42M"
+    },
+    "s30": {
+      "script": 30,
+      "score": 0.845,
+      "margin": 0.559,
+      "check": false,
+      "title": "Knee osteoarthritis, 58F"
+    },
+    "s31": {
+      "script": 31,
+      "score": 0.833,
+      "margin": 0.486,
+      "check": false,
+      "title": "Viral URTI, 24M"
+    },
+    "s32": {
+      "script": 35,
+      "score": 0.806,
+      "margin": 0.529,
+      "check": false,
+      "title": "Renal colic, 44M"
+    },
+    "s33": {
+      "script": 33,
+      "score": 0.818,
+      "margin": 0.465,
+      "check": false,
+      "title": "Gastritis, NSAID use, 39F"
+    },
+    "s34": {
+      "script": 34,
+      "score": 0.819,
+      "margin": 0.397,
+      "check": false,
+      "title": "Paediatric viral diarrhoea, 6F"
+    },
+    "s35": {
+      "script": 32,
+      "score": 0.846,
+      "margin": 0.51,
+      "check": false,
+      "title": "GERD, 36M"
+    },
+    "s36": {
+      "script": 36,
+      "score": 0.877,
+      "margin": 0.53,
+      "check": false,
+      "title": "Atrial fibrillation, 66M"
+    },
+    "s37": {
+      "script": 37,
+      "score": 0.854,
+      "margin": 0.518,
+      "check": false,
+      "title": "Cervical spondylosis, 51F"
+    },
+    "s38": {
+      "script": 38,
+      "score": 0.743,
+      "margin": 0.461,
+      "check": false,
+      "title": "Snake bite observation, 30M"
+    },
+    "s39": {
+      "script": 39,
+      "score": 0.761,
+      "margin": 0.475,
+      "check": false,
+      "title": "Minor head injury, 29M"
+    },
+    "s40": {
+      "script": 40,
+      "score": 0.812,
+      "margin": 0.53,
+      "check": false,
+      "title": "Stable angina, 61M"
+    }
+  }
+}

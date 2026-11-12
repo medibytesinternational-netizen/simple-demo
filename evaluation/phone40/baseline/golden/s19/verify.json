@@ -1,0 +1,141 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "tramadol",
+      "dose": 400.0,
+      "unit": "mg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg/ml; listed strengths: 1 mg solution, 18.75 mg tablet, 25 mg tablet, 37.5 mg tablet; 400 mg is plausible for this drug]",
+      "confidence": 0.7,
+      "source_sentence": "Ferrous sulfate with folic acid daily after food plus abazol 400 mg single dose."
+    },
+    {
+      "kind": "drug",
+      "name": "ferrous",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: ferrous; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Ferrous sulfate with folic acid daily after food plus abazol 400 mg single dose."
+    },
+    {
+      "kind": "drug",
+      "name": "folic acid",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: folic acid; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Ferrous sulfate with folic acid daily after food plus abazol 400 mg single dose."
+    },
+    {
+      "kind": "drug",
+      "name": "paracetamol",
+      "dose": 400.0,
+      "unit": "mg",
+      "negated": true,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:needs_review",
+        "polarity:negated-preserved"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mcg/mg/ml; listed strengths: 1 g solution, 1 g tablet, 300 mcg suspension, 1 mg solution; 400 mg is plausible for this drug]; source_sentence not verbatim in transcript",
+      "confidence": 0.7,
+      "source_sentence": "28-year-old female with two months tiredness, pallor, star breathlessness, hair fall and a clay craving with heavy periods, a denies piles bleeding and weight loss, no known drug allergy, past diagnosis, iron deficiency, now moderate anemia, examination, pallor, pulse, 96 beats per minute, blood pressure 104 over 66 millimeters of mercury, saturation 99% investigations, blood count and ferritin, plant, ferrous sulphate with folic acid daily after foot plus album disol 400 milligrams single dose, diet, leafy vegetables, jaggery, ground nuts, dates, lemon, no tea near tablets, general, continue three months, repeat hemoglobin one month, gynecology review for periods."
+    },
+    {
+      "kind": "vital",
+      "text": "Pulse 96",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Pulse 96 beats per minute."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 104/66",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 104/66 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "99%",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Sturation 99%."
+    },
+    {
+      "kind": "symptom",
+      "text": "breathlessness",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "28-year-old female with two months tiredness, pallor, stare breathlessness, harful and clake craving with heavy periods."
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "2",
+        "3",
+        "11",
+        "28",
+        "66",
+        "96",
+        "99",
+        "104",
+        "400"
+      ],
+      "count": 10
+    },
+    "total": 8,
+    "drug_verified": 1,
+    "drug_needs_review": 3,
+    "vital_verified": 3,
+    "symptom_verified": 1
+  },
+  "brand_mentions": []
+}

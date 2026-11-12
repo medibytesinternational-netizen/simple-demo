@@ -1,0 +1,178 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "ceftriaxone",
+      "dose": 1.0,
+      "unit": "g",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mg; listed strengths: 1 g injection, 1 g solution, 2 g solution, 2 g injection; 1 g is plausible for this drug]",
+      "confidence": 0.96,
+      "source_sentence": "Ceftriaxone 1 g as advised."
+    },
+    {
+      "kind": "drug",
+      "name": "pantoprazole",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Pantoprazole, surgery surgical review, diet, then low-fat small frequent meals."
+    },
+    {
+      "kind": "drug",
+      "name": "aspirin",
+      "dose": 1.0,
+      "unit": "g",
+      "negated": true,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:needs_review",
+        "polarity:negated-preserved"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 1.5 mg solution, 2.25 mg tablet, 2.5 mg solution, 4.5 mg tablet; 1 g is plausible for this drug]; source_sentence not verbatim in transcript",
+      "confidence": 0.7,
+      "source_sentence": "47 year old female with one day right upper abdominal pain after fatty foot vomiting and fever radiating to shoulder denies jaundice no known drug allergy past history gallstone provisional diagnosis acute caulic eyes status examination temperature 106 degrees Fahrenheit pulse 98 beats per minute blood pressure 126 over 90 millimeters of mercury right upper tenderness Murphy positive investigations blood count liver function ultrasound plan nil by mouth IV fluids sephraxion 1 gram as advised panto-prazole surgery surgical review diet then low fat small frequent meals no fried food or ghee general avoid fatty food report join this persistent vomiting or severe pain surgery follow up in two days"
+    },
+    {
+      "kind": "vital",
+      "text": "Temperature 106 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 98",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "blood pressure 126/90",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "General, avoid fatty food, report jaundice, persistent vomiting or severe pain, surgery followup in two days."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "General, avoid fatty food, report jaundice, persistent vomiting or severe pain, surgery followup in two days."
+    },
+    {
+      "kind": "followup",
+      "text": "followup in two days",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "followup in two days"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "2",
+        "47",
+        "90",
+        "98",
+        "106",
+        "126"
+      ],
+      "count": 7
+    },
+    "total": 12,
+    "drug_verified": 1,
+    "drug_needs_review": 2,
+    "vital_verified": 3,
+    "symptom_verified": 5,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

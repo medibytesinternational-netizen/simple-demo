@@ -1,0 +1,550 @@
+{
+  "job_id": "s3-none",
+  "text": "60-year-old male with sudden right arm leg weakness, slurred speech, and facial droop one hour ago. Conscious and answering. Denies fever, seizure, and head injury. No known drug allergy. Hypertension and type two diabetes. Acute ischematic stroke. Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air. Right-sided weakness with facial droop. Investigation, rgent CT brain and blood glucose. Stroke unit monitoring. Nil byy mouth until swallow review. onset time documentation. Diet, Mill by mouth, then soft diet after swallow test only. General, watch consciousness and weakness. Alert team at once for worsening. No food or aspirin until reviewed.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "60-year-old male with sudden right arm leg weakness, slurred speech, and facial droop one hour ago. Conscious and answering. Denies fever, seizure, and head injury. No known drug allergy. Hypertension and type two diabetes. Acute ischematic stroke. Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air. Right-sided weakness with facial droop. Investigation, rgent CT brain and blood glucose. Stroke unit monitoring. Nil byy mouth until swallow review. onset time documentation. Diet, Mill by mouth, then soft diet after swallow test only. General, watch consciousness and weakness. Alert team at once for worsening. No food or aspirin until reviewed.",
+      "start": 0.0,
+      "end": 63.79,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "60-year-old",
+          "s": 0.0,
+          "e": 0.62
+        },
+        {
+          "w": "male",
+          "s": 0.62,
+          "e": 1.24
+        },
+        {
+          "w": "with",
+          "s": 1.24,
+          "e": 1.86
+        },
+        {
+          "w": "sudden",
+          "s": 1.86,
+          "e": 2.48
+        },
+        {
+          "w": "right",
+          "s": 2.48,
+          "e": 3.1
+        },
+        {
+          "w": "arm",
+          "s": 3.1,
+          "e": 3.72
+        },
+        {
+          "w": "leg",
+          "s": 3.72,
+          "e": 4.34
+        },
+        {
+          "w": "weakness,",
+          "s": 4.34,
+          "e": 4.95
+        },
+        {
+          "w": "slurred",
+          "s": 4.95,
+          "e": 5.57
+        },
+        {
+          "w": "speech,",
+          "s": 5.57,
+          "e": 6.19
+        },
+        {
+          "w": "and",
+          "s": 6.19,
+          "e": 6.81
+        },
+        {
+          "w": "facial",
+          "s": 6.81,
+          "e": 7.43
+        },
+        {
+          "w": "droop",
+          "s": 7.43,
+          "e": 8.05
+        },
+        {
+          "w": "one",
+          "s": 8.05,
+          "e": 8.67
+        },
+        {
+          "w": "hour",
+          "s": 8.67,
+          "e": 9.29
+        },
+        {
+          "w": "ago.",
+          "s": 9.29,
+          "e": 9.91
+        },
+        {
+          "w": "Conscious",
+          "s": 9.91,
+          "e": 10.53
+        },
+        {
+          "w": "and",
+          "s": 10.53,
+          "e": 11.15
+        },
+        {
+          "w": "answering.",
+          "s": 11.15,
+          "e": 11.77
+        },
+        {
+          "w": "Denies",
+          "s": 11.77,
+          "e": 12.39
+        },
+        {
+          "w": "fever,",
+          "s": 12.39,
+          "e": 13.01
+        },
+        {
+          "w": "seizure,",
+          "s": 13.01,
+          "e": 13.62
+        },
+        {
+          "w": "and",
+          "s": 13.62,
+          "e": 14.24
+        },
+        {
+          "w": "head",
+          "s": 14.24,
+          "e": 14.86
+        },
+        {
+          "w": "injury.",
+          "s": 14.86,
+          "e": 15.48
+        },
+        {
+          "w": "No",
+          "s": 15.48,
+          "e": 16.1
+        },
+        {
+          "w": "known",
+          "s": 16.1,
+          "e": 16.72
+        },
+        {
+          "w": "drug",
+          "s": 16.72,
+          "e": 17.34
+        },
+        {
+          "w": "allergy.",
+          "s": 17.34,
+          "e": 17.96
+        },
+        {
+          "w": "Hypertension",
+          "s": 17.96,
+          "e": 18.58
+        },
+        {
+          "w": "and",
+          "s": 18.58,
+          "e": 19.2
+        },
+        {
+          "w": "type",
+          "s": 19.2,
+          "e": 19.82
+        },
+        {
+          "w": "two",
+          "s": 19.82,
+          "e": 20.44
+        },
+        {
+          "w": "diabetes.",
+          "s": 20.44,
+          "e": 21.06
+        },
+        {
+          "w": "Acute",
+          "s": 21.06,
+          "e": 21.68
+        },
+        {
+          "w": "ischematic",
+          "s": 21.68,
+          "e": 22.29
+        },
+        {
+          "w": "stroke.",
+          "s": 22.29,
+          "e": 22.91
+        },
+        {
+          "w": "Blood",
+          "s": 22.91,
+          "e": 23.53
+        },
+        {
+          "w": "pressure",
+          "s": 23.53,
+          "e": 24.15
+        },
+        {
+          "w": "160/90",
+          "s": 24.15,
+          "e": 24.77
+        },
+        {
+          "w": "mmHg,",
+          "s": 24.77,
+          "e": 25.39
+        },
+        {
+          "w": "pulse",
+          "s": 25.39,
+          "e": 26.01
+        },
+        {
+          "w": "88",
+          "s": 26.01,
+          "e": 26.63
+        },
+        {
+          "w": "beats",
+          "s": 26.63,
+          "e": 27.25
+        },
+        {
+          "w": "per",
+          "s": 27.25,
+          "e": 27.87
+        },
+        {
+          "w": "minute,",
+          "s": 27.87,
+          "e": 28.49
+        },
+        {
+          "w": "saturation",
+          "s": 28.49,
+          "e": 29.11
+        },
+        {
+          "w": "97%",
+          "s": 29.11,
+          "e": 29.73
+        },
+        {
+          "w": "on",
+          "s": 29.73,
+          "e": 30.35
+        },
+        {
+          "w": "room",
+          "s": 30.35,
+          "e": 30.96
+        },
+        {
+          "w": "air.",
+          "s": 30.96,
+          "e": 31.58
+        },
+        {
+          "w": "Right-sided",
+          "s": 31.58,
+          "e": 32.2
+        },
+        {
+          "w": "weakness",
+          "s": 32.2,
+          "e": 32.82
+        },
+        {
+          "w": "with",
+          "s": 32.82,
+          "e": 33.44
+        },
+        {
+          "w": "facial",
+          "s": 33.44,
+          "e": 34.06
+        },
+        {
+          "w": "droop.",
+          "s": 34.06,
+          "e": 34.68
+        },
+        {
+          "w": "Investigation,",
+          "s": 34.68,
+          "e": 35.3
+        },
+        {
+          "w": "rgent",
+          "s": 35.3,
+          "e": 35.92
+        },
+        {
+          "w": "CT",
+          "s": 35.92,
+          "e": 36.54
+        },
+        {
+          "w": "brain",
+          "s": 36.54,
+          "e": 37.16
+        },
+        {
+          "w": "and",
+          "s": 37.16,
+          "e": 37.78
+        },
+        {
+          "w": "blood",
+          "s": 37.78,
+          "e": 38.4
+        },
+        {
+          "w": "glucose.",
+          "s": 38.4,
+          "e": 39.02
+        },
+        {
+          "w": "Stroke",
+          "s": 39.02,
+          "e": 39.63
+        },
+        {
+          "w": "unit",
+          "s": 39.63,
+          "e": 40.25
+        },
+        {
+          "w": "monitoring.",
+          "s": 40.25,
+          "e": 40.87
+        },
+        {
+          "w": "Nil",
+          "s": 40.87,
+          "e": 41.49
+        },
+        {
+          "w": "byy",
+          "s": 41.49,
+          "e": 42.11
+        },
+        {
+          "w": "mouth",
+          "s": 42.11,
+          "e": 42.73
+        },
+        {
+          "w": "until",
+          "s": 42.73,
+          "e": 43.35
+        },
+        {
+          "w": "swallow",
+          "s": 43.35,
+          "e": 43.97
+        },
+        {
+          "w": "review.",
+          "s": 43.97,
+          "e": 44.59
+        },
+        {
+          "w": "onset",
+          "s": 44.59,
+          "e": 45.21
+        },
+        {
+          "w": "time",
+          "s": 45.21,
+          "e": 45.83
+        },
+        {
+          "w": "documentation.",
+          "s": 45.83,
+          "e": 46.45
+        },
+        {
+          "w": "Diet,",
+          "s": 46.45,
+          "e": 47.07
+        },
+        {
+          "w": "Mill",
+          "s": 47.07,
+          "e": 47.69
+        },
+        {
+          "w": "by",
+          "s": 47.69,
+          "e": 48.3
+        },
+        {
+          "w": "mouth,",
+          "s": 48.3,
+          "e": 48.92
+        },
+        {
+          "w": "then",
+          "s": 48.92,
+          "e": 49.54
+        },
+        {
+          "w": "soft",
+          "s": 49.54,
+          "e": 50.16
+        },
+        {
+          "w": "diet",
+          "s": 50.16,
+          "e": 50.78
+        },
+        {
+          "w": "after",
+          "s": 50.78,
+          "e": 51.4
+        },
+        {
+          "w": "swallow",
+          "s": 51.4,
+          "e": 52.02
+        },
+        {
+          "w": "test",
+          "s": 52.02,
+          "e": 52.64
+        },
+        {
+          "w": "only.",
+          "s": 52.64,
+          "e": 53.26
+        },
+        {
+          "w": "General,",
+          "s": 53.26,
+          "e": 53.88
+        },
+        {
+          "w": "watch",
+          "s": 53.88,
+          "e": 54.5
+        },
+        {
+          "w": "consciousness",
+          "s": 54.5,
+          "e": 55.12
+        },
+        {
+          "w": "and",
+          "s": 55.12,
+          "e": 55.74
+        },
+        {
+          "w": "weakness.",
+          "s": 55.74,
+          "e": 56.36
+        },
+        {
+          "w": "Alert",
+          "s": 56.36,
+          "e": 56.97
+        },
+        {
+          "w": "team",
+          "s": 56.97,
+          "e": 57.59
+        },
+        {
+          "w": "at",
+          "s": 57.59,
+          "e": 58.21
+        },
+        {
+          "w": "once",
+          "s": 58.21,
+          "e": 58.83
+        },
+        {
+          "w": "for",
+          "s": 58.83,
+          "e": 59.45
+        },
+        {
+          "w": "worsening.",
+          "s": 59.45,
+          "e": 60.07
+        },
+        {
+          "w": "No",
+          "s": 60.07,
+          "e": 60.69
+        },
+        {
+          "w": "food",
+          "s": 60.69,
+          "e": 61.31
+        },
+        {
+          "w": "or",
+          "s": 61.31,
+          "e": 61.93
+        },
+        {
+          "w": "aspirin",
+          "s": 61.93,
+          "e": 62.55
+        },
+        {
+          "w": "until",
+          "s": 62.55,
+          "e": 63.17
+        },
+        {
+          "w": "reviewed.",
+          "s": 63.17,
+          "e": 63.79
+        }
+      ]
+    }
+  ],
+  "normalized_en": "60-year-old male with sudden right arm leg weakness, slurred speech, and facial droop 1 hour ago. Conscious and answering. Denies fever, seizure, and head injury. No known drug allergy. Hypertension and type 2 diabetes. Acute ischematic stroke. Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air. Right-sided weakness with facial droop. Investigation, rgent CT brain and blood glucose. Stroke unit monitoring. Nil byy mouth until swallow review. onset time documentation. Diet, Mill by mouth, then soft diet after swallow test only. General, watch consciousness and weakness. Alert team at once for worsening. No food or aspirin until reviewed.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s3-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

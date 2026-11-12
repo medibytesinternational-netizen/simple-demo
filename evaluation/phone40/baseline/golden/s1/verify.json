@@ -1,0 +1,205 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "paracetamol",
+      "dose": 650.0,
+      "unit": "mg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mcg/mg/ml; listed strengths: 1 g solution, 1 g tablet, 300 mcg suspension, 1 mg solution; 650 mg is plausible for this drug]",
+      "confidence": 0.7,
+      "source_sentence": "Piracetamol 650 mg twice daily."
+    },
+    {
+      "kind": "drug",
+      "name": "amoxicillin",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Amoxicilin with clavulanic acid as advised."
+    },
+    {
+      "kind": "drug",
+      "name": "clavulanic acid",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Amoxicilin with clavulanic acid as advised."
+    },
+    {
+      "kind": "vital",
+      "text": "Temperature 101 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "blood pressure 130/85",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 92",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "respiratory rate 22",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "94% on room air",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "blood pressure 130 and 30 over 85",
+      "status": "needs_review",
+      "checks": [
+        "plausibility:verified",
+        "proof:needs_review"
+      ],
+      "notes": "vital proof not verbatim in transcript",
+      "confidence": 0.7,
+      "source_sentence": "As a smith of 52 year old male with 3 days of fever, predictive cough, chest discomfort, breathlessness, fatigue and reduced appetite, Dennis vomiting and wheezing, no known drug allergy, past history of hypertension and type 2 diabetes, professional diagnosis, community acquired pneumonia, examination, temperature 101 degrees Fahrenheit, blood pressure 130 and 30 over 85 mm of necuri, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air, investigations, complete bed count and chest x-ray, plan, paracetamol 650 milligrams, triazole, amoxaline with clavineic acid as advised, glucose monitoring, diet, light home diet, warm fluids, dal rice, adequate water, general, complete antibiotics, daily temperature check, written for worsening, breathlessness for high fever, follow up in 3 days."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite."
+    },
+    {
+      "kind": "symptom",
+      "text": "cough",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "This is vomiting and wheezing."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Return for worsening rethlessness or high fever."
+    },
+    {
+      "kind": "followup",
+      "text": "Follow up in three days",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "Follow up in three days"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "2",
+        "3",
+        "22",
+        "52",
+        "85",
+        "92",
+        "94",
+        "101",
+        "130",
+        "650"
+      ],
+      "count": 10
+    },
+    "total": 14,
+    "drug_verified": 1,
+    "drug_needs_review": 2,
+    "vital_verified": 5,
+    "vital_needs_review": 1,
+    "symptom_verified": 4,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

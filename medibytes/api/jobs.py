@@ -11,6 +11,7 @@ previous process is marked failed rather than silently lost.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import threading
 from collections.abc import Callable
@@ -145,7 +146,7 @@ class JobService:
 
     def submit(self, data_hash: str, filename: str, suffix: str,
                write_input: Callable[[Path], None], source: str | None = None,
-               rerun: bool = False) -> dict[str, Any]:
+               rerun: bool = False, template: str = "discharge") -> dict[str, Any]:
         """Queue a job for an upload (or return the existing one). Idempotent.
 
         `source="hims"` marks a hospital upload: it is left out of the open job list and
@@ -153,6 +154,9 @@ class JobService:
         the recording again even though a finished job exists (the hospital re-sending
         after a degraded run).
         """
+        # One recording may be written up in several formats: each is its own job.
+        if template != "discharge":
+            data_hash = hashlib.sha256(f"{template}:{data_hash}".encode()).hexdigest()
         job_id = job_id_for(data_hash)
         with self._lock:
             existing = self._read(job_id)
@@ -169,6 +173,8 @@ class JobService:
                                "seconds": None, "detail": ""} for s in STAGE_ORDER]}
             if source:
                 job["source"] = source
+            if template != "discharge":
+                job["template"] = template
             self._write(job)
         self._executor.submit(self._run_safely, job_id)
         return job
@@ -199,7 +205,8 @@ class JobService:
         d = self._dir(job_id)
         try:
             pipeline = self._pipeline_provider()
-            result = pipeline.run(d / job["input_name"], d, job_id=job_id, sink=on_event)
+            result = pipeline.run(d / job["input_name"], d, job_id=job_id, sink=on_event,
+                                  template=job.get("template", "discharge"))
             write_result(result, d, job["filename"])
             job["status"] = "succeeded"
         except Exception as exc:

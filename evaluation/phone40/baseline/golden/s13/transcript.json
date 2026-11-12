@@ -1,0 +1,500 @@
+{
+  "job_id": "s13-none",
+  "text": "29-year-old male with five days high fever, body ache, eye pain, two vomits and now mild abdominal pain. Denies bleeding and rash. No known drug allergy. No past major illness. Dingu with warning signs. Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air. Platelet count, hematocrit NS1. Paracetamole 650 mg, platelet monitoring, fluids if needed. No aspirin or ibuprofen. Diet, oral fluids, coconut and water, soft food, complete rest. Gentle, avoid musquitoes. reeport bleeding, black stools, severe pain or drowsiness. Blood test tomorrow.Daily followup.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "29-year-old male with five days high fever, body ache, eye pain, two vomits and now mild abdominal pain. Denies bleeding and rash. No known drug allergy. No past major illness. Dingu with warning signs. Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air. Platelet count, hematocrit NS1. Paracetamole 650 mg, platelet monitoring, fluids if needed. No aspirin or ibuprofen. Diet, oral fluids, coconut and water, soft food, complete rest. Gentle, avoid musquitoes. reeport bleeding, black stools, severe pain or drowsiness. Blood test tomorrow.Daily followup.",
+      "start": 0.0,
+      "end": 47.04,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "29-year-old",
+          "s": 0.0,
+          "e": 0.51
+        },
+        {
+          "w": "male",
+          "s": 0.51,
+          "e": 1.01
+        },
+        {
+          "w": "with",
+          "s": 1.01,
+          "e": 1.52
+        },
+        {
+          "w": "five",
+          "s": 1.52,
+          "e": 2.02
+        },
+        {
+          "w": "days",
+          "s": 2.02,
+          "e": 2.53
+        },
+        {
+          "w": "high",
+          "s": 2.53,
+          "e": 3.03
+        },
+        {
+          "w": "fever,",
+          "s": 3.03,
+          "e": 3.54
+        },
+        {
+          "w": "body",
+          "s": 3.54,
+          "e": 4.05
+        },
+        {
+          "w": "ache,",
+          "s": 4.05,
+          "e": 4.55
+        },
+        {
+          "w": "eye",
+          "s": 4.55,
+          "e": 5.06
+        },
+        {
+          "w": "pain,",
+          "s": 5.06,
+          "e": 5.56
+        },
+        {
+          "w": "two",
+          "s": 5.56,
+          "e": 6.07
+        },
+        {
+          "w": "vomits",
+          "s": 6.07,
+          "e": 6.58
+        },
+        {
+          "w": "and",
+          "s": 6.58,
+          "e": 7.08
+        },
+        {
+          "w": "now",
+          "s": 7.08,
+          "e": 7.59
+        },
+        {
+          "w": "mild",
+          "s": 7.59,
+          "e": 8.09
+        },
+        {
+          "w": "abdominal",
+          "s": 8.09,
+          "e": 8.6
+        },
+        {
+          "w": "pain.",
+          "s": 8.6,
+          "e": 9.1
+        },
+        {
+          "w": "Denies",
+          "s": 9.1,
+          "e": 9.61
+        },
+        {
+          "w": "bleeding",
+          "s": 9.61,
+          "e": 10.12
+        },
+        {
+          "w": "and",
+          "s": 10.12,
+          "e": 10.62
+        },
+        {
+          "w": "rash.",
+          "s": 10.62,
+          "e": 11.13
+        },
+        {
+          "w": "No",
+          "s": 11.13,
+          "e": 11.63
+        },
+        {
+          "w": "known",
+          "s": 11.63,
+          "e": 12.14
+        },
+        {
+          "w": "drug",
+          "s": 12.14,
+          "e": 12.65
+        },
+        {
+          "w": "allergy.",
+          "s": 12.65,
+          "e": 13.15
+        },
+        {
+          "w": "No",
+          "s": 13.15,
+          "e": 13.66
+        },
+        {
+          "w": "past",
+          "s": 13.66,
+          "e": 14.16
+        },
+        {
+          "w": "major",
+          "s": 14.16,
+          "e": 14.67
+        },
+        {
+          "w": "illness.",
+          "s": 14.67,
+          "e": 15.17
+        },
+        {
+          "w": "Dingu",
+          "s": 15.17,
+          "e": 15.68
+        },
+        {
+          "w": "with",
+          "s": 15.68,
+          "e": 16.19
+        },
+        {
+          "w": "warning",
+          "s": 16.19,
+          "e": 16.69
+        },
+        {
+          "w": "signs.",
+          "s": 16.69,
+          "e": 17.2
+        },
+        {
+          "w": "Temperature",
+          "s": 17.2,
+          "e": 17.7
+        },
+        {
+          "w": "102",
+          "s": 17.7,
+          "e": 18.21
+        },
+        {
+          "w": "degrees",
+          "s": 18.21,
+          "e": 18.71
+        },
+        {
+          "w": "Fahrenheit,",
+          "s": 18.71,
+          "e": 19.22
+        },
+        {
+          "w": "Blood",
+          "s": 19.22,
+          "e": 19.73
+        },
+        {
+          "w": "pressure",
+          "s": 19.73,
+          "e": 20.23
+        },
+        {
+          "w": "100/70",
+          "s": 20.23,
+          "e": 20.74
+        },
+        {
+          "w": "mmHg,",
+          "s": 20.74,
+          "e": 21.24
+        },
+        {
+          "w": "pulse",
+          "s": 21.24,
+          "e": 21.75
+        },
+        {
+          "w": "100",
+          "s": 21.75,
+          "e": 22.26
+        },
+        {
+          "w": "beats",
+          "s": 22.26,
+          "e": 22.76
+        },
+        {
+          "w": "per",
+          "s": 22.76,
+          "e": 23.27
+        },
+        {
+          "w": "minute,",
+          "s": 23.27,
+          "e": 23.77
+        },
+        {
+          "w": "saturation",
+          "s": 23.77,
+          "e": 24.28
+        },
+        {
+          "w": "98%",
+          "s": 24.28,
+          "e": 24.78
+        },
+        {
+          "w": "on",
+          "s": 24.78,
+          "e": 25.29
+        },
+        {
+          "w": "room",
+          "s": 25.29,
+          "e": 25.8
+        },
+        {
+          "w": "air.",
+          "s": 25.8,
+          "e": 26.3
+        },
+        {
+          "w": "Platelet",
+          "s": 26.3,
+          "e": 26.81
+        },
+        {
+          "w": "count,",
+          "s": 26.81,
+          "e": 27.31
+        },
+        {
+          "w": "hematocrit",
+          "s": 27.31,
+          "e": 27.82
+        },
+        {
+          "w": "NS1.",
+          "s": 27.82,
+          "e": 28.33
+        },
+        {
+          "w": "Paracetamole",
+          "s": 28.33,
+          "e": 28.83
+        },
+        {
+          "w": "650",
+          "s": 28.83,
+          "e": 29.34
+        },
+        {
+          "w": "mg,",
+          "s": 29.34,
+          "e": 29.84
+        },
+        {
+          "w": "platelet",
+          "s": 29.84,
+          "e": 30.35
+        },
+        {
+          "w": "monitoring,",
+          "s": 30.35,
+          "e": 30.85
+        },
+        {
+          "w": "fluids",
+          "s": 30.85,
+          "e": 31.36
+        },
+        {
+          "w": "if",
+          "s": 31.36,
+          "e": 31.87
+        },
+        {
+          "w": "needed.",
+          "s": 31.87,
+          "e": 32.37
+        },
+        {
+          "w": "No",
+          "s": 32.37,
+          "e": 32.88
+        },
+        {
+          "w": "aspirin",
+          "s": 32.88,
+          "e": 33.38
+        },
+        {
+          "w": "or",
+          "s": 33.38,
+          "e": 33.89
+        },
+        {
+          "w": "ibuprofen.",
+          "s": 33.89,
+          "e": 34.39
+        },
+        {
+          "w": "Diet,",
+          "s": 34.39,
+          "e": 34.9
+        },
+        {
+          "w": "oral",
+          "s": 34.9,
+          "e": 35.41
+        },
+        {
+          "w": "fluids,",
+          "s": 35.41,
+          "e": 35.91
+        },
+        {
+          "w": "coconut",
+          "s": 35.91,
+          "e": 36.42
+        },
+        {
+          "w": "and",
+          "s": 36.42,
+          "e": 36.92
+        },
+        {
+          "w": "water,",
+          "s": 36.92,
+          "e": 37.43
+        },
+        {
+          "w": "soft",
+          "s": 37.43,
+          "e": 37.94
+        },
+        {
+          "w": "food,",
+          "s": 37.94,
+          "e": 38.44
+        },
+        {
+          "w": "complete",
+          "s": 38.44,
+          "e": 38.95
+        },
+        {
+          "w": "rest.",
+          "s": 38.95,
+          "e": 39.45
+        },
+        {
+          "w": "Gentle,",
+          "s": 39.45,
+          "e": 39.96
+        },
+        {
+          "w": "avoid",
+          "s": 39.96,
+          "e": 40.46
+        },
+        {
+          "w": "musquitoes.",
+          "s": 40.46,
+          "e": 40.97
+        },
+        {
+          "w": "reeport",
+          "s": 40.97,
+          "e": 41.48
+        },
+        {
+          "w": "bleeding,",
+          "s": 41.48,
+          "e": 41.98
+        },
+        {
+          "w": "black",
+          "s": 41.98,
+          "e": 42.49
+        },
+        {
+          "w": "stools,",
+          "s": 42.49,
+          "e": 42.99
+        },
+        {
+          "w": "severe",
+          "s": 42.99,
+          "e": 43.5
+        },
+        {
+          "w": "pain",
+          "s": 43.5,
+          "e": 44.01
+        },
+        {
+          "w": "or",
+          "s": 44.01,
+          "e": 44.51
+        },
+        {
+          "w": "drowsiness.",
+          "s": 44.51,
+          "e": 45.02
+        },
+        {
+          "w": "Blood",
+          "s": 45.02,
+          "e": 45.52
+        },
+        {
+          "w": "test",
+          "s": 45.52,
+          "e": 46.03
+        },
+        {
+          "w": "tomorrow.Daily",
+          "s": 46.03,
+          "e": 46.53
+        },
+        {
+          "w": "followup.",
+          "s": 46.53,
+          "e": 47.04
+        }
+      ]
+    }
+  ],
+  "normalized_en": "29-year-old male with 5 days high fever, body ache, eye pain, 2 vomits and now mild abdominal pain. Denies bleeding and rash. No known drug allergy. No past major illness. Dingu with warning signs. Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air. Platelet count, hematocrit NS1. Paracetamole 650 mg, platelet monitoring, fluids if needed. No aspirin or ibuprofen. Diet, oral fluids, coconut and water, soft food, complete rest. Gentle, avoid musquitoes. reeport bleeding, black stools, severe pain or drowsiness. Blood test tomorrow.Daily followup.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s13-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}
