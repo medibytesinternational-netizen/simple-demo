@@ -233,6 +233,20 @@ def _poll(client, audio_id):
     return client.get(f"/api/notes/transcribe/{audio_id}", headers=DOCTOR)
 
 
+def _transcript_segments(client):
+    """Segments of the newest transcript event (the hidden input the voice draft cites)."""
+    from app.models import TimelineEvent
+
+    db = SessionLocal()
+    try:
+        event = db.scalars(
+            select(TimelineEvent).where(TimelineEvent.type == "transcript").order_by(TimelineEvent.created_at.desc())
+        ).first()
+        return (event.payload or {}).get("segments") or []
+    finally:
+        db.close()
+
+
 def test_the_pipeline_note_becomes_a_draft_only_never_approved_and_no_note_on_the_timeline(fresh, keyed):
     _consent(fresh)
     before_types = _event_types(fresh)
@@ -245,9 +259,24 @@ def test_the_pipeline_note_becomes_a_draft_only_never_approved_and_no_note_on_th
     draft = body["draft"]
     assert draft["status"] == "draft_ready" and not draft.get("approved_by")
     content = draft["content"]
-    assert content["hpi"]["text"].startswith("Swelling and redness")
-    assert [c["text"] for c in content["plan"]] == ["IV cefazolin 2 g", "Complete blood count"]
-    assert content["needs_review"] == [{"section": "Plan of management", "text": "Complete blood count"}]
+    assert content["chief_complaint"]["text"] == "Swelling and redness of the right leg since Tuesday"
+    assert content["hpi"]["text"] == "DENIED: fever"
+    assert content["exam"]["general"]["text"] == "pulse 104 beats per minute"
+    assert content["exam"]["systemic"]["text"] == "right calf warm and tender"
+    assert [c["text"] for c in content["assessment"]] == ["Right leg cellulitis"]
+    # Medicines are medication mentions only, with the dose kept apart from the name.
+    assert [(m["drug"], m["dose"], m["frequency"]) for m in content["medication_mentions"]] == [
+        ("cefazolin", "2 g", "every eight hours")
+    ]
+    assert [c["text"] for c in content["plan"]] == ["Complete blood count", "Keep the leg elevated"]
+    assert content["follow_up"]["text"] == "Review in two days"
+    assert content["needs_review"] == [{"section": "Investigations", "text": "Complete blood count"}]
+    # Verified items carry more confidence than unverified ones, and less than a typed note's default.
+    assert content["follow_up"]["confidence"] == 0.9 and content["plan"][0]["confidence"] == 0.6
+    # Each claim cites the transcript sentence it was heard in, not a made-up line.
+    segment_text = {s["segment_id"]: s["text"] for s in _transcript_segments(fresh)}
+    assert segment_text[content["plan"][0]["source_segment_ids"][0]] == "Get a complete blood count."
+    assert segment_text[content["chief_complaint"]["source_segment_ids"][0]].startswith("Swelling and redness")
     added = list(_event_types(fresh))
     for t in before_types:
         added.remove(t)

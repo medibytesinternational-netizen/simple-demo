@@ -64,3 +64,33 @@ class NoteTemplate:
 
     def example(self, key: str) -> tuple[str, str]:
         return self._by_key[key].example
+
+    def json_schema(self) -> dict:
+        """Draft-7 schema of this note, the same item shape as the discharge schema."""
+        item = {"type": "object", "required": ["text", "source_sentence"],
+                "properties": {"text": {"type": "string"}, "source_sentence": {"type": "string"},
+                               "seg_id": {"type": ["integer", "null"]},
+                               "confidence": {"type": "number"},
+                               "verified_kind": {"type": "string"},
+                               "verified_status": {"type": "string",
+                                                   "enum": ["verified", "needs_review", "rejected"]}}}
+        section = {"type": "object", "required": ["items"],
+                   "properties": {"items": {"type": "array", "items": item}}}
+        return {"$schema": "http://json-schema.org/draft-07/schema#",
+                "title": f"{self.document} (heard-only, proof-grounded)",
+                "type": "object", "required": ["sections"],
+                "properties": {
+                    "sections": {"type": "object", "required": list(self.keys),
+                                 "additionalProperties": False,
+                                 "properties": {k: section for k in self.keys}},
+                    "provenance": {"type": "object"}}}
+
+
+def schema_line(keys: tuple[str, ...], extras: str = "") -> str:
+    """The JSON shape shown to the model, written like the discharge one."""
+    first, rest = keys[0], keys[1:]
+    lines = [f'{{"{first}": {{"items": [{{"fact_id": "F1", "text": "...", "source_sentence": '
+             f'"exact sentence heard", "seg_id": 0, "confidence": 0.9{extras}}}]}},']
+    lines += [f' "{k}": {{"items": [...]}},' for k in rest]
+    lines[-1] = lines[-1].rstrip(",") + "}"
+    return "\n".join(lines) + "\n\n"

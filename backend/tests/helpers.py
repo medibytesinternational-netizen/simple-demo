@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Any
@@ -125,13 +127,41 @@ def as_patient(patient_id: str):
 
 # ---------- a stand-in for the MediBytes pipeline API (no network) ----------
 
+PIPELINE_TRANSCRIPT = (
+    "Swelling and redness of the right leg since Tuesday. Denies fever. "
+    "Pulse 104 beats per minute, the right calf is warm and tender. "
+    "This looks like right leg cellulitis. Start IV cefazolin 2 g every eight hours. "
+    "Get a complete blood count. Keep the leg elevated. Review in two days."
+)
+
+
+def _item(text, sentence, status=None):
+    item = {"text": text, "source_sentence": sentence, "seg_id": 0, "confidence": 0.8}
+    if status:
+        item["verified_status"] = status
+    return item
+
+
 PIPELINE_NOTE = {
-    "present_illness": "Swelling and redness of the right leg since Tuesday. Denies fever.",
-    "examination_findings": "pulse 104 beats per minute; right calf warm and tender",
-    "previous_diagnosis": "Right leg cellulitis",
-    "plan_of_management": "IV cefazolin 2 g; Complete blood count",
-    "diet_instructions": "Normal diet",
-    "general_instructions": "Elevate the leg",
+    "sections": {
+        "chief_complaint": {"items": [_item("Swelling and redness of the right leg since Tuesday",
+                                            "Swelling and redness of the right leg since Tuesday.")]},
+        "history_of_present_illness": {"items": [_item("DENIED: fever", "Denies fever.", "verified")]},
+        "past_history": {"items": []},
+        "examination_general": {"items": [_item("pulse 104 beats per minute",
+                                                "Pulse 104 beats per minute, the right calf is warm and tender.",
+                                                "verified")]},
+        "examination_systemic": {"items": [_item("right calf warm and tender",
+                                                 "Pulse 104 beats per minute, the right calf is warm and tender.")]},
+        "assessment": {"items": [_item("Right leg cellulitis", "This looks like right leg cellulitis.")]},
+        "medications": {"items": [_item("cefazolin 2 g every eight hours",
+                                        "Start IV cefazolin 2 g every eight hours.", "verified")]},
+        "investigations": {"items": [_item("Complete blood count", "Get a complete blood count.", "needs_review")]},
+        "plan": {"items": []},
+        "advice": {"items": [_item("Keep the leg elevated", "Keep the leg elevated.")]},
+        "follow_up": {"items": [_item("Review in two days", "Review in two days.", "verified")]},
+    },
+    "provenance": {"template": "opd", "schema": "valid"},
 }
 
 
@@ -144,10 +174,12 @@ class FakePipeline:
         self.error = None  # an HTTPException to raise from submit
         self.job_status = "succeeded"
         self.job_error = None
-        self.note = dict(PIPELINE_NOTE)
-        self.needs_review = [{"section": "plan_of_management", "text": "Complete blood count"}]
+        self.note = json.loads(json.dumps(PIPELINE_NOTE))
+        self.transcript = PIPELINE_TRANSCRIPT
+        self.feature = None
 
-    def submit(self, contents, filename, content_type, audio_id):
+    def submit(self, contents, filename, content_type, audio_id, feature="F1"):
+        self.feature = feature
         self.calls += 1
         self.last_file = (filename, contents, content_type)
         if self.error:
@@ -155,15 +187,11 @@ class FakePipeline:
         return {"audio_id": audio_id, "job_id": "job-test", "status": "running"}
 
     def fetch(self, audio_id):
-        import json
-
-        return {
-            "audio_id": audio_id,
-            "job_status": self.job_status,
-            "job_error": self.job_error,
-            "response": json.dumps([self.note]),
-            "needs_review": self.needs_review,
-        }
+        out = {"audio_id": audio_id, "feature": self.feature or "F1",
+               "job_status": self.job_status, "job_error": self.job_error}
+        if self.job_status == "succeeded":
+            out.update(transcript=self.transcript, note=self.note)
+        return out
 
     def install(self, monkeypatch):
         monkeypatch.setattr("app.services.pipeline.configured", lambda: True)

@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from .base import BASE_SECTIONS, NoteTemplate, SectionSpec
 from .discharge import DISCHARGE
+from .opd import OPD
 
-TEMPLATES: dict[str, NoteTemplate] = {DISCHARGE.name: DISCHARGE}
+TEMPLATES: dict[str, NoteTemplate] = {t.name: t for t in (DISCHARGE, OPD)}
 
 
 def get(name: str | NoteTemplate | None) -> NoteTemplate:

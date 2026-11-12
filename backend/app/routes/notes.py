@@ -138,16 +138,17 @@ def pipeline_status(audio_id: str, db: Session = Depends(get_db)):
     if job_status != "succeeded":
         return {"status": job_status or "running"}
     require_open_encounter(encounter)
-    note = pipeline.parse_note(result.get("response"))
-    text = pipeline.note_to_transcript(note)
-    if not text:
+    note = result.get("note") or {}
+    text = str(result.get("transcript") or "").strip()
+    if not text or not pipeline.has_items(note):
         return {"status": "failed", "error": "No speech was detected in the recording"}
-    event = create_transcript_event(db, patient, encounter, "F1", text, "Consultation (MediBytes pipeline)")
+    feature = result.get("feature") or "F1"
+    event = create_transcript_event(db, patient, encounter, feature, text, "Consultation (MediBytes pipeline)")
     event.payload = {**(event.payload or {}), "audio_id": audio_id, "pipeline_note": note}
-    content = pipeline.to_f1_content(note, result.get("needs_review") or [], event.id)
+    content = pipeline.draft_content(feature, note, event.id, event.payload.get("segments") or [])
     draft = create_draft(
         db,
-        feature="F1",
+        feature=feature,
         patient=patient,
         encounter=encounter,
         content=content,

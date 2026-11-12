@@ -1,14 +1,16 @@
-"""OPD voice notes through the local MediBytes pipeline (the repo's ``medibytes/`` package).
+"""Voice notes through the local MediBytes pipeline (the repo's ``medibytes/`` package).
 
 The recording is queued on ``medibytes.api.jobs.JobService`` (one worker thread, job state on
-disk) and the six-section discharge note it produces is mapped onto the F1 consult draft.
-The pipeline's own output format is unchanged; ``_note_from_discharge`` flattens it here.
+disk) with the note template of the feature it was recorded for (F1 -> ``opd``). The pipeline
+writes that feature's sections; ``draft_content`` maps them onto the feature's draft schema,
+item by item, keeping each item's proof sentence and verified / needs_review status.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sys
 import threading
 from pathlib import Path
@@ -22,22 +24,8 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-SECTIONS = [
-    "present_illness",
-    "examination_findings",
-    "previous_diagnosis",
-    "plan_of_management",
-    "diet_instructions",
-    "general_instructions",
-]
-SECTION_LABELS = {
-    "present_illness": "Present illness",
-    "examination_findings": "Examination findings",
-    "previous_diagnosis": "Diagnosis",
-    "plan_of_management": "Plan of management",
-    "diet_instructions": "Diet instructions",
-    "general_instructions": "General instructions",
-}
+# Feature -> medibytes note template. Only features listed here take voice.
+TEMPLATE_FOR = {"F1": "opd"}
 
 _lock = threading.Lock()
 _service: Any = None
@@ -78,121 +66,176 @@ def _index(audio_id: str) -> Path:
     return Path(settings.medibytes_runs_dir) / "audio" / f"{audio_id}.json"
 
 
-def submit(contents: bytes, filename: str, content_type: str, audio_id: str) -> dict[str, Any]:
+def submit(contents: bytes, filename: str, content_type: str, audio_id: str, feature: str = "F1") -> dict[str, Any]:
     suffix = Path(filename).suffix.lower() or ".webm"
     data_hash = hashlib.sha256(contents).hexdigest()
-    job = _jobs().submit(data_hash, filename, suffix, lambda path: path.write_bytes(contents))
+    job = _jobs().submit(
+        data_hash, filename, suffix, lambda path: path.write_bytes(contents), template=TEMPLATE_FOR[feature]
+    )
     index = _index(audio_id)
     index.parent.mkdir(parents=True, exist_ok=True)
-    index.write_text(json.dumps({"job_id": job["job_id"]}), encoding="utf-8")
+    index.write_text(json.dumps({"job_id": job["job_id"], "feature": feature}), encoding="utf-8")
     return {"audio_id": audio_id, "job_id": job["job_id"], "status": job["status"]}
 
 
 def fetch(audio_id: str) -> dict[str, Any] | None:
+    """Job state; once succeeded, also the heard transcript and the feature's note."""
     index = _index(audio_id)
     if not index.is_file():
         return None
+    entry = json.loads(index.read_text(encoding="utf-8"))
     service = _jobs()
-    job = service.get(json.loads(index.read_text(encoding="utf-8"))["job_id"])
+    job = service.get(entry["job_id"])
     if job is None:
         return None
-    out: dict[str, Any] = {"audio_id": audio_id, "job_status": job["status"], "job_error": job.get("error")}
+    out: dict[str, Any] = {
+        "audio_id": audio_id,
+        "feature": entry.get("feature", "F1"),
+        "job_status": job["status"],
+        "job_error": job.get("error"),
+    }
     if job["status"] == "succeeded":
-        discharge = (service.result(job) or {}).get("discharge") or {}
-        note, needs_review = _note_from_discharge(discharge)
-        out.update(response=json.dumps([note]), needs_review=needs_review)
+        result = service.result(job) or {}
+        out["transcript"] = str((result.get("transcript") or {}).get("text") or "").strip()
+        out["note"] = result.get("discharge") or {}
     return out
 
 
-def _note_from_discharge(discharge: dict[str, Any]) -> tuple[dict[str, str], list[dict[str, str]]]:
-    """medibytes ``discharge.json`` (sections -> items) -> one string per section plus review flags."""
-    sections = discharge.get("sections") or {}
-    note: dict[str, str] = {}
-    needs_review: list[dict[str, str]] = []
-    for key in SECTIONS:
-        items = (sections.get(key) or {}).get("items") or []
-        texts = [str(item.get("text") or "").strip() for item in items]
-        note[key] = "; ".join(t for t in texts if t)
-        needs_review += [
-            {"section": key, "text": str(item.get("text") or "")}
-            for item in items
-            if item.get("verified_status") == "needs_review"
-        ]
-    return note, needs_review
+# ---------- note -> draft ----------
+
+SECTION_LABELS = {
+    "chief_complaint": "Chief complaint",
+    "history_of_present_illness": "History of present illness",
+    "past_history": "Past history",
+    "examination_general": "General examination",
+    "examination_systemic": "Systemic examination",
+    "assessment": "Assessment",
+    "medications": "Medications",
+    "investigations": "Investigations",
+    "plan": "Plan",
+    "advice": "Advice",
+    "follow_up": "Follow-up",
+}
+
+_CONFIDENCE = {"verified": 0.9, "needs_review": 0.6}
+_WORD = re.compile(r"[a-z0-9]+")
 
 
-def parse_note(response: str | None) -> dict[str, str]:
-    """`response` is a JSON string holding a one-object array."""
-    try:
-        note = json.loads(response or "")[0]
-    except (ValueError, IndexError, TypeError, KeyError) as exc:
-        raise HTTPException(502, "The pipeline returned an unreadable note") from exc
-    return {key: str(note.get(key) or "").strip() for key in SECTIONS}
+def _items(note: dict[str, Any], key: str) -> list[dict[str, Any]]:
+    block = (note.get("sections") or {}).get(key) or {}
+    return [it for it in block.get("items") or [] if str(it.get("text") or "").strip()]
 
 
-def note_to_transcript(note: dict[str, str]) -> str:
-    """One line per dictated section, so each section becomes one citable transcript segment."""
-    return "\n".join(f"{SECTION_LABELS[key]}: {note[key]}" for key in SECTIONS if note[key])
+def _segment_for(source: str, segments: list[dict[str, Any]]) -> str | None:
+    """The transcript segment the item was heard in: containing its proof, else most shared words."""
+    source = str(source or "").strip()
+    if not segments:
+        return None
+    if source:
+        for seg in segments:
+            text = str(seg.get("text") or "")
+            if source in text or (text and text in source):
+                return seg["segment_id"]
+    words = set(_WORD.findall(source.lower()))
+    best = max(segments, key=lambda seg: len(words & set(_WORD.findall(str(seg.get("text") or "").lower()))))
+    return best["segment_id"]
 
 
-def to_f1_content(note: dict[str, str], needs_review: list[dict[str, Any]], event_id: str) -> dict[str, Any]:
-    """Map the six pipeline sections onto the F1 consult draft shape.
+class _Mapper:
+    def __init__(self, note: dict[str, Any], event_id: str, segments: list[dict[str, Any]]):
+        self.note, self.event_id, self.segments = note, event_id, segments
+        self.needs_review: list[dict[str, str]] = []
 
-    Segment ids follow note_to_transcript's line order (seg_1, seg_2, ...).
-    """
-    segment_of: dict[str, str] = {}
-    index = 0
-    for key in SECTIONS:
-        if note[key]:
-            index += 1
-            segment_of[key] = f"seg_{index}"
+    def items(self, key: str) -> list[dict[str, Any]]:
+        found = _items(self.note, key)
+        for it in found:
+            if it.get("verified_status") == "needs_review":
+                review = {"section": SECTION_LABELS.get(key, key), "text": str(it["text"]).strip()}
+                if review not in self.needs_review:
+                    self.needs_review.append(review)
+        return found
 
-    def claim(text: str, key: str) -> dict[str, Any]:
+    def claim(self, item: dict[str, Any], prefix: str = "") -> dict[str, Any]:
+        seg = _segment_for(item.get("source_sentence", ""), self.segments)
         return {
-            "text": text,
-            "source_event_ids": [event_id],
-            "source_segment_ids": [segment_of[key]],
-            "confidence": 0.7,
+            "text": prefix + str(item["text"]).strip(),
+            "source_event_ids": [self.event_id],
+            "source_segment_ids": [seg] if seg else [],
+            "confidence": _CONFIDENCE.get(str(item.get("verified_status") or ""), 0.75),
         }
 
-    def section(key: str) -> dict[str, Any] | None:
-        return claim(note[key], key) if note[key] else None
-
-    def items(key: str, sep: str = ";") -> list[dict[str, Any]]:
-        if not note[key]:
-            return []
-        return [claim(part.strip(), key) for part in note[key].split(sep) if part.strip()]
-
-    follow_up_parts = [note[k] for k in ("diet_instructions", "general_instructions") if note[k]]
-    follow_up = None
-    if follow_up_parts:
-        follow_up = {
-            "text": " ".join(follow_up_parts),
-            "source_event_ids": [event_id],
-            "source_segment_ids": [segment_of[k] for k in ("diet_instructions", "general_instructions") if note[k]],
-            "confidence": 0.7,
+    def joined(self, items: list[dict[str, Any]]) -> dict[str, Any] | None:
+        """Several items as one claim (for single-claim fields), citing every segment used."""
+        if not items:
+            return None
+        claims = [self.claim(it) for it in items]
+        return {
+            "text": "; ".join(c["text"] for c in claims),
+            "source_event_ids": [self.event_id],
+            "source_segment_ids": list(dict.fromkeys(s for c in claims for s in c["source_segment_ids"])),
+            "confidence": min(c["confidence"] for c in claims),
         }
 
-    hpi = section("present_illness")
-    chief = None
-    if note["present_illness"]:
-        first = note["present_illness"].split(".")[0].strip()
-        chief = claim(first, "present_illness") if first else None
 
-    not_documented = [SECTION_LABELS[key] for key in SECTIONS if not note[key]]
+_DOSE = re.compile(r"\s+(\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml|mL|U|units?|IU|iu)\b)")
 
+
+def _medication(mapper: _Mapper, item: dict[str, Any]) -> dict[str, Any]:
+    """'Montelukast 10 mg once at night' -> drug, dose, frequency (the words after the dose)."""
+    text = str(item["text"]).strip()
+    not_given = text.upper().startswith("NOT GIVEN:")
+    if not_given:
+        text = text.split(":", 1)[1].strip()
+    match = _DOSE.search(text)
+    if match:
+        drug, dose, rest = text[: match.start()], match.group(1), text[match.end():]
+    else:
+        drug, dose, rest = re.sub(r"\s+no dose\b", "", text), None, ""
+    frequency = rest.strip(" ,;") or None
+    if not_given:
+        frequency = "not given" + (f" ({frequency})" if frequency else "")
+    claim = mapper.claim(item)
     return {
-        "chief_complaint": chief,
-        "hpi": hpi,
-        "exam": {"general": section("examination_findings"), "systemic": None},
-        "assessment": items("previous_diagnosis"),
-        "plan": items("plan_of_management"),
-        "medication_mentions": [],
-        "follow_up": follow_up,
-        "not_documented": not_documented,
-        "needs_review": [
-            {"section": SECTION_LABELS.get(str(item.get("section")), str(item.get("section") or "")), "text": str(item.get("text") or "")}
-            for item in (needs_review or [])
-            if isinstance(item, dict)
-        ],
+        "drug": drug.strip(" ,;"),
+        "dose": dose,
+        "frequency": frequency,
+        "source_event_ids": claim["source_event_ids"],
+        "source_segment_ids": claim["source_segment_ids"],
     }
+
+
+def _f1_content(m: _Mapper) -> dict[str, Any]:
+    chief_items = m.items("chief_complaint")
+    hpi_items = chief_items[1:] + m.items("history_of_present_illness")
+    content = {
+        "chief_complaint": m.claim(chief_items[0]) if chief_items else None,
+        "hpi": m.joined(hpi_items),
+        "exam": {"general": m.joined(m.items("examination_general")),
+                 "systemic": m.joined(m.items("examination_systemic"))},
+        "assessment": [m.claim(it) for it in m.items("assessment")]
+        + [m.claim(it, "" if re.match(r"(?i)\s*(past|history|known)\b", it["text"]) else "Past history: ")
+           for it in m.items("past_history")],
+        "plan": [m.claim(it) for key in ("investigations", "plan", "advice") for it in m.items(key)],
+        "medication_mentions": [_medication(m, it) for it in m.items("medications")],
+        "follow_up": m.joined(m.items("follow_up")),
+    }
+    labels = {"chief_complaint": "Chief complaint", "hpi": "History of present illness",
+              "assessment": "Assessment", "plan": "Plan", "medication_mentions": "Medications",
+              "follow_up": "Follow-up"}
+    content["not_documented"] = [label for key, label in labels.items() if not content[key]]
+    if not content["exam"]["general"] and not content["exam"]["systemic"]:
+        content["not_documented"].append("Examination")
+    content["needs_review"] = m.needs_review
+    return content
+
+
+_BUILDERS = {"F1": _f1_content}
+
+
+def draft_content(feature: str, note: dict[str, Any], event_id: str, segments: list[dict[str, Any]]) -> dict[str, Any]:
+    """The feature's draft content from its medibytes note."""
+    return _BUILDERS[feature](_Mapper(note, event_id, segments))
+
+
+def has_items(note: dict[str, Any]) -> bool:
+    return any(_items(note, key) for key in (note.get("sections") or {}))

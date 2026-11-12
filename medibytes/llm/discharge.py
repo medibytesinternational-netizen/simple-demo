@@ -397,6 +397,8 @@ _SCHEMA_CACHE: dict = {}
 def _discharge_schema(template: NoteTemplate = DISCHARGE):
     """Load the template's schema file once (Draft7, self-checked)."""
     name = template.schema_file
+    if not name:
+        return template.json_schema()
     if name not in _SCHEMA_CACHE:
         with open(SCHEMAS_DIR / name, encoding="utf-8") as fh:
             _SCHEMA_CACHE[name] = json.load(fh)
