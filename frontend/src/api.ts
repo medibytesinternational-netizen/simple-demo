@@ -1,3 +1,4 @@
+import type { Draft } from "./types";
 import { DEMO_MODE, PREVIEW_WRITE_MESSAGE } from "./demo/config";
 
 export class ApiError extends Error {
@@ -113,5 +114,14 @@ export async function uploadDocument(file: File) {
 export async function transcribeAudio(blob: Blob, filename = "consultation.webm") {
   const form = new FormData();
   form.append("file", blob, filename);
-  return api<{ text: string; model: string }>("/notes/transcribe", { method: "POST", body: form });
+  const receipt = await api<{ audio_id: string; status: string }>("/notes/transcribe", { method: "POST", body: form });
+  // The MediBytes pipeline answers with a receipt; poll until the note is ready (usually under a minute).
+  const deadline = Date.now() + 5 * 60 * 1000;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const status = await api<{ status: string; error?: string; draft?: Draft }>(`/notes/transcribe/${encodeURIComponent(receipt.audio_id)}`);
+    if (status.status === "succeeded" && status.draft) return { draft: status.draft };
+    if (status.status === "failed") throw new Error(status.error || "The recording could not be processed");
+  }
+  throw new Error("The pipeline is taking too long. Try again in a minute.");
 }

@@ -24,7 +24,9 @@ from app.db import SessionLocal
 from app.models import AuditEntry
 from app.services.llm import DraftGenerationError
 
-from .helpers import ASTHMA, discharge, text_pdf
+from fastapi import HTTPException
+
+from .helpers import ASTHMA, FakePipeline, discharge, text_pdf
 
 DOCTOR = {"X-User-Id": "u_meera"}
 FRONTEND = Path(__file__).resolve().parents[2] / "frontend" / "src"
@@ -80,40 +82,16 @@ def _post(client, filename, content, content_type):
     return client.post("/api/notes/transcribe", files={"file": (filename, content, content_type)}, headers=DOCTOR)
 
 
-class _FakeOpenAI:
-    text = SENTENCE
-    calls = 0
-    last_file = None
-
-    def __init__(self, api_key=None):
-        outer = type(self)
-
-        class Transcriptions:
-            def create(self, **kwargs):
-                outer.calls += 1
-                outer.last_file = kwargs.get("file")
-                if isinstance(outer.text, Exception):
-                    raise outer.text
-                return SimpleNamespace(text=outer.text)
-
-        self.audio = SimpleNamespace(transcriptions=Transcriptions())
-
-
 @pytest.fixture()
 def keyed(monkeypatch):
-    monkeypatch.setattr("app.routes.notes.settings", SimpleNamespace(openai_api_key="sk-test"))
-    monkeypatch.setattr("openai.OpenAI", _FakeOpenAI)
-    _FakeOpenAI.text = SENTENCE
-    _FakeOpenAI.calls = 0
-    _FakeOpenAI.last_file = None
-    return _FakeOpenAI
+    return FakePipeline().install(monkeypatch)
 
 
 def _assert_nothing_spent(client, before_balance, before_ledger, fake):
     assert _balance(client) == before_balance
     assert len(_ledger(client)) == before_ledger
-    assert fake.calls == 0, "the model must not be called for a refused upload"
-    assert _audit("consultation_transcribed") == []
+    assert fake.calls == 0, "the pipeline must not be called for a refused upload"
+    assert _audit("consultation_submitted") == []
 
 
 # ---------- T3: upload a voice file ----------
@@ -123,7 +101,7 @@ def test_a_wav_upload_returns_the_transcript_and_passes_the_file_through(fresh, 
     audio = _wav()
     response = _post(fresh, "visit.wav", audio, "audio/wav")
     assert response.status_code == 200, response.text
-    assert response.json() == {"text": SENTENCE, "model": "whisper-1"}
+    assert response.json()["status"] == "running" and response.json()["audio_id"]
     name, body, content_type = keyed.last_file
     assert (name, body, content_type) == ("visit.wav", audio, "audio/wav")
 
@@ -153,18 +131,18 @@ def test_a_pdf_that_claims_to_be_audio_is_still_refused(fresh, keyed):
     _assert_nothing_spent(fresh, before, ledger, keyed)
 
 
-def test_audio_over_25_mb_is_refused_with_a_clear_message_and_costs_nothing(fresh, keyed):
+def test_audio_over_64_mb_is_refused_with_a_clear_message_and_costs_nothing(fresh, keyed):
     _consent(fresh)
     before, ledger = _balance(fresh), len(_ledger(fresh))
-    response = _post(fresh, "long.wav", b"\x00" * (25 * MB + 1), "audio/wav")
+    response = _post(fresh, "long.wav", b"\x00" * (64 * MB + 1), "audio/wav")
     assert response.status_code == 413
-    assert response.json()["detail"] == "Audio too large (max 25 MB)"
+    assert response.json()["detail"] == "Audio too large (max 64 MB)"
     _assert_nothing_spent(fresh, before, ledger, keyed)
 
 
-def test_audio_of_exactly_25_mb_is_accepted(fresh, keyed):
+def test_audio_of_exactly_64_mb_is_accepted(fresh, keyed):
     _consent(fresh)
-    response = _post(fresh, "limit.wav", b"\x00" * (25 * MB), "audio/wav")
+    response = _post(fresh, "limit.wav", b"\x00" * (64 * MB), "audio/wav")
     assert response.status_code == 200, response.text
 
 
@@ -200,36 +178,33 @@ def test_an_extensionless_non_audio_file_is_refused(fresh, keyed):
     assert response.status_code == 415
 
 
-def test_each_successful_transcription_is_audited_once_and_charged_two_credits(fresh, keyed):
+def test_each_successful_upload_is_audited_once_and_charged_two_credits(fresh, keyed):
     _consent(fresh)
     before = _balance(fresh)
     assert _post(fresh, "visit.wav", _wav(), "audio/wav").status_code == 200
     assert before - _balance(fresh) == 2
     voice = [row for row in _ledger(fresh) if row["operation"] == "voice_note"]
     assert len(voice) == 1 and voice[0]["units"] == 2 and voice[0]["feature"] == "F1"
-    audits = _audit("consultation_transcribed")
-    assert len(audits) == 1 and audits[0].after["characters"] == len(SENTENCE)
+    assert len(_audit("consultation_submitted")) == 1
     assert _post(fresh, "visit2.wav", _wav(), "audio/wav").status_code == 200
-    assert len(_audit("consultation_transcribed")) == 2
+    assert len(_audit("consultation_submitted")) == 2
     assert before - _balance(fresh) == 4
 
 
-def test_a_provider_failure_or_silence_charges_and_audits_nothing(fresh, keyed):
+def test_a_pipeline_failure_charges_and_audits_nothing(fresh, keyed):
     _consent(fresh)
     before, ledger = _balance(fresh), len(_ledger(fresh))
-    keyed.text = RuntimeError("provider down")
+    keyed.error = HTTPException(502, "Could not reach the MediBytes pipeline")
     assert _post(fresh, "visit.wav", _wav(), "audio/wav").status_code == 502
-    keyed.text = "   "
-    assert _post(fresh, "visit.wav", _wav(), "audio/wav").status_code == 422
     assert _balance(fresh) == before and len(_ledger(fresh)) == ledger
-    assert _audit("consultation_transcribed") == []
+    assert _audit("consultation_submitted") == []
 
 
 def test_without_a_key_upload_is_refused_and_costs_nothing(fresh):
     _consent(fresh)
     before = _balance(fresh)
     response = _post(fresh, "visit.wav", _wav(), "audio/wav")
-    assert response.status_code == 400 and "OPENAI_API_KEY" in response.json()["detail"]
+    assert response.status_code == 400 and "MEDIBYTES_API_KEY" in response.json()["detail"]
     assert _balance(fresh) == before
 
 
@@ -254,27 +229,53 @@ def _event_types(client):
     return [row["type"] for row in rows]
 
 
-def test_a_transcript_becomes_a_draft_only_never_approved_and_no_note_on_the_timeline(fresh, keyed):
+def _poll(client, audio_id):
+    return client.get(f"/api/notes/transcribe/{audio_id}", headers=DOCTOR)
+
+
+def test_the_pipeline_note_becomes_a_draft_only_never_approved_and_no_note_on_the_timeline(fresh, keyed):
     _consent(fresh)
-    keyed.text = ASTHMA
     before_types = _event_types(fresh)
     assert _drafts(fresh) == []
-    transcript = _post(fresh, "visit.wav", _wav(), "audio/wav").json()["text"]
-    generated = fresh.post("/api/notes/generate", json={"feature": "F1", "transcript": transcript}, headers=DOCTOR)
-    assert generated.status_code == 200, generated.text
-    draft = generated.json()["draft"]
-    # "draft" in the spec is the unapproved state; the app stores it as draft_ready.
+    audio_id = _post(fresh, "visit.wav", _wav(), "audio/wav").json()["audio_id"]
+    polled = _poll(fresh, audio_id)
+    assert polled.status_code == 200, polled.text
+    body = polled.json()
+    assert body["status"] == "succeeded"
+    draft = body["draft"]
     assert draft["status"] == "draft_ready" and not draft.get("approved_by")
-    assert [d["status"] for d in _drafts(fresh)] == ["draft_ready"]
-    added = [t for t in _event_types(fresh)]
+    content = draft["content"]
+    assert content["hpi"]["text"].startswith("Swelling and redness")
+    assert [c["text"] for c in content["plan"]] == ["IV cefazolin 2 g", "Complete blood count"]
+    assert content["needs_review"] == [{"section": "Plan of management", "text": "Complete blood count"}]
+    added = list(_event_types(fresh))
     for t in before_types:
         added.remove(t)
     assert added == ["transcript"], "only the hidden input event is written; no consult_note before approval"
-    assert "consult_note" not in _event_types(fresh)
+    # Polling again returns the same draft instead of making another.
+    assert _poll(fresh, audio_id).json()["draft"]["id"] == draft["id"]
+    assert len(_drafts(fresh)) == 1
+
+
+def test_a_pipeline_draft_cites_real_segments_and_can_be_approved(fresh, keyed):
+    _consent(fresh)
+    audio_id = _post(fresh, "visit.wav", _wav(), "audio/wav").json()["audio_id"]
+    draft = _poll(fresh, audio_id).json()["draft"]
+    response = fresh.post(f"/api/drafts/{draft['id']}/approve", json={}, headers=DOCTOR)
+    assert response.status_code == 200, response.text
+
+
+def test_a_running_or_failed_job_makes_no_draft(fresh, keyed):
+    _consent(fresh)
+    audio_id = _post(fresh, "visit.wav", _wav(), "audio/wav").json()["audio_id"]
+    keyed.job_status = "running"
+    assert _poll(fresh, audio_id).json() == {"status": "running"}
+    keyed.job_status, keyed.job_error = "failed", "Recording too short"
+    assert _poll(fresh, audio_id).json() == {"status": "failed", "error": "Recording too short"}
+    assert _drafts(fresh) == []
 
 
 def test_the_draft_still_needs_the_approval_step_and_consent(fresh, keyed):
-    keyed.text = ASTHMA
     draft = fresh.post("/api/notes/generate", json={"feature": "F1", "transcript": ASTHMA}, headers=DOCTOR).json()["draft"]
     response = fresh.post(f"/api/drafts/{draft['id']}/approve", json={}, headers=DOCTOR)
     assert response.status_code == 400 and "consent" in response.json()["detail"].lower()
@@ -295,23 +296,6 @@ def test_after_discharge_no_draft_is_produced(client, keyed):
     response = client.post("/api/notes/generate", json={"feature": "F1", "transcript": ASTHMA}, headers=DOCTOR)
     assert response.status_code == 409
     assert len(_drafts(client)) == before
-
-
-def test_when_drafting_fails_with_502_no_draft_is_stored_and_the_transcript_cost_stands(fresh, keyed, monkeypatch):
-    _consent(fresh)
-    before = _balance(fresh)
-    transcript = _post(fresh, "visit.wav", _wav(), "audio/wav").json()["text"]
-    assert before - _balance(fresh) == 2
-
-    def broken(*args, **kwargs):
-        raise DraftGenerationError("model unavailable")
-
-    monkeypatch.setattr("app.routes.notes.generate_draft", broken)
-    response = fresh.post("/api/notes/generate", json={"feature": "F1", "transcript": transcript}, headers=DOCTOR)
-    assert response.status_code == 502
-    assert _drafts(fresh) == []
-    # The page keeps the transcript in the textarea; the 2 credits for hearing it were already spent.
-    assert before - _balance(fresh) == 2
 
 
 def test_a_transcript_shorter_than_ten_characters_cannot_be_drafted(fresh):
@@ -364,9 +348,9 @@ def test_the_stale_whisper_in_production_line_is_gone():
     assert "Whisper in live mode" not in _source("pages/Notes.tsx")
 
 
-def test_the_page_drafts_from_the_transcript_it_just_received_not_stale_state():
+def test_typed_transcripts_still_draft_and_voice_hands_over_a_pipeline_draft():
     notes = _source("pages/Notes.tsx")
-    assert "generate.mutate({ text: pendingDraft.text })" in notes
+    assert "onDraft={onVoiceDraft}" in notes
     assert "override?.text ?? transcript" in notes
     assert "Transcribing..." in notes and "Drafting..." in notes
 

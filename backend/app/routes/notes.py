@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy import select
@@ -11,7 +13,7 @@ from ..models import (
     Draft,
     TimelineEvent,
 )
-from ..services import credits
+from ..services import credits, pipeline
 from ..services.identity import require
 from ..services.context import build_context, create_transcript_event
 from ..services.drafts import (
@@ -30,9 +32,9 @@ from .common import (
 
 router = APIRouter()
 
-MAX_AUDIO_BYTES = 25 * 1024 * 1024
+MAX_AUDIO_BYTES = 64 * 1024 * 1024
 # Formats the transcription service accepts.
-AUDIO_EXTENSIONS = {"mp3", "wav", "m4a", "webm", "ogg", "oga", "mp4", "mpeg", "mpga", "flac"}
+AUDIO_EXTENSIONS = {"mp3", "wav", "m4a", "webm", "ogg", "oga", "mp4", "mpeg", "mpga", "flac", "aac"}
 
 
 def _looks_like_audio(filename: str | None, content_type: str | None) -> bool:
@@ -78,40 +80,82 @@ async def transcribe_consultation(file: UploadFile = File(...), db: Session = De
         raise HTTPException(415, "That file is not audio. Upload mp3, wav, m4a, webm or ogg.")
     contents = await file.read(MAX_AUDIO_BYTES + 1)
     if len(contents) > MAX_AUDIO_BYTES:
-        raise HTTPException(413, "Audio too large (max 25 MB)")
+        raise HTTPException(413, "Audio too large (max 64 MB)")
     if not contents:
         raise HTTPException(400, "The audio file is empty")
-    if not settings.openai_api_key:
-        raise HTTPException(400, "Live transcription requires OPENAI_API_KEY; use the seeded transcript in cached mode")
-    # A transcription is really about to run: charge before the work. The charge is only flushed, so
-    # a failed transcription leaves the request uncommitted and nothing is spent.
+    if not pipeline.configured():
+        raise HTTPException(400, "Voice notes need the MediBytes pipeline; set MEDIBYTES_API_KEY")
+    # The upload is really about to run: charge before the work. The charge is only flushed, so
+    # a refused upload leaves the request uncommitted and nothing is spent.
     credits.charge(db, "voice_note", feature="F1", mode="live")
-    try:
-        from openai import OpenAI
-
-        client = OpenAI(api_key=settings.openai_api_key)
-        transcript = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=(file.filename or "consultation.webm", contents, file.content_type or "audio/webm"),
-        )
-        text = str(getattr(transcript, "text", "") or "").strip()
-    except Exception as exc:
-        raise HTTPException(502, f"Transcription failed: {exc}") from exc
-    if not text:
-        raise HTTPException(422, "No speech was detected in the recording")
+    audio_id = str(uuid.uuid4())
+    receipt = pipeline.submit(
+        contents,
+        file.filename or "consultation.webm",
+        file.content_type or "audio/webm",
+        audio_id,
+    )
     add_audit(
         db,
-        "consultation_transcribed",
+        "consultation_submitted",
         "patient",
         patient.id,
         patient.id,
         actor_type="model",
-        actor_name="whisper-1",
-        after={"characters": len(text), "encounter_id": encounter.id},
+        actor_name="MediBytes pipeline",
+        after={"audio_id": audio_id, "job_id": receipt.get("job_id"), "encounter_id": encounter.id},
         meta={"mode": "live"},
     )
     db.commit()
-    return {"text": text, "model": "whisper-1"}
+    return {"audio_id": audio_id, "status": receipt.get("status", "running")}
+
+
+@router.get("/notes/transcribe/{audio_id}", dependencies=[Depends(require("clinical_draft"))])
+def pipeline_status(audio_id: str, db: Session = Depends(get_db)):
+    """Poll the pipeline; on success the six-section note becomes an F1 draft (once per audio_id)."""
+    patient, encounter, _ = _state(db)
+    existing = db.scalars(
+        select(TimelineEvent).where(
+            TimelineEvent.patient_id == patient.id,
+            TimelineEvent.type == "transcript",
+            TimelineEvent.subtype == "F1",
+        )
+    ).all()
+    for event in existing:
+        if (event.payload or {}).get("audio_id") == audio_id:
+            draft = db.scalars(select(Draft).where(Draft.feature == "F1", Draft.patient_id == patient.id)).all()
+            match = next((d for d in draft if event.id in (d.created_from_event_ids or [])), None)
+            if match:
+                return {"status": "succeeded", "draft": draft_to_dict(match)}
+    if not pipeline.configured():
+        raise HTTPException(400, "Voice notes need the MediBytes pipeline; set MEDIBYTES_API_KEY")
+    result = pipeline.fetch(audio_id)
+    if result is None:
+        raise HTTPException(404, "No recording with that id")
+    job_status = result.get("job_status")
+    if job_status == "failed":
+        return {"status": "failed", "error": result.get("job_error") or "The recording could not be processed"}
+    if job_status != "succeeded":
+        return {"status": job_status or "running"}
+    require_open_encounter(encounter)
+    note = pipeline.parse_note(result.get("response"))
+    text = pipeline.note_to_transcript(note)
+    if not text:
+        return {"status": "failed", "error": "No speech was detected in the recording"}
+    event = create_transcript_event(db, patient, encounter, "F1", text, "Consultation (MediBytes pipeline)")
+    event.payload = {**(event.payload or {}), "audio_id": audio_id, "pipeline_note": note}
+    content = pipeline.to_f1_content(note, result.get("needs_review") or [], event.id)
+    draft = create_draft(
+        db,
+        feature="F1",
+        patient=patient,
+        encounter=encounter,
+        content=content,
+        llm_call=None,
+        created_from_event_ids=[event.id],
+    )
+    db.commit()
+    return {"status": "succeeded", "draft": draft_to_dict(draft)}
 
 
 @router.post("/notes/generate", dependencies=[Depends(require("clinical_draft"))])

@@ -6,6 +6,7 @@ import { useEvidence } from "../components/Evidence";
 import { ReasonForm } from "../features/f15/ReasonForm";
 import type { ReasonTarget } from "../features/f15/types";
 import { Banner, Skeleton } from "../components/ui";
+import { NextStepCta } from "../components/NextStepCta";
 import { STAFF } from "../components/legacy/HisChrome";
 
 const CATEGORIES: { key: string; label: string }[] = [
@@ -205,6 +206,7 @@ export function TasksPage() {
 
       {error ? <Banner tone="danger" role="alert">{error}</Banner> : null}
       {notice && !error ? <Banner tone="success" role="status">{notice}</Banner> : null}
+      {all.length > 0 && openCount === 0 ? <NextStepCta id="tasks" className="mb-3" /> : null}
 
       <div className="tk-bar">
         <div className="tabs" role="tablist" aria-label="Task view">

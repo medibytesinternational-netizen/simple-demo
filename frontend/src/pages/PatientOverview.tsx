@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { ALERT_TARGET } from "../components/nextStep";
 import { get } from "../api";
 import type { AppState, Lab, Meta } from "../types";
 import { warningCount, type Readiness } from "../features/f09/types";
@@ -142,7 +143,7 @@ export function PatientOverviewPage() {
                 <tr key={a.id}>
                   <td className={`strong his-tone-${a.severity === "critical" ? "critical" : "warning"}`}>{a.severity === "critical" ? "Critical" : "Alert"}</td>
                   <td>{a.title}</td><td className="muted">{a.recommended_action}</td>
-                  <td className="right"><Link className="btn btn-sm" to="/safety?tab=alerts">Review</Link></td>
+                  <td className="right"><Link className="btn btn-sm" to={ALERT_TARGET[a.rule_id]?.to ?? "/safety?tab=alerts"}>{ALERT_TARGET[a.rule_id]?.label ?? "Review"}</Link></td>
                 </tr>
               ))}
               {overdueTasks.map((t) => (

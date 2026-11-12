@@ -12,6 +12,7 @@ import ReferralRequestForm from "../features/f11/ReferralRequestForm";
 import { canAcknowledge, referralStatusLabel } from "../features/f11/rules";
 import { ConsultNoteStatus, type ConsultGenerateResult } from "../features/f01/ConsultNoteStatus";
 import { PageHeader } from "../components/PageHeader";
+import { NextStepCta } from "../components/NextStepCta";
 import { Stepper } from "../components/ui";
 import type { StepState } from "../components/ui";
 
@@ -156,16 +157,11 @@ export function NotesPage() {
 
   // A transcript from VoiceInput (recording or upload) lands in the textarea first, so nothing is lost
   // if drafting fails, then drafts after a short window in which the clinician can cancel.
-  const onVoiceTranscript = (text: string) => {
-    // The feature was pinned when transcription began; a transcript for another tab is dropped.
-    if (voiceFeatureRef.current !== tab.feature) return;
-    setTranscript(text);
+  // The MediBytes pipeline turns the recording straight into a consult draft; show it for review.
+  const onVoiceDraft = () => {
     setError("");
-    if (text.trim().length < 10) {
-      setError("Transcript is too short to draft. Edit it and press Generate draft.");
-      return;
-    }
-    setPendingDraft({ text, feature: tab.feature, left: AUTO_DRAFT_DELAY_S });
+    setConsultResult(null);
+    queryClient.invalidateQueries();
   };
 
   const generate = useMutation<any, Error, { text?: string } | undefined>({
@@ -330,7 +326,7 @@ export function NotesPage() {
                     <div className="flex items-center justify-between gap-2">
                       <span>
                         {consentGranted
-                          ? "Consent is recorded. Record audio or upload an audio file; transcription needs the OpenAI key (live mode)."
+                          ? "Consent is recorded. Record or upload audio; the MediBytes pipeline turns it into a draft note for review."
                           : "Consent for consultation capture has not been recorded. Audio capture is blocked until it is."}
                       </span>
                       <div className="button-row">
@@ -346,7 +342,7 @@ export function NotesPage() {
                             if (active) voiceFeatureRef.current = tab.feature;
                             setTranscribing(active);
                           }}
-                          onTranscript={onVoiceTranscript}
+                          onDraft={onVoiceDraft}
                         />
                       </div>
                     </div>
@@ -355,7 +351,7 @@ export function NotesPage() {
                 {transcribing || pendingDraft || generate.isPending ? (
                   <div className="banner mt-2" role="status">
                     {transcribing ? (
-                      <><span className="spinner" /> Transcribing...</>
+                      <><span className="spinner" /> Transcribing... the MediBytes pipeline usually takes under a minute.</>
                     ) : pendingDraft ? (
                       <div className="flex items-center justify-between gap-2">
                         <span>Drafting in {pendingDraft.left} s. The transcript is in the box above; you can edit it first.</span>
@@ -551,6 +547,7 @@ export function NotesPage() {
           {latest?.status === "approved" && hasDraft ? (
             <div className="banner success mt-3">
               This version is approved and on the timeline. Generate again to create a new draft; the previous version will be marked superseded.
+              <NextStepCta id={tab.key} />
             </div>
           ) : null}
         </div>

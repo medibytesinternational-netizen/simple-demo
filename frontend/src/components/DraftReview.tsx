@@ -603,6 +603,16 @@ function DraftContent({
           ) : null}
           <Section title="Follow-up"><ClaimLine claim={content.follow_up} /></Section>
           <NotDocumented items={content.not_documented} />
+          {content.needs_review?.length ? (
+            <Banner tone="warning">
+              <strong>Check these first</strong> — the pipeline could not fully confirm them against the recording:
+              <ul>
+                {content.needs_review.map((item: { section: string; text: string }, i: number) => (
+                  <li key={i}>{item.section}: {item.text}</li>
+                ))}
+              </ul>
+            </Banner>
+          ) : null}
         </>
       );
     case "F2":

@@ -121,3 +121,52 @@ def as_patient(patient_id: str):
         yield
     finally:
         identity.reset_context(tokens)
+
+
+# ---------- a stand-in for the MediBytes pipeline API (no network) ----------
+
+PIPELINE_NOTE = {
+    "present_illness": "Swelling and redness of the right leg since Tuesday. Denies fever.",
+    "examination_findings": "pulse 104 beats per minute; right calf warm and tender",
+    "previous_diagnosis": "Right leg cellulitis",
+    "plan_of_management": "IV cefazolin 2 g; Complete blood count",
+    "diet_instructions": "Normal diet",
+    "general_instructions": "Elevate the leg",
+}
+
+
+class FakePipeline:
+    """Installed over app.services.pipeline's network calls by the `keyed` fixtures."""
+
+    def __init__(self):
+        self.calls = 0
+        self.last_file = None
+        self.error = None  # an HTTPException to raise from submit
+        self.job_status = "succeeded"
+        self.job_error = None
+        self.note = dict(PIPELINE_NOTE)
+        self.needs_review = [{"section": "plan_of_management", "text": "Complete blood count"}]
+
+    def submit(self, contents, filename, content_type, audio_id):
+        self.calls += 1
+        self.last_file = (filename, contents, content_type)
+        if self.error:
+            raise self.error
+        return {"audio_id": audio_id, "job_id": "job-test", "status": "running"}
+
+    def fetch(self, audio_id):
+        import json
+
+        return {
+            "audio_id": audio_id,
+            "job_status": self.job_status,
+            "job_error": self.job_error,
+            "response": json.dumps([self.note]),
+            "needs_review": self.needs_review,
+        }
+
+    def install(self, monkeypatch):
+        monkeypatch.setattr("app.services.pipeline.configured", lambda: True)
+        monkeypatch.setattr("app.services.pipeline.submit", self.submit)
+        monkeypatch.setattr("app.services.pipeline.fetch", self.fetch)
+        return self

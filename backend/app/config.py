@@ -18,6 +18,9 @@ class Settings:
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4o")
     llm_mode: str = os.getenv("LLM_MODE", "auto").lower()
+    medibytes_api_key: str = os.getenv("MEDIBYTES_API_KEY", "")
+    medibytes_base_url: str = os.getenv("MEDIBYTES_BASE_URL", "https://product-production-b091.up.railway.app")
+    medibytes_company_id: int = int(os.getenv("MEDIBYTES_COMPANY_ID", "1"))
     demo_now: datetime = datetime.fromisoformat(
         os.getenv("DEMO_NOW", "2026-10-20T09:00:00")
     )

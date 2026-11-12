@@ -7,6 +7,7 @@ import { ReadinessPanel } from "../features/f09/ReadinessPanel";
 import { SignPanel } from "../features/f09/SignPanel";
 import type { Readiness } from "../features/f09/types";
 import { Banner, Skeleton } from "../components/ui";
+import { NextStepCta } from "../components/NextStepCta";
 
 type Mode = "print" | "view" | "clear";
 type TabKey = "summary" | "doctor" | "result" | "unit";
@@ -161,6 +162,7 @@ export function DischargePage() {
           <div className="dc-pad">
             {readiness.isLoading ? <Skeleton count={5} /> : <ReadinessPanel readiness={readiness.data} />}
             {draft ? <div className="mt-3"><SignPanel draft={draft} readiness={readiness.data} /></div> : null}
+            {signed ? <NextStepCta id="discharge" /> : null}
           </div>
         ) : null}
 
