@@ -84,7 +84,7 @@ async def transcribe_consultation(file: UploadFile = File(...), db: Session = De
     if not contents:
         raise HTTPException(400, "The audio file is empty")
     if not pipeline.configured():
-        raise HTTPException(400, "Voice notes need the MediBytes pipeline; set MEDIBYTES_API_KEY")
+        raise HTTPException(400, "Voice notes need the MediBytes pipeline; set OPENAI_API_KEY")
     # The upload is really about to run: charge before the work. The charge is only flushed, so
     # a refused upload leaves the request uncommitted and nothing is spent.
     credits.charge(db, "voice_note", feature="F1", mode="live")
@@ -128,7 +128,7 @@ def pipeline_status(audio_id: str, db: Session = Depends(get_db)):
             if match:
                 return {"status": "succeeded", "draft": draft_to_dict(match)}
     if not pipeline.configured():
-        raise HTTPException(400, "Voice notes need the MediBytes pipeline; set MEDIBYTES_API_KEY")
+        raise HTTPException(400, "Voice notes need the MediBytes pipeline; set OPENAI_API_KEY")
     result = pipeline.fetch(audio_id)
     if result is None:
         raise HTTPException(404, "No recording with that id")

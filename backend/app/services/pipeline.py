@@ -1,18 +1,26 @@
-"""Client for the MediBytes transcription pipeline API (audio -> six-section note).
+"""OPD voice notes through the local MediBytes pipeline (the repo's ``medibytes/`` package).
 
-Upload answers 202 with a receipt; the finished note is pulled with the status call.
-See "API Documentation.pdf" (MediBytes API — Guide).
+The recording is queued on ``medibytes.api.jobs.JobService`` (one worker thread, job state on
+disk) and the six-section discharge note it produces is mapped onto the F1 consult draft.
+The pipeline's own output format is unchanged; ``_note_from_discharge`` flattens it here.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
+import sys
+import threading
+from pathlib import Path
 from typing import Any
 
-import httpx
 from fastapi import HTTPException
 
 from ..config import settings
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 SECTIONS = [
     "present_illness",
@@ -31,56 +39,86 @@ SECTION_LABELS = {
     "general_instructions": "General instructions",
 }
 
-_UPLOAD_ERRORS = {
-    400: "The audio file is empty",
-    401: "Pipeline API key is missing or wrong",
-    413: "Audio too large (max 64 MB)",
-    415: "That file type is not supported by the pipeline",
-    422: "The recording id was not accepted by the pipeline",
-    503: "The MediBytes pipeline is not ready; try again shortly",
-}
+_lock = threading.Lock()
+_service: Any = None
 
 
 def configured() -> bool:
-    return bool(settings.medibytes_api_key)
+    """The MediBytes pipeline needs gpt-4.1, so it runs only with an OpenAI key."""
+    return bool(settings.openai_api_key)
 
 
-def _headers() -> dict[str, str]:
-    return {"Authorization": f"Bearer {settings.medibytes_api_key}"}
+def _jobs() -> Any:
+    """Start the job service once; the speech models load on the first job, not at import."""
+    global _service
+    with _lock:
+        if _service is None:
+            try:
+                from medibytes.api.jobs import JobService
+                from medibytes.config import Settings
+                from medibytes.factory import build_pipeline
+            except ImportError as exc:
+                raise HTTPException(
+                    503, f"The MediBytes pipeline is not installed ({exc.name}); install requirements-medibytes.txt"
+                ) from exc
+            pipeline_lock = threading.Lock()
+            built: dict[str, Any] = {}
+
+            def provider() -> Any:
+                with pipeline_lock:
+                    if "p" not in built:
+                        built["p"] = build_pipeline(Settings.from_env(env_file=None))
+                    return built["p"]
+
+            _service = JobService(settings.medibytes_runs_dir, provider)
+        return _service
 
 
-def _base() -> str:
-    return settings.medibytes_base_url.rstrip("/")
+def _index(audio_id: str) -> Path:
+    return Path(settings.medibytes_runs_dir) / "audio" / f"{audio_id}.json"
 
 
 def submit(contents: bytes, filename: str, content_type: str, audio_id: str) -> dict[str, Any]:
-    try:
-        response = httpx.post(
-            f"{_base()}/api/v1/transcriptions",
-            headers=_headers(),
-            files={"file": (filename, contents, content_type)},
-            data={"audio_id": audio_id, "company_id": str(settings.medibytes_company_id)},
-            timeout=120,
-        )
-    except httpx.HTTPError as exc:
-        raise HTTPException(502, f"Could not reach the MediBytes pipeline: {exc}") from exc
-    if response.status_code != 202:
-        message = _UPLOAD_ERRORS.get(response.status_code, f"Pipeline upload failed [{response.status_code}]")
-        status = response.status_code if response.status_code in (400, 413, 415, 422) else 502
-        raise HTTPException(status, message)
-    return response.json()
+    suffix = Path(filename).suffix.lower() or ".webm"
+    data_hash = hashlib.sha256(contents).hexdigest()
+    job = _jobs().submit(data_hash, filename, suffix, lambda path: path.write_bytes(contents))
+    index = _index(audio_id)
+    index.parent.mkdir(parents=True, exist_ok=True)
+    index.write_text(json.dumps({"job_id": job["job_id"]}), encoding="utf-8")
+    return {"audio_id": audio_id, "job_id": job["job_id"], "status": job["status"]}
 
 
 def fetch(audio_id: str) -> dict[str, Any] | None:
-    try:
-        response = httpx.get(f"{_base()}/api/v1/transcriptions/{audio_id}", headers=_headers(), timeout=30)
-    except httpx.HTTPError as exc:
-        raise HTTPException(502, f"Could not reach the MediBytes pipeline: {exc}") from exc
-    if response.status_code == 404:
+    index = _index(audio_id)
+    if not index.is_file():
         return None
-    if response.status_code != 200:
-        raise HTTPException(502, f"Pipeline status failed [{response.status_code}]")
-    return response.json()
+    service = _jobs()
+    job = service.get(json.loads(index.read_text(encoding="utf-8"))["job_id"])
+    if job is None:
+        return None
+    out: dict[str, Any] = {"audio_id": audio_id, "job_status": job["status"], "job_error": job.get("error")}
+    if job["status"] == "succeeded":
+        discharge = (service.result(job) or {}).get("discharge") or {}
+        note, needs_review = _note_from_discharge(discharge)
+        out.update(response=json.dumps([note]), needs_review=needs_review)
+    return out
+
+
+def _note_from_discharge(discharge: dict[str, Any]) -> tuple[dict[str, str], list[dict[str, str]]]:
+    """medibytes ``discharge.json`` (sections -> items) -> one string per section plus review flags."""
+    sections = discharge.get("sections") or {}
+    note: dict[str, str] = {}
+    needs_review: list[dict[str, str]] = []
+    for key in SECTIONS:
+        items = (sections.get(key) or {}).get("items") or []
+        texts = [str(item.get("text") or "").strip() for item in items]
+        note[key] = "; ".join(t for t in texts if t)
+        needs_review += [
+            {"section": key, "text": str(item.get("text") or "")}
+            for item in items
+            if item.get("verified_status") == "needs_review"
+        ]
+    return note, needs_review
 
 
 def parse_note(response: str | None) -> dict[str, str]:

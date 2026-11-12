@@ -298,7 +298,7 @@ def test_audio_with_consent_but_no_key_is_refused_and_costs_nothing(fresh):
     _consent(fresh)
     before = _balance(fresh)
     response = fresh.post("/api/notes/transcribe", files=_audio())
-    assert response.status_code == 400 and "MEDIBYTES_API_KEY" in response.json()["detail"]
+    assert response.status_code == 400 and "OPENAI_API_KEY" in response.json()["detail"]
     assert _balance(fresh) == before
 
 

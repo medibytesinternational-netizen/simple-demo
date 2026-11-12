@@ -204,7 +204,7 @@ def test_without_a_key_upload_is_refused_and_costs_nothing(fresh):
     _consent(fresh)
     before = _balance(fresh)
     response = _post(fresh, "visit.wav", _wav(), "audio/wav")
-    assert response.status_code == 400 and "MEDIBYTES_API_KEY" in response.json()["detail"]
+    assert response.status_code == 400 and "OPENAI_API_KEY" in response.json()["detail"]
     assert _balance(fresh) == before
 
 
