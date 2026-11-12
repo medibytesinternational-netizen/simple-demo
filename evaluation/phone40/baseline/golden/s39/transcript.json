@@ -1,0 +1,500 @@
+{
+  "job_id": "s39-none",
+  "text": "29-year-old male, two-wheelers kid without helet one hour ago. Brief under one minute blanckout, now alert with headache and vomit. Denies fazure and ear, nosebleed. No known drug allergy. No past major illness. Minor head injury for observation. Glass go 15x15. Blood pressure 120/80 mmHg, pulse 88. Saturation 99%. Small forehead cut. No earbleed. Hardly neuro checks paracetamale ondansetron. If vomiting, no sedation, CT if worsening. Diet, light productive vomiting settles. No alcohol 48 ha. general. Overnight wakeup checks. Attendant mandi- manditory. Return for repeated vomiting, confusion, seizure or fluid leaks. Review tomorrow.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "29-year-old male, two-wheelers kid without helet one hour ago. Brief under one minute blanckout, now alert with headache and vomit. Denies fazure and ear, nosebleed. No known drug allergy. No past major illness. Minor head injury for observation. Glass go 15x15. Blood pressure 120/80 mmHg, pulse 88. Saturation 99%. Small forehead cut. No earbleed. Hardly neuro checks paracetamale ondansetron. If vomiting, no sedation, CT if worsening. Diet, light productive vomiting settles. No alcohol 48 ha. general. Overnight wakeup checks. Attendant mandi- manditory. Return for repeated vomiting, confusion, seizure or fluid leaks. Review tomorrow.",
+      "start": 0.0,
+      "end": 61.4,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "29-year-old",
+          "s": 0.0,
+          "e": 0.66
+        },
+        {
+          "w": "male,",
+          "s": 0.66,
+          "e": 1.32
+        },
+        {
+          "w": "two-wheelers",
+          "s": 1.32,
+          "e": 1.98
+        },
+        {
+          "w": "kid",
+          "s": 1.98,
+          "e": 2.64
+        },
+        {
+          "w": "without",
+          "s": 2.64,
+          "e": 3.3
+        },
+        {
+          "w": "helet",
+          "s": 3.3,
+          "e": 3.96
+        },
+        {
+          "w": "one",
+          "s": 3.96,
+          "e": 4.62
+        },
+        {
+          "w": "hour",
+          "s": 4.62,
+          "e": 5.28
+        },
+        {
+          "w": "ago.",
+          "s": 5.28,
+          "e": 5.94
+        },
+        {
+          "w": "Brief",
+          "s": 5.94,
+          "e": 6.6
+        },
+        {
+          "w": "under",
+          "s": 6.6,
+          "e": 7.26
+        },
+        {
+          "w": "one",
+          "s": 7.26,
+          "e": 7.92
+        },
+        {
+          "w": "minute",
+          "s": 7.92,
+          "e": 8.58
+        },
+        {
+          "w": "blanckout,",
+          "s": 8.58,
+          "e": 9.24
+        },
+        {
+          "w": "now",
+          "s": 9.24,
+          "e": 9.9
+        },
+        {
+          "w": "alert",
+          "s": 9.9,
+          "e": 10.56
+        },
+        {
+          "w": "with",
+          "s": 10.56,
+          "e": 11.22
+        },
+        {
+          "w": "headache",
+          "s": 11.22,
+          "e": 11.88
+        },
+        {
+          "w": "and",
+          "s": 11.88,
+          "e": 12.54
+        },
+        {
+          "w": "vomit.",
+          "s": 12.54,
+          "e": 13.2
+        },
+        {
+          "w": "Denies",
+          "s": 13.2,
+          "e": 13.86
+        },
+        {
+          "w": "fazure",
+          "s": 13.86,
+          "e": 14.52
+        },
+        {
+          "w": "and",
+          "s": 14.52,
+          "e": 15.18
+        },
+        {
+          "w": "ear,",
+          "s": 15.18,
+          "e": 15.84
+        },
+        {
+          "w": "nosebleed.",
+          "s": 15.84,
+          "e": 16.5
+        },
+        {
+          "w": "No",
+          "s": 16.5,
+          "e": 17.16
+        },
+        {
+          "w": "known",
+          "s": 17.16,
+          "e": 17.83
+        },
+        {
+          "w": "drug",
+          "s": 17.83,
+          "e": 18.49
+        },
+        {
+          "w": "allergy.",
+          "s": 18.49,
+          "e": 19.15
+        },
+        {
+          "w": "No",
+          "s": 19.15,
+          "e": 19.81
+        },
+        {
+          "w": "past",
+          "s": 19.81,
+          "e": 20.47
+        },
+        {
+          "w": "major",
+          "s": 20.47,
+          "e": 21.13
+        },
+        {
+          "w": "illness.",
+          "s": 21.13,
+          "e": 21.79
+        },
+        {
+          "w": "Minor",
+          "s": 21.79,
+          "e": 22.45
+        },
+        {
+          "w": "head",
+          "s": 22.45,
+          "e": 23.11
+        },
+        {
+          "w": "injury",
+          "s": 23.11,
+          "e": 23.77
+        },
+        {
+          "w": "for",
+          "s": 23.77,
+          "e": 24.43
+        },
+        {
+          "w": "observation.",
+          "s": 24.43,
+          "e": 25.09
+        },
+        {
+          "w": "Glass",
+          "s": 25.09,
+          "e": 25.75
+        },
+        {
+          "w": "go",
+          "s": 25.75,
+          "e": 26.41
+        },
+        {
+          "w": "15x15.",
+          "s": 26.41,
+          "e": 27.07
+        },
+        {
+          "w": "Blood",
+          "s": 27.07,
+          "e": 27.73
+        },
+        {
+          "w": "pressure",
+          "s": 27.73,
+          "e": 28.39
+        },
+        {
+          "w": "120/80",
+          "s": 28.39,
+          "e": 29.05
+        },
+        {
+          "w": "mmHg,",
+          "s": 29.05,
+          "e": 29.71
+        },
+        {
+          "w": "pulse",
+          "s": 29.71,
+          "e": 30.37
+        },
+        {
+          "w": "88.",
+          "s": 30.37,
+          "e": 31.03
+        },
+        {
+          "w": "Saturation",
+          "s": 31.03,
+          "e": 31.69
+        },
+        {
+          "w": "99%.",
+          "s": 31.69,
+          "e": 32.35
+        },
+        {
+          "w": "Small",
+          "s": 32.35,
+          "e": 33.01
+        },
+        {
+          "w": "forehead",
+          "s": 33.01,
+          "e": 33.67
+        },
+        {
+          "w": "cut.",
+          "s": 33.67,
+          "e": 34.33
+        },
+        {
+          "w": "No",
+          "s": 34.33,
+          "e": 34.99
+        },
+        {
+          "w": "earbleed.",
+          "s": 34.99,
+          "e": 35.65
+        },
+        {
+          "w": "Hardly",
+          "s": 35.65,
+          "e": 36.31
+        },
+        {
+          "w": "neuro",
+          "s": 36.31,
+          "e": 36.97
+        },
+        {
+          "w": "checks",
+          "s": 36.97,
+          "e": 37.63
+        },
+        {
+          "w": "paracetamale",
+          "s": 37.63,
+          "e": 38.29
+        },
+        {
+          "w": "ondansetron.",
+          "s": 38.29,
+          "e": 38.95
+        },
+        {
+          "w": "If",
+          "s": 38.95,
+          "e": 39.61
+        },
+        {
+          "w": "vomiting,",
+          "s": 39.61,
+          "e": 40.27
+        },
+        {
+          "w": "no",
+          "s": 40.27,
+          "e": 40.93
+        },
+        {
+          "w": "sedation,",
+          "s": 40.93,
+          "e": 41.59
+        },
+        {
+          "w": "CT",
+          "s": 41.59,
+          "e": 42.25
+        },
+        {
+          "w": "if",
+          "s": 42.25,
+          "e": 42.91
+        },
+        {
+          "w": "worsening.",
+          "s": 42.91,
+          "e": 43.57
+        },
+        {
+          "w": "Diet,",
+          "s": 43.57,
+          "e": 44.23
+        },
+        {
+          "w": "light",
+          "s": 44.23,
+          "e": 44.89
+        },
+        {
+          "w": "productive",
+          "s": 44.89,
+          "e": 45.55
+        },
+        {
+          "w": "vomiting",
+          "s": 45.55,
+          "e": 46.21
+        },
+        {
+          "w": "settles.",
+          "s": 46.21,
+          "e": 46.87
+        },
+        {
+          "w": "No",
+          "s": 46.87,
+          "e": 47.53
+        },
+        {
+          "w": "alcohol",
+          "s": 47.53,
+          "e": 48.19
+        },
+        {
+          "w": "48",
+          "s": 48.19,
+          "e": 48.85
+        },
+        {
+          "w": "ha.",
+          "s": 48.85,
+          "e": 49.51
+        },
+        {
+          "w": "general.",
+          "s": 49.51,
+          "e": 50.17
+        },
+        {
+          "w": "Overnight",
+          "s": 50.17,
+          "e": 50.83
+        },
+        {
+          "w": "wakeup",
+          "s": 50.83,
+          "e": 51.49
+        },
+        {
+          "w": "checks.",
+          "s": 51.49,
+          "e": 52.15
+        },
+        {
+          "w": "Attendant",
+          "s": 52.15,
+          "e": 52.81
+        },
+        {
+          "w": "mandi-",
+          "s": 52.81,
+          "e": 53.48
+        },
+        {
+          "w": "manditory.",
+          "s": 53.48,
+          "e": 54.14
+        },
+        {
+          "w": "Return",
+          "s": 54.14,
+          "e": 54.8
+        },
+        {
+          "w": "for",
+          "s": 54.8,
+          "e": 55.46
+        },
+        {
+          "w": "repeated",
+          "s": 55.46,
+          "e": 56.12
+        },
+        {
+          "w": "vomiting,",
+          "s": 56.12,
+          "e": 56.78
+        },
+        {
+          "w": "confusion,",
+          "s": 56.78,
+          "e": 57.44
+        },
+        {
+          "w": "seizure",
+          "s": 57.44,
+          "e": 58.1
+        },
+        {
+          "w": "or",
+          "s": 58.1,
+          "e": 58.76
+        },
+        {
+          "w": "fluid",
+          "s": 58.76,
+          "e": 59.42
+        },
+        {
+          "w": "leaks.",
+          "s": 59.42,
+          "e": 60.08
+        },
+        {
+          "w": "Review",
+          "s": 60.08,
+          "e": 60.74
+        },
+        {
+          "w": "tomorrow.",
+          "s": 60.74,
+          "e": 61.4
+        }
+      ]
+    }
+  ],
+  "normalized_en": "29-year-old male, 2-wheelers kid without helet 1 hour ago. Brief under 1 minute blanckout, now alert with headache and vomit. Denies fazure and ear, nosebleed. No known drug allergy. No past major illness. Minor head injury for observation. Glass go 15x15. Blood pressure 120/80 mmHg, pulse 88. Saturation 99%. Small forehead cut. No earbleed. Hardly neuro checks paracetamale ondansetron. If vomiting, no sedation, CT if worsening. Diet, light productive vomiting settles. No alcohol 48 ha. general. Overnight wakeup checks. Attendant mandi- manditory. Return for repeated vomiting, confusion, seizure or fluid leaks. Review tomorrow.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s39-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

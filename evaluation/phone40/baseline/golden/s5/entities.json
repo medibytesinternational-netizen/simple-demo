@@ -1,0 +1,267 @@
+{
+  "job_id": "s5-none",
+  "drugs": [
+    {
+      "name": "amoxicillin",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Young adult female, started on amoxicillin today for throat infection withth whole body itching 20 minutes later.",
+      "negated": true,
+      "note": "ALLERGEN - an allergy to this drug is asserted in the dictation; not an active order, physician must confirm",
+      "allergen": true,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "name": "adrenaline",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Adrenaline if anaphylaxis.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm | heard only by small-int8, not by the primary decoder",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "second_pass": "small-int8"
+    }
+  ],
+  "symptoms": [],
+  "vitals": [
+    {
+      "text": "96% ",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 96% plu 180 beats per minute, blood pressure 110/70 mmHg.",
+      "start_char": 337,
+      "end_char": 340,
+      "span_status": "exact"
+    },
+    {
+      "text": "blood pressure 110/70",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 96% plu 180 beats per minute, blood pressure 110/70 mmHg.",
+      "start_char": 367,
+      "end_char": 388,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [
+    {
+      "text": "penicillin",
+      "negated": true,
+      "confidence": 0.82,
+      "color": "YELLOW",
+      "source_sentence": "Denies prior penicillin allergy andheezing.",
+      "note": "NEGATED candidate - verify drug name",
+      "start_char": 216,
+      "end_char": 226,
+      "span_status": "exact"
+    },
+    {
+      "text": "amoxicillin",
+      "negated": false,
+      "confidence": 0.82,
+      "color": "RED",
+      "source_sentence": "Suspected amoxicillin allergy.",
+      "note": "ASSERTED allergy - confirm before prescribing",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "negations": [
+    {
+      "span": "Denies prior penicillin allergy andheezing.",
+      "negated": true,
+      "start_char": 203,
+      "end_char": 246,
+      "span_status": "exact"
+    }
+  ],
+  "diagnosis": {},
+  "followup": {
+    "text": "Follow up tomorrow",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Follow up tomorrow",
+    "start_char": 624,
+    "end_char": 642,
+    "span_status": "exact"
+  },
+  "drug_second_pass": {
+    "model": "small-int8",
+    "added": [
+      "adrenaline"
+    ]
+  },
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "amoxicillin",
+        "dose": null,
+        "unit": null,
+        "negated": true,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified",
+          "polarity:negated-preserved"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Young adult female, started on amoxicillin today for throat infection withth whole body itching 20 minutes later."
+      },
+      {
+        "kind": "drug",
+        "name": "adrenaline",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:needs_review"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated; source_sentence not verbatim in transcript",
+        "confidence": 0.7,
+        "source_sentence": "Adrenaline if anaphylaxis."
+      },
+      {
+        "kind": "vital",
+        "text": "96% ",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 96% plu 180 beats per minute, blood pressure 110/70 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "blood pressure 110/70",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 96% plu 180 beats per minute, blood pressure 110/70 mmHg."
+      },
+      {
+        "kind": "allergy",
+        "text": "penicillin",
+        "negated": true,
+        "status": "verified",
+        "checks": [
+          "polarity:preserved",
+          "proof:verified"
+        ],
+        "notes": "DENIED (negated)",
+        "confidence": 0.82,
+        "source_sentence": "Denies prior penicillin allergy andheezing."
+      },
+      {
+        "kind": "allergy",
+        "text": "amoxicillin",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "polarity:preserved",
+          "proof:verified"
+        ],
+        "notes": "ASSERTED",
+        "confidence": 0.82,
+        "source_sentence": "Suspected amoxicillin allergy."
+      },
+      {
+        "kind": "followup",
+        "text": "Follow up tomorrow",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Follow up tomorrow"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "20",
+          "70",
+          "96",
+          "110",
+          "180"
+        ],
+        "count": 6
+      },
+      "total": 7,
+      "drug_needs_review": 2,
+      "vital_verified": 2,
+      "allergy_verified": 2,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

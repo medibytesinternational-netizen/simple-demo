@@ -1,0 +1,225 @@
+{
+  "job_id": "s9-none",
+  "drugs": [],
+  "symptoms": [
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Severe anemic female, bedven, one unit red cells, started 40 minutes, now sudden chills, back pain and feeling veryo.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "breathlessness",
+      "confidence": 0.91,
+      "color": "GREEN",
+      "source_sentence": "No breathlessness.",
+      "negated": true,
+      "note": "DENIED - excluded",
+      "start_char": 119,
+      "end_char": 133,
+      "span_status": "exact"
+    },
+    {
+      "text": "chest pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "General, report hypotension, peze, chest pain or ure fa.",
+      "negated": false,
+      "start_char": 555,
+      "end_char": 565,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Temperature 101.4 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg.",
+      "start_char": 249,
+      "end_char": 285,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 106",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg.",
+      "start_char": 287,
+      "end_char": 296,
+      "span_status": "exact"
+    },
+    {
+      "text": "blood pressure 100/65",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg.",
+      "start_char": 315,
+      "end_char": 336,
+      "span_status": "exact"
+    },
+    {
+      "text": "96% on room air",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 96% on room air.",
+      "start_char": 354,
+      "end_char": 369,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {},
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "vital",
+        "text": "Temperature 101.4 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 106",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "blood pressure 100/65",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "96% on room air",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 96% on room air."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Severe anemic female, bedven, one unit red cells, started 40 minutes, now sudden chills, back pain and feeling veryo."
+      },
+      {
+        "kind": "symptom",
+        "text": "breathlessness",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.91,
+        "source_sentence": "No breathlessness."
+      },
+      {
+        "kind": "symptom",
+        "text": "chest pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "General, report hypotension, peze, chest pain or ure fa."
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "40",
+          "65",
+          "96",
+          "100",
+          "101.4",
+          "106"
+        ],
+        "count": 7
+      },
+      "total": 7,
+      "vital_verified": 4,
+      "symptom_verified": 3
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

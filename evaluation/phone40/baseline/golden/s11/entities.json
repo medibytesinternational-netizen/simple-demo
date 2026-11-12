@@ -1,0 +1,347 @@
+{
+  "job_id": "s11-none",
+  "drugs": [
+    {
+      "name": "azithromycin",
+      "dose": 500.0,
+      "unit": "mg",
+      "frequency": "daily",
+      "duration": "3 days",
+      "confidence": 0.96,
+      "color": "GREEN",
+      "source_sentence": "Controlled oxygen, nebulized salbutamol, tiotropium, azithromycin 500 mg daily three days.",
+      "negated": false,
+      "start_char": 408,
+      "end_char": 420,
+      "span_status": "exact"
+    },
+    {
+      "name": "salbutamol",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Controlled oxygen, nebulized salbutamol, tiotropium, azithromycin 500 mg daily three days.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm",
+      "start_char": 384,
+      "end_char": 394,
+      "span_status": "exact"
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "68-year-old smoker with COPD, three days of worse breathlessness, yellow sputum and low fever.",
+      "negated": false,
+      "start_char": 84,
+      "end_char": 89,
+      "span_status": "exact"
+    },
+    {
+      "text": "breathlessness",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "68-year-old smoker with COPD, three days of worse breathlessness, yellow sputum and low fever.",
+      "negated": false,
+      "start_char": 46,
+      "end_char": 60,
+      "span_status": "exact"
+    },
+    {
+      "text": "chest pain",
+      "confidence": 0.91,
+      "color": "GREEN",
+      "source_sentence": "Denies chest pain.",
+      "negated": true,
+      "note": "DENIED - excluded",
+      "start_char": 98,
+      "end_char": 108,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "91% on room air",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit.",
+      "start_char": 194,
+      "end_char": 209,
+      "span_status": "exact"
+    },
+    {
+      "text": "respiratory rate 24",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit.",
+      "start_char": 211,
+      "end_char": 230,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 98",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit.",
+      "start_char": 232,
+      "end_char": 240,
+      "span_status": "exact"
+    },
+    {
+      "text": "blood pressure 138/84",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit.",
+      "start_char": 259,
+      "end_char": 280,
+      "span_status": "exact"
+    },
+    {
+      "text": "temperature 100 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit.",
+      "start_char": 287,
+      "end_char": 321,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [
+    {
+      "text": "penicillin",
+      "negated": true,
+      "confidence": 0.82,
+      "color": "YELLOW",
+      "source_sentence": "No penicillin allergy.",
+      "note": "NEGATED candidate - verify drug name",
+      "start_char": 113,
+      "end_char": 123,
+      "span_status": "exact"
+    }
+  ],
+  "negations": [
+    {
+      "span": "No penicillin allergy.",
+      "negated": true,
+      "start_char": 110,
+      "end_char": 132,
+      "span_status": "exact"
+    }
+  ],
+  "diagnosis": {},
+  "followup": {},
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "azithromycin",
+        "dose": 500.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg/ml; listed strengths: 10 mg drops, 15 mg drops, 20 mg suspension, 33.3 mg suspension; 500 mg is plausible for this drug]",
+        "confidence": 0.96,
+        "source_sentence": "Controlled oxygen, nebulized salbutamol, tiotropium, azithromycin 500 mg daily three days."
+      },
+      {
+        "kind": "drug",
+        "name": "salbutamol",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Controlled oxygen, nebulized salbutamol, tiotropium, azithromycin 500 mg daily three days."
+      },
+      {
+        "kind": "vital",
+        "text": "91% on room air",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "respiratory rate 24",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 98",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "blood pressure 138/84",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "temperature 100 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit."
+      },
+      {
+        "kind": "allergy",
+        "text": "penicillin",
+        "negated": true,
+        "status": "verified",
+        "checks": [
+          "polarity:preserved",
+          "proof:verified"
+        ],
+        "notes": "DENIED (negated)",
+        "confidence": 0.82,
+        "source_sentence": "No penicillin allergy."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "68-year-old smoker with COPD, three days of worse breathlessness, yellow sputum and low fever."
+      },
+      {
+        "kind": "symptom",
+        "text": "breathlessness",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "68-year-old smoker with COPD, three days of worse breathlessness, yellow sputum and low fever."
+      },
+      {
+        "kind": "symptom",
+        "text": "chest pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.91,
+        "source_sentence": "Denies chest pain."
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "3",
+          "24",
+          "68",
+          "84",
+          "91",
+          "98",
+          "100",
+          "138",
+          "500"
+        ],
+        "count": 9
+      },
+      "total": 11,
+      "drug_verified": 1,
+      "drug_needs_review": 1,
+      "vital_verified": 5,
+      "allergy_verified": 1,
+      "symptom_verified": 3
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "facts": [
+    {
+      "kind": "vital",
+      "text": "Blood pressure 160/90",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 88",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "97% on room air",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Denies fever, seizure, and head injury."
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "2",
+        "60",
+        "88",
+        "90",
+        "97",
+        "160"
+      ],
+      "count": 7
+    },
+    "total": 4,
+    "vital_verified": 3,
+    "symptom_verified": 1
+  },
+  "brand_mentions": []
+}

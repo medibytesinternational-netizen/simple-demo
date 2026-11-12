@@ -1,0 +1,545 @@
+{
+  "job_id": "s35-none",
+  "drugs": [
+    {
+      "name": "pantoprazole",
+      "dose": 40.0,
+      "unit": "mg",
+      "frequency": "daily",
+      "duration": "4 weeks",
+      "confidence": 0.96,
+      "color": "GREEN",
+      "source_sentence": "Pantoprazole 40 mg daily before breakfast four weeks day- weight loss.",
+      "negated": false,
+      "start_char": 336,
+      "end_char": 348,
+      "span_status": "exact"
+    },
+    {
+      "name": "omeprazole",
+      "dose": 40.0,
+      "unit": "mg",
+      "frequency": "daily",
+      "duration": "4 weeks",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "36 year old male with 3 months heartburn, sore bleaching, post-meal chest discomfort and night regurgitation, worse with spicy food and late nights, denies warm-meter blood and weight loss, no known drug allergy, no past major illness, diagnosis, reflex disease, examination, blood pressure 124 over 80 millimeters of mercury, pulse 82 weight 74 kilos, system at system system is normal, plan panto-prasol 40 milligrams daily before breakfast four weeks they weight loss, diet, small-frequency meals, no spicy oily or late heavy meals, no tea coffee cola empty stomach, head end raised, general no late eating, stop smoking, return for blood vomit, black stools or dysphagia follow up in four weeks",
+      "negated": true,
+      "note": "fuzzy prasol->omeprazole (0.62) | heard only by small-int8, not by the primary decoder | ambiguous: matcher tie: omeprazole, paracetamol",
+      "raw_token": "prasol",
+      "candidates": [
+        {
+          "name": "omeprazole",
+          "score": 0.625,
+          "matched_alias": "omeprazole",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "omeprazole",
+            "substances": [
+              "omeprazole"
+            ],
+            "units": [
+              "mg"
+            ],
+            "mass_mg": [
+              2.0,
+              700.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "suspension",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "suspension",
+                "unit": "mg",
+                "value": 2.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mg",
+                "value": 4.0
+              },
+              {
+                "form": "capsule",
+                "unit": "mg",
+                "value": 10.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 10.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 20.0
+              },
+              {
+                "form": "capsule",
+                "unit": "mg",
+                "value": 20.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "paracetamol",
+          "score": 0.625,
+          "matched_alias": "parcetamol",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "acetaminophen",
+            "substances": [
+              "acetaminophen"
+            ],
+            "units": [
+              "g",
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.3,
+              1000.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "solution",
+              "suppository",
+              "suspension",
+              "syrup"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mcg",
+                "value": 300.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 2.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 2.5
+              }
+            ]
+          }
+        },
+        {
+          "name": "tramadol",
+          "score": 0.571,
+          "matched_alias": "tramadol",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "tramadol",
+            "substances": [
+              "tramadol"
+            ],
+            "units": [
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              1.0,
+              400.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "solution",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 18.75
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 25.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 37.5
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 50.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 50.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "pantoprazole",
+          "score": 0.556,
+          "matched_alias": "pantoprazole",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "pantoprazole",
+            "substances": [
+              "pantoprazole"
+            ],
+            "units": [
+              "mg"
+            ],
+            "mass_mg": [
+              20.0,
+              40.0
+            ],
+            "forms": [
+              "capsule",
+              "granules",
+              "injection",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 20.0
+              },
+              {
+                "form": "capsule",
+                "unit": "mg",
+                "value": 40.0
+              },
+              {
+                "form": "granules",
+                "unit": "mg",
+                "value": 40.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 40.0
+              },
+              {
+                "form": "injection",
+                "unit": "mg",
+                "value": 40.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "prednisolone",
+          "score": 0.556,
+          "matched_alias": "prednisolone",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "prednisolone",
+            "substances": [
+              "prednisolone"
+            ],
+            "units": [
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.01,
+              100.0
+            ],
+            "forms": [
+              "drops",
+              "injection",
+              "ointment",
+              "solution",
+              "suppository",
+              "suspension"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 10.0
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 30.0
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 100.0
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 300.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mg",
+                "value": 1.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 1.0
+              }
+            ]
+          }
+        }
+      ],
+      "matcher_pick": "omeprazole",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "second_pass": "small-int8",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "36 year old male with 3 months heartburn, sore bleaching, post-meal chest discomfort and night regurgitation, worse with spicy food and late nights, denies warm-meter blood and weight loss, no known drug allergy, no past major illness, diagnosis, reflex disease, examination, blood pressure 124 over 80 millimeters of mercury, pulse 82 weight 74 kilos, system at system system is normal, plan panto-prasol 40 milligrams daily before breakfast four weeks they weight loss, diet, small-frequency meals, no spicy oily or late heavy meals, no tea coffee cola empty stomach, head end raised, general no late eating, stop smoking, return for blood vomit, black stools or dysphagia follow up in four weeks",
+        "final_output_sentence": "36 year old male with 3 months heartburn, sore bleaching, post-meal chest discomfort and night regurgitation, worse with spicy food and late nights, denies warm-meter blood and weight loss, no known drug allergy, no past major illness, diagnosis, reflex disease, examination, blood pressure 124 over 80 millimeters of mercury, pulse 82 weight 74 kilos, system at system system is normal, plan panto-prasol 40 milligrams daily before breakfast four weeks they weight loss, diet, small-frequency meals, no spicy oily or late heavy meals, no tea coffee cola empty stomach, head end raised, general no late eating, stop smoking, return for blood vomit, black stools or dysphagia follow up in four weeks",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.0,
+        "reason": "matcher tie: omeprazole, paracetamol",
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies vomiting, blood, and weight loss.",
+      "negated": false,
+      "start_char": 154,
+      "end_char": 162,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Blood pressure 124/80",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 124/80 mmHg, pulse 82.",
+      "start_char": 250,
+      "end_char": 271,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 82",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 124/80 mmHg, pulse 82.",
+      "start_char": 278,
+      "end_char": 286,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "Follow up in four weeks",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Follow up in four weeks",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "drug_second_pass": {
+    "model": "small-int8",
+    "added": [
+      "omeprazole"
+    ]
+  },
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 0.0,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "pantoprazole",
+        "dose": 40.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 20 mg tablet, 40 mg capsule, 40 mg granules, 40 mg tablet; 40 mg is plausible for this drug]",
+        "confidence": 0.96,
+        "source_sentence": "Pantoprazole 40 mg daily before breakfast four weeks day- weight loss."
+      },
+      {
+        "kind": "drug",
+        "name": "omeprazole",
+        "dose": 40.0,
+        "unit": "mg",
+        "negated": true,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:needs_review",
+          "polarity:negated-preserved"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 2 mg suspension, 4 mg suspension, 10 mg capsule, 10 mg tablet; 40 mg is plausible for this drug]; source_sentence not verbatim in transcript",
+        "confidence": 0.7,
+        "source_sentence": "36 year old male with 3 months heartburn, sore bleaching, post-meal chest discomfort and night regurgitation, worse with spicy food and late nights, denies warm-meter blood and weight loss, no known drug allergy, no past major illness, diagnosis, reflex disease, examination, blood pressure 124 over 80 millimeters of mercury, pulse 82 weight 74 kilos, system at system system is normal, plan panto-prasol 40 milligrams daily before breakfast four weeks they weight loss, diet, small-frequency meals, no spicy oily or late heavy meals, no tea coffee cola empty stomach, head end raised, general no late eating, stop smoking, return for blood vomit, black stools or dysphagia follow up in four weeks"
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 124/80",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 124/80 mmHg, pulse 82."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 82",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 124/80 mmHg, pulse 82."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies vomiting, blood, and weight loss."
+      },
+      {
+        "kind": "followup",
+        "text": "Follow up in four weeks",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Follow up in four weeks"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "3",
+          "4",
+          "36",
+          "40",
+          "74",
+          "80",
+          "82",
+          "124"
+        ],
+        "count": 8
+      },
+      "total": 6,
+      "drug_verified": 1,
+      "drug_needs_review": 1,
+      "vital_verified": 2,
+      "symptom_verified": 1,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

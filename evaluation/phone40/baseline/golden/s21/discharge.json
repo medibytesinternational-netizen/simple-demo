@@ -1,0 +1,143 @@
+{
+  "sections": {
+    "present_illness": {
+      "items": [
+        {
+          "text": "headache",
+          "source_sentence": "ge -year-old female with six months of one-sided throbbing headache, nausea, light sensitive and vomiting lasting 6 to 8 hos.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F5",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "vomiting",
+          "source_sentence": "ge -year-old female with six months of one-sided throbbing headache, nausea, light sensitive and vomiting lasting 6 to 8 hos.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F6",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "fever",
+          "source_sentence": "Denies fever, weakness, and vision loss.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F7",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "headache",
+          "source_sentence": "Headache daily.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F8",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pain",
+          "source_sentence": "Avoid overuse, emergency for tendderclap pain, weakness, or speech clap.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F9",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "examination_findings": {
+      "items": [
+        {
+          "text": "Blood pressure 118/76",
+          "source_sentence": "Blood pressure 118/76 mmHg.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F2",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "Pulse 80",
+          "source_sentence": "Pulse 80 beats per minute.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F3",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "Temperature 98.4 degrees Fahrenheit",
+          "source_sentence": "Temperature 98.4 degrees Fahrenheit.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F4",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "previous_diagnosis": {
+      "items": []
+    },
+    "plan_of_management": {
+      "items": [
+        {
+          "text": "Follow up in two weeks",
+          "source_sentence": "Follow up in two weeks",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F10",
+          "verified_kind": "followup",
+          "verified_status": "verified"
+        },
+        {
+          "text": "paracetamol 650 mg",
+          "source_sentence": "Paracetame 650 mg at onset.",
+          "seg_id": null,
+          "confidence": 0.7,
+          "verified_kind": "drug",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "diet_instructions": {
+      "items": []
+    },
+    "general_instructions": {
+      "items": []
+    }
+  },
+  "provenance": {
+    "llm_engine": "discharge:gpt-4.1",
+    "dropped_unproven": 2,
+    "verified_summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "6",
+          "8",
+          "76",
+          "80",
+          "98.4",
+          "118",
+          "650"
+        ],
+        "count": 9
+      },
+      "total": 10,
+      "drug_verified": 1,
+      "vital_verified": 3,
+      "symptom_verified": 5,
+      "followup_verified": 1
+    },
+    "canonicalized": 0,
+    "llm_extractive": 0,
+    "prefilled": 1,
+    "schema": "valid"
+  }
+}

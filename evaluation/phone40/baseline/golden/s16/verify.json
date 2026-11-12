@@ -1,0 +1,176 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "furosemide",
+      "dose": 40.0,
+      "unit": "mg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 1 mg solution, 2.5 mg tablet, 4 mg solution, 5 mg tablet; 40 mg is plausible for this drug]",
+      "confidence": 0.96,
+      "source_sentence": "Furosemide 40 mg morning, atorvastatin 10 mg night."
+    },
+    {
+      "kind": "drug",
+      "name": "atorvastatin",
+      "dose": 10.0,
+      "unit": "mg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 5 mg tablet, 10 mg tablet, 10 mg capsule, 20 mg tablet; 10 mg is plausible for this drug]",
+      "confidence": 0.96,
+      "source_sentence": "Furosemide 40 mg morning, atorvastatin 10 mg night."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 140/90",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 140/90 mmHg, pulse 96 beats per minute, respiratory rate 22, saturation 94% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 96",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 140/90 mmHg, pulse 96 beats per minute, respiratory rate 22, saturation 94% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "respiratory rate 22",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 140/90 mmHg, pulse 96 beats per minute, respiratory rate 22, saturation 94% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "94% on room air",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 140/90 mmHg, pulse 96 beats per minute, respiratory rate 22, saturation 94% on room air."
+    },
+    {
+      "kind": "symptom",
+      "text": "breathlessness",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "62-year-old male with two weeks exertional and night breathlessness, leg swelling and low urine."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Denies chest pain and fever."
+    },
+    {
+      "kind": "symptom",
+      "text": "chest pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.91,
+      "source_sentence": "Denies chest pain and fever."
+    },
+    {
+      "kind": "symptom",
+      "text": "chest pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Gentle, daily weight urine check, leg elevation, emergency for 2 kilog gain, severe breathlessness or chest pain."
+    },
+    {
+      "kind": "symptom",
+      "text": "breathlessness",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Gentle, daily weight urine check, leg elevation, emergency for 2 kilog gain, severe breathlessness or chest pain."
+    },
+    {
+      "kind": "followup",
+      "text": "in one week",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "in one week"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "2",
+        "10",
+        "22",
+        "40",
+        "62",
+        "90",
+        "94",
+        "96",
+        "112",
+        "140"
+      ],
+      "count": 11
+    },
+    "total": 12,
+    "drug_verified": 2,
+    "vital_verified": 4,
+    "symptom_verified": 5,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

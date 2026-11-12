@@ -1,0 +1,161 @@
+{
+  "job_id": "s3-none",
+  "drugs": [],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies fever, seizure, and head injury.",
+      "negated": false,
+      "start_char": 130,
+      "end_char": 135,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Blood pressure 160/90",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air.",
+      "start_char": 245,
+      "end_char": 266,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 88",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air.",
+      "start_char": 273,
+      "end_char": 281,
+      "span_status": "exact"
+    },
+    {
+      "text": "97% on room air",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air.",
+      "start_char": 311,
+      "end_char": 326,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {},
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "vital",
+        "text": "Blood pressure 160/90",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 88",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air."
+      },
+      {
+        "kind": "vital",
+        "text": "97% on room air",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 160/90 mmHg, pulse 88 beats per minute, saturation 97% on room air."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies fever, seizure, and head injury."
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "60",
+          "88",
+          "90",
+          "97",
+          "160"
+        ],
+        "count": 7
+      },
+      "total": 4,
+      "vital_verified": 3,
+      "symptom_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

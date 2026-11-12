@@ -1,32 +1,37 @@
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-import { fileURLToPath } from "node:url";
 
-const apiUnavailable: Plugin = {
-  name: "frontend-only-api-response",
-  configureServer(server) {
-    server.middlewares.use((request, response, next) => {
-      const url = request.url ?? "";
-      if (url !== "/api" && !url.startsWith("/api/")) return next();
-      response.statusCode = 404;
-      response.setHeader("Content-Type", "application/json");
-      response.end(JSON.stringify({ detail: "This frontend-only development server does not include an API." }));
-    });
-  },
-};
+const API_TARGET = "http://127.0.0.1:8000";
 
 export default defineConfig({
-  plugins: [react(), apiUnavailable],
+  plugins: [react()],
   server: {
     port: 5173,
+    proxy: {
+      "/api": {
+        target: API_TARGET,
+        changeOrigin: true,
+      },
+    },
+  },
+  preview: {
+    proxy: {
+      "/api": { target: API_TARGET, changeOrigin: true },
+    },
+  },
+  css: {
+    modules: { localsConvention: "camelCaseOnly" },
   },
   build: {
     outDir: "dist",
-    rollupOptions: {
-      input: {
-        main: fileURLToPath(new URL("./index.html", import.meta.url)),
-        product: fileURLToPath(new URL("./product.html", import.meta.url)),
-      },
-    },
+    emptyOutDir: true,
+    sourcemap: false,
+  },
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./src/medibytes/test/setup.ts"],
+    include: ["src/**/*.test.{ts,tsx}"],
+    css: { modules: { classNameStrategy: "non-scoped" } },
+    restoreMocks: true,
   },
 });

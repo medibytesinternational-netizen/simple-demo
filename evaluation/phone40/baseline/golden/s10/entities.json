@@ -1,0 +1,466 @@
+{
+  "job_id": "s10-none",
+  "drugs": [
+    {
+      "name": "valproate",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Missed sodium valprate 3 days.",
+      "negated": false,
+      "raw_token": "valprate",
+      "candidates": [
+        {
+          "name": "valproate",
+          "kind": "substance",
+          "substances": [
+            "valproate"
+          ],
+          "units": [
+            "g",
+            "mg",
+            "ml"
+          ],
+          "strengths": [
+            {
+              "form": "granules",
+              "unit": "g",
+              "value": 1.0
+            },
+            {
+              "form": "granules",
+              "unit": "mg",
+              "value": 29.03
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 40.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 58.0
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 60.0
+            },
+            {
+              "form": "granules",
+              "unit": "mg",
+              "value": 72.61
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 87.0
+            },
+            {
+              "form": "injection",
+              "unit": "mg",
+              "value": 100.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 100.0
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 100.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 145.0
+            },
+            {
+              "form": "granules",
+              "unit": "mg",
+              "value": 145.14
+            }
+          ],
+          "forms": [
+            "capsule",
+            "granules",
+            "injection",
+            "solution",
+            "syrup",
+            "tablet"
+          ],
+          "mass_mg": [
+            29.03,
+            1000.0
+          ],
+          "score": 0.941,
+          "matched_name": "valproate"
+        }
+      ],
+      "matcher_pick": "sodium valproate",
+      "note": "fuzzy valprate->sodium valproate (0.94), no dose dictated - physician must confirm | heard only by small-int8, not by the primary decoder | validator valprate->valproate (overrules matcher)",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "second_pass": "small-int8",
+      "validation": {
+        "status": "corrected",
+        "original_sentence": "Missed sodium valprate 3 days.",
+        "final_output_sentence": "Missed sodium valproate 3 days.",
+        "applied_corrections": [
+          {
+            "replaced_token": "valprate",
+            "substituted_with": "valproate"
+          }
+        ],
+        "semantic_confidence_score": 0.98,
+        "reason": "matches sodium formulation and context",
+        "overrules_matcher": true,
+        "engine": "llm:gpt-4.1"
+      }
+    },
+    {
+      "name": "glucose",
+      "dose": 106.0,
+      "unit": "mg",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "YELLOW",
+      "source_sentence": "Clucose 106 milligrams per misliter.",
+      "negated": false,
+      "note": "fuzzy clucose->glucose (0.86) | heard only by small-int8, not by the primary decoder | validator clucose->glucose",
+      "raw_token": "clucose",
+      "candidates": [
+        {
+          "name": "glucose",
+          "score": 0.857,
+          "matched_alias": "glucose",
+          "source": "reference",
+          "reference": {
+            "kind": "substance",
+            "name": "glucose",
+            "substances": [
+              "glucose"
+            ],
+            "units": [
+              "g",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              1.8,
+              75000.0
+            ],
+            "forms": [
+              "gel",
+              "injection",
+              "solution"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 0.05
+              },
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 0.1
+              },
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 0.25
+              },
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 0.5
+              },
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 1.5
+              },
+              {
+                "form": "injection",
+                "unit": "g",
+                "value": 25.0
+              }
+            ]
+          }
+        }
+      ],
+      "matcher_pick": "glucose",
+      "start_char": 341,
+      "end_char": 348,
+      "span_status": "exact",
+      "second_pass": "small-int8",
+      "validation": {
+        "status": "corrected",
+        "original_sentence": "Clucose 106 milligrams per misliter.",
+        "final_output_sentence": "glucose 106 milligrams per misliter.",
+        "applied_corrections": [
+          {
+            "replaced_token": "clucose",
+            "substituted_with": "glucose"
+          }
+        ],
+        "semantic_confidence_score": 1.0,
+        "reason": "dose and unit match glucose formulations",
+        "overrules_matcher": false,
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies headache, injury, fever, and alcohol.",
+      "negated": false,
+      "start_char": 173,
+      "end_char": 178,
+      "span_status": "exact"
+    },
+    {
+      "text": "headache",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies headache, injury, fever, and alcohol.",
+      "negated": false,
+      "start_char": 155,
+      "end_char": 163,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Blood pressure 128/80",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 128/80 mmHg, pulse 90 beats per minute, saturation 98%.",
+      "start_char": 270,
+      "end_char": 291,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 90",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 128/80 mmHg, pulse 90 beats per minute, saturation 98%.",
+      "start_char": 298,
+      "end_char": 306,
+      "span_status": "exact"
+    },
+    {
+      "text": "98%",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 128/80 mmHg, pulse 90 beats per minute, saturation 98%.",
+      "start_char": 336,
+      "end_char": 339,
+      "span_status": "exact"
+    },
+    {
+      "text": "Glucose 106",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Glucose 106 mg/dL.",
+      "start_char": 341,
+      "end_char": 352,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {},
+  "drug_second_pass": {
+    "model": "small-int8",
+    "added": [
+      "sodium valproate",
+      "glucose"
+    ]
+  },
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 4.415,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "valproate",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:needs_review"
+        ],
+        "notes": "reference substance: valproate; no dose dictated; source_sentence not verbatim in transcript",
+        "confidence": 0.7,
+        "source_sentence": "Missed sodium valprate 3 days."
+      },
+      {
+        "kind": "drug",
+        "name": "glucose",
+        "dose": 106.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "numeral:verified",
+          "proof:needs_review"
+        ],
+        "notes": "fuzzy top-candidate agreement; no pack record; magnitude unchecked; source_sentence not verbatim in transcript",
+        "confidence": 0.7,
+        "source_sentence": "Clucose 106 milligrams per misliter."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 128/80",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 128/80 mmHg, pulse 90 beats per minute, saturation 98%."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 90",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 128/80 mmHg, pulse 90 beats per minute, saturation 98%."
+      },
+      {
+        "kind": "vital",
+        "text": "98%",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 128/80 mmHg, pulse 90 beats per minute, saturation 98%."
+      },
+      {
+        "kind": "vital",
+        "text": "Glucose 106",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Glucose 106 mg/dL."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies headache, injury, fever, and alcohol."
+      },
+      {
+        "kind": "symptom",
+        "text": "headache",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies headache, injury, fever, and alcohol."
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "2",
+          "3",
+          "5",
+          "34",
+          "80",
+          "90",
+          "98",
+          "106",
+          "128"
+        ],
+        "count": 9
+      },
+      "total": 8,
+      "drug_needs_review": 2,
+      "vital_verified": 4,
+      "symptom_verified": 2
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

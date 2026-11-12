@@ -1,0 +1,500 @@
+{
+  "job_id": "s8-none",
+  "text": "65-year-old female admitted yesterday with severe pneumonia, fever, productive cough, and breathlessness. Admission saturation 86%, now on facemask oxygen 6 L per minute, consciousness. Denies chest pain. No known drug allergy. Severe pneumonia, still oxygen dependent. Saturation 95% on oxygen. Blood pressure 118/72 mmHg, pulse 94.Respiratory rate 24. Temperature 99.8 degrees Fahrenheit. X-ray, bil- bilateral inf- infiltrates. Culture sent. IV ceftriaxone puls, azithromycin 500 mg. Repeat blood count and blood gas evening. Soft high-protein feeds. Warm fluids. Head NBrace. General. Continuous monitoring. Report effort increase or drowsiness. Do not remove mask and advised.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "65-year-old female admitted yesterday with severe pneumonia, fever, productive cough, and breathlessness. Admission saturation 86%, now on facemask oxygen 6 L per minute, consciousness. Denies chest pain. No known drug allergy. Severe pneumonia, still oxygen dependent. Saturation 95% on oxygen. Blood pressure 118/72 mmHg, pulse 94.Respiratory rate 24. Temperature 99.8 degrees Fahrenheit. X-ray, bil- bilateral inf- infiltrates. Culture sent. IV ceftriaxone puls, azithromycin 500 mg. Repeat blood count and blood gas evening. Soft high-protein feeds. Warm fluids. Head NBrace. General. Continuous monitoring. Report effort increase or drowsiness. Do not remove mask and advised.",
+      "start": 0.0,
+      "end": 71.68,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "65-year-old",
+          "s": 0.0,
+          "e": 0.77
+        },
+        {
+          "w": "female",
+          "s": 0.77,
+          "e": 1.54
+        },
+        {
+          "w": "admitted",
+          "s": 1.54,
+          "e": 2.31
+        },
+        {
+          "w": "yesterday",
+          "s": 2.31,
+          "e": 3.08
+        },
+        {
+          "w": "with",
+          "s": 3.08,
+          "e": 3.85
+        },
+        {
+          "w": "severe",
+          "s": 3.85,
+          "e": 4.62
+        },
+        {
+          "w": "pneumonia,",
+          "s": 4.62,
+          "e": 5.4
+        },
+        {
+          "w": "fever,",
+          "s": 5.4,
+          "e": 6.17
+        },
+        {
+          "w": "productive",
+          "s": 6.17,
+          "e": 6.94
+        },
+        {
+          "w": "cough,",
+          "s": 6.94,
+          "e": 7.71
+        },
+        {
+          "w": "and",
+          "s": 7.71,
+          "e": 8.48
+        },
+        {
+          "w": "breathlessness.",
+          "s": 8.48,
+          "e": 9.25
+        },
+        {
+          "w": "Admission",
+          "s": 9.25,
+          "e": 10.02
+        },
+        {
+          "w": "saturation",
+          "s": 10.02,
+          "e": 10.79
+        },
+        {
+          "w": "86%,",
+          "s": 10.79,
+          "e": 11.56
+        },
+        {
+          "w": "now",
+          "s": 11.56,
+          "e": 12.33
+        },
+        {
+          "w": "on",
+          "s": 12.33,
+          "e": 13.1
+        },
+        {
+          "w": "facemask",
+          "s": 13.1,
+          "e": 13.87
+        },
+        {
+          "w": "oxygen",
+          "s": 13.87,
+          "e": 14.64
+        },
+        {
+          "w": "6",
+          "s": 14.64,
+          "e": 15.42
+        },
+        {
+          "w": "L",
+          "s": 15.42,
+          "e": 16.19
+        },
+        {
+          "w": "per",
+          "s": 16.19,
+          "e": 16.96
+        },
+        {
+          "w": "minute,",
+          "s": 16.96,
+          "e": 17.73
+        },
+        {
+          "w": "consciousness.",
+          "s": 17.73,
+          "e": 18.5
+        },
+        {
+          "w": "Denies",
+          "s": 18.5,
+          "e": 19.27
+        },
+        {
+          "w": "chest",
+          "s": 19.27,
+          "e": 20.04
+        },
+        {
+          "w": "pain.",
+          "s": 20.04,
+          "e": 20.81
+        },
+        {
+          "w": "No",
+          "s": 20.81,
+          "e": 21.58
+        },
+        {
+          "w": "known",
+          "s": 21.58,
+          "e": 22.35
+        },
+        {
+          "w": "drug",
+          "s": 22.35,
+          "e": 23.12
+        },
+        {
+          "w": "allergy.",
+          "s": 23.12,
+          "e": 23.89
+        },
+        {
+          "w": "Severe",
+          "s": 23.89,
+          "e": 24.66
+        },
+        {
+          "w": "pneumonia,",
+          "s": 24.66,
+          "e": 25.43
+        },
+        {
+          "w": "still",
+          "s": 25.43,
+          "e": 26.21
+        },
+        {
+          "w": "oxygen",
+          "s": 26.21,
+          "e": 26.98
+        },
+        {
+          "w": "dependent.",
+          "s": 26.98,
+          "e": 27.75
+        },
+        {
+          "w": "Saturation",
+          "s": 27.75,
+          "e": 28.52
+        },
+        {
+          "w": "95%",
+          "s": 28.52,
+          "e": 29.29
+        },
+        {
+          "w": "on",
+          "s": 29.29,
+          "e": 30.06
+        },
+        {
+          "w": "oxygen.",
+          "s": 30.06,
+          "e": 30.83
+        },
+        {
+          "w": "Blood",
+          "s": 30.83,
+          "e": 31.6
+        },
+        {
+          "w": "pressure",
+          "s": 31.6,
+          "e": 32.37
+        },
+        {
+          "w": "118/72",
+          "s": 32.37,
+          "e": 33.14
+        },
+        {
+          "w": "mmHg,",
+          "s": 33.14,
+          "e": 33.91
+        },
+        {
+          "w": "pulse",
+          "s": 33.91,
+          "e": 34.68
+        },
+        {
+          "w": "94.Respiratory",
+          "s": 34.68,
+          "e": 35.45
+        },
+        {
+          "w": "rate",
+          "s": 35.45,
+          "e": 36.23
+        },
+        {
+          "w": "24.",
+          "s": 36.23,
+          "e": 37.0
+        },
+        {
+          "w": "Temperature",
+          "s": 37.0,
+          "e": 37.77
+        },
+        {
+          "w": "99.8",
+          "s": 37.77,
+          "e": 38.54
+        },
+        {
+          "w": "degrees",
+          "s": 38.54,
+          "e": 39.31
+        },
+        {
+          "w": "Fahrenheit.",
+          "s": 39.31,
+          "e": 40.08
+        },
+        {
+          "w": "X-ray,",
+          "s": 40.08,
+          "e": 40.85
+        },
+        {
+          "w": "bil-",
+          "s": 40.85,
+          "e": 41.62
+        },
+        {
+          "w": "bilateral",
+          "s": 41.62,
+          "e": 42.39
+        },
+        {
+          "w": "inf-",
+          "s": 42.39,
+          "e": 43.16
+        },
+        {
+          "w": "infiltrates.",
+          "s": 43.16,
+          "e": 43.93
+        },
+        {
+          "w": "Culture",
+          "s": 43.93,
+          "e": 44.7
+        },
+        {
+          "w": "sent.",
+          "s": 44.7,
+          "e": 45.47
+        },
+        {
+          "w": "IV",
+          "s": 45.47,
+          "e": 46.25
+        },
+        {
+          "w": "ceftriaxone",
+          "s": 46.25,
+          "e": 47.02
+        },
+        {
+          "w": "puls,",
+          "s": 47.02,
+          "e": 47.79
+        },
+        {
+          "w": "azithromycin",
+          "s": 47.79,
+          "e": 48.56
+        },
+        {
+          "w": "500",
+          "s": 48.56,
+          "e": 49.33
+        },
+        {
+          "w": "mg.",
+          "s": 49.33,
+          "e": 50.1
+        },
+        {
+          "w": "Repeat",
+          "s": 50.1,
+          "e": 50.87
+        },
+        {
+          "w": "blood",
+          "s": 50.87,
+          "e": 51.64
+        },
+        {
+          "w": "count",
+          "s": 51.64,
+          "e": 52.41
+        },
+        {
+          "w": "and",
+          "s": 52.41,
+          "e": 53.18
+        },
+        {
+          "w": "blood",
+          "s": 53.18,
+          "e": 53.95
+        },
+        {
+          "w": "gas",
+          "s": 53.95,
+          "e": 54.72
+        },
+        {
+          "w": "evening.",
+          "s": 54.72,
+          "e": 55.49
+        },
+        {
+          "w": "Soft",
+          "s": 55.49,
+          "e": 56.26
+        },
+        {
+          "w": "high-protein",
+          "s": 56.26,
+          "e": 57.04
+        },
+        {
+          "w": "feeds.",
+          "s": 57.04,
+          "e": 57.81
+        },
+        {
+          "w": "Warm",
+          "s": 57.81,
+          "e": 58.58
+        },
+        {
+          "w": "fluids.",
+          "s": 58.58,
+          "e": 59.35
+        },
+        {
+          "w": "Head",
+          "s": 59.35,
+          "e": 60.12
+        },
+        {
+          "w": "NBrace.",
+          "s": 60.12,
+          "e": 60.89
+        },
+        {
+          "w": "General.",
+          "s": 60.89,
+          "e": 61.66
+        },
+        {
+          "w": "Continuous",
+          "s": 61.66,
+          "e": 62.43
+        },
+        {
+          "w": "monitoring.",
+          "s": 62.43,
+          "e": 63.2
+        },
+        {
+          "w": "Report",
+          "s": 63.2,
+          "e": 63.97
+        },
+        {
+          "w": "effort",
+          "s": 63.97,
+          "e": 64.74
+        },
+        {
+          "w": "increase",
+          "s": 64.74,
+          "e": 65.51
+        },
+        {
+          "w": "or",
+          "s": 65.51,
+          "e": 66.28
+        },
+        {
+          "w": "drowsiness.",
+          "s": 66.28,
+          "e": 67.06
+        },
+        {
+          "w": "Do",
+          "s": 67.06,
+          "e": 67.83
+        },
+        {
+          "w": "not",
+          "s": 67.83,
+          "e": 68.6
+        },
+        {
+          "w": "remove",
+          "s": 68.6,
+          "e": 69.37
+        },
+        {
+          "w": "mask",
+          "s": 69.37,
+          "e": 70.14
+        },
+        {
+          "w": "and",
+          "s": 70.14,
+          "e": 70.91
+        },
+        {
+          "w": "advised.",
+          "s": 70.91,
+          "e": 71.68
+        }
+      ]
+    }
+  ],
+  "normalized_en": "65-year-old female admitted yesterday with severe pneumonia, fever, productive cough, and breathlessness. Admission saturation 86%, now on facemask oxygen 6 L per minute, consciousness. Denies chest pain. No known drug allergy. Severe pneumonia, still oxygen dependent. Saturation 95% on oxygen. Blood pressure 118/72 mmHg, pulse 94.Respiratory rate 24. Temperature 99.8 degrees Fahrenheit. X-ray, bil- bilateral inf- infiltrates. Culture sent. IV ceftriaxone puls, azithromycin 500 mg. Repeat blood count and blood gas evening. Soft high-protein feeds. Warm fluids. Head NBrace. General. Continuous monitoring. Report effort increase or drowsiness. Do not remove mask and advised.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s8-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

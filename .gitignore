@@ -1,19 +1,29 @@
-# Python/editor artifacts from local tooling
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
 
-# Node
+# Secrets and local configuration
+.env
+frontend/.env
+
+# Pipeline output, model cache and job state
+runs/
+.cache/
+
+# Web UI
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 frontend/*.tsbuildinfo
 npm-debug.log*
 
-# OS / editor
-.DS_Store
-Thumbs.db
+# Editors / OS
 .vscode/
 .idea/
-/.hypothesis/
-
-.playwright-mcp/
+.DS_Store
+Thumbs.db

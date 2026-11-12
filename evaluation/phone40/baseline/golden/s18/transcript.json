@@ -1,0 +1,480 @@
+{
+  "job_id": "s18-none",
+  "text": "38-year-old female with three months weight gain, tiredness, constipation, dry skin, hair fall, and irregular periods. Denies neck pain and fever. No known drug allergy. Hypothyroidism, irregular treatment, now uncontrolled. Pulse 64 beats per minute. Blood pressure 112/72 mmHg. temperature 97.8 degrees Fahrenheit. Weight 68 kilos. TSH and free T4. Levothyroxine 75 mcg daily, empty stomach, nothing for 30 minutes. Review six weeks. Diet, Balance diet. Iodines dis salt, protein and fiber. Gentle same time tablet daily. No skipping. Reports swelling or severe tightness. Follow up in six weeks.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "38-year-old female with three months weight gain, tiredness, constipation, dry skin, hair fall, and irregular periods. Denies neck pain and fever. No known drug allergy. Hypothyroidism, irregular treatment, now uncontrolled. Pulse 64 beats per minute. Blood pressure 112/72 mmHg. temperature 97.8 degrees Fahrenheit. Weight 68 kilos. TSH and free T4. Levothyroxine 75 mcg daily, empty stomach, nothing for 30 minutes. Review six weeks. Diet, Balance diet. Iodines dis salt, protein and fiber. Gentle same time tablet daily. No skipping. Reports swelling or severe tightness. Follow up in six weeks.",
+      "start": 0.0,
+      "end": 47.83,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "38-year-old",
+          "s": 0.0,
+          "e": 0.54
+        },
+        {
+          "w": "female",
+          "s": 0.54,
+          "e": 1.07
+        },
+        {
+          "w": "with",
+          "s": 1.07,
+          "e": 1.61
+        },
+        {
+          "w": "three",
+          "s": 1.61,
+          "e": 2.15
+        },
+        {
+          "w": "months",
+          "s": 2.15,
+          "e": 2.69
+        },
+        {
+          "w": "weight",
+          "s": 2.69,
+          "e": 3.22
+        },
+        {
+          "w": "gain,",
+          "s": 3.22,
+          "e": 3.76
+        },
+        {
+          "w": "tiredness,",
+          "s": 3.76,
+          "e": 4.3
+        },
+        {
+          "w": "constipation,",
+          "s": 4.3,
+          "e": 4.84
+        },
+        {
+          "w": "dry",
+          "s": 4.84,
+          "e": 5.37
+        },
+        {
+          "w": "skin,",
+          "s": 5.37,
+          "e": 5.91
+        },
+        {
+          "w": "hair",
+          "s": 5.91,
+          "e": 6.45
+        },
+        {
+          "w": "fall,",
+          "s": 6.45,
+          "e": 6.99
+        },
+        {
+          "w": "and",
+          "s": 6.99,
+          "e": 7.52
+        },
+        {
+          "w": "irregular",
+          "s": 7.52,
+          "e": 8.06
+        },
+        {
+          "w": "periods.",
+          "s": 8.06,
+          "e": 8.6
+        },
+        {
+          "w": "Denies",
+          "s": 8.6,
+          "e": 9.14
+        },
+        {
+          "w": "neck",
+          "s": 9.14,
+          "e": 9.67
+        },
+        {
+          "w": "pain",
+          "s": 9.67,
+          "e": 10.21
+        },
+        {
+          "w": "and",
+          "s": 10.21,
+          "e": 10.75
+        },
+        {
+          "w": "fever.",
+          "s": 10.75,
+          "e": 11.29
+        },
+        {
+          "w": "No",
+          "s": 11.29,
+          "e": 11.82
+        },
+        {
+          "w": "known",
+          "s": 11.82,
+          "e": 12.36
+        },
+        {
+          "w": "drug",
+          "s": 12.36,
+          "e": 12.9
+        },
+        {
+          "w": "allergy.",
+          "s": 12.9,
+          "e": 13.44
+        },
+        {
+          "w": "Hypothyroidism,",
+          "s": 13.44,
+          "e": 13.97
+        },
+        {
+          "w": "irregular",
+          "s": 13.97,
+          "e": 14.51
+        },
+        {
+          "w": "treatment,",
+          "s": 14.51,
+          "e": 15.05
+        },
+        {
+          "w": "now",
+          "s": 15.05,
+          "e": 15.58
+        },
+        {
+          "w": "uncontrolled.",
+          "s": 15.58,
+          "e": 16.12
+        },
+        {
+          "w": "Pulse",
+          "s": 16.12,
+          "e": 16.66
+        },
+        {
+          "w": "64",
+          "s": 16.66,
+          "e": 17.2
+        },
+        {
+          "w": "beats",
+          "s": 17.2,
+          "e": 17.73
+        },
+        {
+          "w": "per",
+          "s": 17.73,
+          "e": 18.27
+        },
+        {
+          "w": "minute.",
+          "s": 18.27,
+          "e": 18.81
+        },
+        {
+          "w": "Blood",
+          "s": 18.81,
+          "e": 19.35
+        },
+        {
+          "w": "pressure",
+          "s": 19.35,
+          "e": 19.88
+        },
+        {
+          "w": "112/72",
+          "s": 19.88,
+          "e": 20.42
+        },
+        {
+          "w": "mmHg.",
+          "s": 20.42,
+          "e": 20.96
+        },
+        {
+          "w": "temperature",
+          "s": 20.96,
+          "e": 21.5
+        },
+        {
+          "w": "97.8",
+          "s": 21.5,
+          "e": 22.03
+        },
+        {
+          "w": "degrees",
+          "s": 22.03,
+          "e": 22.57
+        },
+        {
+          "w": "Fahrenheit.",
+          "s": 22.57,
+          "e": 23.11
+        },
+        {
+          "w": "Weight",
+          "s": 23.11,
+          "e": 23.65
+        },
+        {
+          "w": "68",
+          "s": 23.65,
+          "e": 24.18
+        },
+        {
+          "w": "kilos.",
+          "s": 24.18,
+          "e": 24.72
+        },
+        {
+          "w": "TSH",
+          "s": 24.72,
+          "e": 25.26
+        },
+        {
+          "w": "and",
+          "s": 25.26,
+          "e": 25.8
+        },
+        {
+          "w": "free",
+          "s": 25.8,
+          "e": 26.33
+        },
+        {
+          "w": "T4.",
+          "s": 26.33,
+          "e": 26.87
+        },
+        {
+          "w": "Levothyroxine",
+          "s": 26.87,
+          "e": 27.41
+        },
+        {
+          "w": "75",
+          "s": 27.41,
+          "e": 27.95
+        },
+        {
+          "w": "mcg",
+          "s": 27.95,
+          "e": 28.48
+        },
+        {
+          "w": "daily,",
+          "s": 28.48,
+          "e": 29.02
+        },
+        {
+          "w": "empty",
+          "s": 29.02,
+          "e": 29.56
+        },
+        {
+          "w": "stomach,",
+          "s": 29.56,
+          "e": 30.09
+        },
+        {
+          "w": "nothing",
+          "s": 30.09,
+          "e": 30.63
+        },
+        {
+          "w": "for",
+          "s": 30.63,
+          "e": 31.17
+        },
+        {
+          "w": "30",
+          "s": 31.17,
+          "e": 31.71
+        },
+        {
+          "w": "minutes.",
+          "s": 31.71,
+          "e": 32.24
+        },
+        {
+          "w": "Review",
+          "s": 32.24,
+          "e": 32.78
+        },
+        {
+          "w": "six",
+          "s": 32.78,
+          "e": 33.32
+        },
+        {
+          "w": "weeks.",
+          "s": 33.32,
+          "e": 33.86
+        },
+        {
+          "w": "Diet,",
+          "s": 33.86,
+          "e": 34.39
+        },
+        {
+          "w": "Balance",
+          "s": 34.39,
+          "e": 34.93
+        },
+        {
+          "w": "diet.",
+          "s": 34.93,
+          "e": 35.47
+        },
+        {
+          "w": "Iodines",
+          "s": 35.47,
+          "e": 36.01
+        },
+        {
+          "w": "dis",
+          "s": 36.01,
+          "e": 36.54
+        },
+        {
+          "w": "salt,",
+          "s": 36.54,
+          "e": 37.08
+        },
+        {
+          "w": "protein",
+          "s": 37.08,
+          "e": 37.62
+        },
+        {
+          "w": "and",
+          "s": 37.62,
+          "e": 38.16
+        },
+        {
+          "w": "fiber.",
+          "s": 38.16,
+          "e": 38.69
+        },
+        {
+          "w": "Gentle",
+          "s": 38.69,
+          "e": 39.23
+        },
+        {
+          "w": "same",
+          "s": 39.23,
+          "e": 39.77
+        },
+        {
+          "w": "time",
+          "s": 39.77,
+          "e": 40.31
+        },
+        {
+          "w": "tablet",
+          "s": 40.31,
+          "e": 40.84
+        },
+        {
+          "w": "daily.",
+          "s": 40.84,
+          "e": 41.38
+        },
+        {
+          "w": "No",
+          "s": 41.38,
+          "e": 41.92
+        },
+        {
+          "w": "skipping.",
+          "s": 41.92,
+          "e": 42.46
+        },
+        {
+          "w": "Reports",
+          "s": 42.46,
+          "e": 42.99
+        },
+        {
+          "w": "swelling",
+          "s": 42.99,
+          "e": 43.53
+        },
+        {
+          "w": "or",
+          "s": 43.53,
+          "e": 44.07
+        },
+        {
+          "w": "severe",
+          "s": 44.07,
+          "e": 44.6
+        },
+        {
+          "w": "tightness.",
+          "s": 44.6,
+          "e": 45.14
+        },
+        {
+          "w": "Follow",
+          "s": 45.14,
+          "e": 45.68
+        },
+        {
+          "w": "up",
+          "s": 45.68,
+          "e": 46.22
+        },
+        {
+          "w": "in",
+          "s": 46.22,
+          "e": 46.75
+        },
+        {
+          "w": "six",
+          "s": 46.75,
+          "e": 47.29
+        },
+        {
+          "w": "weeks.",
+          "s": 47.29,
+          "e": 47.83
+        }
+      ]
+    }
+  ],
+  "normalized_en": "38-year-old female with 3 months weight gain, tiredness, constipation, dry skin, hair fall, and irregular periods. Denies neck pain and fever. No known drug allergy. Hypothyroidism, irregular treatment, now uncontrolled. Pulse 64 beats per minute. Blood pressure 112/72 mmHg. temperature 97.8 degrees Fahrenheit. Weight 68 kilos. TSH and free T4. Levothyroxine 75 mcg daily, empty stomach, nothing for 30 minutes. Review 6 weeks. Diet, Balance diet. Iodines dis salt, protein and fiber. Gentle same time tablet daily. No skipping. Reports swelling or severe tightness. Follow up in 6 weeks.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s18-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

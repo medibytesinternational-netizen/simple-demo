@@ -1,0 +1,204 @@
+{
+  "job_id": "s36-none",
+  "drugs": [],
+  "symptoms": [
+    {
+      "text": "chest pain",
+      "confidence": 0.91,
+      "color": "GREEN",
+      "source_sentence": "Denies chest pain and fainting.",
+      "negated": true,
+      "note": "DENIED - excluded",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "chest pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Report chest pain, fainting, severe breathlessness or one-sided weakness, Cardiology in two days.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "breathlessness",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Report chest pain, fainting, severe breathlessness or one-sided weakness, Cardiology in two days.",
+      "negated": false,
+      "start_char": 574,
+      "end_char": 588,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Pulse 120",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Pulse 120 beats per minute, irre- irregular.",
+      "start_char": 229,
+      "end_char": 238,
+      "span_status": "exact"
+    },
+    {
+      "text": "Blood pressure 130/80",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 130/80 mmHg.",
+      "start_char": 274,
+      "end_char": 295,
+      "span_status": "exact"
+    },
+    {
+      "text": "96%",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 96%.",
+      "start_char": 313,
+      "end_char": 316,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {},
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "vital",
+        "text": "Pulse 120",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Pulse 120 beats per minute, irre- irregular."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 130/80",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 130/80 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "96%",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 96%."
+      },
+      {
+        "kind": "symptom",
+        "text": "chest pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.91,
+        "source_sentence": "Denies chest pain and fainting."
+      },
+      {
+        "kind": "symptom",
+        "text": "chest pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Report chest pain, fainting, severe breathlessness or one-sided weakness, Cardiology in two days."
+      },
+      {
+        "kind": "symptom",
+        "text": "breathlessness",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Report chest pain, fainting, severe breathlessness or one-sided weakness, Cardiology in two days."
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "66",
+          "80",
+          "96",
+          "120",
+          "130"
+        ],
+        "count": 7
+      },
+      "total": 6,
+      "vital_verified": 3,
+      "symptom_verified": 3
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

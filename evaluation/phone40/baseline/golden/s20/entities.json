@@ -1,0 +1,733 @@
+{
+  "job_id": "s20-none",
+  "drugs": [
+    {
+      "name": "water",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "31-year-old male with one day of six watery motions, cramps, two vomits, and mild fever after outside food.",
+      "negated": false,
+      "raw_token": "watery",
+      "candidates": [
+        {
+          "name": "water",
+          "kind": "substance",
+          "substances": [
+            "water"
+          ],
+          "units": [
+            "g",
+            "ml"
+          ],
+          "strengths": [
+            {
+              "form": "injection",
+              "unit": "g",
+              "value": 1.0
+            },
+            {
+              "form": "injection",
+              "unit": "ml",
+              "value": 1.0
+            }
+          ],
+          "forms": [
+            "injection"
+          ],
+          "mass_mg": [
+            1000.0,
+            1000.0
+          ],
+          "score": 0.909,
+          "matched_name": "water"
+        }
+      ],
+      "matcher_pick": "water",
+      "note": "fuzzy watery->water (0.91), no dose dictated - physician must confirm | ambiguous: no drug mentioned or implied in the sentence",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "31-year-old male with one day of six watery motions, cramps, two vomits, and mild fever after outside food.",
+        "final_output_sentence": "31-year-old male with one day of six watery motions, cramps, two vomits, and mild fever after outside food.",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.0,
+        "reason": "no drug mentioned or implied in the sentence",
+        "engine": "llm:gpt-4.1"
+      }
+    },
+    {
+      "name": "ondansetron",
+      "dose": 4.0,
+      "unit": "mg",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.96,
+      "color": "GREEN",
+      "source_sentence": "Ondansetron 4 mg if vomiting.",
+      "negated": false,
+      "start_char": 369,
+      "end_char": 380,
+      "span_status": "exact"
+    },
+    {
+      "name": "levothyroxine",
+      "dose": 4.0,
+      "unit": "mg",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "31 year old male with one day of six watery motions, cramps, two vomits and mild fever after outside foot, denies blood in stools, no known drug allergy, no past major illness, diagnosis gastroenteritis with mild dehydration, examination, temperature 99.4 degrees Fahrenheit, pulse 100 beats per minute, dead pressure 110 over 70 millimetres of mercury, saturation 99% dry tongue, plan, oral rehydration salts each motion, on dense electron 4 milligrams if vomiting, no routine antibiotics, diet ORS, coconut water, curd dyes, banana, soft kitchty, no oily or street food, general hand washing, report blood, high fever, severe pain or no urine 8 hours, follow up in two days.",
+      "negated": true,
+      "note": "fuzzy electron->levothyroxine (0.57); dose implausible for ceftriaxone | heard only by small-int8, not by the primary decoder | ambiguous: matcher tie: levothyroxine, paracetamol",
+      "raw_token": "electron",
+      "candidates": [
+        {
+          "name": "levothyroxine",
+          "score": 0.571,
+          "matched_alias": "levothyroxine",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "levothyroxine",
+            "substances": [
+              "levothyroxine"
+            ],
+            "units": [
+              "mcg"
+            ],
+            "mass_mg": [
+              0.005,
+              0.3
+            ],
+            "forms": [
+              "capsule",
+              "solution",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 5.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mcg",
+                "value": 9.0
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 10.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mcg",
+                "value": 12.5
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 20.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mcg",
+                "value": 25.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "paracetamol",
+          "score": 0.571,
+          "matched_alias": "crocin",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "acetaminophen",
+            "substances": [
+              "acetaminophen"
+            ],
+            "units": [
+              "g",
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.3,
+              1000.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "solution",
+              "suppository",
+              "suspension",
+              "syrup"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mcg",
+                "value": 300.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 2.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 2.5
+              }
+            ]
+          }
+        },
+        {
+          "name": "azithromycin",
+          "score": 0.526,
+          "matched_alias": "acytromicin",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "azithromycin",
+            "substances": [
+              "azithromycin"
+            ],
+            "units": [
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              10.0,
+              600.0
+            ],
+            "forms": [
+              "capsule",
+              "drops",
+              "injection",
+              "suspension",
+              "syrup",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "drops",
+                "unit": "mg",
+                "value": 10.0
+              },
+              {
+                "form": "drops",
+                "unit": "mg",
+                "value": 15.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mg",
+                "value": 20.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mg",
+                "value": 33.3
+              },
+              {
+                "form": "suspension",
+                "unit": "mg",
+                "value": 40.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mg",
+                "value": 100.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "ondansetron",
+          "score": 0.526,
+          "matched_alias": "ondansetron",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "ondansetron",
+            "substances": [
+              "ondansetron"
+            ],
+            "units": [
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.8,
+              24.0
+            ],
+            "forms": [
+              "injection",
+              "solution",
+              "spray",
+              "suppository",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 800.0
+              },
+              {
+                "form": "injection",
+                "unit": "mg",
+                "value": 2.0
+              },
+              {
+                "form": "spray",
+                "unit": "mg",
+                "value": 2.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 2.0
+              },
+              {
+                "form": "",
+                "unit": "mg",
+                "value": 4.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 4.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "ceftriaxone",
+          "score": 0.526,
+          "matched_alias": "ceftriaxone",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "ceftriaxone",
+            "substances": [
+              "ceftriaxone"
+            ],
+            "units": [
+              "g",
+              "mg"
+            ],
+            "mass_mg": [
+              125.0,
+              10000.0
+            ],
+            "forms": [
+              "injection",
+              "solution"
+            ],
+            "strengths": [
+              {
+                "form": "injection",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 2.0
+              },
+              {
+                "form": "injection",
+                "unit": "g",
+                "value": 2.0
+              },
+              {
+                "form": "injection",
+                "unit": "g",
+                "value": 10.0
+              },
+              {
+                "form": "injection",
+                "unit": "mg",
+                "value": 125.0
+              }
+            ]
+          },
+          "dose_implausible": true
+        }
+      ],
+      "matcher_pick": "levothyroxine",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "second_pass": "small-int8",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "31 year old male with one day of six watery motions, cramps, two vomits and mild fever after outside foot, denies blood in stools, no known drug allergy, no past major illness, diagnosis gastroenteritis with mild dehydration, examination, temperature 99.4 degrees Fahrenheit, pulse 100 beats per minute, dead pressure 110 over 70 millimetres of mercury, saturation 99% dry tongue, plan, oral rehydration salts each motion, on dense electron 4 milligrams if vomiting, no routine antibiotics, diet ORS, coconut water, curd dyes, banana, soft kitchty, no oily or street food, general hand washing, report blood, high fever, severe pain or no urine 8 hours, follow up in two days.",
+        "final_output_sentence": "31 year old male with one day of six watery motions, cramps, two vomits and mild fever after outside foot, denies blood in stools, no known drug allergy, no past major illness, diagnosis gastroenteritis with mild dehydration, examination, temperature 99.4 degrees Fahrenheit, pulse 100 beats per minute, dead pressure 110 over 70 millimetres of mercury, saturation 99% dry tongue, plan, oral rehydration salts each motion, on dense electron 4 milligrams if vomiting, no routine antibiotics, diet ORS, coconut water, curd dyes, banana, soft kitchty, no oily or street food, general hand washing, report blood, high fever, severe pain or no urine 8 hours, follow up in two days.",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.0,
+        "reason": "matcher tie: levothyroxine, paracetamol",
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "31-year-old male with one day of six watery motions, cramps, two vomits, and mild fever after outside food.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Ondansetron 4 mg if vomiting.",
+      "negated": false,
+      "start_char": 389,
+      "end_char": 397,
+      "span_status": "exact"
+    },
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Report blood, high fever, severe pain, or no urineas.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Report blood, high fever, severe pain, or no urineas.",
+      "negated": false,
+      "start_char": 555,
+      "end_char": 559,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Temperature 99.4 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 99.4 degrees Fahrenheit.",
+      "start_char": 211,
+      "end_char": 246,
+      "span_status": "exact"
+    },
+    {
+      "text": "Pulse 100",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Pulse 100 beats per minute.",
+      "start_char": 248,
+      "end_char": 257,
+      "span_status": "exact"
+    },
+    {
+      "text": "Blood pressure 110/70",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 110/70 mmHg.",
+      "start_char": 276,
+      "end_char": 297,
+      "span_status": "exact"
+    },
+    {
+      "text": "99%",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 99%.",
+      "start_char": 315,
+      "end_char": 318,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "Follow up in two days",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Follow up in two days",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "drug_second_pass": {
+    "model": "small-int8",
+    "added": [
+      "levothyroxine"
+    ]
+  },
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 3.183,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "water",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "fuzzy top-candidate agreement; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "31-year-old male with one day of six watery motions, cramps, two vomits, and mild fever after outside food."
+      },
+      {
+        "kind": "drug",
+        "name": "ondansetron",
+        "dose": 4.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mcg/mg/ml; listed strengths: 800 mcg solution, 2 mg injection, 2 mg spray, 2 mg solution; 4 mg is plausible for this drug]",
+        "confidence": 0.96,
+        "source_sentence": "Ondansetron 4 mg if vomiting."
+      },
+      {
+        "kind": "drug",
+        "name": "levothyroxine",
+        "dose": 4.0,
+        "unit": "mg",
+        "negated": true,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:needs_review",
+          "polarity:negated-preserved"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mcg; listed strengths: 5 mcg solution, 9 mcg tablet, 10 mcg solution, 12.5 mcg tablet; 4 mg is plausible for this drug]; source_sentence not verbatim in transcript",
+        "confidence": 0.7,
+        "source_sentence": "31 year old male with one day of six watery motions, cramps, two vomits and mild fever after outside foot, denies blood in stools, no known drug allergy, no past major illness, diagnosis gastroenteritis with mild dehydration, examination, temperature 99.4 degrees Fahrenheit, pulse 100 beats per minute, dead pressure 110 over 70 millimetres of mercury, saturation 99% dry tongue, plan, oral rehydration salts each motion, on dense electron 4 milligrams if vomiting, no routine antibiotics, diet ORS, coconut water, curd dyes, banana, soft kitchty, no oily or street food, general hand washing, report blood, high fever, severe pain or no urine 8 hours, follow up in two days."
+      },
+      {
+        "kind": "vital",
+        "text": "Temperature 99.4 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 99.4 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "Pulse 100",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Pulse 100 beats per minute."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 110/70",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 110/70 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "99%",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 99%."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "31-year-old male with one day of six watery motions, cramps, two vomits, and mild fever after outside food."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Ondansetron 4 mg if vomiting."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Report blood, high fever, severe pain, or no urineas."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Report blood, high fever, severe pain, or no urineas."
+      },
+      {
+        "kind": "followup",
+        "text": "Follow up in two days",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Follow up in two days"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "4",
+          "6",
+          "31",
+          "70",
+          "99",
+          "99.4",
+          "100",
+          "110"
+        ],
+        "count": 10
+      },
+      "total": 12,
+      "drug_needs_review": 2,
+      "drug_verified": 1,
+      "vital_verified": 4,
+      "symptom_verified": 4,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

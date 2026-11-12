@@ -1,0 +1,2047 @@
+{
+  "meta": {
+    "source": "experiments/phone40/scripts",
+    "built": "2026-10-11",
+    "reviewed": true,
+    "how": "regex extractor on the script text plus an exact drug-reference scan; every item must be confirmed against the script by a person",
+    "reviewer": "user (approved the corrected draft with 'proceed', 2026-10-11; no itemised changes)",
+    "corrections": [
+      "s19: removed ferrous - replaced by the full name 'ferrous sulphate'",
+      "s20: removed water - diet word ('coconut water'), not a drug",
+      "s25: removed potassium - diet instruction 'low potassium', not a drug",
+      "s27: removed human menopausal gonadotropin - from history word 'menopause'",
+      "s27: removed calcium - investigation ('calcium, vitamin D'), not a drug",
+      "s27: removed vitamin - investigation ('vitamin D'), not a drug",
+      "s29: removed amylase - investigation, not a drug",
+      "s30: removed vitamin - investigation ('vitamin D'), not a drug",
+      "s34: removed water - diet word, not a drug",
+      "s3: aspirin {'negated': True} - 'No food or aspirin until reviewed'",
+      "s13: aspirin {'negated': True} - 'no aspirin or ibuprofen'",
+      "s13: ibuprofen {'negated': True} - 'no aspirin or ibuprofen'",
+      "s5: adrenaline {'borderline': True} - conditional: 'adrenaline if anaphylaxis' (gold_v2 MB_MED_005)",
+      "s24: potassium {'borderline': True} - 'potassium correction', no named salt",
+      "s25: furosemide {'borderline': True} - conditional: 'furosemide only if advised'",
+      "s33: pantoprazole {'negated': False} - prescribed; 'stop' refers to NSAIDs",
+      "s33: antacid {'borderline': True} - a drug class, not a substance",
+      "s34: zinc {'borderline': True} - supplement, 'as advised'",
+      "s19: added ferrous sulphate - full name",
+      "s8: added oxygen (borderline) - oxygen is borderline in gold_v2",
+      "s11: added oxygen (borderline) - as s8",
+      "s9: added normal saline (borderline) - IV fluid",
+      "s20: added oral rehydration salts (borderline) - ORS",
+      "s34: added oral rehydration salts (borderline) - ORS",
+      "s37: added calcium (borderline) - supplement",
+      "s37: added vitamin d (borderline) - supplement",
+      "s6: added vital glucose 72.0 - second (current) reading",
+      "s19: dropped brand leafy - ordinary word ('leafy vegetables')"
+    ]
+  },
+  "clips": {
+    "s1": {
+      "reference": "Assessment of a fifty-two-year-old male with three days of fever, productive cough, chest discomfort, breathlessness, fatigue and reduced appetite. Denies vomiting and wheezing; no known drug allergy. Past history of hypertension and type two diabetes; provisional diagnosis community-acquired pneumonia. Examination: temperature one hundred and one degrees Fahrenheit, blood pressure one hundred and thirty over eighty-five millimetres of mercury, pulse ninety-two beats per minute, respiratory rate twenty-two, saturation ninety-four percent on room air. Investigations: complete blood count and chest X-ray. Plan: paracetamol six hundred and fifty milligrams thrice daily, amoxicillin with clavulanic acid as advised, glucose monitoring. Diet: light home diet, warm fluids, dal-rice, adequate water. General: complete antibiotics, daily temperature check, return for worsening breathlessness or high fever. Follow up in three days.",
+      "drugs": [
+        {
+          "name": "paracetamol",
+          "dose": 650.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: paracetamol six hundred and fifty milligrams thrice daily, amoxicillin with clavulanic acid as advised, glucose monitoring.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "amoxicillin",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: paracetamol six hundred and fifty milligrams thrice daily, amoxicillin with clavulanic acid as advised, glucose monitoring.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "clavulanic acid",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: paracetamol six hundred and fifty milligrams thrice daily, amoxicillin with clavulanic acid as advised, glucose monitoring.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 101 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 101.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 130 over 85",
+          "draft_by": "extractor",
+          "systolic": 130.0,
+          "diastolic": 85.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 92",
+          "draft_by": "extractor",
+          "value": 92.0
+        },
+        {
+          "kind": "rr",
+          "unit": "/min",
+          "quote": "respiratory rate 22",
+          "draft_by": "extractor",
+          "value": 22.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "94 percent on room air",
+          "draft_by": "extractor",
+          "value": 94.0
+        }
+      ],
+      "allergies": []
+    },
+    "s2": {
+      "reference": "Dictation for a forty-eight-year-old female with five days of headache, dizziness, blurred vision and evening tiredness. Denies chest pain and breathlessness; no known drug allergy. Past history hypertension and high cholesterol; diagnosis uncontrolled essential hypertension. Examination: blood pressure one fifty over ninety-five millimetres of mercury, pulse eighty-six beats per minute, temperature ninety-eight point six degrees Fahrenheit, saturation ninety-eight percent on room air. Investigations: kidney function and ECG. Plan: continue amlodipine five milligrams once daily, home BP charting. Diet: low salt, no pickles or processed food, vegetables, two litres water daily. General: morning BP check, daily walk, emergency review for severe headache, chest pain or vision change. Follow up in one week.",
+      "drugs": [
+        {
+          "name": "amlodipine",
+          "dose": 5.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: continue amlodipine five milligrams once daily, home BP charting.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 150 over 95",
+          "draft_by": "extractor",
+          "systolic": 150.0,
+          "diastolic": 95.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 86",
+          "draft_by": "extractor",
+          "value": 86.0
+        },
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 98.6 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 98.6
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "98 percent on room air",
+          "draft_by": "extractor",
+          "value": 98.0
+        }
+      ],
+      "allergies": []
+    },
+    "s3": {
+      "reference": "Sixty-year-old male with sudden right arm-leg weakness, slurred speech and facial droop one hour ago, conscious and answering. Denies fever, seizure and head injury; no known drug allergy. Past history hypertension and type two diabetes; provisional diagnosis acute ischemic stroke. Examination: blood pressure one sixty over ninety millimetres of mercury, pulse eighty-eight beats per minute, saturation ninety-seven percent on room air, right-sided weakness with facial droop. Investigations: urgent CT brain and blood glucose. Plan: stroke-unit monitoring, nil by mouth until swallow review, onset-time documentation. Diet: nil by mouth, then soft diet after swallow test only. General: watch consciousness and weakness, alert team at once for worsening. No food or aspirin until reviewed.",
+      "drugs": [
+        {
+          "name": "aspirin",
+          "dose": null,
+          "unit": null,
+          "negated": true,
+          "quote": "No food or aspirin until reviewed.",
+          "draft_by": "reference-scan + corrected"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 160 over 90",
+          "draft_by": "extractor",
+          "systolic": 160.0,
+          "diastolic": 90.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 88",
+          "draft_by": "extractor",
+          "value": 88.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "97 percent on room air",
+          "draft_by": "extractor",
+          "value": 97.0
+        }
+      ],
+      "allergies": []
+    },
+    "s4": {
+      "reference": "Fifty-eight-year-old male smoker with thirty minutes of heavy central chest pressure radiating to the left arm, breathlessness and sweating. Denies fever and cough; no known drug allergy. Past history hypertension and high cholesterol; provisional diagnosis acute coronary syndrome. Examination: blood pressure one forty-five over ninety millimetres of mercury, pulse ninety-six beats per minute, respiratory rate twenty, saturation ninety-five percent on room air. Investigations: ECG and troponin. Plan: aspirin as advised, continuous rhythm and BP monitoring. Diet: light low salt low fat diet, no smoking or alcohol. General: complete bed rest, report worsening pain, sweating, breathlessness or fainting at once. Follow up in cardiology in two days.",
+      "drugs": [
+        {
+          "name": "aspirin",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: aspirin as advised, continuous rhythm and BP monitoring.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 145 over 90",
+          "draft_by": "extractor",
+          "systolic": 145.0,
+          "diastolic": 90.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 96",
+          "draft_by": "extractor",
+          "value": 96.0
+        },
+        {
+          "kind": "rr",
+          "unit": "/min",
+          "quote": "respiratory rate 20",
+          "draft_by": "extractor",
+          "value": 20.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "95 percent on room air",
+          "draft_by": "extractor",
+          "value": 95.0
+        }
+      ],
+      "allergies": []
+    },
+    "s5": {
+      "reference": "Young adult female started on amoxicillin today for throat infection, with whole-body itching twenty minutes later, rash on arms-neck and mild lip swelling with throat tightness, still talking normally. Denies prior penicillin allergy and wheezing. No past major illness; diagnosis acute allergic reaction, suspected amoxicillin allergy. Examination: saturation ninety-six percent, pulse one hundred and eight beats per minute, blood pressure one ten over seventy millimetres of mercury. Plan: stop amoxicillin, antihistamines ready, adrenaline if anaphylaxis, document allergy. Diet: light home food, plenty of fluids. General: watch for wheeze, swelling or BP fall; never repeat amoxicillin without advice. Return if throat tightens. Follow up tomorrow.",
+      "drugs": [
+        {
+          "name": "amoxicillin",
+          "dose": null,
+          "unit": null,
+          "negated": true,
+          "quote": "Young adult female started on amoxicillin today for throat infection, with whole-body itching twenty minutes later, rash on arms-neck and mild lip swelling with throat tightness, still talking normally.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "adrenaline",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: stop amoxicillin, antihistamines ready, adrenaline if anaphylaxis, document allergy.",
+          "draft_by": "extractor + corrected",
+          "borderline": true
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "96 percent",
+          "draft_by": "extractor",
+          "value": 96.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 108",
+          "draft_by": "extractor",
+          "value": 108.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 110 over 70",
+          "draft_by": "extractor",
+          "systolic": 110.0,
+          "diastolic": 70.0
+        }
+      ],
+      "allergies": [
+        {
+          "substance": "penicillin",
+          "negated": true,
+          "quote": "Denies prior penicillin allergy and wheezing.",
+          "draft_by": "extractor"
+        },
+        {
+          "substance": "amoxicillin",
+          "negated": false,
+          "quote": "No past major illness; diagnosis acute allergic reaction, suspected amoxicillin allergy.",
+          "draft_by": "extractor"
+        }
+      ]
+    },
+    "s6": {
+      "reference": "Elderly diabetic father took morning insulin but skipped breakfast, then sweating, shakiness, dizziness and confusion within one hour, conscious and swallowing. Denies vomiting and fever; no known drug allergy. Past history type two diabetes on insulin and metformin; diagnosis hypoglycaemia from missed meal. Examination: glucose fifty-four milligrams per decilitre, rising to seventy-two after sweet drink. Plan: fast sugar now, recheck every fifteen to thirty minutes, hold extra insulin until review. Diet: never skip meals after insulin; dal, rice, roti on time plus bedtime snack. General: carry sugar always, monitor twenty-four hours, rush for unconsciousness, seizure or repeat lows. Follow up in two days.",
+      "drugs": [
+        {
+          "name": "insulin",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Elderly diabetic father took morning insulin but skipped breakfast, then sweating, shakiness, dizziness and confusion within one hour, conscious and swallowing.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "metformin",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Past history type two diabetes on insulin and metformin; diagnosis hypoglycaemia from missed meal.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "glucose",
+          "unit": "mg/dL",
+          "quote": "glucose 54",
+          "draft_by": "extractor",
+          "value": 54.0
+        },
+        {
+          "kind": "glucose",
+          "value": 72.0,
+          "unit": "mg/dL",
+          "quote": "rising to seventy-two after sweet drink",
+          "draft_by": "correction"
+        }
+      ],
+      "allergies": []
+    },
+    "s7": {
+      "reference": "Bed twelve, day one after laparoscopic appendectomy for acute appendicitis, now increasing site pain, nausea and mild redness around an intact dressing. Denies active bleeding and vomiting; no known drug allergy. Past diagnosis acute appendicitis; now suspected surgical site infection. Examination: temperature one hundred point two degrees Fahrenheit, blood pressure one twenty-four over seventy-eight millimetres of mercury, pulse ninety-eight, saturation ninety-seven percent on room air. Plan: IV fluids, paracetamol as prescribed, continue ceftriaxone, wound review and blood count. Diet: sips to soft diet, curd-rice, dal water, no oily food. General: keep dressing dry, brief supported walks, report high fever, bleeding or worsening pain. Review this evening.",
+      "drugs": [
+        {
+          "name": "paracetamol",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: IV fluids, paracetamol as prescribed, continue ceftriaxone, wound review and blood count.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "ceftriaxone",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: IV fluids, paracetamol as prescribed, continue ceftriaxone, wound review and blood count.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 100.2 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 100.2
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 124 over 78",
+          "draft_by": "extractor",
+          "systolic": 124.0,
+          "diastolic": 78.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 98",
+          "draft_by": "extractor",
+          "value": 98.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "97 percent on room air",
+          "draft_by": "extractor",
+          "value": 97.0
+        }
+      ],
+      "allergies": []
+    },
+    "s8": {
+      "reference": "Sixty-five-year-old female admitted yesterday with severe pneumonia, fever, productive cough and breathlessness; admission saturation eighty-six percent, now on face-mask oxygen six litres per minute, conscious. Denies chest pain; no known drug allergy. Past diagnosis severe pneumonia, still oxygen-dependent. Examination: saturation ninety-five percent on oxygen, blood pressure one eighteen over seventy-two millimetres of mercury, pulse ninety-four, respiratory rate twenty-four, temperature ninety-nine point eight degrees Fahrenheit. X-ray bilateral infiltrates; cultures sent. Plan: IV ceftriaxone plus azithromycin five hundred milligrams, repeat blood count and blood gas evening. Diet: soft high-protein feeds, warm fluids, head-end raised. General: continuous monitoring, report effort increase or drowsiness. Do not remove mask unadvised.",
+      "drugs": [
+        {
+          "name": "azithromycin",
+          "dose": 500.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: IV ceftriaxone plus azithromycin five hundred milligrams, repeat blood count and blood gas evening.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "ceftriaxone",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: IV ceftriaxone plus azithromycin five hundred milligrams, repeat blood count and blood gas evening.",
+          "draft_by": "extractor"
+        },
+        {
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "name": "oxygen",
+          "borderline": true,
+          "quote": "now on face-mask oxygen six litres per minute",
+          "draft_by": "correction"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "86 percent",
+          "draft_by": "extractor",
+          "value": 86.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "95 percent ",
+          "draft_by": "extractor",
+          "value": 95.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 118 over 72",
+          "draft_by": "extractor",
+          "systolic": 118.0,
+          "diastolic": 72.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 94",
+          "draft_by": "extractor",
+          "value": 94.0
+        },
+        {
+          "kind": "rr",
+          "unit": "/min",
+          "quote": "respiratory rate 24",
+          "draft_by": "extractor",
+          "value": 24.0
+        },
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 99.8 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 99.8
+        }
+      ],
+      "allergies": []
+    },
+    "s9": {
+      "reference": "Severely anaemic female, bed seven, one unit red cells started forty minutes ago, now sudden chills, back pain and feeling very cold, no breathlessness. Denies prior transfusion reaction; no known drug allergy. Past diagnosis severe anaemia; now suspected acute transfusion reaction. Examination: temperature one hundred and one point four degrees Fahrenheit, pulse one hundred and six beats per minute, blood pressure one hundred over sixty-five millimetres of mercury, saturation ninety-six percent on room air. Plan: stop transfusion, saline line open, recheck ID and bag, send samples to lab, half-hourly vitals and urine chart. Diet: warm fluids, normal diet when stable. General: report hypotension, wheeze, chest pain or urine fall; no restart without senior review.",
+      "drugs": [
+        {
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "name": "normal saline",
+          "borderline": true,
+          "quote": "saline line open",
+          "draft_by": "correction"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 101.4 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 101.4
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 106",
+          "draft_by": "extractor",
+          "value": 106.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 100 over 65",
+          "draft_by": "extractor",
+          "systolic": 100.0,
+          "diastolic": 65.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "96 percent on room air",
+          "draft_by": "extractor",
+          "value": 96.0
+        }
+      ],
+      "allergies": []
+    },
+    "s10": {
+      "reference": "Thirty-four-year-old male after two-minute generalised seizure with jerking and unconsciousness at home, now drowsy but improving; missed sodium valproate three days. Denies head injury, fever and alcohol; no known drug allergy. Past diagnosis epilepsy; now post-ictal breakthrough seizure. Examination: blood pressure one twenty-eight over eighty millimetres of mercury, pulse ninety beats per minute, saturation ninety-eight percent, glucose one hundred and six milligrams per decilitre. Investigations: electrolytes and renal-liver tests. Plan: observation, seizure precautions, restart antiepileptic as advised. Diet: regular diet, good sleep, no alcohol, hydration. General: never miss doses, no driving until cleared, rush for seizure over five minutes or repeated fits. Neurology in three days.",
+      "drugs": [
+        {
+          "name": "sodium valproate",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Thirty-four-year-old male after two-minute generalised seizure with jerking and unconsciousness at home, now drowsy but improving; missed sodium valproate three days.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 128 over 80",
+          "draft_by": "extractor",
+          "systolic": 128.0,
+          "diastolic": 80.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 90",
+          "draft_by": "extractor",
+          "value": 90.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "98 percent",
+          "draft_by": "extractor",
+          "value": 98.0
+        },
+        {
+          "kind": "glucose",
+          "unit": "mg/dL",
+          "quote": "glucose 106",
+          "draft_by": "extractor",
+          "value": 106.0
+        }
+      ],
+      "allergies": []
+    },
+    "s11": {
+      "reference": "Sixty-eight-year-old smoker with COPD, three days of worse breathlessness, yellow sputum and low fever. Denies chest pain; no penicillin allergy. Past history COPD and hypertension; now infective exacerbation. Examination: saturation ninety-one percent on room air, respiratory rate twenty-four, pulse ninety-eight beats per minute, blood pressure one thirty-eight over eighty-four millimetres of mercury, temperature one hundred degrees Fahrenheit. Investigations: chest X-ray and sputum culture. Plan: controlled oxygen, nebulised salbutamol, tiotropium, azithromycin five hundred milligrams daily three days, smoking cessation. Diet: small frequent high-protein meals, warm water, avoid smoke. General: pursed-lip breathing, daily walks, emergency for blue lips or drowsiness. Follow up in three days.",
+      "drugs": [
+        {
+          "name": "azithromycin",
+          "dose": 500.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: controlled oxygen, nebulised salbutamol, tiotropium, azithromycin five hundred milligrams daily three days, smoking cessation.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "salbutamol",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: controlled oxygen, nebulised salbutamol, tiotropium, azithromycin five hundred milligrams daily three days, smoking cessation.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "tiotropium",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: controlled oxygen, nebulised salbutamol, tiotropium, azithromycin five hundred milligrams daily three days, smoking cessation.",
+          "draft_by": "reference-scan"
+        },
+        {
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "name": "oxygen",
+          "borderline": true,
+          "quote": "Plan: controlled oxygen",
+          "draft_by": "correction"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "91 percent on room air",
+          "draft_by": "extractor",
+          "value": 91.0
+        },
+        {
+          "kind": "rr",
+          "unit": "/min",
+          "quote": "respiratory rate 24",
+          "draft_by": "extractor",
+          "value": 24.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 98",
+          "draft_by": "extractor",
+          "value": 98.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 138 over 84",
+          "draft_by": "extractor",
+          "systolic": 138.0,
+          "diastolic": 84.0
+        },
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 100 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 100.0
+        }
+      ],
+      "allergies": [
+        {
+          "substance": "penicillin",
+          "negated": true,
+          "quote": "Denies chest pain; no penicillin allergy.",
+          "draft_by": "extractor"
+        }
+      ]
+    },
+    "s12": {
+      "reference": "Twenty-six-year-old known asthmatic with one day of wheeze, dry cough, chest tightness and breathlessness after dust. Denies fever and chest pain; no drug allergy. Past diagnosis bronchial asthma; now moderate exacerbation. Examination: respiratory rate twenty-six, saturation ninety-three percent on room air, pulse one hundred and four beats per minute, blood pressure one twelve over seventy millimetres of mercury, temperature ninety-nine degrees Fahrenheit, bilateral wheeze. Plan: nebulised salbutamol, prednisolone forty milligrams daily five days, continue budesonide with spacer check. Diet: warm fluids, no cold drinks, normal vegetarian diet. General: carry reliever, correct inhaler technique, return for speech difficulty, blue lips or no relief. Follow up in two days.",
+      "drugs": [
+        {
+          "name": "prednisolone",
+          "dose": 40.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: nebulised salbutamol, prednisolone forty milligrams daily five days, continue budesonide with spacer check.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "salbutamol",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: nebulised salbutamol, prednisolone forty milligrams daily five days, continue budesonide with spacer check.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "budesonide",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: nebulised salbutamol, prednisolone forty milligrams daily five days, continue budesonide with spacer check.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "rr",
+          "unit": "/min",
+          "quote": "respiratory rate 26",
+          "draft_by": "extractor",
+          "value": 26.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "93 percent on room air",
+          "draft_by": "extractor",
+          "value": 93.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 104",
+          "draft_by": "extractor",
+          "value": 104.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 112 over 70",
+          "draft_by": "extractor",
+          "systolic": 112.0,
+          "diastolic": 70.0
+        },
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 99 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 99.0
+        }
+      ],
+      "allergies": []
+    },
+    "s13": {
+      "reference": "Twenty-nine-year-old male with five days high fever, body ache, eye pain, two vomits and now mild abdominal pain. Denies bleeding and rash; no known drug allergy. No past major illness; diagnosis dengue with warning signs. Examination: temperature one hundred and two degrees Fahrenheit, blood pressure one hundred over seventy millimetres of mercury, pulse one hundred beats per minute, saturation ninety-eight percent on room air. Investigations: platelet count, haematocrit, NS1. Plan: paracetamol six hundred and fifty milligrams, platelet monitoring, fluids if needed; no aspirin or ibuprofen. Diet: oral fluids, coconut and dal water, soft food, complete rest. General: avoid mosquitoes, report bleeding, black stools, severe pain or drowsiness. Blood test tomorrow, daily follow up.",
+      "drugs": [
+        {
+          "name": "paracetamol",
+          "dose": 650.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: paracetamol six hundred and fifty milligrams, platelet monitoring, fluids if needed; no aspirin or ibuprofen.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "aspirin",
+          "dose": null,
+          "unit": null,
+          "negated": true,
+          "quote": "Plan: paracetamol six hundred and fifty milligrams, platelet monitoring, fluids if needed; no aspirin or ibuprofen.",
+          "draft_by": "reference-scan + corrected"
+        },
+        {
+          "name": "ibuprofen",
+          "dose": null,
+          "unit": null,
+          "negated": true,
+          "quote": "Plan: paracetamol six hundred and fifty milligrams, platelet monitoring, fluids if needed; no aspirin or ibuprofen.",
+          "draft_by": "reference-scan + corrected"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 102 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 102.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 100 over 70",
+          "draft_by": "extractor",
+          "systolic": 100.0,
+          "diastolic": 70.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 100",
+          "draft_by": "extractor",
+          "value": 100.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "98 percent on room air",
+          "draft_by": "extractor",
+          "value": 98.0
+        }
+      ],
+      "allergies": []
+    },
+    "s14": {
+      "reference": "Twenty-two-year-old female with seven days step-ladder fever, headache, dry cough, appetite loss and mild loose motions. Denies breathlessness; no known drug allergy. No past major illness; provisional diagnosis enteric fever. Examination: temperature one hundred and one point six degrees Fahrenheit, pulse eighty-eight beats per minute, blood pressure one ten over sixty-eight millimetres of mercury, saturation ninety-nine percent on room air. Investigations: blood culture and blood count. Plan: ciprofloxacin five hundred milligrams twice daily, paracetamol, hydration watch. Diet: soft cooked rice-dal-curd, boiled water only, no street food or raw salads. General: hand washing, complete course, return for pain, bleeding or persistent fever. Follow up in three days.",
+      "drugs": [
+        {
+          "name": "ciprofloxacin",
+          "dose": 500.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: ciprofloxacin five hundred milligrams twice daily, paracetamol, hydration watch.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "paracetamol",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: ciprofloxacin five hundred milligrams twice daily, paracetamol, hydration watch.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 101.6 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 101.6
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 88",
+          "draft_by": "extractor",
+          "value": 88.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 110 over 68",
+          "draft_by": "extractor",
+          "systolic": 110.0,
+          "diastolic": 68.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "99 percent on room air",
+          "draft_by": "extractor",
+          "value": 99.0
+        }
+      ],
+      "allergies": []
+    },
+    "s15": {
+      "reference": "Thirty-five-year-old female with two days burning and frequent urination, fever with chills, right flank pain and one vomit. Denies discharge; no known drug allergy. Past history recurrent urinary infection; now acute pyelonephritis. Examination: temperature one hundred and one degrees Fahrenheit, pulse one hundred and two beats per minute, blood pressure one sixteen over seventy-four millimetres of mercury, saturation ninety-eight percent, right renal angle tender. Investigations: urine routine-culture and ultrasound. Plan: nitrofurantoin one hundred milligrams twice daily, paracetamol, fluids if vomiting. Diet: three litres water daily, coconut water, buttermilk; do not hold urine. General: complete course, report persistent fever, back pain or low urine. Repeat urine in three days.",
+      "drugs": [
+        {
+          "name": "nitrofurantoin",
+          "dose": 100.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: nitrofurantoin one hundred milligrams twice daily, paracetamol, fluids if vomiting.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "paracetamol",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: nitrofurantoin one hundred milligrams twice daily, paracetamol, fluids if vomiting.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 101 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 101.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 102",
+          "draft_by": "extractor",
+          "value": 102.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 116 over 74",
+          "draft_by": "extractor",
+          "systolic": 116.0,
+          "diastolic": 74.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "98 percent",
+          "draft_by": "extractor",
+          "value": 98.0
+        }
+      ],
+      "allergies": []
+    },
+    "s16": {
+      "reference": "Sixty-two-year-old male with two weeks exertional and night breathlessness, leg swelling and low urine. Denies chest pain and fever; no known drug allergy. Past history hypertension and old infarct; diagnosis congestive failure. Examination: blood pressure one forty over ninety millimetres of mercury, pulse ninety-six beats per minute, respiratory rate twenty-two, saturation ninety-four percent on room air, ankle edema, basal crackles. Investigations: chest X-ray, ECG, echo. Plan: furosemide forty milligrams morning, atorvastatin ten milligrams night, daily weight chart. Diet: salt under two grams, fluids one and a half litres, no pickles. General: daily weight-urine check, leg elevation, emergency for two-kilo gain, severe breathlessness or chest pain. Follow up in one week.",
+      "drugs": [
+        {
+          "name": "furosemide",
+          "dose": 40.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: furosemide forty milligrams morning, atorvastatin ten milligrams night, daily weight chart.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "atorvastatin",
+          "dose": 10.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: furosemide forty milligrams morning, atorvastatin ten milligrams night, daily weight chart.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 140 over 90",
+          "draft_by": "extractor",
+          "systolic": 140.0,
+          "diastolic": 90.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 96",
+          "draft_by": "extractor",
+          "value": 96.0
+        },
+        {
+          "kind": "rr",
+          "unit": "/min",
+          "quote": "respiratory rate 22",
+          "draft_by": "extractor",
+          "value": 22.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "94 percent on room air",
+          "draft_by": "extractor",
+          "value": 94.0
+        }
+      ],
+      "allergies": []
+    },
+    "s17": {
+      "reference": "Forty-five-year-old male with two months thirst, frequent urination, tiredness and five-kilo loss. Denies fever; no known drug allergy. Past history high cholesterol; diagnosis new type two diabetes with hyperglycaemia. Examination: random glucose two hundred and eighty-six milligrams per decilitre, blood pressure one thirty-six over eighty-six millimetres of mercury, pulse eighty-eight, saturation ninety-nine percent. Investigations: fasting glucose, HbA1c, lipids. Plan: metformin five hundred milligrams twice daily after food, glucometer training. Diet: whole grains, vegetables, dal, no sugar or sweet drinks, fixed timings. General: thirty-minute walk daily, foot care, return for vomiting, pain or very high readings. Follow up in two weeks.",
+      "drugs": [
+        {
+          "name": "metformin",
+          "dose": 500.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: metformin five hundred milligrams twice daily after food, glucometer training.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "glucose",
+          "unit": "mg/dL",
+          "quote": "glucose 286",
+          "draft_by": "extractor",
+          "value": 286.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 136 over 86",
+          "draft_by": "extractor",
+          "systolic": 136.0,
+          "diastolic": 86.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 88",
+          "draft_by": "extractor",
+          "value": 88.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "99 percent",
+          "draft_by": "extractor",
+          "value": 99.0
+        }
+      ],
+      "allergies": []
+    },
+    "s18": {
+      "reference": "Thirty-eight-year-old female with three months weight gain, tiredness, constipation, dry skin, hair fall and irregular periods. Denies neck pain and fever; no known drug allergy. Past diagnosis hypothyroidism, irregular treatment; now uncontrolled. Examination: pulse sixty-four beats per minute, blood pressure one twelve over seventy-two millimetres of mercury, temperature ninety-seven point eight degrees Fahrenheit, weight sixty-eight kilos. Investigations: TSH and free T4. Plan: levothyroxine seventy-five micrograms daily empty stomach, nothing for thirty minutes, review six weeks. Diet: balanced diet, iodised salt, protein and fibre. General: same-time tablet daily, no skipping, report swelling or severe tiredness. Follow up in six weeks.",
+      "drugs": [
+        {
+          "name": "levothyroxine",
+          "dose": 75.0,
+          "unit": "mcg",
+          "negated": false,
+          "quote": "Plan: levothyroxine seventy-five micrograms daily empty stomach, nothing for thirty minutes, review six weeks.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 64",
+          "draft_by": "extractor",
+          "value": 64.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 112 over 72",
+          "draft_by": "extractor",
+          "systolic": 112.0,
+          "diastolic": 72.0
+        },
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 97.8 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 97.8
+        }
+      ],
+      "allergies": []
+    },
+    "s19": {
+      "reference": "Twenty-eight-year-old female with two months tiredness, pallor, stair breathlessness, hair fall and clay craving, with heavy periods. Denies piles bleeding and weight loss; no known drug allergy. Past diagnosis iron deficiency; now moderate anaemia. Examination: pallor, pulse ninety-six beats per minute, blood pressure one hundred and four over sixty-six millimetres of mercury, saturation ninety-nine percent. Investigations: blood count and ferritin. Plan: ferrous sulphate with folic acid daily after food plus albendazole four hundred milligrams single dose. Diet: leafy vegetables, jaggery, groundnuts, dates, lemon; no tea near tablets. General: continue three months, repeat haemoglobin one month, gynaecology review for periods.",
+      "drugs": [
+        {
+          "name": "albendazole",
+          "dose": 400.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: ferrous sulphate with folic acid daily after food plus albendazole four hundred milligrams single dose.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "folic acid",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: ferrous sulphate with folic acid daily after food plus albendazole four hundred milligrams single dose.",
+          "draft_by": "extractor"
+        },
+        {
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "name": "ferrous sulphate",
+          "quote": "Plan: ferrous sulphate with folic acid daily after food",
+          "draft_by": "correction"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 96",
+          "draft_by": "extractor",
+          "value": 96.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 104 over 66",
+          "draft_by": "extractor",
+          "systolic": 104.0,
+          "diastolic": 66.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "99 percent",
+          "draft_by": "extractor",
+          "value": 99.0
+        }
+      ],
+      "allergies": []
+    },
+    "s20": {
+      "reference": "Thirty-one-year-old male with one day of six watery motions, cramps, two vomits and mild fever after outside food. Denies blood in stools; no known drug allergy. No past major illness; diagnosis gastroenteritis with mild dehydration. Examination: temperature ninety-nine point four degrees Fahrenheit, pulse one hundred beats per minute, blood pressure one ten over seventy millimetres of mercury, saturation ninety-nine percent, dry tongue. Plan: oral rehydration salts each motion, ondansetron four milligrams if vomiting; no routine antibiotics. Diet: ORS, coconut water, curd-rice, banana, soft khichdi; no oily or street food. General: hand washing, report blood, high fever, severe pain or no urine eight hours. Follow up in two days.",
+      "drugs": [
+        {
+          "name": "ondansetron",
+          "dose": 4.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: oral rehydration salts each motion, ondansetron four milligrams if vomiting; no routine antibiotics.",
+          "draft_by": "extractor"
+        },
+        {
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "name": "oral rehydration salts",
+          "borderline": true,
+          "quote": "Plan: oral rehydration salts each motion",
+          "draft_by": "correction"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 99.4 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 99.4
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 100",
+          "draft_by": "extractor",
+          "value": 100.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 110 over 70",
+          "draft_by": "extractor",
+          "systolic": 110.0,
+          "diastolic": 70.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "99 percent",
+          "draft_by": "extractor",
+          "value": 99.0
+        }
+      ],
+      "allergies": []
+    },
+    "s21": {
+      "reference": "Thirty-three-year-old female with six months of one-sided throbbing headache, nausea, light sensitivity and vomiting lasting six to eight hours, triggered by fasting and sleep loss. Denies fever, weakness and vision loss; no known drug allergy. No past major illness; diagnosis migraine without aura. Examination: blood pressure one eighteen over seventy-six millimetres of mercury, pulse eighty beats per minute, temperature ninety-eight point four degrees Fahrenheit, neurology normal. Plan: paracetamol six hundred and fifty milligrams at onset, headache diary, sleep hygiene. Diet: regular meals, no fasting, adequate water, limit tea-coffee-chocolate. General: dark quiet rest, avoid overuse, emergency for thunderclap pain, weakness or speech change. Follow up in two weeks.",
+      "drugs": [
+        {
+          "name": "paracetamol",
+          "dose": 650.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: paracetamol six hundred and fifty milligrams at onset, headache diary, sleep hygiene.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 118 over 76",
+          "draft_by": "extractor",
+          "systolic": 118.0,
+          "diastolic": 76.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 80",
+          "draft_by": "extractor",
+          "value": 80.0
+        },
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 98.4 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 98.4
+        }
+      ],
+      "allergies": []
+    },
+    "s22": {
+      "reference": "Forty-year-old male smoker with three weeks evening fever, productive cough, night sweats, four-kilo loss and appetite loss. Denies rest breathlessness; no known drug allergy. Past history smoking; provisional diagnosis pulmonary tuberculosis. Examination: temperature one hundred degrees Fahrenheit, pulse ninety-two beats per minute, blood pressure one twenty over seventy-eight millimetres of mercury, saturation ninety-six percent, weight fifty-eight kilos. Investigations: chest X-ray, sputum CBNAAT. Plan: weight-based anti-tubercular treatment after confirmation, pyridoxine, liver monitoring. Diet: high protein eggs, dal, milk, groundnuts, fruits; no smoking or alcohol. General: mask, cough etiquette, full six-month course, report yellow eyes or rash. Weekly follow up.",
+      "drugs": [
+        {
+          "name": "pyridoxine",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: weight-based anti-tubercular treatment after confirmation, pyridoxine, liver monitoring.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 100 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 100.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 92",
+          "draft_by": "extractor",
+          "value": 92.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 120 over 78",
+          "draft_by": "extractor",
+          "systolic": 120.0,
+          "diastolic": 78.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "96 percent",
+          "draft_by": "extractor",
+          "value": 96.0
+        }
+      ],
+      "allergies": []
+    },
+    "s23": {
+      "reference": "Fifty-year-old diabetic male with three days painful red warm left-leg swelling below knee with fever after a scratch. Denies bite; no known drug allergy. Past history type two diabetes and hypertension; diagnosis left leg cellulitis. Examination: temperature one hundred and one point two degrees Fahrenheit, pulse ninety-eight beats per minute, blood pressure one thirty-four over eighty-two millimetres of mercury, glucose two hundred and forty milligrams per decilitre, tender red leg with sharp edge. Plan: amoxicillin-clavulanate as advised, paracetamol, elevation, glucose control, continue metformin. Diet: low sugar, plenty fluids, no sweets. General: elevate above heart, mark redness daily, return for spread, blisters or high fever. Follow up in two days.",
+      "drugs": [
+        {
+          "name": "amoxicillin",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: amoxicillin-clavulanate as advised, paracetamol, elevation, glucose control, continue metformin.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "clavulanic acid",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: amoxicillin-clavulanate as advised, paracetamol, elevation, glucose control, continue metformin.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "paracetamol",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: amoxicillin-clavulanate as advised, paracetamol, elevation, glucose control, continue metformin.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "metformin",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: amoxicillin-clavulanate as advised, paracetamol, elevation, glucose control, continue metformin.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 101.2 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 101.2
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 98",
+          "draft_by": "extractor",
+          "value": 98.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 134 over 82",
+          "draft_by": "extractor",
+          "systolic": 134.0,
+          "diastolic": 82.0
+        },
+        {
+          "kind": "glucose",
+          "unit": "mg/dL",
+          "quote": "glucose 240",
+          "draft_by": "extractor",
+          "value": 240.0
+        }
+      ],
+      "allergies": []
+    },
+    "s24": {
+      "reference": "Nineteen-year-old type one diabetic with two days vomiting, abdominal pain, rapid deep breathing and drowsiness after missing insulin with fever. Denies diarrhoea; no known drug allergy. Past diagnosis type one diabetes; now suspected ketoacidosis. Examination: glucose four hundred and eighty milligrams per decilitre, blood pressure one hundred over sixty millimetres of mercury, pulse one hundred and twelve beats per minute, respiratory rate twenty-eight, saturation ninety-eight percent, fruity breath. Investigations: blood gas, ketones, electrolytes. Plan: ICU fluids, insulin infusion, potassium correction, hourly monitoring. Diet: nil by mouth, then diabetic soft diet when stable. General: never stop insulin in illness, emergency for vomiting or drowsiness. Shift to ICU now.",
+      "drugs": [
+        {
+          "name": "insulin",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Nineteen-year-old type one diabetic with two days vomiting, abdominal pain, rapid deep breathing and drowsiness after missing insulin with fever.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "potassium",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: ICU fluids, insulin infusion, potassium correction, hourly monitoring.",
+          "draft_by": "extractor + corrected",
+          "borderline": true
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "glucose",
+          "unit": "mg/dL",
+          "quote": "glucose 480",
+          "draft_by": "extractor",
+          "value": 480.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 100 over 60",
+          "draft_by": "extractor",
+          "systolic": 100.0,
+          "diastolic": 60.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 112",
+          "draft_by": "extractor",
+          "value": 112.0
+        },
+        {
+          "kind": "rr",
+          "unit": "/min",
+          "quote": "respiratory rate 28",
+          "draft_by": "extractor",
+          "value": 28.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "98 percent",
+          "draft_by": "extractor",
+          "value": 98.0
+        }
+      ],
+      "allergies": []
+    },
+    "s25": {
+      "reference": "Seventy-year-old female with three days low urine, face swelling, tiredness and breathlessness after loose motions and poor intake. Denies chest pain; no known drug allergy. Past history hypertension and diabetes; diagnosis acute kidney injury with dehydration. Examination: blood pressure one fifty over ninety millimetres of mercury, pulse ninety beats per minute, saturation ninety-six percent, mild edema, low output. Investigations: kidney function, electrolytes, urine test, ultrasound. Plan: careful IV fluids, stop nephrotoxins, hourly intake-output; furosemide only if advised. Diet: low salt, low potassium, measured fluids; avoid bananas until reports. General: urine chart, daily weight, emergency for no urine eight hours or severe breathlessness. Follow up tomorrow.",
+      "drugs": [
+        {
+          "name": "furosemide",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: careful IV fluids, stop nephrotoxins, hourly intake-output; furosemide only if advised.",
+          "draft_by": "extractor + corrected",
+          "borderline": true
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 150 over 90",
+          "draft_by": "extractor",
+          "systolic": 150.0,
+          "diastolic": 90.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 90",
+          "draft_by": "extractor",
+          "value": 90.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "96 percent",
+          "draft_by": "extractor",
+          "value": 96.0
+        }
+      ],
+      "allergies": []
+    },
+    "s26": {
+      "reference": "Fifty-five-year-old chronic alcohol user with one month abdominal distension, leg swelling, tiredness, appetite loss and one week yellow eyes. Denies vomited blood and black stools; no known drug allergy. Past diagnosis alcoholic liver disease; now decompensated cirrhosis with ascites. Examination: blood pressure one ten over sixty-eight millimetres of mercury, pulse eighty-eight, temperature ninety-eight point six degrees Fahrenheit, icterus, edema, shifting dullness. Investigations: liver function, blood count, ultrasound. Plan: furosemide as advised, lactulose, thiamine, alcohol abstinence counselling. Diet: low salt, high-protein vegetarian dal-milk if tolerated, no alcohol or raw salads. General: daily girth-weight, report bleeding, confusion, fever or low urine. Follow up in one week.",
+      "drugs": [
+        {
+          "name": "furosemide",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: furosemide as advised, lactulose, thiamine, alcohol abstinence counselling.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "lactulose",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: furosemide as advised, lactulose, thiamine, alcohol abstinence counselling.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "thiamine",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: furosemide as advised, lactulose, thiamine, alcohol abstinence counselling.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 110 over 68",
+          "draft_by": "extractor",
+          "systolic": 110.0,
+          "diastolic": 68.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 88",
+          "draft_by": "extractor",
+          "value": 88.0
+        },
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 98.6 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 98.6
+        }
+      ],
+      "allergies": []
+    },
+    "s27": {
+      "reference": "Sixty-year-old female slipped six hours ago, injuring right wrist, now swelling, deformity, severe pain, cannot move wrist. Denies head injury; no known drug allergy. Past history menopause, suspected osteoporosis; diagnosis right distal radius fracture. Examination: swollen dinner-fork wrist, warm fingers with good pulse, blood pressure one thirty over eighty millimetres of mercury, pulse eighty-eight, glucose one forty milligrams per decilitre. Investigations: wrist X-ray, calcium, vitamin D. Plan: slab, elevation, paracetamol six hundred and fifty milligrams, orthopaedic reduction review. Diet: milk, curd, ragi, greens, sunlight. General: keep slab dry, move fingers hourly, return for numbness, blue fingers or rising pain. Orthopaedics in two days.",
+      "drugs": [
+        {
+          "name": "paracetamol",
+          "dose": 650.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: slab, elevation, paracetamol six hundred and fifty milligrams, orthopaedic reduction review.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 130 over 80",
+          "draft_by": "extractor",
+          "systolic": 130.0,
+          "diastolic": 80.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 88",
+          "draft_by": "extractor",
+          "value": 88.0
+        },
+        {
+          "kind": "glucose",
+          "unit": "mg/dL",
+          "quote": "glucose 140",
+          "draft_by": "extractor",
+          "value": 140.0
+        }
+      ],
+      "allergies": []
+    },
+    "s28": {
+      "reference": "Forty-seven-year-old female with one day right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder. Denies jaundice; no known drug allergy. Past history gallstones; provisional diagnosis acute cholecystitis. Examination: temperature one hundred and one degrees Fahrenheit, pulse ninety-eight beats per minute, blood pressure one twenty-six over eighty millimetres of mercury, right upper tenderness, Murphy positive. Investigations: blood count, liver function, ultrasound. Plan: nil by mouth, IV fluids, ceftriaxone one gram as advised, pantoprazole, surgical review. Diet: then low-fat small frequent meals, no fried food or ghee. General: avoid fatty food, report jaundice, persistent vomiting or severe pain. Surgery follow up in two days.",
+      "drugs": [
+        {
+          "name": "ceftriaxone",
+          "dose": 1.0,
+          "unit": "g",
+          "negated": false,
+          "quote": "Plan: nil by mouth, IV fluids, ceftriaxone one gram as advised, pantoprazole, surgical review.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "pantoprazole",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: nil by mouth, IV fluids, ceftriaxone one gram as advised, pantoprazole, surgical review.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 101 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 101.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 98",
+          "draft_by": "extractor",
+          "value": 98.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 126 over 80",
+          "draft_by": "extractor",
+          "systolic": 126.0,
+          "diastolic": 80.0
+        }
+      ],
+      "allergies": []
+    },
+    "s29": {
+      "reference": "Forty-two-year-old male with one day severe upper abdominal pain radiating to back after alcohol, plus three vomits. Denies fever and chest pain; no known drug allergy. Past history alcohol use, high triglycerides; provisional diagnosis acute pancreatitis. Examination: temperature one hundred degrees Fahrenheit, pulse one hundred and six beats per minute, blood pressure one twenty over eighty millimetres of mercury, saturation ninety-seven percent, tender epigastrium. Investigations: amylase, lipase, ultrasound. Plan: nil by mouth, IV fluids, pantoprazole forty milligrams IV, paracetamol analgesia, no alcohol. Diet: nil twenty-four hours, then clear fluids to low-fat soft diet. General: complete abstinence, return for worse pain, vomiting or breathlessness. Follow up in two days.",
+      "drugs": [
+        {
+          "name": "pantoprazole",
+          "dose": 40.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: nil by mouth, IV fluids, pantoprazole forty milligrams IV, paracetamol analgesia, no alcohol.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "paracetamol",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: nil by mouth, IV fluids, pantoprazole forty milligrams IV, paracetamol analgesia, no alcohol.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 100 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 100.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 106",
+          "draft_by": "extractor",
+          "value": 106.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 120 over 80",
+          "draft_by": "extractor",
+          "systolic": 120.0,
+          "diastolic": 80.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "97 percent",
+          "draft_by": "extractor",
+          "value": 97.0
+        }
+      ],
+      "allergies": []
+    },
+    "s30": {
+      "reference": "Fifty-eight-year-old female with one year bilateral knee pain worse on stairs and mornings, stiffness under thirty minutes, grinding sensation. Denies injury and fever; no known drug allergy. Past history obesity and hypertension; diagnosis bilateral knee osteoarthritis. Examination: weight seventy-eight kilos, blood pressure one forty-two over eighty-eight millimetres of mercury, pulse eighty-four, crepitus with mild right effusion. Investigations: standing knee X-ray, vitamin D. Plan: paracetamol as needed, quadriceps physiotherapy, weight loss, topical analgesia. Diet: low-calorie low-salt, calcium-protein, two litres water. General: daily walk and exercises, no squatting or cross-legged sitting, review for locking or night pain. Follow up in one month.",
+      "drugs": [
+        {
+          "name": "paracetamol",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: paracetamol as needed, quadriceps physiotherapy, weight loss, topical analgesia.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 142 over 88",
+          "draft_by": "extractor",
+          "systolic": 142.0,
+          "diastolic": 88.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 84",
+          "draft_by": "extractor",
+          "value": 84.0
+        }
+      ],
+      "allergies": []
+    },
+    "s31": {
+      "reference": "Twenty-four-year-old male with two days runny nose, sneezing, sore throat, mild cough and low fever. Denies breathlessness and chest pain; no known drug allergy. No past major illness; diagnosis viral upper respiratory infection. Examination: temperature ninety-nine point six degrees Fahrenheit, pulse eighty-eight beats per minute, blood pressure one eighteen over seventy-four millimetres of mercury, saturation ninety-nine percent, congested throat, no wheeze. Plan: paracetamol five hundred milligrams, gargles, steam, antihistamine as advised; no antibiotics. Diet: warm fluids, turmeric milk, light food, two to three litres water. General: mask, hand wash, two-day rest, return for breathlessness, fever over three days or coloured sputum.",
+      "drugs": [
+        {
+          "name": "paracetamol",
+          "dose": 500.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: paracetamol five hundred milligrams, gargles, steam, antihistamine as advised; no antibiotics.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 99.6 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 99.6
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 88",
+          "draft_by": "extractor",
+          "value": 88.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 118 over 74",
+          "draft_by": "extractor",
+          "systolic": 118.0,
+          "diastolic": 74.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "99 percent",
+          "draft_by": "extractor",
+          "value": 99.0
+        }
+      ],
+      "allergies": []
+    },
+    "s32": {
+      "reference": "Forty-four-year-old male with six hours severe colicky right flank pain to groin, vomiting and burning urination. Denies fever; no known drug allergy. Past history kidney stone two years ago; now likely ureteric stone colic. Examination: blood pressure one thirty over eighty-four millimetres of mercury, pulse ninety-four, temperature ninety-eight point eight degrees Fahrenheit, tender renal angle, no guarding. Investigations: urine test and ultrasound. Plan: paracetamol analgesia, antispasmodic if needed, high fluids, urology review. Diet: three litres water, low salt, limit spinach and cola. General: strain urine for stone, return for fever, persistent vomiting, no urine or severe pain. Follow up in two days with scan.",
+      "drugs": [
+        {
+          "name": "paracetamol",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: paracetamol analgesia, antispasmodic if needed, high fluids, urology review.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 130 over 84",
+          "draft_by": "extractor",
+          "systolic": 130.0,
+          "diastolic": 84.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 94",
+          "draft_by": "extractor",
+          "value": 94.0
+        },
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 98.8 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 98.8
+        }
+      ],
+      "allergies": []
+    },
+    "s33": {
+      "reference": "Thirty-nine-year-old female with two weeks upper abdominal burning, nausea and bloating after knee painkillers, plus one vomit. Denies blood vomit and black stools; no known drug allergy. Past history self-medicated knee pain; diagnosis acute NSAID gastritis. Examination: blood pressure one twenty over seventy-eight millimetres of mercury, pulse eighty-six, temperature ninety-eight point four degrees Fahrenheit, tender epigastrium, no guarding. Plan: stop NSAIDs, pantoprazole forty milligrams daily before food, antacid as needed. Diet: bland curd-rice, banana, buttermilk; no spicy, oily, tea-coffee empty stomach. General: no painkillers unadvised, return for blood vomit, black stools or severe pain. Follow up in one week.",
+      "drugs": [
+        {
+          "name": "pantoprazole",
+          "dose": 40.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: stop NSAIDs, pantoprazole forty milligrams daily before food, antacid as needed.",
+          "draft_by": "extractor + corrected"
+        },
+        {
+          "name": "antacid",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: stop NSAIDs, pantoprazole forty milligrams daily before food, antacid as needed.",
+          "draft_by": "reference-scan + corrected",
+          "borderline": true
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 120 over 78",
+          "draft_by": "extractor",
+          "systolic": 120.0,
+          "diastolic": 78.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 86",
+          "draft_by": "extractor",
+          "value": 86.0
+        },
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 98.4 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 98.4
+        }
+      ],
+      "allergies": []
+    },
+    "s34": {
+      "reference": "Six-year-old female with two days of four to five watery motions, mild vomiting and low fever, playful with normal urine. Mother denies blood stools; no known drug allergy. Immunisation complete; diagnosis viral diarrhoea, no dehydration. Examination: temperature ninety-nine point two degrees Fahrenheit, pulse one hundred beats per minute, weight eighteen kilos, no sunken eyes, normal pinch. Plan: oral rehydration salts each motion, zinc as advised, continued feeding; no antibiotics. Diet: khichdi, curd-rice, banana, plenty fluids; no colas or packed juice. General: hand washing, report blood, high fever, repeated vomiting, no urine six hours or drowsiness. Follow up in two days.",
+      "drugs": [
+        {
+          "name": "zinc",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: oral rehydration salts each motion, zinc as advised, continued feeding; no antibiotics.",
+          "draft_by": "extractor + corrected",
+          "borderline": true
+        },
+        {
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "name": "oral rehydration salts",
+          "borderline": true,
+          "quote": "Plan: oral rehydration salts each motion",
+          "draft_by": "correction"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 99.2 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 99.2
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 100",
+          "draft_by": "extractor",
+          "value": 100.0
+        }
+      ],
+      "allergies": []
+    },
+    "s35": {
+      "reference": "Thirty-six-year-old male with three months heartburn, sour belching, post-meal chest discomfort and night regurgitation, worse with spicy food and late nights. Denies vomited blood and weight loss; no known drug allergy. No past major illness; diagnosis reflux disease. Examination: blood pressure one twenty-four over eighty millimetres of mercury, pulse eighty-two, weight seventy-four kilos, systemic normal. Plan: pantoprazole forty milligrams daily before breakfast four weeks, weight loss. Diet: small frequent meals, no spicy, oily or late heavy meals, no tea-coffee-cola empty stomach, head-end raised. General: no late eating, stop smoking, return for blood vomit, black stools or dysphagia. Follow up in four weeks.",
+      "drugs": [
+        {
+          "name": "pantoprazole",
+          "dose": 40.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: pantoprazole forty milligrams daily before breakfast four weeks, weight loss.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 124 over 80",
+          "draft_by": "extractor",
+          "systolic": 124.0,
+          "diastolic": 80.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 82",
+          "draft_by": "extractor",
+          "value": 82.0
+        }
+      ],
+      "allergies": []
+    },
+    "s36": {
+      "reference": "Sixty-six-year-old male with two days palpitations, tiredness and mild breathlessness, irregular home pulse. Denies chest pain and fainting; no known drug allergy. Past history hypertension and diabetes; now atrial fibrillation, fast rate. Examination: pulse one hundred and twenty beats per minute irregular, blood pressure one thirty over eighty millimetres of mercury, saturation ninety-six percent, no crackles. Investigations: ECG, echo, thyroid, electrolytes. Plan: rate control as advised, anticoagulation assessment, cardiology review today. Diet: low salt, no alcohol, limit tea-coffee, regular timings. General: no exertion until review, report chest pain, fainting, severe breathlessness or one-sided weakness. Cardiology in two days.",
+      "drugs": [],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 120",
+          "draft_by": "extractor",
+          "value": 120.0
+        },
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 130 over 80",
+          "draft_by": "extractor",
+          "systolic": 130.0,
+          "diastolic": 80.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "96 percent",
+          "draft_by": "extractor",
+          "value": 96.0
+        }
+      ],
+      "allergies": []
+    },
+    "s37": {
+      "reference": "Fifty-one-year-old female with three months neck pain to right shoulder, headache, finger tingling and morning stiffness. Denies injury, fever and weakness; no known drug allergy. Past history hypertension; diagnosis cervical spondylosis with tension headache. Examination: blood pressure one thirty-two over eighty-four millimetres of mercury, pulse eighty beats per minute, temperature ninety-eight point two degrees Fahrenheit, stiff neck, normal power. Investigations: neck X-ray. Plan: paracetamol as needed, physiotherapy, posture correction, calcium-vitamin D. Diet: balanced diet, milk, vegetables, two litres water, weight control. General: no prolonged mobile use, thin pillow, daily exercises, return for worsening numbness or severe headache. Follow up in two weeks.",
+      "drugs": [
+        {
+          "name": "paracetamol",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: paracetamol as needed, physiotherapy, posture correction, calcium-vitamin D.",
+          "draft_by": "extractor"
+        },
+        {
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "name": "calcium",
+          "borderline": true,
+          "quote": "calcium-vitamin D",
+          "draft_by": "correction"
+        },
+        {
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "name": "vitamin d",
+          "borderline": true,
+          "quote": "calcium-vitamin D",
+          "draft_by": "correction"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 132 over 84",
+          "draft_by": "extractor",
+          "systolic": 132.0,
+          "diastolic": 84.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 80",
+          "draft_by": "extractor",
+          "value": 80.0
+        },
+        {
+          "kind": "temp_f",
+          "unit": "F",
+          "quote": "temperature 98.2 degrees Fahrenheit",
+          "draft_by": "extractor",
+          "value": 98.2
+        }
+      ],
+      "allergies": []
+    },
+    "s38": {
+      "reference": "Thirty-year-old farmer bitten on right foot two hours ago, now local pain and ankle swelling with two fang marks, conscious, no bleeding, breathlessness or eyelid droop. Denies drug allergy. No past major illness; diagnosis snake bite under observation, no systemic signs. Examination: blood pressure one twenty over eighty millimetres of mercury, pulse ninety-two, saturation ninety-nine percent, swollen foot, no active bleed. Investigations: clotting time, blood count, urine output. Plan: two-hour nil by mouth, immobilise below heart level, tetanus cover, antivenom only if indicated, hourly checks. Diet: light fluids when stable, no alcohol or herbs. General: keep still, no cutting or tight tie, report bleeding, vomiting or droop. Admit twenty-four hours.",
+      "drugs": [],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 120 over 80",
+          "draft_by": "extractor",
+          "systolic": 120.0,
+          "diastolic": 80.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 92",
+          "draft_by": "extractor",
+          "value": 92.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "99 percent",
+          "draft_by": "extractor",
+          "value": 99.0
+        }
+      ],
+      "allergies": []
+    },
+    "s39": {
+      "reference": "Twenty-nine-year-old male, two-wheeler skid without helmet one hour ago, brief under-one-minute blackout, now alert with headache and one vomit. Denies seizure and ear-nose bleed; no known drug allergy. No past major illness; diagnosis minor head injury for observation. Examination: Glasgow fifteen by fifteen, blood pressure one twenty-four over eighty millimetres of mercury, pulse eighty-eight, saturation ninety-nine percent, small forehead cut, no ear bleed. Plan: hourly neuro checks, paracetamol, ondansetron if vomiting, no sedation, CT if worsening. Diet: light food after vomiting settles, no alcohol forty-eight hours. General: overnight wake-up checks, attendant mandatory, return for repeated vomiting, confusion, seizure or fluid leak. Review tomorrow.",
+      "drugs": [
+        {
+          "name": "paracetamol",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: hourly neuro checks, paracetamol, ondansetron if vomiting, no sedation, CT if worsening.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "ondansetron",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: hourly neuro checks, paracetamol, ondansetron if vomiting, no sedation, CT if worsening.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 124 over 80",
+          "draft_by": "extractor",
+          "systolic": 124.0,
+          "diastolic": 80.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 88",
+          "draft_by": "extractor",
+          "value": 88.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "99 percent",
+          "draft_by": "extractor",
+          "value": 99.0
+        }
+      ],
+      "allergies": []
+    },
+    "s40": {
+      "reference": "Sixty-one-year-old male, post-angioplasty two years ago, now twice exertional chest discomfort monthly, relieved by rest, no rest pain. Denies breathlessness; no drug allergy. Past history coronary disease, hypertension; now stable angina. Examination: blood pressure one thirty over eighty-two millimetres of mercury, pulse seventy-eight, saturation ninety-eight percent. Plan: ECG, aspirin seventy-five milligrams daily, atorvastatin twenty milligrams night, nitroglycerin training. Diet: low salt low fat, vegetables and fruits; no smoking or alcohol. General: daily walk, carry nitroglycerin, emergency for ten-minute rest pain. Follow up in one month.",
+      "drugs": [
+        {
+          "name": "aspirin",
+          "dose": 75.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: ECG, aspirin seventy-five milligrams daily, atorvastatin twenty milligrams night, nitroglycerin training.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "atorvastatin",
+          "dose": 20.0,
+          "unit": "mg",
+          "negated": false,
+          "quote": "Plan: ECG, aspirin seventy-five milligrams daily, atorvastatin twenty milligrams night, nitroglycerin training.",
+          "draft_by": "extractor"
+        },
+        {
+          "name": "nitroglycerin",
+          "dose": null,
+          "unit": null,
+          "negated": false,
+          "quote": "Plan: ECG, aspirin seventy-five milligrams daily, atorvastatin twenty milligrams night, nitroglycerin training.",
+          "draft_by": "extractor"
+        }
+      ],
+      "brands": [],
+      "vitals": [
+        {
+          "kind": "bp",
+          "unit": "mmHg",
+          "quote": "blood pressure 130 over 82",
+          "draft_by": "extractor",
+          "systolic": 130.0,
+          "diastolic": 82.0
+        },
+        {
+          "kind": "pulse",
+          "unit": "bpm",
+          "quote": "pulse 78",
+          "draft_by": "extractor",
+          "value": 78.0
+        },
+        {
+          "kind": "spo2",
+          "unit": "%",
+          "quote": "98 percent",
+          "draft_by": "extractor",
+          "value": 98.0
+        }
+      ],
+      "allergies": []
+    }
+  }
+}

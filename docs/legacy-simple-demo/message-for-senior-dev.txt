@@ -1,0 +1,20 @@
+Hi,
+
+I tested the Hospital-Demo code against our product requirements document. The full review is attached (2 pages).
+
+Short answer: the code is not an exact match. All 16 modules exist, but only 4 do everything the document says (safety checks, claim pack, hospital dashboard, patient timeline).
+
+Main problems:
+1. Without an AI key, drafts are pre-written text, not built from what the doctor said. An asthma conversation still produced a leg-infection note.
+2. The investigation request form crashes for the demo patient.
+3. An uploaded lab report is ignored; the screen shows stored numbers.
+4. After discharge, the record still accepts new notes and tasks.
+5. Not built yet: separate views for nurse, pharmacist and billing; connection to hospital systems; AI credit counting; automatic escalation of overdue tasks.
+
+What works well: nothing is saved until a person approves it, and the consent and allergy checks are enforced.
+
+Not tested: the real AI model and speech-to-text, because we have no working key.
+
+Next, I will fix these on a separate branch, with automatic tests for each fix. I will send you the branch when it is ready.
+
+Thanks

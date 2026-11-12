@@ -1,0 +1,153 @@
+{
+  "sections": {
+    "present_illness": {
+      "items": [
+        {
+          "text": "headache",
+          "source_sentence": "A1-year-old female with three months neck pain to right shoulder, headache, finger tingling, and morning stiffness.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F6",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pain",
+          "source_sentence": "A1-year-old female with three months neck pain to right shoulder, headache, finger tingling, and morning stiffness.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F7",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "fever",
+          "source_sentence": "Denies injury, fever, and weakness.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F8",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "headache",
+          "source_sentence": "Cervical spondylosis with tension headache.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F9",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "headache",
+          "source_sentence": "worsening num- numbness or severe headache.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F10",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "examination_findings": {
+      "items": [
+        {
+          "text": "Blood pressure 132/84",
+          "source_sentence": "Blood pressure 132/84 mmHg.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F3",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "Pulse 80",
+          "source_sentence": "Pulse 80 beats per minute.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F4",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "Temperature 98.2 degrees Fahrenheit",
+          "source_sentence": "Temperature 98.2 degrees Fahrenheit.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F5",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "previous_diagnosis": {
+      "items": []
+    },
+    "plan_of_management": {
+      "items": [
+        {
+          "text": "calcium no dose",
+          "source_sentence": "Postcorrection calcium, vitamin D.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F1",
+          "verified_kind": "drug",
+          "verified_status": "needs_review",
+          "note": "canonicalized"
+        },
+        {
+          "text": "vitamin no dose",
+          "source_sentence": "Postcorrection calcium, vitamin D.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F2",
+          "verified_kind": "drug",
+          "verified_status": "needs_review",
+          "note": "canonicalized"
+        },
+        {
+          "text": "Follow up in two weeks",
+          "source_sentence": "Follow up in two weeks",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F11",
+          "verified_kind": "followup",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "diet_instructions": {
+      "items": []
+    },
+    "general_instructions": {
+      "items": []
+    }
+  },
+  "provenance": {
+    "llm_engine": "discharge:gpt-4.1",
+    "dropped_unproven": 0,
+    "verified_summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "3",
+          "80",
+          "84",
+          "98.2",
+          "132"
+        ],
+        "count": 7
+      },
+      "total": 11,
+      "drug_needs_review": 2,
+      "vital_verified": 3,
+      "symptom_verified": 5,
+      "followup_verified": 1
+    },
+    "canonicalized": 2,
+    "llm_extractive": 0,
+    "prefilled": 0,
+    "schema": "valid"
+  }
+}

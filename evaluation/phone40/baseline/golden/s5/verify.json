@@ -1,0 +1,117 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "amoxicillin",
+      "dose": null,
+      "unit": null,
+      "negated": true,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified",
+        "polarity:negated-preserved"
+      ],
+      "notes": "mini-list exact (name or observed alias); no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Young adult female, started on amoxicillin today for throat infection withth whole body itching 20 minutes later."
+    },
+    {
+      "kind": "drug",
+      "name": "adrenaline",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:needs_review"
+      ],
+      "notes": "mini-list exact (name or observed alias); no dose dictated; source_sentence not verbatim in transcript",
+      "confidence": 0.7,
+      "source_sentence": "Adrenaline if anaphylaxis."
+    },
+    {
+      "kind": "vital",
+      "text": "96% ",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Saturation 96% plu 180 beats per minute, blood pressure 110/70 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "blood pressure 110/70",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Saturation 96% plu 180 beats per minute, blood pressure 110/70 mmHg."
+    },
+    {
+      "kind": "allergy",
+      "text": "penicillin",
+      "negated": true,
+      "status": "verified",
+      "checks": [
+        "polarity:preserved",
+        "proof:verified"
+      ],
+      "notes": "DENIED (negated)",
+      "confidence": 0.82,
+      "source_sentence": "Denies prior penicillin allergy andheezing."
+    },
+    {
+      "kind": "allergy",
+      "text": "amoxicillin",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "polarity:preserved",
+        "proof:verified"
+      ],
+      "notes": "ASSERTED",
+      "confidence": 0.82,
+      "source_sentence": "Suspected amoxicillin allergy."
+    },
+    {
+      "kind": "followup",
+      "text": "Follow up tomorrow",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "Follow up tomorrow"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "20",
+        "70",
+        "96",
+        "110",
+        "180"
+      ],
+      "count": 6
+    },
+    "total": 7,
+    "drug_needs_review": 2,
+    "vital_verified": 2,
+    "allergy_verified": 2,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

@@ -1,0 +1,156 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "amlodipine",
+      "dose": 5.0,
+      "unit": "mg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 1.25 mg tablet, 2.5 mg tablet, 2.5 mg capsule, 5 mg tablet; 5 mg is plausible for this drug]",
+      "confidence": 0.96,
+      "source_sentence": "Continue amlodipine 5 mg once daily, home BP harting."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 150/95",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 150/95 mmHg, pulse 86 beats per minute, temperature 98.6 degrees Fahrenheit, saturation 98% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 86",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 150/95 mmHg, pulse 86 beats per minute, temperature 98.6 degrees Fahrenheit, saturation 98% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "temperature 98.6 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 150/95 mmHg, pulse 86 beats per minute, temperature 98.6 degrees Fahrenheit, saturation 98% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "98% on room air",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 150/95 mmHg, pulse 86 beats per minute, temperature 98.6 degrees Fahrenheit, saturation 98% on room air."
+    },
+    {
+      "kind": "symptom",
+      "text": "headache",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Dictation of ge-year-old female with five days of headache, dizziness, blurred vision, and evening tiredness."
+    },
+    {
+      "kind": "symptom",
+      "text": "chest pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.91,
+      "source_sentence": "Denies chest pain and breathlessness."
+    },
+    {
+      "kind": "symptom",
+      "text": "breathlessness",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.91,
+      "source_sentence": "Denies chest pain and breathlessness."
+    },
+    {
+      "kind": "symptom",
+      "text": "chest pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Gentle morning DP check, daily walk, emergency review for severe headache, chest pain, or vision change."
+    },
+    {
+      "kind": "symptom",
+      "text": "headache",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Gentle morning DP check, daily walk, emergency review for severe headache, chest pain, or vision change."
+    },
+    {
+      "kind": "followup",
+      "text": "Follow up in one week",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "Follow up in one week"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "2",
+        "5",
+        "86",
+        "95",
+        "98",
+        "98.6",
+        "150"
+      ],
+      "count": 8
+    },
+    "total": 11,
+    "drug_verified": 1,
+    "vital_verified": 4,
+    "symptom_verified": 5,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

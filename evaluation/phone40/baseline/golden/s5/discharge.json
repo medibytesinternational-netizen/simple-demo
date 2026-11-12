@@ -1,0 +1,155 @@
+{
+  "sections": {
+    "present_illness": {
+      "items": [
+        {
+          "text": "Rash on arms, neck, and mild lip swelling with throat tightness.",
+          "source_sentence": "Rash on arms, neck, and mild lip swelling with throat tightness.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        }
+      ]
+    },
+    "examination_findings": {
+      "items": [
+        {
+          "text": "96% ",
+          "source_sentence": "Saturation 96% plu 180 beats per minute, blood pressure 110/70 mmHg.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F3",
+          "verified_kind": "vital",
+          "verified_status": "verified",
+          "note": "canonicalized"
+        },
+        {
+          "text": "blood pressure 110/70",
+          "source_sentence": "Saturation 96% plu 180 beats per minute, blood pressure 110/70 mmHg.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F4",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "previous_diagnosis": {
+      "items": []
+    },
+    "plan_of_management": {
+      "items": [
+        {
+          "text": "NOT GIVEN: amoxicillin no dose",
+          "source_sentence": "Young adult female, started on amoxicillin today for throat infection withth whole body itching 20 minutes later.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "verified_kind": "drug",
+          "verified_status": "needs_review",
+          "note": "canonicalized"
+        },
+        {
+          "text": "NOT GIVEN: amoxicillin no dose",
+          "source_sentence": "Young adult female, started on amoxicillin today for throat infection withth whole body itching 20 minutes later.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F1",
+          "verified_kind": "drug",
+          "verified_status": "needs_review",
+          "note": "canonicalized"
+        },
+        {
+          "text": "Follow up tomorrow",
+          "source_sentence": "Follow up tomorrow",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F7",
+          "verified_kind": "followup",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "diet_instructions": {
+      "items": [
+        {
+          "text": "Diet light home.",
+          "source_sentence": "Diet light home.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        },
+        {
+          "text": "Put plenty of fluids.",
+          "source_sentence": "Put plenty of fluids.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        }
+      ]
+    },
+    "general_instructions": {
+      "items": [
+        {
+          "text": "DENIED allergy: penicillin",
+          "source_sentence": "Denies prior penicillin allergy andheezing.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F5",
+          "verified_kind": "allergy",
+          "verified_status": "verified",
+          "note": "canonicalized"
+        },
+        {
+          "text": "Allergy: amoxicillin",
+          "source_sentence": "Suspected amoxicillin allergy.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F6",
+          "verified_kind": "allergy",
+          "verified_status": "verified",
+          "note": "canonicalized"
+        },
+        {
+          "text": "document allergy.",
+          "source_sentence": "document allergy.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        },
+        {
+          "text": "Return if throat tightens.",
+          "source_sentence": "Return if throat tightens.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "llm_engine": "discharge:gpt-4.1",
+    "dropped_unproven": 2,
+    "verified_summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "20",
+          "70",
+          "96",
+          "110",
+          "180"
+        ],
+        "count": 6
+      },
+      "total": 7,
+      "drug_needs_review": 2,
+      "vital_verified": 2,
+      "allergy_verified": 2,
+      "followup_verified": 1
+    },
+    "canonicalized": 5,
+    "llm_extractive": 5,
+    "prefilled": 0,
+    "schema": "valid"
+  }
+}

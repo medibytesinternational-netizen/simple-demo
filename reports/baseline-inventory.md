@@ -1,5 +1,7 @@
 # Baseline inventory
 
+> Historical report from PR #1's frontend-only preview, before the MediBytes backend migration. Its screenshots and test notes describe that earlier version, not the current pipeline workspace. See [`MIGRATION.md`](../MIGRATION.md) for current validation and supported capabilities.
+
 Source: the `simple-demo-main.zip` snapshot supplied by the user. The archive contains no Git metadata.
 
 ## Existing architecture

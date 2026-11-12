@@ -1,0 +1,619 @@
+{
+  "job_id": "s40-none",
+  "drugs": [
+    {
+      "name": "aspirin",
+      "dose": 75.0,
+      "unit": "mg",
+      "frequency": "daily",
+      "duration": "",
+      "confidence": 0.96,
+      "color": "GREEN",
+      "source_sentence": "ECG aspirin 75 mg daily.",
+      "negated": false,
+      "start_char": 273,
+      "end_char": 280,
+      "span_status": "exact"
+    },
+    {
+      "name": "atorvastatin",
+      "dose": 20.0,
+      "unit": "mg",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.88,
+      "color": "YELLOW",
+      "source_sentence": "Aorvastatin 20 mg night, nitroglycerin training.",
+      "negated": false,
+      "note": "fuzzy aorvastatin->atorvastatin (0.96) | validator aorvastatin->atorvastatin",
+      "raw_token": "aorvastatin",
+      "candidates": [
+        {
+          "name": "atorvastatin",
+          "score": 0.957,
+          "matched_alias": "atorvastatin",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "atorvastatin",
+            "substances": [
+              "atorvastatin"
+            ],
+            "units": [
+              "mg"
+            ],
+            "mass_mg": [
+              5.0,
+              160.0
+            ],
+            "forms": [
+              "capsule",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 5.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 10.0
+              },
+              {
+                "form": "capsule",
+                "unit": "mg",
+                "value": 10.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 20.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 40.0
+              },
+              {
+                "form": "capsule",
+                "unit": "mg",
+                "value": 75.0
+              }
+            ]
+          }
+        }
+      ],
+      "matcher_pick": "atorvastatin",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "validation": {
+        "status": "corrected",
+        "original_sentence": "Aorvastatin 20 mg night, nitroglycerin training.",
+        "final_output_sentence": "atorvastatin 20 mg night, nitroglycerin training.",
+        "applied_corrections": [
+          {
+            "replaced_token": "aorvastatin",
+            "substituted_with": "atorvastatin"
+          }
+        ],
+        "semantic_confidence_score": 1.0,
+        "reason": "20 mg dose and night administration match atorvastatin",
+        "overrules_matcher": false,
+        "engine": "llm:gpt-4.1"
+      }
+    },
+    {
+      "name": "nitroglycerin",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Aorvastatin 20 mg night, nitroglycerin training.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm (national drug list, not this pipeline's own)",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "name": "atorvastatin",
+      "dose": 20.0,
+      "unit": "mg",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "61 year old male post angioplasty 2 years ago now twice exercional chest discomfort monthly revealed by rest no rest pain, denies breathlessness no drug allergy past history coronary disease hypertension now stable and genia examination blood pressure 130 over 82 millimeters of mercury pulse 78 saturation 98% plan ECG aspirin 75 milligrams daily a Thorbas statin 20 milligrams night nitroglycerin training diet low salt low fat vegetables and fruits no smoking or alcohol general daily work carry nitroglycerin emergency for 10 minutes rest main follow up in one month",
+      "negated": true,
+      "note": "fuzzy statin->nystatin (0.86) | heard only by small-int8, not by the primary decoder | validator statin->atorvastatin (overrules matcher)",
+      "raw_token": "statin",
+      "candidates": [
+        {
+          "name": "nystatin",
+          "score": 0.857,
+          "matched_alias": "nystatin",
+          "source": "reference",
+          "reference": {
+            "kind": "substance",
+            "name": "nystatin",
+            "substances": [
+              "nystatin"
+            ],
+            "units": [
+              "U",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              10.0,
+              10.0
+            ],
+            "forms": [
+              "capsule",
+              "cream",
+              "ointment",
+              "powder",
+              "solution",
+              "suspension"
+            ],
+            "strengths": [
+              {
+                "form": "powder",
+                "unit": "U",
+                "value": 100.0
+              },
+              {
+                "form": "ointment",
+                "unit": "U",
+                "value": 100.0
+              },
+              {
+                "form": "cream",
+                "unit": "U",
+                "value": 25000.0
+              },
+              {
+                "form": "ointment",
+                "unit": "U",
+                "value": 100000.0
+              },
+              {
+                "form": "tablet",
+                "unit": "U",
+                "value": 100000.0
+              },
+              {
+                "form": "suspension",
+                "unit": "U",
+                "value": 100000.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "salbutamol",
+          "score": 0.714,
+          "matched_alias": "asthalin",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "albuterol",
+            "substances": [
+              "albuterol"
+            ],
+            "units": [
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.05,
+              8.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "powder",
+              "solution",
+              "spray",
+              "suspension"
+            ],
+            "strengths": [
+              {
+                "form": "spray",
+                "unit": "mcg",
+                "value": 50.0
+              },
+              {
+                "form": "powder",
+                "unit": "mcg",
+                "value": 95.0
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 100.0
+              },
+              {
+                "form": "powder",
+                "unit": "mcg",
+                "value": 100.0
+              },
+              {
+                "form": "injection",
+                "unit": "mcg",
+                "value": 100.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mcg",
+                "value": 100.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "atorvastatin",
+          "score": 0.667,
+          "matched_alias": "atorvastatin",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "atorvastatin",
+            "substances": [
+              "atorvastatin"
+            ],
+            "units": [
+              "mg"
+            ],
+            "mass_mg": [
+              5.0,
+              160.0
+            ],
+            "forms": [
+              "capsule",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 5.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 10.0
+              },
+              {
+                "form": "capsule",
+                "unit": "mg",
+                "value": 10.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 20.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 40.0
+              },
+              {
+                "form": "capsule",
+                "unit": "mg",
+                "value": 75.0
+              }
+            ]
+          }
+        }
+      ],
+      "matcher_pick": "nystatin",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "second_pass": "small-int8",
+      "validation": {
+        "status": "corrected",
+        "original_sentence": "61 year old male post angioplasty 2 years ago now twice exercional chest discomfort monthly revealed by rest no rest pain, denies breathlessness no drug allergy past history coronary disease hypertension now stable and genia examination blood pressure 130 over 82 millimeters of mercury pulse 78 saturation 98% plan ECG aspirin 75 milligrams daily a Thorbas statin 20 milligrams night nitroglycerin training diet low salt low fat vegetables and fruits no smoking or alcohol general daily work carry nitroglycerin emergency for 10 minutes rest main follow up in one month",
+        "final_output_sentence": "61 year old male post angioplasty 2 years ago now twice exercional chest discomfort monthly revealed by rest no rest pain, denies breathlessness no drug allergy past history coronary disease hypertension now stable and genia examination blood pressure 130 over 82 millimeters of mercury pulse 78 saturation 98% plan ECG aspirin 75 milligrams daily a Thorbas atorvastatin 20 milligrams night nitroglycerin training diet low salt low fat vegetables and fruits no smoking or alcohol general daily work carry nitroglycerin emergency for 10 minutes rest main follow up in one month",
+        "applied_corrections": [
+          {
+            "replaced_token": "statin",
+            "substituted_with": "atorvastatin"
+          }
+        ],
+        "semantic_confidence_score": 1.0,
+        "reason": "matches dose, unit, indication for coronary disease",
+        "overrules_matcher": true,
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "No rest pain.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "General, daily workk, carry nitroglycerin emergency for 10 minutes rest pain.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Blood pressure 130/82",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 130/82 mmHg, pulse 78.",
+      "start_char": 215,
+      "end_char": 236,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 78",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 130/82 mmHg, pulse 78.",
+      "start_char": 243,
+      "end_char": 251,
+      "span_status": "exact"
+    },
+    {
+      "text": "98%",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 98%.",
+      "start_char": 264,
+      "end_char": 267,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "Followup in one month",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Followup in one month",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "drug_second_pass": {
+    "model": "small-int8",
+    "added": [
+      "nystatin"
+    ]
+  },
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 4.002,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "aspirin",
+        "dose": 75.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 1.5 mg solution, 2.25 mg tablet, 2.5 mg solution, 4.5 mg tablet; 75 mg is plausible for this drug]",
+        "confidence": 0.96,
+        "source_sentence": "ECG aspirin 75 mg daily."
+      },
+      {
+        "kind": "drug",
+        "name": "atorvastatin",
+        "dose": 20.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 5 mg tablet, 10 mg tablet, 10 mg capsule, 20 mg tablet; 20 mg is plausible for this drug]",
+        "confidence": 0.88,
+        "source_sentence": "Aorvastatin 20 mg night, nitroglycerin training."
+      },
+      {
+        "kind": "drug",
+        "name": "nitroglycerin",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: nitroglycerin; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Aorvastatin 20 mg night, nitroglycerin training."
+      },
+      {
+        "kind": "drug",
+        "name": "atorvastatin",
+        "dose": 20.0,
+        "unit": "mg",
+        "negated": true,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:needs_review",
+          "brand:conflict",
+          "polarity:negated-preserved"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 5 mg tablet, 10 mg tablet, 10 mg capsule, 20 mg tablet; 20 mg is plausible for this drug]; source_sentence not verbatim in transcript; dose 20 belongs to statin (lovastatin), not atorvastatin",
+        "confidence": 0.7,
+        "source_sentence": "61 year old male post angioplasty 2 years ago now twice exercional chest discomfort monthly revealed by rest no rest pain, denies breathlessness no drug allergy past history coronary disease hypertension now stable and genia examination blood pressure 130 over 82 millimeters of mercury pulse 78 saturation 98% plan ECG aspirin 75 milligrams daily a Thorbas statin 20 milligrams night nitroglycerin training diet low salt low fat vegetables and fruits no smoking or alcohol general daily work carry nitroglycerin emergency for 10 minutes rest main follow up in one month"
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 130/82",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 130/82 mmHg, pulse 78."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 78",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 130/82 mmHg, pulse 78."
+      },
+      {
+        "kind": "vital",
+        "text": "98%",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 98%."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "No rest pain."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "General, daily workk, carry nitroglycerin emergency for 10 minutes rest pain."
+      },
+      {
+        "kind": "followup",
+        "text": "Followup in one month",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Followup in one month"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "10",
+          "20",
+          "61",
+          "75",
+          "78",
+          "82",
+          "98",
+          "130"
+        ],
+        "count": 10
+      },
+      "total": 10,
+      "drug_verified": 2,
+      "drug_needs_review": 2,
+      "vital_verified": 3,
+      "symptom_verified": 2,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}
