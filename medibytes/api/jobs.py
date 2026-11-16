@@ -179,6 +179,33 @@ class JobService:
         self._executor.submit(self._run_safely, job_id)
         return job
 
+    def retry(self, job_id: str) -> tuple[dict[str, Any] | None, bool]:
+        """Queue one retry for a failed UI job without uploading or billing again.
+
+        A retry reuses the input already stored with the job. If the job is queued,
+        running, or succeeded, return its current state without scheduling a second
+        worker run. HIMS jobs use their own redelivery flow and remain private here.
+        """
+        if not _safe_id(job_id):
+            return None, False
+        with self._lock:
+            job = self._read(job_id)
+            if job is None or _is_private(job):
+                return None, False
+            if job["status"] != "failed":
+                return job, False
+            if not (self._dir(job_id) / job.get("input_name", "")).is_file():
+                return job, False
+
+            job["status"], job["error"] = "queued", None
+            for stage in job["stages"]:
+                stage.update(state="pending", seconds=None, detail="")
+            job["retry_count"] = int(job.get("retry_count", 0)) + 1
+            self._write(job)
+
+        self._executor.submit(self._run_safely, job_id)
+        return job, True
+
     def _run_safely(self, job_id: str) -> None:
         """A worker thread that dies silently leaves a job "running" forever."""
         try:

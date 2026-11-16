@@ -277,6 +277,9 @@ def test_the_pipeline_note_becomes_a_draft_only_never_approved_and_no_note_on_th
     segment_text = {s["segment_id"]: s["text"] for s in _transcript_segments(fresh)}
     assert segment_text[content["plan"][0]["source_segment_ids"][0]] == "Get a complete blood count."
     assert segment_text[content["chief_complaint"]["source_segment_ids"][0]].startswith("Swelling and redness")
+    timeline = fresh.get("/api/patients/pat_ravi/timeline?limit=500", headers=DOCTOR).json()["events"]
+    transcript = next(event for event in timeline if event["type"] == "transcript")
+    assert transcript["title"] == "OPD consultation (MediBytes pipeline)"
     added = list(_event_types(fresh))
     for t in before_types:
         added.remove(t)
@@ -300,8 +303,61 @@ def test_a_running_or_failed_job_makes_no_draft(fresh, keyed):
     keyed.job_status = "running"
     assert _poll(fresh, audio_id).json() == {"status": "running"}
     keyed.job_status, keyed.job_error = "failed", "Recording too short"
-    assert _poll(fresh, audio_id).json() == {"status": "failed", "error": "Recording too short"}
+    assert _poll(fresh, audio_id).json() == {
+        "status": "failed", "error": "Recording too short", "retryable": True,
+    }
     assert _drafts(fresh) == []
+
+
+def test_no_speech_failure_is_not_retryable(fresh, keyed):
+    _consent(fresh)
+    audio_id = _post(fresh, "quiet.wav", _wav(), "audio/wav").json()["audio_id"]
+    keyed.transcript = ""
+    response = _poll(fresh, audio_id)
+    assert response.json() == {
+        "status": "failed", "error": "No speech was detected in the recording", "retryable": False,
+    }
+    assert _drafts(fresh) == []
+
+
+def test_failed_voice_job_can_retry_without_another_credit_or_duplicate_draft(fresh, keyed):
+    _consent(fresh)
+    audio_id = _post(fresh, "visit.wav", _wav(), "audio/wav").json()["audio_id"]
+    keyed.job_status, keyed.job_error = "failed", "Temporary model error"
+    assert _poll(fresh, audio_id).json() == {
+        "status": "failed", "error": "Temporary model error", "retryable": True,
+    }
+
+    balance = _balance(fresh)
+    ledger_size = len(_ledger(fresh))
+    retried = fresh.post(f"/api/notes/transcribe/{audio_id}/retry", headers=DOCTOR)
+    assert retried.status_code == 200 and retried.json()["status"] == "running"
+    assert _balance(fresh) == balance and len(_ledger(fresh)) == ledger_size
+    assert keyed.retry_calls == 1
+    assert len(_audit("consultation_retry_submitted")) == 1
+
+    # A repeated click while the same job runs is idempotent and does not enqueue twice.
+    retried_again = fresh.post(f"/api/notes/transcribe/{audio_id}/retry", headers=DOCTOR)
+    assert retried_again.status_code == 200 and retried_again.json()["status"] == "running"
+    assert keyed.retry_calls == 2
+    assert len(_audit("consultation_retry_submitted")) == 1
+    assert _balance(fresh) == balance and len(_ledger(fresh)) == ledger_size
+
+    keyed.job_status = "succeeded"
+    draft = _poll(fresh, audio_id).json()["draft"]
+    assert _poll(fresh, audio_id).json()["draft"]["id"] == draft["id"]
+    assert len(_drafts(fresh)) == 1
+
+
+def test_voice_retry_requires_consent_and_a_prior_upload(fresh, keyed):
+    response = fresh.post("/api/notes/transcribe/audio-unknown/retry", headers=DOCTOR)
+    assert response.status_code == 403
+    assert keyed.retry_calls == 0
+
+    _consent(fresh)
+    response = fresh.post("/api/notes/transcribe/audio-unknown/retry", headers=DOCTOR)
+    assert response.status_code == 404
+    assert keyed.retry_calls == 0
 
 
 def test_the_draft_still_needs_the_approval_step_and_consent(fresh, keyed):
@@ -362,6 +418,7 @@ def test_voice_input_shows_record_and_upload_together():
     assert "Record audio" in source and "Upload voice" in source
     assert 'type="file"' in source and "audio/*" in source
     assert "Record patient consent before capturing audio." in source
+    assert "Retry without another credit" in source
 
 
 def test_only_the_f1_tab_gets_voice_input():

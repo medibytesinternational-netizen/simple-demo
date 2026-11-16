@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { transcribeAudio } from "../api";
+import { retryTranscription, TranscriptionError, transcribeAudio } from "../api";
 import type { Draft } from "../types";
 
 // The only place in the app that captures voice. Record and Upload always come together: a screen that
@@ -35,6 +35,8 @@ export function VoiceInput({ consentGranted, disabled, onDraft, onBusyChange, on
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState("");
+  const [retryAudioId, setRetryAudioId] = useState("");
+  const [retrySource, setRetrySource] = useState<VoiceSource>("record");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -68,13 +70,38 @@ export function VoiceInput({ consentGranted, disabled, onDraft, onBusyChange, on
 
   const transcribe = async (body: Blob, filename: string | undefined, source: VoiceSource) => {
     setTranscribing(true);
+    setRetryAudioId("");
+    setRetrySource(source);
     try {
       const result = await transcribeAudio(body, filename);
       if (!mountedRef.current) return;
       setError("");
+      setRetryAudioId("");
       callbacks.current.onDraft(result.draft, source);
     } catch (err: any) {
-      if (mountedRef.current) setError(String(err?.message || err));
+      if (mountedRef.current) {
+        setError(String(err?.message || err));
+        if (err instanceof TranscriptionError && err.retryable) setRetryAudioId(err.audioId);
+      }
+    } finally {
+      if (mountedRef.current) setTranscribing(false);
+    }
+  };
+
+  const retry = async () => {
+    if (!retryAudioId || transcribing || disabled) return;
+    setTranscribing(true);
+    try {
+      const result = await retryTranscription(retryAudioId);
+      if (!mountedRef.current) return;
+      setError("");
+      setRetryAudioId("");
+      callbacks.current.onDraft(result.draft, retrySource);
+    } catch (err: any) {
+      if (mountedRef.current) {
+        setError(String(err?.message || err));
+        if (err instanceof TranscriptionError && err.retryable) setRetryAudioId(err.audioId);
+      }
     } finally {
       if (mountedRef.current) setTranscribing(false);
     }
@@ -82,6 +109,7 @@ export function VoiceInput({ consentGranted, disabled, onDraft, onBusyChange, on
 
   const startRecording = async () => {
     setError("");
+    setRetryAudioId("");
     if (!consentGranted) {
       setError(CONSENT_MESSAGE);
       return;
@@ -118,6 +146,7 @@ export function VoiceInput({ consentGranted, disabled, onDraft, onBusyChange, on
 
   const chooseFile = () => {
     setError("");
+    setRetryAudioId("");
     if (!consentGranted) {
       setError(CONSENT_MESSAGE);
       return;
@@ -163,7 +192,16 @@ export function VoiceInput({ consentGranted, disabled, onDraft, onBusyChange, on
           }}
         />
       </div>
-      {error ? <div className="small" role="alert" style={{ color: "var(--danger, #b42318)" }}>{error}</div> : null}
+      {error ? (
+        <div className="small" role="alert" style={{ color: "var(--danger, #b42318)" }}>
+          {error}
+          {retryAudioId ? (
+            <button type="button" className="btn btn-sm ml-2" onClick={retry} disabled={transcribing || disabled}>
+              Retry without another credit
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

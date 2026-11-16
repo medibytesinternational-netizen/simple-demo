@@ -101,6 +101,24 @@ def fetch(audio_id: str) -> dict[str, Any] | None:
     return out
 
 
+def retry(audio_id: str) -> dict[str, Any] | None:
+    """Retry a failed UI job using its already-stored upload; never creates a new job."""
+    index = _index(audio_id)
+    if not index.is_file():
+        return None
+    entry = json.loads(index.read_text(encoding="utf-8"))
+    job, retried = _jobs().retry(entry["job_id"])
+    if job is None:
+        return None
+    return {
+        "audio_id": audio_id,
+        "job_id": job["job_id"],
+        "feature": entry.get("feature", "F1"),
+        "status": job["status"],
+        "retried": retried,
+    }
+
+
 # ---------- note -> draft ----------
 
 SECTION_LABELS = {

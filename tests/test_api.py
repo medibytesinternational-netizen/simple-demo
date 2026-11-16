@@ -124,6 +124,45 @@ def test_a_rejected_recording_fails_the_job_with_the_reason(tmp_path):
         assert again["job_id"] == job_id
 
 
+def test_a_failed_job_can_be_retried_once_without_reuploading(tmp_path):
+    builds = 0
+
+    def provider():
+        nonlocal builds
+        builds += 1
+        if builds == 1:
+            return _fake_pipeline(FakePreprocessor(AudioRejected("422 NO_AUDIO: silent")))
+        return _fake_pipeline()
+
+    jobs = JobService(tmp_path / "runs", provider)
+    try:
+        receipt = jobs.submit("a" * 64, "voice.wav", ".wav",
+                              lambda path: path.write_bytes(b"recorded-audio"))
+        end = time.time() + 10
+        first = jobs.get(receipt["job_id"])
+        while first["status"] not in ("succeeded", "failed") and time.time() < end:
+            time.sleep(0.05)
+            first = jobs.get(receipt["job_id"])
+        assert first["status"] == "failed"
+        assert (jobs._dir(receipt["job_id"]) / "input.wav").read_bytes() == b"recorded-audio"
+
+        queued, retried = jobs.retry(receipt["job_id"])
+        assert retried and queued["status"] == "queued" and queued["retry_count"] == 1
+        again, retried_again = jobs.retry(receipt["job_id"])
+        assert not retried_again and again["status"] in ("queued", "running", "succeeded")
+
+        end = time.time() + 10
+        finished = jobs.get(receipt["job_id"])
+        while finished["status"] not in ("succeeded", "failed") and time.time() < end:
+            time.sleep(0.05)
+            finished = jobs.get(receipt["job_id"])
+        assert finished["status"] == "succeeded", finished["error"]
+        assert finished["retry_count"] == 1 and builds == 2
+        assert jobs.retry(receipt["job_id"])[1] is False
+    finally:
+        jobs.shutdown()
+
+
 def test_recent_jobs_list_newest_first(client):
     for data in (b"one", b"two"):
         _wait(client, client.post("/api/jobs", files={"file": ("a.wav", data, "audio/wav")})

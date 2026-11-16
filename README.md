@@ -74,6 +74,25 @@ LLM_MODE=auto
 
 `LLM_MODE=auto` uses live GPT-4o when a key is present, otherwise cached drafts. Set `LLM_MODE=cached` to force deterministic drafts even with a key. Audio transcription is only available in live mode.
 
+## F1 OPD voice notes
+
+The Notes page records audio in the browser or accepts an audio upload. It sends the
+recording to `POST /api/notes/transcribe` as the `file` multipart field, then polls
+`GET /api/notes/transcribe/{audio_id}` for the transcript-backed OPD draft. The
+recording requires patient consent and an active encounter. The clinician must review
+and approve the resulting draft; processing does not approve or write a consult note
+automatically.
+
+The integrated F1 voice path uses the local MediBytes pipeline, including GPT-4.1, so
+it requires `OPENAI_API_KEY` even though the general demo can run in cached mode. The
+initial accepted upload charges the F1 `voice_note` credit. If processing fails after
+the upload was accepted, retry the stored job with
+`POST /api/notes/transcribe/{audio_id}/retry`; this reuses the saved audio, checks the
+same consent and active-encounter rules, and does not charge another voice credit.
+
+F1 OPD is the only feature registered for voice today. The Phone40 parity gate must
+pass before template generalization and additional feature rollout proceed.
+
 The header shows **Live GPT-4o** or **Cached demo**. Model, prompt version, latency and token counts are recorded in `llm_calls`; the UI shows them on every draft and in the audit log.
 
 Do not commit `backend/.env` or the API key.

@@ -174,6 +174,7 @@ class FakePipeline:
         self.error = None  # an HTTPException to raise from submit
         self.job_status = "succeeded"
         self.job_error = None
+        self.retry_calls = 0
         self.note = json.loads(json.dumps(PIPELINE_NOTE))
         self.transcript = PIPELINE_TRANSCRIPT
         self.feature = None
@@ -193,8 +194,17 @@ class FakePipeline:
             out.update(transcript=self.transcript, note=self.note)
         return out
 
+    def retry(self, audio_id):
+        self.retry_calls += 1
+        retried = self.job_status == "failed"
+        if retried:
+            self.job_status, self.job_error = "running", None
+        return {"audio_id": audio_id, "job_id": "job-test", "feature": self.feature or "F1",
+                "status": self.job_status, "retried": retried}
+
     def install(self, monkeypatch):
         monkeypatch.setattr("app.services.pipeline.configured", lambda: True)
         monkeypatch.setattr("app.services.pipeline.submit", self.submit)
         monkeypatch.setattr("app.services.pipeline.fetch", self.fetch)
+        monkeypatch.setattr("app.services.pipeline.retry", self.retry)
         return self

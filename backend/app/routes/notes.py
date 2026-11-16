@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..db import get_db
 from ..models import (
+    AuditEntry,
     Draft,
     TimelineEvent,
 )
@@ -52,6 +53,35 @@ def _looks_like_audio(filename: str | None, content_type: str | None) -> bool:
     return declared.startswith("audio/")
 
 
+def _has_capture_consent(db: Session, patient_id: str, encounter_id: str) -> bool:
+    consents = db.scalars(
+        select(TimelineEvent).where(
+            TimelineEvent.patient_id == patient_id,
+            TimelineEvent.encounter_id == encounter_id,
+            TimelineEvent.type == "consent",
+            TimelineEvent.status == "approved",
+        )
+    ).all()
+    return any((event.payload or {}).get("granted") is True for event in consents)
+
+
+def _patient_submitted_audio(db: Session, patient_id: str, encounter_id: str, audio_id: str) -> bool:
+    entries = db.scalars(
+        select(AuditEntry).where(
+            AuditEntry.patient_id == patient_id,
+            AuditEntry.action == "consultation_submitted",
+        )
+    ).all()
+    return any(
+        (entry.after or {}).get("audio_id") == audio_id
+        and (entry.after or {}).get("encounter_id") == encounter_id
+        for entry in entries
+    )
+
+
+_VOICE_EVENT_TITLES = {"F1": "OPD consultation (MediBytes pipeline)"}
+
+
 # --------------------------------------------------------------------------
 # Notes (F1, F2, F3, F4)
 # --------------------------------------------------------------------------
@@ -64,15 +94,7 @@ async def transcribe_consultation(file: UploadFile = File(...), db: Session = De
     """
     patient, encounter, _ = _state(db)
     # Every refusal below happens before credits.charge, so a refused upload spends nothing.
-    consents = db.scalars(
-        select(TimelineEvent).where(
-            TimelineEvent.patient_id == patient.id,
-            TimelineEvent.encounter_id == encounter.id,
-            TimelineEvent.type == "consent",
-            TimelineEvent.status == "approved",
-        )
-    ).all()
-    if not any((event.payload or {}).get("granted") is True for event in consents):
+    if not _has_capture_consent(db, patient.id, encounter.id):
         raise HTTPException(403, "Record patient consent before capturing audio")
     # A discharged encounter is locked, so a transcript could never become a draft: refuse before charging.
     require_open_encounter(encounter)
@@ -104,9 +126,42 @@ async def transcribe_consultation(file: UploadFile = File(...), db: Session = De
         actor_type="model",
         actor_name="MediBytes pipeline",
         after={"audio_id": audio_id, "job_id": receipt.get("job_id"), "encounter_id": encounter.id},
-        meta={"mode": "live"},
+        meta={"mode": "live", "feature": "F1"},
     )
     db.commit()
+    return {"audio_id": audio_id, "status": receipt.get("status", "running")}
+
+
+@router.post("/notes/transcribe/{audio_id}/retry", dependencies=[Depends(require("clinical_draft"))])
+def retry_consultation(audio_id: str, db: Session = Depends(get_db)):
+    """Retry a failed voice job from its saved audio without charging voice credits again."""
+    patient, encounter, _ = _state(db)
+    if not _has_capture_consent(db, patient.id, encounter.id):
+        raise HTTPException(403, "Record patient consent before processing audio")
+    require_open_encounter(encounter)
+    if not pipeline.configured():
+        raise HTTPException(400, "Voice notes need the MediBytes pipeline; set OPENAI_API_KEY")
+    if not _patient_submitted_audio(db, patient.id, encounter.id, audio_id):
+        raise HTTPException(404, "No recording with that id")
+
+    receipt = pipeline.retry(audio_id)
+    if receipt is None:
+        raise HTTPException(404, "No recording with that id")
+    if receipt.get("status") == "failed" and not receipt.get("retried"):
+        raise HTTPException(409, "The saved recording is unavailable for retry")
+    if receipt.get("retried"):
+        add_audit(
+            db,
+            "consultation_retry_submitted",
+            "patient",
+            patient.id,
+            patient.id,
+            actor_type="model",
+            actor_name="MediBytes pipeline",
+            after={"audio_id": audio_id, "job_id": receipt.get("job_id"), "encounter_id": encounter.id},
+            meta={"mode": "live", "feature": receipt.get("feature", "F1"), "charged": False},
+        )
+        db.commit()
     return {"audio_id": audio_id, "status": receipt.get("status", "running")}
 
 
@@ -114,6 +169,8 @@ async def transcribe_consultation(file: UploadFile = File(...), db: Session = De
 def pipeline_status(audio_id: str, db: Session = Depends(get_db)):
     """Poll the pipeline; on success the six-section note becomes an F1 draft (once per audio_id)."""
     patient, encounter, _ = _state(db)
+    if not _patient_submitted_audio(db, patient.id, encounter.id, audio_id):
+        raise HTTPException(404, "No recording with that id")
     existing = db.scalars(
         select(TimelineEvent).where(
             TimelineEvent.patient_id == patient.id,
@@ -134,16 +191,27 @@ def pipeline_status(audio_id: str, db: Session = Depends(get_db)):
         raise HTTPException(404, "No recording with that id")
     job_status = result.get("job_status")
     if job_status == "failed":
-        return {"status": "failed", "error": result.get("job_error") or "The recording could not be processed"}
+        return {
+            "status": "failed",
+            "error": result.get("job_error") or "The recording could not be processed",
+            "retryable": True,
+        }
     if job_status != "succeeded":
         return {"status": job_status or "running"}
     require_open_encounter(encounter)
     note = result.get("note") or {}
     text = str(result.get("transcript") or "").strip()
     if not text or not pipeline.has_items(note):
-        return {"status": "failed", "error": "No speech was detected in the recording"}
+        return {"status": "failed", "error": "No speech was detected in the recording", "retryable": False}
     feature = result.get("feature") or "F1"
-    event = create_transcript_event(db, patient, encounter, feature, text, "Consultation (MediBytes pipeline)")
+    event = create_transcript_event(
+        db,
+        patient,
+        encounter,
+        feature,
+        text,
+        _VOICE_EVENT_TITLES.get(feature, f"{feature} voice note (MediBytes pipeline)"),
+    )
     event.payload = {**(event.payload or {}), "audio_id": audio_id, "pipeline_note": note}
     content = pipeline.draft_content(feature, note, event.id, event.payload.get("segments") or [])
     draft = create_draft(

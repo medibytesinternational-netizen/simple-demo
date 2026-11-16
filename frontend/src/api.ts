@@ -9,6 +9,13 @@ export class ApiError extends Error {
   }
 }
 
+export class TranscriptionError extends Error {
+  constructor(message: string, readonly audioId: string, readonly retryable = true) {
+    super(message);
+    this.name = "TranscriptionError";
+  }
+}
+
 const USER_KEY = "mb_user";
 const PATIENT_KEY = "mb_patient";
 
@@ -111,17 +118,44 @@ export async function uploadDocument(file: File) {
   return api<any>("/documents/upload", { method: "POST", body: form });
 }
 
-export async function transcribeAudio(blob: Blob, filename = "consultation.webm") {
-  const form = new FormData();
-  form.append("file", blob, filename);
-  const receipt = await api<{ audio_id: string; status: string }>("/notes/transcribe", { method: "POST", body: form });
+async function pollTranscription(audioId: string) {
   // The MediBytes pipeline answers with a receipt; poll until the note is ready (usually under a minute).
   const deadline = Date.now() + 5 * 60 * 1000;
   while (Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, 3000));
-    const status = await api<{ status: string; error?: string; draft?: Draft }>(`/notes/transcribe/${encodeURIComponent(receipt.audio_id)}`);
+    let status: { status: string; error?: string; draft?: Draft; retryable?: boolean };
+    try {
+      status = await api<{ status: string; error?: string; draft?: Draft; retryable?: boolean }>(`/notes/transcribe/${encodeURIComponent(audioId)}`);
+    } catch (err: any) {
+      throw new TranscriptionError(String(err?.message || err), audioId);
+    }
     if (status.status === "succeeded" && status.draft) return { draft: status.draft };
-    if (status.status === "failed") throw new Error(status.error || "The recording could not be processed");
+    if (status.status === "failed") {
+      throw new TranscriptionError(
+        status.error || "The recording could not be processed",
+        audioId,
+        status.retryable !== false,
+      );
+    }
   }
-  throw new Error("The pipeline is taking too long. Try again in a minute.");
+  throw new TranscriptionError("The pipeline is taking too long. Try again in a minute.", audioId);
+}
+
+export async function transcribeAudio(blob: Blob, filename = "consultation.webm") {
+  const form = new FormData();
+  form.append("file", blob, filename);
+  const receipt = await api<{ audio_id: string; status: string }>("/notes/transcribe", { method: "POST", body: form });
+  return pollTranscription(receipt.audio_id);
+}
+
+export async function retryTranscription(audioId: string) {
+  try {
+    await api<{ audio_id: string; status: string }>(
+      `/notes/transcribe/${encodeURIComponent(audioId)}/retry`,
+      { method: "POST" },
+    );
+  } catch (err: any) {
+    throw new TranscriptionError(String(err?.message || err), audioId);
+  }
+  return pollTranscription(audioId);
 }
