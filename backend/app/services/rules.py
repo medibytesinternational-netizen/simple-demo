@@ -261,7 +261,13 @@ def _findings(db: Session, patient: Patient, encounter: Encounter, state: dict[s
         ).all()
         for note in notes:
             payload = note.payload or {}
-            if not (payload.get("allergies") == [] or payload.get("assertion") == "no_known_allergies"):
+            if payload.get("format") == "opd_v2":
+                # In the OPD format an empty Allergies heading means "not discussed", not "none".
+                from .approval.f05_assertion import says_no_known_allergies
+
+                if not says_no_known_allergies({"allergies": payload.get("allergies") or []}):
+                    continue
+            elif not (payload.get("allergies") == [] or payload.get("assertion") == "no_known_allergies"):
                 continue
             found.append(
                 Finding(

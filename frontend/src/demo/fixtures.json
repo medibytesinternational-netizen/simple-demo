@@ -276,19 +276,16 @@
    "as_of": "2026-10-20T09:00:00.993131"
   },
   "summary": {
-   "active_encounters": 4,
-   "patients": 5,
+   "active_encounters": 1,
+   "patients": 1,
    "wards": {
-    "Day Care": 1,
-    "Ward 5": 1,
-    "Ward 4": 1,
     "Ward 4B": 1
    },
    "pending_drafts": 7,
-   "overdue_tasks": 3,
-   "escalated_tasks": 3,
-   "open_alerts": 8,
-   "critical_alerts": 5,
+   "overdue_tasks": 1,
+   "escalated_tasks": 1,
+   "open_alerts": 6,
+   "critical_alerts": 4,
    "pending_documents": 1,
    "open_referrals": 1,
    "pending_investigations": 1,
@@ -296,101 +293,6 @@
    "discharge_reviews": 1
   },
   "patients": [
-   {
-    "patient_id": "pat_anita",
-    "name": "Anita Desai",
-    "mrn": "MB-2042",
-    "age": 67,
-    "sex": "Female",
-    "encounter_id": "enc_ward_2",
-    "kind": "IPD",
-    "ward": "Ward 4",
-    "bed": "4B",
-    "encounter_status": "active",
-    "open_alerts": 1,
-    "critical_alerts": 0,
-    "overdue_tasks": 1,
-    "escalated_tasks": 1,
-    "pending_drafts": 0,
-    "pending_documents": 0,
-    "open_referrals": 0,
-    "pending_investigations": 0,
-    "claim_gaps": 0,
-    "flags": [
-     "overdue task",
-     "escalated"
-    ]
-   },
-   {
-    "patient_id": "pat_arun",
-    "name": "Arun Pillai",
-    "mrn": "MB-1988",
-    "age": 55,
-    "sex": "Male",
-    "encounter_id": "enc_ward_4",
-    "kind": "IPD",
-    "ward": "Ward 4",
-    "bed": "4A",
-    "encounter_status": "discharged",
-    "open_alerts": 0,
-    "critical_alerts": 0,
-    "overdue_tasks": 0,
-    "escalated_tasks": 0,
-    "pending_drafts": 0,
-    "pending_documents": 0,
-    "open_referrals": 0,
-    "pending_investigations": 0,
-    "claim_gaps": 0,
-    "flags": []
-   },
-   {
-    "patient_id": "pat_joseph",
-    "name": "Joseph Fernandes",
-    "mrn": "MB-2051",
-    "age": 72,
-    "sex": "Male",
-    "encounter_id": "enc_ward_3",
-    "kind": "IPD",
-    "ward": "Ward 5",
-    "bed": "5A",
-    "encounter_status": "active",
-    "open_alerts": 1,
-    "critical_alerts": 1,
-    "overdue_tasks": 1,
-    "escalated_tasks": 1,
-    "pending_drafts": 0,
-    "pending_documents": 0,
-    "open_referrals": 0,
-    "pending_investigations": 0,
-    "claim_gaps": 0,
-    "flags": [
-     "critical alert",
-     "overdue task",
-     "escalated"
-    ]
-   },
-   {
-    "patient_id": "pat_meera",
-    "name": "Meera Iyer",
-    "mrn": "MB-2060",
-    "age": 45,
-    "sex": "Female",
-    "encounter_id": "enc_day_1",
-    "kind": "Day care",
-    "ward": "Day Care",
-    "bed": "DC-2",
-    "encounter_status": "active",
-    "open_alerts": 0,
-    "critical_alerts": 0,
-    "overdue_tasks": 0,
-    "escalated_tasks": 0,
-    "pending_drafts": 0,
-    "pending_documents": 0,
-    "open_referrals": 0,
-    "pending_investigations": 0,
-    "claim_gaps": 0,
-    "flags": []
-   },
    {
     "patient_id": "pat_ravi",
     "name": "Ravi Menon",
@@ -5673,56 +5575,6 @@
   "image_url": "/demo/doc_seed_outside.svg"
  },
  "__patients__": {
-  "pat_anita": {
-   "id": "pat_anita",
-   "mrn": "MB-2042",
-   "name": "Anita Desai",
-   "age": 67,
-   "sex": "Female",
-   "allergies": [
-    "Sulfonamides — rash"
-   ],
-   "problems": [
-    "Heart failure",
-    "Atrial fibrillation"
-   ]
-  },
-  "pat_arun": {
-   "id": "pat_arun",
-   "mrn": "MB-1988",
-   "name": "Arun Pillai",
-   "age": 55,
-   "sex": "Male",
-   "allergies": [],
-   "problems": [
-    "Community-acquired pneumonia"
-   ]
-  },
-  "pat_joseph": {
-   "id": "pat_joseph",
-   "mrn": "MB-2051",
-   "name": "Joseph Fernandes",
-   "age": 72,
-   "sex": "Male",
-   "allergies": [],
-   "problems": [
-    "COPD",
-    "CKD stage 2"
-   ]
-  },
-  "pat_meera": {
-   "id": "pat_meera",
-   "mrn": "MB-2060",
-   "name": "Meera Iyer",
-   "age": 45,
-   "sex": "Female",
-   "allergies": [
-    "Latex — contact dermatitis"
-   ],
-   "problems": [
-    "Post-operative day 1"
-   ]
-  },
   "pat_ravi": {
    "id": "pat_ravi",
    "mrn": "MB-1001",

@@ -17,7 +17,11 @@ type Props = {
   /** Another step (for example drafting) is running; both buttons wait. */
   disabled?: boolean;
   /** Called with the draft the MediBytes pipeline produced from the recording. */
-  onDraft: (draft: Draft, source: VoiceSource) => void;
+  onDraft?: (draft: Draft, source: VoiceSource) => void;
+  /** Which note the recording writes: F1 OPD report (default) or F2 admission note. */
+  feature?: string;
+  /** Send the audio somewhere else instead of the consultation note (the new patient intake). */
+  capture?: (audio: Blob, filename: string | undefined, source: VoiceSource) => Promise<void>;
   /** True while recording or while the transcription request runs. */
   onBusyChange?: (busy: boolean) => void;
   /** True only while the transcription request runs ("Transcribing..."). */
@@ -31,7 +35,7 @@ function looksLikeAudio(file: File): boolean {
   return (file.type || "").toLowerCase().startsWith("audio/");
 }
 
-export function VoiceInput({ consentGranted, disabled, onDraft, onBusyChange, onTranscribingChange }: Props) {
+export function VoiceInput({ consentGranted, disabled, onDraft, capture, feature = "F1", onBusyChange, onTranscribingChange }: Props) {
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState("");
@@ -41,8 +45,8 @@ export function VoiceInput({ consentGranted, disabled, onDraft, onBusyChange, on
   const fileRef = useRef<HTMLInputElement | null>(null);
   const mountedRef = useRef(true);
   // Callbacks are read through a ref so a transcript that arrives later reaches the current handler.
-  const callbacks = useRef({ onDraft, onBusyChange, onTranscribingChange });
-  callbacks.current = { onDraft, onBusyChange, onTranscribingChange };
+  const callbacks = useRef({ onDraft, capture, onBusyChange, onTranscribingChange });
+  callbacks.current = { onDraft, capture, onBusyChange, onTranscribingChange };
 
   useEffect(() => {
     mountedRef.current = true;
@@ -69,10 +73,15 @@ export function VoiceInput({ consentGranted, disabled, onDraft, onBusyChange, on
   const transcribe = async (body: Blob, filename: string | undefined, source: VoiceSource) => {
     setTranscribing(true);
     try {
-      const result = await transcribeAudio(body, filename);
+      if (callbacks.current.capture) {
+        await callbacks.current.capture(body, filename, source);
+        if (mountedRef.current) setError("");
+        return;
+      }
+      const result = await transcribeAudio(body, filename, feature);
       if (!mountedRef.current) return;
       setError("");
-      callbacks.current.onDraft(result.draft, source);
+      callbacks.current.onDraft?.(result.draft, source);
     } catch (err: any) {
       if (mountedRef.current) setError(String(err?.message || err));
     } finally {

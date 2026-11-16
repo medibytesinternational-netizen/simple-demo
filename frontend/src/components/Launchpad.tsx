@@ -5,6 +5,7 @@ import { usePatientDirectory } from "./patientDirectory";
 import { useOpenChart } from "./openChart";
 import { Icon } from "./icons";
 import { useDialog } from "./ui/useDialog";
+import { canSee, type AppRole } from "./roles";
 
 function matches(item: NavItem & { group?: string }, q: string) {
   const hay = [item.label, item.hint, item.group || "", ...(item.keywords || [])].join(" ").toLowerCase();
@@ -38,7 +39,7 @@ function moveFocus(e: KeyboardEvent<HTMLElement>, root: HTMLElement | null) {
   else if (!down) root.querySelector<HTMLInputElement>(".launchpad-search input")?.focus();
 }
 
-export function Launchpad({ counts, onClose }: { counts: Record<CountKey, number>; onClose: () => void }) {
+export function Launchpad({ role, counts, onClose }: { role: AppRole; counts: Record<CountKey, number>; onClose: () => void }) {
   const ref = useDialog<HTMLDivElement>(onClose, { initialFocus: ".launchpad-search input", lockScroll: true });
   const location = useLocation();
   const navigate = useNavigate();
@@ -48,10 +49,14 @@ export function Launchpad({ counts, onClose }: { counts: Record<CountKey, number
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
 
+  const visible = useMemo(
+    () => NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((item) => canSee(role, item.id)) })).filter((g) => g.items.length),
+    [role],
+  );
   const groups = useMemo(() => {
-    if (!q) return NAV_GROUPS;
-    return NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((item) => matches({ ...item, group: g.title }, q)) })).filter((g) => g.items.length);
-  }, [q]);
+    if (!q) return visible;
+    return visible.map((g) => ({ ...g, items: g.items.filter((item) => matches({ ...item, group: g.title }, q)) })).filter((g) => g.items.length);
+  }, [q, visible]);
   const patients = useMemo(
     () => (q ? directory.rows.filter((r) => r.name.toLowerCase().includes(q) || r.mrn.toLowerCase().includes(q)).slice(0, 6) : []),
     [q, directory.rows],
@@ -63,13 +68,13 @@ export function Launchpad({ counts, onClose }: { counts: Record<CountKey, number
     else navigate(`/patients?patient=${encodeURIComponent(id)}`);
   };
   const openFirst = () => {
-    const first = ALL_ITEMS.find((item) => matches(item, q));
+    const first = ALL_ITEMS.find((item) => canSee(role, item.id) && matches(item, q));
     if (q && first) { onClose(); navigate(first.to); return; }
     if (patients[0]) openPatient(patients[0].id, patients[0].chartAvailable);
   };
 
   return (
-    <div ref={ref} className="launchpad" role="dialog" aria-modal="true" aria-label="All modules" tabIndex={-1} onKeyDown={(e) => moveFocus(e, ref.current)}>
+    <div ref={ref} className="launchpad" role="dialog" aria-modal="true" aria-label="Search pages and patients" tabIndex={-1} onKeyDown={(e) => moveFocus(e, ref.current)}>
       <div className="launchpad-top">
         <div className="launchpad-search" role="search">
           <Icon name="search" size={18} />
@@ -77,11 +82,11 @@ export function Launchpad({ counts, onClose }: { counts: Record<CountKey, number
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); openFirst(); } }}
-            placeholder="Search modules or patients"
-            aria-label="Search modules or patients"
+            placeholder="Search pages or patients"
+            aria-label="Search pages or patients"
           />
         </div>
-        <button type="button" className="chrome-btn icon-only launchpad-close" onClick={onClose} aria-label="Close all modules">
+        <button type="button" className="chrome-btn icon-only launchpad-close" onClick={onClose} aria-label="Close search">
           <Icon name="close" size={18} />
         </button>
       </div>

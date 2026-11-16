@@ -20,7 +20,7 @@ import app.background as background
 from app.db import SessionLocal, utcnow
 from app.integrations import outbox, pull
 from app.integrations.fhir import bundle_to_events
-from app.models import Alert, Encounter, Patient, TimelineEvent
+from app.models import Encounter, Patient, TimelineEvent
 from app.models_ext.s17_integration import IntegrationSync, OutboundMessage
 from app.services.timeline import get_state
 
@@ -292,14 +292,10 @@ def test_only_the_hospital_system_link_may_ingest(client):
 
 
 def test_the_patient_is_matched_by_mrn_and_an_unknown_mrn_is_an_error(client):
-    db = SessionLocal()
-    try:
-        other = db.scalar(select(Patient).where(Patient.mrn == "MB-2042"))
-        other_id = other.id
-    finally:
-        db.close()
+    other = client.post("/api/patients", json={"name": "Other Patient", "age": 50, "sex": "Female", "no_known_allergies": True}).json()["patient"]
+    other_id = other["id"]
     result = client.post("/api/ingest/fhir", json={"system": SYSTEM, "bundle": bundle(
-        lab("o1", "Potassium", 4.0, "mmol/L"), mrn="MB-2042")}, headers=HMS).json()
+        lab("o1", "Potassium", 4.0, "mmol/L"), mrn=other["mrn"])}, headers=HMS).json()
     assert result["created"] == 1
     assert [e.payload["external_id"] for e in fhir_events(other_id)] == [f"{SYSTEM}:Observation/o1"]
     assert fhir_events("pat_ravi") == []

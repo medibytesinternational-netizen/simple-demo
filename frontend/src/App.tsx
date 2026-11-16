@@ -1,5 +1,6 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { Shell } from "./components/Shell";
+import { RoleHome } from "./components/Chrome";
 import { TimelinePage } from "./pages/Timeline";
 import { NotesPage } from "./pages/Notes";
 import { SafetyPage } from "./pages/Safety";
@@ -12,12 +13,13 @@ import { PatientsPage } from "./pages/Patients";
 import { AuditPage } from "./pages/Audit";
 import { PatientOverviewPage } from "./pages/PatientOverview";
 import { ProgressPage } from "./pages/Progress";
+import { NewPatientPage } from "./pages/NewPatient";
 
 export default function App() {
   return (
     <Routes>
       <Route element={<Shell />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route index element={<RoleHome />} />
         <Route path="/patient" element={<PatientOverviewPage />} />
         <Route path="/timeline" element={<TimelinePage />} />
         <Route path="/progress" element={<ProgressPage />} />
@@ -29,8 +31,9 @@ export default function App() {
         <Route path="/revenue" element={<RevenuePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/patients" element={<PatientsPage />} />
+        <Route path="/patients/new" element={<NewPatientPage />} />
         <Route path="/audit" element={<AuditPage />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<RoleHome />} />
       </Route>
     </Routes>
   );

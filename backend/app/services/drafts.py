@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import timedelta
+import re
+from datetime import datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
@@ -135,6 +136,49 @@ def _clear_generated_authorship(value: Any) -> Any:
     return value
 
 
+def _next_created_at(db: Session, patient_id: str, feature: str) -> datetime:
+    """Now, but never before the patient's latest draft of this feature.
+
+    The demo clock restarts from a fixed time with the server, so "now" can be earlier than a draft
+    written before a restart. Lists show the newest draft first; this keeps that order true.
+    """
+    latest = db.scalar(
+        select(Draft.created_at)
+        .where(Draft.patient_id == patient_id, Draft.feature == feature)
+        .order_by(Draft.created_at.desc())
+    )
+    now = utcnow()
+    return latest + timedelta(microseconds=1) if latest and latest >= now else now
+
+
+def _admission_content(db: Session, patient: Patient, encounter: Encounter, content: dict[str, Any]) -> dict[str, Any]:
+    """Admission format: record headings, the recording first, the signed OPD report for the gaps,
+    and every known allergy listed for the doctor to verify before signing."""
+    from .admission import ADMIT_FORMAT, admission_header, latest_opd_report, merge_with_opd
+
+    merged = merge_with_opd({**content, "format": ADMIT_FORMAT}, latest_opd_report(db, patient.id))
+    merged["header"] = admission_header(patient, encounter, acting_name())
+    if not merged.get("allergies_to_verify"):
+        record = db.scalars(
+            select(TimelineEvent).where(TimelineEvent.patient_id == patient.id, TimelineEvent.type == "allergy_record")
+        ).first()
+        items: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        for raw in list(patient.allergies or []) + [str(c.get("text", "")) for c in merged.get("allergies") or [] if isinstance(c, dict)]:
+            text = re.sub(r"^(food|drug|other)\s*:\s*", "", str(raw), flags=re.I).strip()
+            if not text or re.match(r"(?i)no known", text):
+                continue
+            parts = re.split(r"\s+[—-]\s+", text, maxsplit=1)
+            substance, reaction = parts[0].strip(), (parts[1].strip() if len(parts) > 1 else "")
+            if substance.lower() in seen:
+                continue
+            seen.add(substance.lower())
+            items.append({"substance": substance, "reaction": reaction,
+                          "source_event_id": record.id if record else "", "verified": False})
+        merged["allergies_to_verify"] = items
+    return merged
+
+
 def create_draft(
     db: Session,
     *,
@@ -148,6 +192,13 @@ def create_draft(
     content = _clear_generated_authorship(content)
     if feature in LOCKED_FEATURES:
         require_open_encounter(encounter)
+    if feature == "F1":
+        # The OPD format's record headings come from registration and the visit, never from the model.
+        from .opd import OPD_FORMAT, opd_header
+
+        content = {**content, "format": OPD_FORMAT, "header": opd_header(patient, encounter, acting_name())}
+    if feature == "F2":
+        content = _admission_content(db, patient, encounter, content)
     draft = Draft(
         id=new_id("drf"),
         feature=feature,
@@ -161,7 +212,7 @@ def create_draft(
         llm_call_id=llm_call.id if llm_call else None,
         evidence_event_ids=_collect_evidence(content),
         created_from_event_ids=created_from_event_ids or [],
-        created_at=utcnow(),
+        created_at=_next_created_at(db, patient.id, feature),
         updated_at=utcnow(),
     )
     db.add(draft)
@@ -215,6 +266,59 @@ def update_draft(
         after={"status": draft.status, "content": content},
     )
     return draft
+
+
+def revise_draft(db: Session, draft: Draft) -> Draft:
+    """Start a correction of a signed note: a new draft with the signed content, ready to edit.
+
+    The signed note stays on the timeline until the revision is signed; signing it supersedes the
+    old entry (and, for F1, stores a newly formatted document). The old document is kept.
+    """
+    if draft.status != "approved":
+        raise ValueError("Only a signed note can be revised; edit the draft instead")
+    patient = db.get(Patient, draft.patient_id)
+    encounter = db.get(Encounter, draft.encounter_id) if draft.encounter_id else None
+    if not patient or not encounter:
+        raise ValueError("Patient or encounter missing")
+    open_revision = db.scalars(
+        select(Draft).where(
+            Draft.idempotency_key == f"revision_of:{draft.id}",
+            Draft.status.in_(["draft_ready", "human_edited"]),
+        )
+    ).first()
+    if open_revision:
+        # Bring it back to the front of the list (it may have been made before a clock restart).
+        open_revision.created_at = _next_created_at(db, draft.patient_id, draft.feature)
+        return open_revision
+    require_open_encounter(encounter)
+    revision = Draft(
+        id=new_id("drf"),
+        feature=draft.feature,
+        patient_id=draft.patient_id,
+        encounter_id=draft.encounter_id,
+        status="draft_ready",
+        content=dict(draft.content or {}),
+        schema_version=draft.schema_version,
+        prompt_version=draft.prompt_version,
+        model=draft.model,
+        llm_call_id=draft.llm_call_id,
+        evidence_event_ids=list(draft.evidence_event_ids or []),
+        created_from_event_ids=list(draft.created_from_event_ids or []),
+        idempotency_key=f"revision_of:{draft.id}",
+        created_at=_next_created_at(db, draft.patient_id, draft.feature),
+        updated_at=utcnow(),
+    )
+    db.add(revision)
+    db.flush()
+    add_audit(
+        db,
+        "draft_revision_started",
+        "draft",
+        revision.id,
+        draft.patient_id,
+        after={"revision_of": draft.id, "event_id": draft.committed_event_id},
+    )
+    return revision
 
 
 def reject_draft(db: Session, draft: Draft, reason: str, actor: str | None = None) -> Draft:

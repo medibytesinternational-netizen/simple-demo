@@ -4,8 +4,9 @@ from __future__ import annotations
 from .base import BASE_SECTIONS, NoteTemplate, SectionSpec
 from .discharge import DISCHARGE
 from .opd import OPD
+from .admission import ADMISSION
 
-TEMPLATES: dict[str, NoteTemplate] = {t.name: t for t in (DISCHARGE, OPD)}
+TEMPLATES: dict[str, NoteTemplate] = {t.name: t for t in (DISCHARGE, OPD, ADMISSION)}
 
 
 def get(name: str | NoteTemplate | None) -> NoteTemplate:

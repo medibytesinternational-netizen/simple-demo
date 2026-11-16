@@ -53,42 +53,6 @@ body { font-size: var(--fs-md); line-height: 1.4; }
 .content-scroll { overflow: auto; }
 .content { max-width: none !important; padding: 10px 14px !important; margin: 0 !important; }
 
-.his-status {
-  flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 14px;
-  padding: 4px 10px; background: var(--his-navy); color: #fff; font-size: 12.5px; white-space: nowrap;
-}
-.his-status-item b { font-weight: 700; }
-.his-status-btn {
-  background: var(--his-blue); color: #fff; border: 1px solid #5b8ad6; border-radius: 2px;
-  padding: 1px 8px; font-size: 12px;
-}
-.his-status-btn:hover { background: #2c6fd6; }
-.his-screen-tag { margin-left: auto; color: var(--his-tag); font-weight: 700; font-size: 13.5px; }
-.his-clock { background: var(--his-navy-deep); padding: 1px 10px; font-family: var(--font-mono); letter-spacing: .5px; }
-.his-version { font-weight: 700; }
-
-.his-menu {
-  flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px;
-  padding: 4px 8px; background: var(--his-menu); border-bottom: 1px solid var(--his-line);
-}
-.his-menu-item {
-  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; font-size: 12.5px;
-  color: #10213d; border: 1px solid transparent; border-radius: 2px; white-space: nowrap;
-}
-.his-menu-item:hover { color: var(--his-navy); background: #fff; border-color: var(--his-line); }
-.his-menu-item.primary { color: var(--his-blue); font-weight: 700; background: #fff; border-color: #c4d6f0; }
-.his-menu-item.active { color: var(--his-navy); font-weight: 700; background: #fff; border-color: var(--his-blue); }
-.his-menu-count { min-width: 16px; padding: 0 4px; font-size: 10.5px; line-height: 15px; text-align: center; color: #fff; background: var(--his-blue); border-radius: 2px; }
-.his-menu-count.critical { background: var(--critical); }
-.his-menu-count.warning { background: var(--warning); }
-
-.his-footer {
-  flex: none; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-  padding: 3px 10px; background: var(--his-menu); border-top: 1px solid var(--his-line);
-  font-size: 12px; color: var(--text-2);
-}
-@media (max-width: 760px) { .his-hide-sm { display: none; } .his-screen-tag { margin-left: 0; } }
-
 /* ---------- page header = titled panel ---------- */
 .page-header {
   background: var(--his-panel); border: 1px solid var(--his-line); border-radius: 0;
@@ -165,9 +129,6 @@ body { font-size: var(--fs-md); line-height: 1.4; }
 .modal-head, .drawer-head { background: var(--his-navy); color: #fff; padding: 6px 10px; }
 .modal-head *, .drawer-head * { color: #fff; }
 
-/* hide leftover glass/dock chrome */
-.dock-strip, .launchpad { display: none !important; }
-
 /* Page-level styles hard-code soft radii and shadows; flatten them inside the work area.
    Round markers (dots, avatars, spinners, step numbers) keep their shape. */
 .content :where(*:not(.dot, .pill-dot, .env-dot, .avatar, .spinner, [class*="step"], [class*="ring"], svg, svg *, input[type="radio"])) {
@@ -221,21 +182,6 @@ body { font-size: var(--fs-md); line-height: 1.4; }
 .dc-pad { padding: 12px; }
 @media (max-width: 900px) { .field-grid-3 .gf-wide { grid-column: auto; } .dc-form-top { grid-template-columns: 1fr; gap: 8px; } .dc-form-title { text-align: left; } .dc-form-tools { justify-self: start; } }
 
-/* ---------- two-row grouped menu ---------- */
-.his-menu { flex-direction: column; align-items: stretch; flex-wrap: nowrap; padding: 0; gap: 0; }
-.his-menu-groups { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 2px; padding: 4px 8px 0; background: var(--his-menu); border-bottom: 1px solid var(--his-line); }
-.his-group {
-  display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; font-size: 12.5px; font-weight: 600;
-  background: var(--his-tab); color: var(--text-2); border: 1px solid var(--his-line); border-bottom: 0; border-radius: 0;
-}
-.his-group:hover { background: #fff; color: var(--his-navy); }
-.his-group.current { color: var(--his-navy); }
-.his-group.open { background: #fff; color: var(--his-navy); font-weight: 700; box-shadow: inset 0 2px 0 var(--his-blue); position: relative; top: 1px; }
-.his-quick { margin-bottom: 3px; }
-.his-menu-groups .his-quick:first-of-type { margin-left: auto; }
-.his-menu-items { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; padding: 4px 8px; background: #fff; border-bottom: 1px solid var(--his-line); min-height: 32px; }
-.his-menu-crumb { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-right: 6px; }
-
 /* ---------- patient banner: plain form strip ---------- */
 .patient-banner { background: var(--his-panel) !important; border: 1px solid var(--his-line) !important; backdrop-filter: none !important; padding: 6px 12px !important; }
 .patient-banner::before, .patient-banner::after { display: none !important; }
@@ -263,37 +209,10 @@ body { font-size: var(--fs-md); line-height: 1.4; }
 .dk-kpi-note { font-size: 11.5px !important; color: var(--muted) !important; }
 .dk-kpi-arrow, .dk-item-icon { display: none !important; }
 
-/* ---------- hospital vs patient workspace ---------- */
-.his-workspace { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 5px 8px; border-bottom: 1px solid var(--his-line); }
-.his-ws { padding: 4px 14px; font-size: 12.5px; font-weight: 700; letter-spacing: .4px; border: 1px solid var(--his-line); background: #fff; color: var(--text-2); }
-.his-ws:hover { border-color: var(--his-blue); color: var(--his-navy); }
-.his-ws-hospital.on { background: var(--his-navy); border-color: var(--his-navy); color: #fff; }
-.his-ws-patient.on { background: #0e7490; border-color: #0e7490; color: #fff; }
-.his-ws-hint { font-size: 12px; color: var(--muted); }
-.his-quick { margin: 0; }
-.his-workspace .his-quick:first-of-type { margin-left: auto; }
-.his-menu-groups .his-quick:first-of-type { margin-left: 0; }
-
-/* Hospital workspace: blue. Patient workspace: teal accents and an identity strip. */
-.is-hospital .his-workspace { background: var(--his-menu); }
-.is-patient .his-workspace { background: #e6f6f8; }
-.is-patient .his-menu-groups { background: #e6f6f8; }
-.is-patient .his-group.open { box-shadow: inset 0 2px 0 #0e7490; }
-.is-patient .his-menu-item.active { border-color: #0e7490; color: #0b5566; }
-.his-pt-strip { display: flex; flex-wrap: wrap; gap: 4px 6px; font-size: 12px; }
-.his-pt-strip > span { background: #fff; border: 1px solid #9fd3dc; padding: 2px 8px; }
-.his-pt-strip b { color: #0b5566; font-size: 11px; margin-right: 4px; }
-.his-pt-strip .his-pt-allergy { border-color: var(--critical-line); background: var(--critical-soft); color: var(--critical); }
-.his-pt-strip .his-pt-allergy b { color: var(--critical); }
-
 /* patient chart: full width, no side rail */
 .pg-timeline.tl-full { display: block; }
 .pg-timeline.tl-full > .panel { width: 100%; }
 .pg-timeline.tl-full .timeline-scroll { max-height: none; }
-
-/* ---------- role switcher ---------- */
-.his-role { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
-.his-role select { font-size: 12px; padding: 1px 4px; border: 1px solid #5b8ad6; background: var(--his-navy-deep); color: #fff; border-radius: 0; }
 
 /* ---------- tasks & escalation ---------- */
 .tk-counts { display: flex; gap: 14px; font-size: 12.5px; color: var(--text-2); }
@@ -323,7 +242,6 @@ body { font-size: var(--fs-md); line-height: 1.4; }
 .tk-actions { display: inline-flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
 .tk-urgent-btn { background: #dc2626 !important; border-color: #b91c1c !important; color: #fff !important; }
 .tk-urgent-btn:hover { background: #b91c1c !important; }
-@media (max-width: 1500px) { .his-status .his-hide-sm { display: none; } }
 
 /* ---------- patient progress ---------- */
 .pr-score { display: flex; align-items: baseline; gap: 8px; font-size: 12px; color: var(--text-2); font-weight: 600; }

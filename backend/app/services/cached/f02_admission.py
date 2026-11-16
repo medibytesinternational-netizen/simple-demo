@@ -1,9 +1,9 @@
-"""F2 admission draft without an AI key.
+"""F2 admission note without an AI key, in the hospital admission format.
 
-Built only from what was said (quoted verbatim through services/extract.py) and from records
-already held (home medicines, abnormal latest results, problems and allergies on the patient
-record). A section with no source stays empty. Proposed orders are proposals: approving the
-note never creates an order.
+Every item quotes a sentence that was said in the admission dictation and cites its segment. A
+heading nobody spoke about stays empty; when the draft is created it is filled from the patient's
+signed OPD report where that report has it, and otherwise listed under ``not_documented``.
+Proposed treatment is a proposal: signing the note never places an order.
 """
 
 from __future__ import annotations
@@ -11,147 +11,35 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from ..extract import analyse, claim, joined_claim, medicines_in
-from .common import _home_meds, _patient, _segments, _transcript_event
+from ..extract import analyse, claim, joined_claim
+from .common import _segments, _transcript_event
 
-ORDER_RATIONALE = "Said in the admission conversation"
-_ABNORMAL_WORDS = ("high", "low", "critical")
-
-
-def _is_abnormal(lab: dict[str, Any]) -> bool:
-    flag = str(lab.get("flag") or "").lower()
-    return any(word in flag for word in _ABNORMAL_WORDS)
-
-
-def _medicine_text(med: dict[str, Any]) -> str:
-    parts = [str(med.get("drug", "")).strip(), str(med.get("dose", "")).strip(), str(med.get("frequency", "")).strip()]
-    return " ".join(part for part in parts if part)
-
-
-def _lab_text(lab: dict[str, Any]) -> str:
-    value = " ".join(str(item) for item in (lab.get("value"), lab.get("unit")) if item not in (None, ""))
-    return f"{lab.get('name', '')} {value} ({str(lab.get('flag', '')).lower()})".replace("  ", " ").strip()
-
-
-def _history_claim(context: dict[str, Any], analysis, transcript_id: str) -> dict[str, Any] | None:
-    pieces: list[str] = []
-    event_ids: list[str] = []
-    segment_ids: list[str] = []
-    confidence = 0.9
-
-    transcript_part = joined_claim(analysis.history, transcript_id)
-    if transcript_part:
-        pieces.append(transcript_part["text"])
-        event_ids.extend(transcript_part["source_event_ids"])
-        segment_ids.extend(transcript_part["source_segment_ids"])
-        confidence = transcript_part["confidence"]
-
-    meds = [med for med in _home_meds(context) if _medicine_text(med)]
-    if meds:
-        pieces.append("Home medicines on record: " + ", ".join(_medicine_text(med) for med in meds) + ".")
-        event_ids.extend(str(med.get("event_id", "")) for med in meds)
-
-    labs = [lab for lab in context.get("latest_labs", []) if _is_abnormal(lab) and lab.get("name")]
-    if labs:
-        pieces.append("Abnormal latest results: " + ", ".join(_lab_text(lab) for lab in labs) + ".")
-        event_ids.extend(str(lab.get("event_id", "")) for lab in labs)
-
-    problems = [str(item).strip() for item in _patient(context).get("problems", []) if str(item).strip()]
-    if problems:
-        pieces.append("On the patient record: " + ", ".join(problems) + ".")
-
-    if not pieces:
-        return None
-    return {
-        "text": " ".join(pieces),
-        "source_event_ids": list(dict.fromkeys(item for item in event_ids if item)),
-        "source_segment_ids": list(dict.fromkeys(segment_ids)),
-        "confidence": confidence,
-    }
-
-
-def _proposed_orders(analysis, transcript_id: str) -> list[dict[str, Any]]:
-    orders: list[dict[str, Any]] = []
-    seen: set[str] = set()
-    for sentence in analysis.plan:
-        names_medicine = bool(medicines_in(sentence))
-        # "Review in four weeks" is a follow-up appointment, not an order.
-        if re.match(r"\s*review\b", sentence.text, re.I) and not names_medicine:
-            continue
-        if sentence.text in seen:
-            continue
-        seen.add(sentence.text)
-        orders.append(
-            {
-                "order": sentence.text,
-                "rationale": ORDER_RATIONALE,
-                "source_event_ids": [transcript_id] if transcript_id else [],
-                "source_segment_ids": [sentence.segment_id],
-            }
-        )
-    return orders
-
-
-def _allergy_event(context: dict[str, Any], substance: str) -> dict[str, Any] | None:
-    wanted = substance.lower()
-    for event in context.get("evidence_events", []):
-        if event.get("type") != "allergy_record":
-            continue
-        recorded = str((event.get("payload") or {}).get("substance", "")).strip().lower()
-        if recorded and (recorded == wanted or recorded in wanted or wanted in recorded):
-            return event
-    return None
-
-
-def _allergies(context: dict[str, Any]) -> list[dict[str, Any]]:
-    out = []
-    for item in _patient(context).get("allergies", []):
-        if isinstance(item, dict):
-            raw_substance = str(item.get("substance", ""))
-            reaction = str(item.get("reaction", "") or "")
-            event_id = str(item.get("event_id", "") or "")
-        else:
-            raw_substance, reaction, event_id = str(item), "", ""
-        substance, _, tail = raw_substance.partition(" — ")
-        substance = substance.strip()
-        if not substance:
-            continue
-        if not reaction:
-            reaction = tail.strip()
-        if not event_id or not reaction:
-            event = _allergy_event(context, substance)
-            if event:
-                event_id = event_id or str(event.get("id", ""))
-                reaction = reaction or str((event.get("payload") or {}).get("reaction", "") or "")
-        out.append(
-            {
-                "substance": substance,
-                "reaction": reaction,
-                "source_event_id": event_id,
-                "verified": False,
-            }
-        )
-    return out
+_FIND: dict[str, re.Pattern[str]] = {
+    "admission_type": re.compile(r"\b(elective|emergency|emergent|urgent admission)\b", re.I),
+    "ward": re.compile(r"\b(admit(?:ted|ting)? (?:him|her|them|the patient)? ?(?:to|in(?:to)?)|ward\s*\d*|icu|hdu|ccu|nicu)\b", re.I),
+    "speciality": re.compile(r"\b(under (?:the )?(?:general )?(?:medicine|surgery|cardiology|neurology|orthopaedics|orthopedics|gynaecology|paediatrics|pediatrics|nephrology|pulmonology|gastroenterology|oncology)|speciality|department of)\b", re.I),
+    "provisional_diagnosis": re.compile(r"\b(provisional diagnosis|working diagnosis|diagnosis is|most likely|looks like|suggestive of|consistent with)\b", re.I),
+    "proposed_treatment": re.compile(r"\b(start|give|continue|commence|infuse|iv |intravenous|tablet|tab |injection|surgery|procedure|operation|oxygen|nebuli[sz]|physiotherapy|dialysis)\b", re.I),
+    "expected_outcome": re.compile(r"\b(expect(?:ed)? (?:him|her|them|it)? ?to (?:improve|recover|stay|remain|worsen|deteriorate)|should improve|prognosis|outcome)\b", re.I),
+    "possible_complications": re.compile(r"\b(risk of|complication|may develop|could develop|watch (?:out )?for)\b", re.I),
+    "allergies": re.compile(r"\ballerg(?:y|ies|ic)\b", re.I),
+    "cost_category": re.compile(r"\b(cost|insurance|scheme|category|package|rupees|rs\.?|lakh|thousand|general ward rate|private)\b", re.I),
+    "admission_labs": re.compile(r"\b(cbc|complete blood count|blood (?:test|culture|sugar|count)|renal function|kidney function|liver function|lft|rft|electrolytes|urine|culture|hba1c|troponin|coagulation|lab(?:oratory)?s?)\b", re.I),
+    "imaging_studies": re.compile(r"\b(x-?ray|ultrasound|usg|ct\b|ct scan|mri|echo(?:cardiogram)?|scan|doppler)\b", re.I),
+    "consultations_required": re.compile(r"\b(opinion|consult(?:ation)?|refer(?:ral)? to|review by|see (?:the )?\w+ team)\b", re.I),
+}
+_SINGLE = {"admission_type", "ward", "speciality", "expected_outcome", "cost_category"}
 
 
 def f2_admission_note(context: dict[str, Any]) -> dict[str, Any]:
-    transcript_id = _transcript_event(context)
+    tid = _transcript_event(context)
     analysis = analyse(_segments(context))
-    # A follow-up sentence that merely mentions "peak flow" or similar is not an examination finding.
-    exam = [sentence for sentence in analysis.exam if sentence not in analysis.follow_up]
-    return {
-        "chief_complaint": claim(analysis.complaint, transcript_id) if analysis.complaint else None,
-        "history": _history_claim(context, analysis, transcript_id),
-        "exam": {
-            "general": joined_claim(exam, transcript_id),
-            "systemic": None,
-        },
-        "assessment": [claim(sentence, transcript_id) for sentence in analysis.assessment],
-        "plan": [claim(sentence, transcript_id) for sentence in analysis.plan],
-        "proposed_orders": _proposed_orders(analysis, transcript_id),
-        "allergies_to_verify": _allergies(context),
-        "not_documented": analysis.missing(),
-    }
+    said = [s for s in analysis.sentences if not s.is_question]
+    content: dict[str, Any] = {"format": "admit_v2"}
+    for key, rx in _FIND.items():
+        found = [s for s in said if rx.search(s.text)]
+        content[key] = joined_claim(found[:1], tid) if key in _SINGLE else [claim(s, tid) for s in found]
+    return content
 
 
 GENERATORS = {"F2": f2_admission_note}

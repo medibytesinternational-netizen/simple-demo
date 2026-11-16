@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from .config import settings
 
@@ -16,7 +16,21 @@ def real_utcnow() -> datetime:
 
 
 def now() -> datetime:
+    """The time a record is stamped with: the real current time, or the demo scenario clock."""
+    if settings.clock_mode != "demo":
+        return datetime.now()
     return _demo_start + (real_utcnow() - _real_start)
+
+
+def resume_after(latest: datetime | None) -> None:
+    """Carry on after the latest recorded time instead of starting again from the demo time.
+
+    Without this, every server restart sends the clock back, and anything recorded afterwards
+    sorts before what was recorded earlier (timeline, drafts, audit).
+    """
+    global _real_start
+    if latest and latest >= now():
+        _real_start = real_utcnow() - (latest - _demo_start) - timedelta(seconds=1)
 
 
 def reset() -> None:

@@ -6,6 +6,7 @@ import { useEvidence } from "../components/Evidence";
 import { usePatientId } from "../session";
 import { buildTimelineQuery, hasFilters } from "../features/f16/filters";
 import { ProvenanceFacts } from "../features/f16/Provenance";
+import { EventBody } from "../features/f16/EventBody";
 import { NO_FILTERS, type TimelineFilters, type TimelineResponse } from "../features/f16/types";
 import { PageHeader } from "../components/PageHeader";
 import { EmptyState, Field, ListRow, Menu, MenuItem, Panel, Pill, Skeleton, Toolbar } from "../components/ui";
@@ -192,7 +193,7 @@ export function TimelinePage() {
                               ) : null}
                             </span>
                           }
-                          body={event.body_text ? <span className="tl-preview">{event.body_text}</span> : undefined}
+                          body={<EventBody event={event} />}
                           chips={<ProvenanceFacts event={event} />}
                           side={
                             <span className="tl-when">
@@ -237,6 +238,7 @@ const EVENT_ICONS: Record<string, string> = {
   allergy_record: "alert",
   document_request: "request",
   document_review: "scan",
+  registration: "user_check",
 };
 
 function eventIcon(type: string) {

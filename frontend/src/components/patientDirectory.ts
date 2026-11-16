@@ -31,6 +31,7 @@ export type DirectoryRow = {
   previewPatient?: PreviewPatient;
 };
 
+/** The seeded demo patient. Any registered patient opens; the server says so with `browsable`. */
 export const CHART_PATIENT_ID = "pat_ravi";
 
 export function ageFrom(dob: string, now = new Date()) {
@@ -51,7 +52,7 @@ export function usePatientDirectory() {
       queryFn: () => get<{ patient: { allergies: string[]; problems: string[] } }>(`/patients/${row.patient_id}`),
       staleTime: 60_000,
       // The server refuses clinical detail for patients outside this view.
-      enabled: row.browsable ?? row.patient_id === CHART_PATIENT_ID,
+      enabled: row.browsable !== false,
     })),
   });
 
@@ -78,7 +79,7 @@ export function usePatientDirectory() {
       overdueTasks: row.overdue_tasks,
       flags: row.flags,
       source: "seed",
-      chartAvailable: row.browsable ?? row.patient_id === CHART_PATIENT_ID,
+      chartAvailable: row.browsable !== false,
       previewEncounter: enc,
     };
   });

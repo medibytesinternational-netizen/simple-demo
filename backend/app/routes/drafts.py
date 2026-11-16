@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
 from ..services.identity import require
-from ..services.identity import acting_name
+from ..services.identity import acting_name, current_patient_id
 from ..db import get_db, utcnow
 from ..models import (
     Draft,
@@ -17,6 +17,7 @@ from ..services.drafts import (
     approve_draft,
     draft_to_dict,
     reject_draft,
+    revise_draft,
     update_draft,
 )
 from ..services.rules import evaluate_rules
@@ -47,7 +48,8 @@ def drafts(
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
-    stmt = select(Draft).order_by(Draft.created_at.desc()).limit(limit)
+    # Drafts belong to the open patient; another patient's draft never shows here.
+    stmt = select(Draft).where(Draft.patient_id == current_patient_id()).order_by(Draft.created_at.desc()).limit(limit)
     if feature:
         stmt = stmt.where(Draft.feature == feature)
     if encounter_id:
@@ -133,6 +135,17 @@ def draft_approve(draft_id: str, body: ApproveRequest, db: Session = Depends(get
         "event": event_to_dict(event) if event else None,
         "new_alerts": [{"id": alert.id, "rule_id": alert.rule_id, "title": alert.title} for alert in created_alerts],
     }
+
+
+@router.post("/drafts/{draft_id}/revise", dependencies=[Depends(require("edit_draft"))])
+def draft_revise(draft_id: str, db: Session = Depends(get_db)):
+    """Edit a signed note: returns a new draft with its content. Signing that draft updates the timeline."""
+    draft = db.get(Draft, draft_id)
+    if not draft or draft.patient_id != current_patient_id():
+        raise HTTPException(404, "Draft not found")
+    revision = revise_draft(db, draft)
+    db.commit()
+    return draft_to_dict(revision)
 
 
 @router.post("/drafts/{draft_id}/reject", dependencies=[Depends(require("reject_draft"))])

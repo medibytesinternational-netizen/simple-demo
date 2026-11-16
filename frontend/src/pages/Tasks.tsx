@@ -7,7 +7,7 @@ import { ReasonForm } from "../features/f15/ReasonForm";
 import type { ReasonTarget } from "../features/f15/types";
 import { Banner, Skeleton } from "../components/ui";
 import { NextStepCta } from "../components/NextStepCta";
-import { STAFF } from "../components/legacy/HisChrome";
+import { STAFF } from "../components/roles";
 
 const CATEGORIES: { key: string; label: string }[] = [
   { key: "general", label: "General" },
@@ -19,7 +19,7 @@ const CATEGORIES: { key: string; label: string }[] = [
   { key: "ecg", label: "ECG" },
 ];
 const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.label]));
-const ROLE_LABEL: Record<string, string> = { senior_doctor: "Senior doctor", nurse: "Nurse", doctor: "Chief doctor" };
+const ROLE_LABEL: Record<string, string> = Object.fromEntries(STAFF.map((s) => [s.role, s.label]));
 const ASSIGNABLE = STAFF.filter((s) => s.role !== "doctor");
 
 const STATUS_LABEL: Record<string, string> = {
@@ -57,7 +57,7 @@ export function TasksPage() {
   const [dueHours, setDueHours] = useState(4);
 
   const [view, setView] = useState<View>("open");
-  const [roleFilter, setRoleFilter] = useState<"all" | "senior_doctor" | "nurse">("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | "senior_doctor" | "junior_doctor" | "nurse">("all");
   const [reasonFor, setReasonFor] = useState<ReasonTarget | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -222,6 +222,7 @@ export function TasksPage() {
             <select className="select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}>
               <option value="all">All staff</option>
               <option value="senior_doctor">Senior doctors</option>
+              <option value="junior_doctor">Junior doctors</option>
               <option value="nurse">Nurses</option>
             </select>
           </label>

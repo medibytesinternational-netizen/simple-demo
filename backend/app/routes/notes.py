@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -14,7 +14,7 @@ from ..models import (
     TimelineEvent,
 )
 from ..services import credits, pipeline
-from ..services.identity import require
+from ..services.identity import current_patient_id, require
 from ..services.context import build_context, create_transcript_event
 from ..services.drafts import (
     create_draft,
@@ -56,12 +56,14 @@ def _looks_like_audio(filename: str | None, content_type: str | None) -> bool:
 # Notes (F1, F2, F3, F4)
 # --------------------------------------------------------------------------
 @router.post("/notes/transcribe", dependencies=[Depends(require("clinical_draft"))])
-async def transcribe_consultation(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def transcribe_consultation(file: UploadFile = File(...), feature: str = Form("F1"), db: Session = Depends(get_db)):
     """Transcribe a consented consultation recording.
 
     This is the only audio path. It requires live mode; the cached demo does not
     pretend to understand audio. Consent must already exist for the encounter.
     """
+    if feature not in pipeline.TEMPLATE_FOR:
+        raise HTTPException(422, f"Voice is not available for {feature}")
     patient, encounter, _ = _state(db)
     # Every refusal below happens before credits.charge, so a refused upload spends nothing.
     consents = db.scalars(
@@ -87,13 +89,14 @@ async def transcribe_consultation(file: UploadFile = File(...), db: Session = De
         raise HTTPException(400, "Voice notes need the MediBytes pipeline; set OPENAI_API_KEY")
     # The upload is really about to run: charge before the work. The charge is only flushed, so
     # a refused upload leaves the request uncommitted and nothing is spent.
-    credits.charge(db, "voice_note", feature="F1", mode="live")
+    credits.charge(db, "voice_note", feature=feature, mode="live")
     audio_id = str(uuid.uuid4())
     receipt = pipeline.submit(
         contents,
         file.filename or "consultation.webm",
         file.content_type or "audio/webm",
         audio_id,
+        feature,
     )
     add_audit(
         db,
@@ -118,12 +121,12 @@ def pipeline_status(audio_id: str, db: Session = Depends(get_db)):
         select(TimelineEvent).where(
             TimelineEvent.patient_id == patient.id,
             TimelineEvent.type == "transcript",
-            TimelineEvent.subtype == "F1",
+            TimelineEvent.subtype.in_(list(pipeline.TEMPLATE_FOR)),
         )
     ).all()
     for event in existing:
         if (event.payload or {}).get("audio_id") == audio_id:
-            draft = db.scalars(select(Draft).where(Draft.feature == "F1", Draft.patient_id == patient.id)).all()
+            draft = db.scalars(select(Draft).where(Draft.feature == event.subtype, Draft.patient_id == patient.id)).all()
             match = next((d for d in draft if event.id in (d.created_from_event_ids or [])), None)
             if match:
                 return {"status": "succeeded", "draft": draft_to_dict(match)}
@@ -143,7 +146,8 @@ def pipeline_status(audio_id: str, db: Session = Depends(get_db)):
     if not text or not pipeline.has_items(note):
         return {"status": "failed", "error": "No speech was detected in the recording"}
     feature = result.get("feature") or "F1"
-    event = create_transcript_event(db, patient, encounter, feature, text, "Consultation (MediBytes pipeline)")
+    title = "Admission dictation (MediBytes pipeline)" if feature == "F2" else "Consultation (MediBytes pipeline)"
+    event = create_transcript_event(db, patient, encounter, feature, text, title)
     event.payload = {**(event.payload or {}), "audio_id": audio_id, "pipeline_note": note}
     content = pipeline.draft_content(feature, note, event.id, event.payload.get("segments") or [])
     draft = create_draft(
@@ -212,7 +216,8 @@ def generate_note(body: NoteGenerateRequest, db: Session = Depends(get_db)):
 
 @router.get("/notes/latest")
 def latest_notes(feature: str | None = None, db: Session = Depends(get_db)):
-    stmt = select(Draft).order_by(Draft.created_at.desc()).limit(10)
+    # Drafts belong to the open patient; another patient's draft never shows here.
+    stmt = select(Draft).where(Draft.patient_id == current_patient_id()).order_by(Draft.created_at.desc()).limit(10)
     if feature:
         stmt = stmt.where(Draft.feature == feature)
     rows = list(db.scalars(stmt))

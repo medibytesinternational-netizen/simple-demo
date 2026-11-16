@@ -180,6 +180,8 @@ SOURCE_LABELS = {
     "device": "Bedside device reading",
     "seed": "Demo seed data",
     "human": "Typed by a person",
+    "F8": "Uploaded document",
+    "registration": "Registration desk",
 }
 
 

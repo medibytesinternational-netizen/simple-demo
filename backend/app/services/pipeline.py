@@ -25,7 +25,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 # Feature -> medibytes note template. Only features listed here take voice.
-TEMPLATE_FOR = {"F1": "opd"}
+TEMPLATE_FOR = {"F1": "opd", "F2": "admission"}
 
 _lock = threading.Lock()
 _service: Any = None
@@ -104,6 +104,29 @@ def fetch(audio_id: str) -> dict[str, Any] | None:
 # ---------- note -> draft ----------
 
 SECTION_LABELS = {
+    # Hospital OPD format (F1).
+    "mode_of_admission": "Mode of admission",
+    "referring_physician": "Referring physician",
+    "previous_admission": "Previous admission",
+    "previous_diagnosis": "Previous diagnosis",
+    "allergies": "Allergies",
+    "pain": "Pain",
+    "occupation": "Occupation",
+    "source_of_history": "Source of history and reliability",
+    "chief_complaints": "Chief complaints",
+    # Hospital admission format (F2).
+    "admission_type": "Elective or emergency",
+    "ward": "Admit to ward",
+    "speciality": "Speciality",
+    "provisional_diagnosis": "Provisional diagnosis",
+    "proposed_treatment": "Proposed treatment",
+    "expected_outcome": "Expected outcome",
+    "possible_complications": "Possible complications",
+    "cost_category": "Approximate cost or category",
+    "admission_labs": "Admission labs",
+    "imaging_studies": "Imaging studies",
+    "consultations_required": "Consultations required",
+    # Discharge and earlier note sections.
     "chief_complaint": "Chief complaint",
     "history_of_present_illness": "History of present illness",
     "past_history": "Past history",
@@ -177,59 +200,36 @@ class _Mapper:
         }
 
 
-_DOSE = re.compile(r"\s+(\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml|mL|U|units?|IU|iu)\b)")
-
-
-def _medication(mapper: _Mapper, item: dict[str, Any]) -> dict[str, Any]:
-    """'Montelukast 10 mg once at night' -> drug, dose, frequency (the words after the dose)."""
-    text = str(item["text"]).strip()
-    not_given = text.upper().startswith("NOT GIVEN:")
-    if not_given:
-        text = text.split(":", 1)[1].strip()
-    match = _DOSE.search(text)
-    if match:
-        drug, dose, rest = text[: match.start()], match.group(1), text[match.end():]
-    else:
-        drug, dose, rest = re.sub(r"\s+no dose\b", "", text), None, ""
-    frequency = rest.strip(" ,;") or None
-    if not_given:
-        frequency = "not given" + (f" ({frequency})" if frequency else "")
-    claim = mapper.claim(item)
-    return {
-        "drug": drug.strip(" ,;"),
-        "dose": dose,
-        "frequency": frequency,
-        "source_event_ids": claim["source_event_ids"],
-        "source_segment_ids": claim["source_segment_ids"],
-    }
-
-
 def _f1_content(m: _Mapper) -> dict[str, Any]:
-    chief_items = m.items("chief_complaint")
-    hpi_items = chief_items[1:] + m.items("history_of_present_illness")
-    content = {
-        "chief_complaint": m.claim(chief_items[0]) if chief_items else None,
-        "hpi": m.joined(hpi_items),
-        "exam": {"general": m.joined(m.items("examination_general")),
-                 "systemic": m.joined(m.items("examination_systemic"))},
-        "assessment": [m.claim(it) for it in m.items("assessment")]
-        + [m.claim(it, "" if re.match(r"(?i)\s*(past|history|known)\b", it["text"]) else "Past history: ")
-           for it in m.items("past_history")],
-        "plan": [m.claim(it) for key in ("investigations", "plan", "advice") for it in m.items(key)],
-        "medication_mentions": [_medication(m, it) for it in m.items("medications")],
-        "follow_up": m.joined(m.items("follow_up")),
-    }
-    labels = {"chief_complaint": "Chief complaint", "hpi": "History of present illness",
-              "assessment": "Assessment", "plan": "Plan", "medication_mentions": "Medications",
-              "follow_up": "Follow-up"}
-    content["not_documented"] = [label for key, label in labels.items() if not content[key]]
-    if not content["exam"]["general"] and not content["exam"]["systemic"]:
-        content["not_documented"].append("Examination")
+    """The hospital OPD format. Record headings are added when the draft is created."""
+    from .opd import OPD_FORMAT, heard_not_documented
+
+    one = ("mode_of_admission", "referring_physician", "previous_admission", "pain",
+           "occupation", "source_of_history", "history_of_present_illness")
+    many = ("previous_diagnosis", "allergies", "chief_complaints")
+    content: dict[str, Any] = {"format": OPD_FORMAT}
+    for key in one:
+        content[key] = m.joined(m.items(key))
+    for key in many:
+        content[key] = [m.claim(it) for it in m.items(key)]
+    content["not_documented"] = heard_not_documented(content)
     content["needs_review"] = m.needs_review
     return content
 
 
-_BUILDERS = {"F1": _f1_content}
+def _f2_content(m: _Mapper) -> dict[str, Any]:
+    """The hospital admission format. Record headings and the OPD fill-in are added at draft creation."""
+    from ..schemas import ADMISSION_HEARD_SECTIONS
+    from .admission import ADMIT_FORMAT
+
+    content: dict[str, Any] = {"format": ADMIT_FORMAT}
+    for key, _label, many in ADMISSION_HEARD_SECTIONS:
+        content[key] = [m.claim(it) for it in m.items(key)] if many else m.joined(m.items(key))
+    content["needs_review"] = m.needs_review
+    return content
+
+
+_BUILDERS = {"F1": _f1_content, "F2": _f2_content}
 
 
 def draft_content(feature: str, note: dict[str, Any], event_id: str, segments: list[dict[str, Any]]) -> dict[str, Any]:

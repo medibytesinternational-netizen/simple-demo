@@ -5,7 +5,8 @@ import { get } from "../api";
 import type { AppState, Lab, Meta } from "../types";
 import { warningCount, type Readiness } from "../features/f09/types";
 import { usePatientId } from "../session";
-import { Skeleton } from "../components/ui";
+import { Disclosure, Skeleton } from "../components/ui";
+import { canSee, currentRole } from "../components/roles";
 import type { ProgressResponse } from "./Progress";
 
 // Documents still waiting for a person to confirm what OCR read (same set as the dock badge).
@@ -79,7 +80,7 @@ export function PatientOverviewPage() {
           <p className="page-desc">What needs attention for this patient, the latest results and what to do next.</p>
         </div>
         <div className="page-header-actions button-row">
-          <Link className="btn btn-primary" to="/notes?tab=consult">Start consultation</Link>
+          {canSee(currentRole(), "consult") ? <Link className="btn btn-primary" to="/notes?tab=consult">Start consultation</Link> : null}
           <Link className="btn" to="/timeline">Open chart</Link>
         </div>
       </header>
@@ -93,8 +94,41 @@ export function PatientOverviewPage() {
         </Link>
       ) : null}
 
-
       {state.isError ? <p className="error-box" role="alert">The patient record could not be loaded. Try again in a moment.</p> : null}
+
+      <section className="his-box">
+        <h2 className="his-box-title">Needs attention</h2>
+        {!s ? <Skeleton variant="rows" count={3} /> : openAlerts.length + overdueTasks.length + unreviewedLabs.length === 0 ? (
+          <p className="his-box-empty">Nothing needs attention right now.</p>
+        ) : (
+          <table className="table">
+            <thead><tr><th>Type</th><th>Item</th><th>Detail</th><th /></tr></thead>
+            <tbody>
+              {openAlerts.map((a) => (
+                <tr key={a.id}>
+                  <td className={`strong his-tone-${a.severity === "critical" ? "critical" : "warning"}`}>{a.severity === "critical" ? "Critical" : "Alert"}</td>
+                  <td>{a.title}</td><td className="muted">{a.recommended_action}</td>
+                  <td className="right"><Link className="btn btn-sm" to={ALERT_TARGET[a.rule_id]?.to ?? "/safety?tab=alerts"}>{ALERT_TARGET[a.rule_id]?.label ?? "Review"}</Link></td>
+                </tr>
+              ))}
+              {overdueTasks.map((t) => (
+                <tr key={t.id}>
+                  <td className="strong his-tone-warning">Overdue</td>
+                  <td>{t.title}</td><td className="muted">{t.owner || t.assigned_to || "Unassigned"} · due {when(t.due_at)}</td>
+                  <td className="right"><Link className="btn btn-sm" to="/tasks">Open</Link></td>
+                </tr>
+              ))}
+              {unreviewedLabs.map((l) => (
+                <tr key={l.event_id}>
+                  <td className="strong his-tone-info">Unreviewed</td>
+                  <td>{l.name} {l.value} {l.unit}</td><td className="muted">Reference {l.reference_range || "not documented"} · {when(l.collected_at)}</td>
+                  <td className="right"><Link className="btn btn-sm" to="/notes?tab=labs">Review</Link></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
 
       <div className="his-dash-cols">
         <section className="his-box">
@@ -131,40 +165,7 @@ export function PatientOverviewPage() {
         </section>
       </div>
 
-      <section className="his-box">
-        <h2 className="his-box-title">Needs attention</h2>
-        {!s ? <Skeleton variant="rows" count={3} /> : openAlerts.length + overdueTasks.length + unreviewedLabs.length === 0 ? (
-          <p className="his-box-empty">Nothing needs attention right now.</p>
-        ) : (
-          <table className="table">
-            <thead><tr><th>Type</th><th>Item</th><th>Detail</th><th /></tr></thead>
-            <tbody>
-              {openAlerts.map((a) => (
-                <tr key={a.id}>
-                  <td className={`strong his-tone-${a.severity === "critical" ? "critical" : "warning"}`}>{a.severity === "critical" ? "Critical" : "Alert"}</td>
-                  <td>{a.title}</td><td className="muted">{a.recommended_action}</td>
-                  <td className="right"><Link className="btn btn-sm" to={ALERT_TARGET[a.rule_id]?.to ?? "/safety?tab=alerts"}>{ALERT_TARGET[a.rule_id]?.label ?? "Review"}</Link></td>
-                </tr>
-              ))}
-              {overdueTasks.map((t) => (
-                <tr key={t.id}>
-                  <td className="strong his-tone-warning">Overdue</td>
-                  <td>{t.title}</td><td className="muted">{t.owner || t.assigned_to || "Unassigned"} · due {when(t.due_at)}</td>
-                  <td className="right"><Link className="btn btn-sm" to="/tasks">Open</Link></td>
-                </tr>
-              ))}
-              {unreviewedLabs.map((l) => (
-                <tr key={l.event_id}>
-                  <td className="strong his-tone-info">Unreviewed</td>
-                  <td>{l.name} {l.value} {l.unit}</td><td className="muted">Reference {l.reference_range || "not documented"} · {when(l.collected_at)}</td>
-                  <td className="right"><Link className="btn btn-sm" to="/notes?tab=labs">Review</Link></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-
+      <Disclosure title={`Labs, medicines and notes${s ? ` (${s.latest_labs.length} results, ${s.active_meds.length} medicines, ${notes.length} notes)` : ""}`}>
       <div className="his-dash-cols">
         <section className="his-box">
           <h2 className="his-box-title">Latest lab results</h2>
@@ -214,6 +215,7 @@ export function PatientOverviewPage() {
           </table>
         ) : <p className="his-box-empty">No signed notes yet.</p>}
       </section>
+      </Disclosure>
     </div>
   );
 }

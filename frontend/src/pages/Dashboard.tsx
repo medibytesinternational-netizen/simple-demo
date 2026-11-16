@@ -14,7 +14,7 @@ type Referral = { id: string; specialty: string; status: string };
 
 // Only the primary synthetic patient has a full clinical chart in the current data.
 const CHART_PATIENT_ID = "pat_ravi";
-const openChartAvailable = (row: Row) => row.browsable ?? row.patient_id === CHART_PATIENT_ID;
+const openChartAvailable = (row: Row) => row.browsable !== false;
 const PENDING_DRAFT = new Set(["draft_ready", "human_edited", "model_unavailable"]);
 // Draft-producing modules; the hospital view only counts them; review happens inside the patient.
 const DRAFT_FEATURES = ["F1", "F2", "F3", "F4", "F7", "F11", "F6", "F9", "F10"];
@@ -170,6 +170,33 @@ export function DashboardPage() {
         </Banner>
       ) : null}
 
+      <section className="his-box">
+        <h2 className="his-box-title">Needs attention</h2>
+        {dashboard.isLoading || (data && detailsLoading && !attention.length) ? <Skeleton variant="rows" count={3} /> : attention.length ? (
+          <table className="table">
+            <thead><tr><th>Patient</th><th>Ward / Bed</th><th>Type</th><th>Issue</th><th>Detail</th><th /></tr></thead>
+            <tbody>
+              {attention.map((item) => {
+                const action = openPatient(item.patient);
+                return (
+                  <tr key={item.key}>
+                    <td>{item.patient?.name || "-"}</td>
+                    <td>{place(item.patient) || "-"}</td>
+                    <td className={`strong his-tone-${item.tone}`}>{item.tag}</td>
+                    <td>{item.title}</td>
+                    <td className="muted">{item.detail}</td>
+                    <td className="right">
+                      {action?.onClick ? <button type="button" className="btn btn-sm" onClick={action.onClick}>{action.label}</button>
+                        : action?.to ? <Link className="btn btn-sm" to={action.to}>{action.label}</Link> : null}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : <p className="his-box-empty">Nothing needs attention right now.</p>}
+      </section>
+
       <div className="his-dash-cols">
         <section className="his-box">
           <h2 className="his-box-title">Hospital summary</h2>
@@ -208,33 +235,6 @@ export function DashboardPage() {
           ) : <Skeleton count={4} />}
         </section>
       </div>
-
-      <section className="his-box">
-        <h2 className="his-box-title">Needs attention</h2>
-        {dashboard.isLoading || (data && detailsLoading && !attention.length) ? <Skeleton variant="rows" count={3} /> : attention.length ? (
-          <table className="table">
-            <thead><tr><th>Patient</th><th>Ward / Bed</th><th>Type</th><th>Issue</th><th>Detail</th><th /></tr></thead>
-            <tbody>
-              {attention.map((item) => {
-                const action = openPatient(item.patient);
-                return (
-                  <tr key={item.key}>
-                    <td>{item.patient?.name || "-"}</td>
-                    <td>{place(item.patient) || "-"}</td>
-                    <td className={`strong his-tone-${item.tone}`}>{item.tag}</td>
-                    <td>{item.title}</td>
-                    <td className="muted">{item.detail}</td>
-                    <td className="right">
-                      {action?.onClick ? <button type="button" className="btn btn-sm" onClick={action.onClick}>{action.label}</button>
-                        : action?.to ? <Link className="btn btn-sm" to={action.to}>{action.label}</Link> : null}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        ) : <p className="his-box-empty">Nothing needs attention right now.</p>}
-      </section>
 
       <section className="his-box">
         <h2 className="his-box-title">Patients</h2>

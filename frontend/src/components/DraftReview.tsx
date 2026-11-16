@@ -1,4 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { OPD_HEADER_FIELDS, OPD_HEARD_SECTIONS, isOpdV2 } from "../features/f01/opdFormat";
+import { OpdEditor } from "../features/f01/OpdEditor";
+import { ADMIT_HEADER_FIELDS, ADMIT_HEARD_SECTIONS, isAdmitV2 } from "../features/f02/admitFormat";
+
+// A revision just started from a signed note opens straight in the editor.
+const openForEdit = new Set<string>();
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, patch, post } from "../api";
 import type { Claim, Draft, Meta } from "../types";
@@ -42,7 +48,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
       .map(({ index }: any) => index);
     setSelectedTasks(defaults);
     setEditText(JSON.stringify(draft.content, null, 2));
-    setEditMode(false);
+    setEditMode(openForEdit.delete(draft.id));
     setF4Exam(draft.content?.exam?.general?.text || "");
     setF4Plan(draft.content?.plan?.text || "");
   }, [draft.id, draft.content, tasks]);
@@ -52,13 +58,24 @@ export function DraftReview({ draft }: { draft: Draft }) {
   const approve = useMutation({
     mutationFn: async () => {
       let content: any = undefined;
-      if (editMode) content = JSON.parse(editText);
+      if (editMode && !isOpdV2(draft.content)) content = JSON.parse(editText);
       return post<any>(`/drafts/${draft.id}/approve`, {
         content,
         approved_by: meta.data?.user.name || "Dr. Meera Shah",
       });
     },
     onSuccess: () => {
+      setError("");
+      invalidate();
+    },
+    onError: (err: any) => setError(String(err?.message || err)),
+  });
+
+  // Correct a signed OPD report: a new draft with its content; signing it replaces the timeline entry.
+  const revise = useMutation({
+    mutationFn: () => post<Draft>(`/drafts/${draft.id}/revise`),
+    onSuccess: (revision) => {
+      openForEdit.add(revision.id);
       setError("");
       invalidate();
     },
@@ -163,6 +180,9 @@ export function DraftReview({ draft }: { draft: Draft }) {
   });
 
   const isApproved = draft.status === "approved";
+  const opdNote = draft.feature === "F1" && isOpdV2(draft.content);
+  // Admission notes in the hospital format use the same heading editor (before signing; signing admits).
+  const admitNote = draft.feature === "F2" && isAdmitV2(draft.content);
   const isRejected = draft.status === "rejected";
   const f4Incomplete =
     draft.feature === "F4" &&
@@ -224,7 +244,13 @@ export function DraftReview({ draft }: { draft: Draft }) {
         {!isApproved && !isRejected ? (
           <button className="btn btn-sm" aria-pressed={editMode} onClick={() => setEditMode((value) => !value)}>
             <Icon name="edit" size={14} />
-            {editMode ? "Stop editing" : "Edit draft (advanced)"}
+            {editMode ? "Stop editing" : opdNote || admitNote ? "Edit" : "Edit draft (advanced)"}
+          </button>
+        ) : null}
+        {isApproved && opdNote ? (
+          <button className="btn btn-sm" onClick={() => revise.mutate()} disabled={revise.isPending} aria-busy={revise.isPending || undefined}>
+            <Icon name="edit" size={14} />
+            {revise.isPending ? "Opening..." : "Edit"}
           </button>
         ) : null}
       </div>
@@ -350,7 +376,9 @@ export function DraftReview({ draft }: { draft: Draft }) {
         ) : null}
 
         <article className="draft-paper">
-          {editMode ? (
+          {editMode && (opdNote || admitNote) ? (
+            <OpdEditor draft={draft} onDone={() => setEditMode(false)} sections={admitNote ? ADMIT_HEARD_SECTIONS : undefined} />
+          ) : editMode ? (
             <div className="draft-editing">
               <label className="field-label" htmlFor={`draft-json-${draft.id}`}>Draft content (JSON)</label>
               <div className="field-hint mb-2">
@@ -572,6 +600,30 @@ function DraftContent({
   const content = draft.content || {};
   switch (draft.feature) {
     case "F1":
+      if (isOpdV2(content)) {
+        return (
+          <>
+            <Section title="Patient record" sub="From registration">
+              <dl className="opd-record">
+                {OPD_HEADER_FIELDS.map(([key, label]) => (
+                  <div key={key}><dt>{label}</dt><dd>{content.header?.[key] || <Blank />}</dd></div>
+                ))}
+              </dl>
+            </Section>
+            {OPD_HEARD_SECTIONS.map(([key, label, many]) => (
+              <Section key={key} title={label}>
+                {many ? <ClaimList claims={content[key]} emptyLabel="Not documented" /> : <ClaimLine claim={content[key]} emptyLabel="Not documented" />}
+              </Section>
+            ))}
+            {content.needs_review?.length ? (
+              <Banner tone="warning">
+                <strong>Check these first</strong>: the pipeline could not fully confirm them against the recording:
+                <ul>{content.needs_review.map((item: any, i: number) => <li key={i}><b>{item.section}:</b> {item.text}</li>)}</ul>
+              </Banner>
+            ) : null}
+          </>
+        );
+      }
       return (
         <>
           <Section title="Chief complaint"><ClaimLine claim={content.chief_complaint} /></Section>
@@ -616,6 +668,39 @@ function DraftContent({
         </>
       );
     case "F2":
+      if (isAdmitV2(content)) {
+        return (
+          <>
+            <Section title="Patient record" sub="From registration">
+              <dl className="opd-record">
+                {ADMIT_HEADER_FIELDS.map(([key, label]) => (
+                  <div key={key}><dt>{label}</dt><dd>{content.header?.[key] || <Blank />}</dd></div>
+                ))}
+              </dl>
+            </Section>
+            {ADMIT_HEARD_SECTIONS.map(([key, label, many]) => {
+              const items: any[] = many ? content[key] || [] : content[key] ? [content[key]] : [];
+              return (
+                <Section key={key} title={label}>
+                  {items.length ? items.map((claim: any, i: number) => (
+                    <div key={i} className="admit-item">
+                      <ClaimLine claim={claim} />
+                      {claim.origin === "opd" ? <Pill tone="info">from OPD report</Pill> : claim.human_authored ? null : <Pill tone="neutral">from recording</Pill>}
+                    </div>
+                  )) : <div className="empty-field">Not documented</div>}
+                </Section>
+              );
+            })}
+            {content.needs_review?.length ? (
+              <Banner tone="warning">
+                <strong>Check these first</strong>: the pipeline could not fully confirm them against the recording:
+                <ul>{content.needs_review.map((item: any, i: number) => <li key={i}><b>{item.section}:</b> {item.text}</li>)}</ul>
+              </Banner>
+            ) : null}
+            <div className="small muted">Signing admits the patient to the ward above. Proposed treatment is not ordered by signing.</div>
+          </>
+        );
+      }
       return (
         <>
           <Section title="Chief complaint"><ClaimLine claim={content.chief_complaint} /></Section>

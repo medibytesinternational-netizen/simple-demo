@@ -38,8 +38,7 @@ def get_encounter(db: Session, encounter_id: str | None = None) -> Encounter:
         if not encounter:
             raise ValueError("Encounter not found")
         return encounter
-    # The app is patient-centric: the default encounter belongs to the demo
-    # patient, not whichever cohort patient happened to be admitted last.
+    # The app is patient-centric: the default encounter belongs to the open patient.
     patient = get_patient(db)
     encounter = db.scalars(
         select(Encounter)
@@ -52,10 +51,9 @@ def get_encounter(db: Session, encounter_id: str | None = None) -> Encounter:
             .where(Encounter.patient_id == patient.id)
             .order_by(Encounter.discharged_at.desc(), Encounter.admitted_at.desc())
         ).first()
+    # Never fall back to another patient's visit: a record without one is an error.
     if not encounter:
-        encounter = db.scalars(select(Encounter).order_by(Encounter.admitted_at.desc())).first()
-    if not encounter:
-        raise ValueError("No encounter found")
+        raise ValueError(f"No encounter found for {patient.name}")
     return encounter
 
 

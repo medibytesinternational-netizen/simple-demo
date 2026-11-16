@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 from .. import background
 from ..db import utcnow
 from ..models import Task
-from .identity import TASK_ROLES, acting_name, acting_user
+from .identity import TASK_ROLES, USERS, acting_name, acting_user
 from .timeline import add_audit, add_event
 
 MIN_REASON = 10
@@ -93,6 +93,9 @@ def role_for_assignee(name: str | None) -> str | None:
     """Infer the receiving role from an assignee name when the caller did not give one."""
     if not name:
         return None
+    staff = next((u for u in USERS if u.name == name), None)
+    if staff and staff.role in TASK_ROLES:
+        return staff.role
     lowered = name.lower()
     if lowered.startswith("nurse"):
         return "nurse"

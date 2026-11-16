@@ -19,6 +19,9 @@ class Settings:
     openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4o")
     llm_mode: str = os.getenv("LLM_MODE", "auto").lower()
     medibytes_runs_dir: Path = Path(os.getenv("MEDIBYTES_RUNS_DIR") or BASE_DIR / "runs")
+    # "real": every record is stamped with the actual current time (local wall clock).
+    # "demo": the fixed scenario clock starting at demo_now (tests use this so they repeat exactly).
+    clock_mode: str = os.getenv("MEDIBYTES_CLOCK", "real").lower()
     demo_now: datetime = datetime.fromisoformat(
         os.getenv("DEMO_NOW", "2026-10-20T09:00:00")
     )

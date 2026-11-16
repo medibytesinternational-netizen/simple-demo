@@ -238,6 +238,7 @@ def test_encounter_of_another_patient_is_refused(client):
     from app.db import SessionLocal
     from app.models import Encounter
 
+    client.post("/api/patients", json={"name": "Other Patient", "age": 50, "sex": "Female", "no_known_allergies": True})
     db = SessionLocal()
     try:
         other_encounter = db.query(Encounter).filter(Encounter.patient_id != "pat_ravi").first().id

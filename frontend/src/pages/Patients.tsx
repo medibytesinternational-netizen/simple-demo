@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { DEMO_MODE } from "../demo/config";
 import { previewStore } from "../demo/previewStore";
 import { PatientDrawer } from "../components/PatientDrawer";
@@ -140,7 +140,7 @@ export function PatientsPage() {
   const emptyState = (
     <EmptyState icon="search" title="No patients match"
       action={filtersActive ? <button type="button" className="btn btn-sm" onClick={clearFilters}>Clear filters</button> : undefined}>
-      {filtersActive ? "Try a different search or clear the filters." : "Registered patients appear here. Use Register patient to add one."}
+      {filtersActive ? "Try a different search or clear the filters." : "Registered patients appear here. Use New patient to add one."}
     </EmptyState>
   );
 
@@ -150,16 +150,11 @@ export function PatientsPage() {
         <div>
           <h1 className="dk-title">Patient list</h1>
           <p className="dk-sub">Find a patient, see their summary, or open their dashboard.</p>
-          {!DEMO_MODE ? <p className="dk-card-foot" id="registration-note">Registration needs the patient API, which is not enabled in this workspace.</p> : null}
         </div>
         <div className="dk-actions">
-          <button type="button" className="dk-btn dk-btn-primary"
-            onClick={() => setForm({ mode: "add" })}
-            disabled={!DEMO_MODE}
-            aria-describedby={!DEMO_MODE ? "registration-note" : undefined}
-            title={DEMO_MODE ? "Register a patient in this preview tab" : "Registration needs the patient API, which is not enabled in this workspace"}>
-            <Icon name="plus" size={16} /> Register patient
-          </button>
+          <Link className="dk-btn dk-btn-primary" to="/patients/new">
+            <Icon name="plus" size={16} /> New patient
+          </Link>
         </div>
       </header>
 
@@ -295,7 +290,7 @@ export function PatientsPage() {
         <p className="dk-card-foot pt-foot">
           {DEMO_MODE
             ? "Preview environment: patients you add are kept in this browser tab only and are never saved. Only Ravi Menon has a full clinical chart in the available patient records."
-            : "Only Ravi Menon has a full clinical chart. Other patients have summary records with alerts, tasks and medicine information."}
+            : "Open a patient to see their dashboard and timeline. Use New patient to register someone and record their first consultation."}
         </p>
       </section>
 

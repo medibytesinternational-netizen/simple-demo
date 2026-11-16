@@ -259,24 +259,21 @@ def test_the_pipeline_note_becomes_a_draft_only_never_approved_and_no_note_on_th
     draft = body["draft"]
     assert draft["status"] == "draft_ready" and not draft.get("approved_by")
     content = draft["content"]
-    assert content["chief_complaint"]["text"] == "Swelling and redness of the right leg since Tuesday"
-    assert content["hpi"]["text"] == "DENIED: fever"
-    assert content["exam"]["general"]["text"] == "pulse 104 beats per minute"
-    assert content["exam"]["systemic"]["text"] == "right calf warm and tender"
-    assert [c["text"] for c in content["assessment"]] == ["Right leg cellulitis"]
-    # Medicines are medication mentions only, with the dose kept apart from the name.
-    assert [(m["drug"], m["dose"], m["frequency"]) for m in content["medication_mentions"]] == [
-        ("cefazolin", "2 g", "every eight hours")
-    ]
-    assert [c["text"] for c in content["plan"]] == ["Complete blood count", "Keep the leg elevated"]
-    assert content["follow_up"]["text"] == "Review in two days"
-    assert content["needs_review"] == [{"section": "Investigations", "text": "Complete blood count"}]
-    # Verified items carry more confidence than unverified ones, and less than a typed note's default.
-    assert content["follow_up"]["confidence"] == 0.9 and content["plan"][0]["confidence"] == 0.6
+    # The hospital OPD format: heard headings from the note, record headings from registration.
+    assert content["format"] == "opd_v2"
+    assert [c["text"] for c in content["chief_complaints"]] == ["Swelling and redness of the right leg since Tuesday"]
+    assert content["history_of_present_illness"]["text"] == "DENIED: fever; Started on Tuesday"
+    assert content["pain"]["text"] == "Right calf warm and tender"
+    assert content["header"]["hospital_number"] == "MB-1001"
+    assert "Occupation" in content["not_documented"] and "Chief complaints" not in content["not_documented"]
+    assert content["needs_review"] == [{"section": "History of present illness", "text": "Started on Tuesday"}]
+    # Verified items carry more confidence than unverified ones; a joined claim takes the lowest.
+    assert content["history_of_present_illness"]["confidence"] == 0.6
+    assert content["chief_complaints"][0]["confidence"] == 0.75
     # Each claim cites the transcript sentence it was heard in, not a made-up line.
     segment_text = {s["segment_id"]: s["text"] for s in _transcript_segments(fresh)}
-    assert segment_text[content["plan"][0]["source_segment_ids"][0]] == "Get a complete blood count."
-    assert segment_text[content["chief_complaint"]["source_segment_ids"][0]].startswith("Swelling and redness")
+    assert segment_text[content["chief_complaints"][0]["source_segment_ids"][0]].startswith("Swelling and redness")
+    assert segment_text[content["pain"]["source_segment_ids"][0]].startswith("Pulse 104")
     added = list(_event_types(fresh))
     for t in before_types:
         added.remove(t)
@@ -364,12 +361,13 @@ def test_voice_input_shows_record_and_upload_together():
     assert "Record patient consent before capturing audio." in source
 
 
-def test_only_the_f1_tab_gets_voice_input():
+def test_only_the_opd_and_admission_capture_box_gets_voice_input():
     notes = _source("pages/Notes.tsx")
     assert notes.count("<VoiceInput") == 1
-    start = notes.index('tab.feature === "F1" ? (\n                  <div className={`banner')
-    end = notes.index("{transcribing || pendingDraft")
-    assert start < notes.index("<VoiceInput") < end, "VoiceInput must sit inside the F1 consent banner only"
+    # The recorder sits in the capture box shown only while there is no OPD report / admission note yet.
+    start = notes.index(") : isOpd ? (")
+    assert start < notes.index("<VoiceInput") < notes.index("Record the admission\" : \"Record the consultation") + 2000
+    assert "feature={tab.feature}" in notes
 
 
 def test_the_stale_whisper_in_production_line_is_gone():
