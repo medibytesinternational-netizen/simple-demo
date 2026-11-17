@@ -203,6 +203,7 @@ def _investigation_dict(request: InvestigationRequest) -> dict[str, Any]:
         "approved_by": request.approved_by,
         "created_at": request.created_at.isoformat() if request.created_at else None,
         "exported_at": request.exported_at.isoformat() if request.exported_at else None,
+        "source_event_id": getattr(request, "source_event_id", None),
     }
 
 

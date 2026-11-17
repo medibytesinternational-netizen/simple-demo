@@ -141,6 +141,17 @@ function Registration({ p }: { p: any }) {
   );
 }
 
+/** One dictated progress-notes row: the notes and who signed them. */
+function ProgressEntry({ p }: { p: Record<string, any> }) {
+  const notes: string[] = (p.notes || []).map((n: any) => String(n?.text ?? n ?? "").trim()).filter(Boolean);
+  return (
+    <div className="evb">
+      <Row label="Notes">{notes.join("; ")}</Row>
+      {p.signed_by?.name ? <Row label="Signed">{p.signed_by.name}{p.signed_by.role ? ` (${p.signed_by.role})` : ""}</Row> : null}
+    </div>
+  );
+}
+
 /** Timeline entry body, formatted by event type. Types without a layout fall back to the plain text. */
 export function EventBody({ event }: { event: TimelineEventF16 }) {
   const p = event.payload || {};
@@ -151,15 +162,16 @@ export function EventBody({ event }: { event: TimelineEventF16 }) {
   else if (event.type === "med_order" && p.drug) body = <MedOrder p={p} />;
   else if (event.type === "document_review") body = <DocumentReview p={p} />;
   else if (event.type === "registration") body = <Registration p={p} />;
+  else if ((event.type === "progress_note" || event.type === "nurse_progress_note") && p.format === "progress_v2") body = <ProgressEntry p={p} />;
   else if (event.body_text) body = <span className="tl-preview">{event.body_text}</span>;
 
   // Signed OPD reports and admission notes are stored as documents to view and print.
-  const storedNote = (event.type === "consult_note" || event.type === "admission_note") && event.document_id;
+  const storedNote = ["consult_note", "admission_note", "progress_report", "referral", "discharge_report"].includes(event.type) && event.document_id;
   if (!body && !storedNote) return null;
   return (
     <>
       {body}
-      {storedNote ? <StoredDocument documentId={event.document_id!} label={event.type === "admission_note" ? "admission note" : "OPD note document"} /> : null}
+      {storedNote ? <StoredDocument documentId={event.document_id!} label={event.type === "admission_note" ? "admission note" : event.type === "progress_report" ? "progress notes report" : event.type === "referral" ? "referral form" : event.type === "discharge_report" ? "discharge summary" : "OPD note document"} /> : null}
     </>
   );
 }

@@ -8,6 +8,7 @@ import { SignPanel } from "../features/f09/SignPanel";
 import type { Readiness } from "../features/f09/types";
 import { Banner, Skeleton } from "../components/ui";
 import { NextStepCta } from "../components/NextStepCta";
+import { DischargeReport } from "../features/f09/DischargeReport";
 
 type Mode = "print" | "view" | "clear";
 type TabKey = "summary" | "doctor" | "result" | "unit";
@@ -38,7 +39,13 @@ const fmtDate = (v?: string | null) => (v ? new Date(v).toLocaleDateString("en-G
 type Section = { heading: string; paragraphs?: { text: string }[] };
 type Med = { drug: string; dose?: string; route?: string; frequency?: string };
 
+/** Discharge summary in the hospital format (generated from the record). */
 export function DischargePage() {
+  return <DischargeReport />;
+}
+
+/** The earlier AI-drafted discharge screen, no longer routed. */
+export function DischargeDraftPage() {
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<Mode>("view");
   const [tab, setTab] = useState<TabKey>("summary");

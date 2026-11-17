@@ -50,6 +50,7 @@ function statusTone(status: string): Tone {
 export function DocumentsPage() {
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") || "inbound";
+  const isRequisition = tab === "requisition";
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -76,12 +77,12 @@ export function DocumentsPage() {
   const investigations = useQuery<{ requests: InvestigationRequest[] }>({
     queryKey: ["investigation-requests"],
     queryFn: () => get("/investigation-requests"),
-    enabled: tab === "requisition",
+    enabled: isRequisition,
   });
   const drafts = useQuery<{ drafts: Draft[] }>({
     queryKey: ["drafts", "F10"],
     queryFn: () => get("/drafts?feature=F10&limit=1"),
-    enabled: tab === "requisition",
+    enabled: isRequisition,
   });
 
   useEffect(() => {
@@ -177,17 +178,18 @@ export function DocumentsPage() {
   const confirmedDocs = documents.data?.documents.filter((item) => ["confirmed", "reviewed"].includes(item.ocr_status)) || [];
   const loadedFields = document.data?.extracted?.fields || [];
   const confidentCount = loadedFields.filter((field) => field.confidence >= 0.8).length;
+  const reqRows = investigations.data?.requests || [];
   const tabItems = [
     { key: "inbound", label: "Inbound reports" },
-    { key: "requisition", label: "Investigation requests" },
+    { key: "requisition", label: "Investigation & radiology" },
     { key: "followup", label: "Records follow-up" },
   ];
 
   return (
     <div className="pg-documents">
       <PageHeader
-        title={tab === "requisition" ? "Investigation requests" : tab === "followup" ? "Records follow-up" : "Inbound reports"}
-        description={tab === "requisition"
+        title={tab === "requisition" ? "Investigation & radiology requests" : tab === "followup" ? "Records follow-up" : "Inbound reports"}
+        description={isRequisition
           ? "Imaging and laboratory requests pre-filled from the record. Allergies must be checked before a request is approved."
           : tab === "followup"
             ? "Requests for missing outside records and pre-authorisation, and matching what arrives."
@@ -408,14 +410,14 @@ export function DocumentsPage() {
             </Disclosure>
           </div>
         </div>
-      ) : tab === "requisition" ? (
+      ) : isRequisition ? (
         <>
           <Panel
-            title="Investigation and radiology requisitions"
+            title="Investigation & radiology requests"
             sub="Pre-filled from the documented record. Allergies are carried forward and must be verified before use."
           >
             <Toolbar label="Requisition actions">
-              <span className="small muted">{investigations.data?.requests.length || 0} requests</span>
+              <span className="small muted">{reqRows.length} requests</span>
               <span className="toolbar-spacer" />
               <button
                 className="btn btn-primary btn-sm"
@@ -428,7 +430,7 @@ export function DocumentsPage() {
             </Toolbar>
             <DataTable<InvestigationRequest>
               caption="Investigation requests"
-              rows={investigations.data?.requests || []}
+              rows={reqRows}
               rowKey={(request) => request.id}
               loading={investigations.isLoading}
               empty={
@@ -443,8 +445,8 @@ export function DocumentsPage() {
                   sort: (request) => request.study,
                   cell: (request) => (
                     <>
-                      <div className="cell-strong">{request.study}</div>
-                      <div className="cell-sub">{request.request_type} · {request.indication}</div>
+                      <div className="cell-strong">{request.study}{request.source_event_id ? <> <Pill tone="info">From progress note</Pill></> : null}</div>
+                      <div className="cell-sub">{request.request_type === "imaging" ? "Radiology" : "Investigation"} · {request.indication}</div>
                     </>
                   ),
                 },
@@ -474,7 +476,7 @@ export function DocumentsPage() {
                   key: "status",
                   header: "Status",
                   sort: (request) => request.status,
-                  cell: (request) => <Pill tone={request.status === "exported" ? "success" : "neutral"} dot>{request.status}</Pill>,
+                  cell: (request) => <Pill tone={request.status === "exported" ? "success" : request.status === "requested" ? "warning" : "neutral"} dot>{request.status === "exported" ? "sent" : request.status}</Pill>,
                 },
                 {
                   key: "action",
@@ -483,7 +485,7 @@ export function DocumentsPage() {
                   cell: (request) =>
                     request.status !== "exported" ? (
                       <button className="btn btn-sm" onClick={() => exportInvestigation.mutate(request.id)} disabled={exportInvestigation.isPending}>
-                        Mark exported
+                        {request.status === "requested" ? "Send request" : "Mark exported"}
                       </button>
                     ) : <span className="small muted">Export complete</span>,
                 },

@@ -199,6 +199,11 @@ def create_draft(
         content = {**content, "format": OPD_FORMAT, "header": opd_header(patient, encounter, acting_name())}
     if feature == "F2":
         content = _admission_content(db, patient, encounter, content)
+    if feature == "F4" and content.get("format") == "progress_v2":
+        from .progress import default_role, header
+
+        role = content.get("role") if content.get("role") in ("doctor", "nurse") else default_role()
+        content = {**content, "role": role, "header": header(patient, encounter)}
     draft = Draft(
         id=new_id("drf"),
         feature=feature,
@@ -420,6 +425,13 @@ def approve_draft(
 
     event_type = FEATURE_EVENT_TYPES.get(draft.feature, "note")
     title = FEATURE_TITLES.get(draft.feature, "Clinical note")
+    daily_log = draft.feature == "F4" and payload.get("format") == "progress_v2"
+    if daily_log:
+        # A daily progress-notes row: doctor's or nurse's table, and every day's entry stays.
+        from .progress import EVENT_TYPE, TITLE
+
+        role = payload.get("role") if payload.get("role") in EVENT_TYPE else "doctor"
+        event_type, title = EVENT_TYPE[role], TITLE[role]
     body_text = "\n".join(_flatten_text(payload))
     event_payload = dict(payload)
     event_payload["draft_id"] = draft.id
@@ -428,7 +440,7 @@ def approve_draft(
         build(ctx, event_payload)
 
     supersedes = None
-    if event_type in SUPERSEDING_TYPES:
+    if event_type in SUPERSEDING_TYPES and not daily_log:
         previous = db.scalars(
             select(TimelineEvent)
             .where(

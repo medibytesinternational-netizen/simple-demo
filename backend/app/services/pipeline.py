@@ -25,7 +25,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 # Feature -> medibytes note template. Only features listed here take voice.
-TEMPLATE_FOR = {"F1": "opd", "F2": "admission"}
+TEMPLATE_FOR = {"F1": "opd", "F2": "admission", "F4": "progress", "F11": "referral"}
 
 _lock = threading.Lock()
 _service: Any = None
@@ -66,7 +66,9 @@ def _index(audio_id: str) -> Path:
     return Path(settings.medibytes_runs_dir) / "audio" / f"{audio_id}.json"
 
 
-def submit(contents: bytes, filename: str, content_type: str, audio_id: str, feature: str = "F1") -> dict[str, Any]:
+def submit(
+    contents: bytes, filename: str, content_type: str, audio_id: str, feature: str = "F1", extra: dict[str, Any] | None = None
+) -> dict[str, Any]:
     suffix = Path(filename).suffix.lower() or ".webm"
     data_hash = hashlib.sha256(contents).hexdigest()
     job = _jobs().submit(
@@ -74,7 +76,7 @@ def submit(contents: bytes, filename: str, content_type: str, audio_id: str, fea
     )
     index = _index(audio_id)
     index.parent.mkdir(parents=True, exist_ok=True)
-    index.write_text(json.dumps({"job_id": job["job_id"], "feature": feature}), encoding="utf-8")
+    index.write_text(json.dumps({"job_id": job["job_id"], "feature": feature, **(extra or {})}), encoding="utf-8")
     return {"audio_id": audio_id, "job_id": job["job_id"], "status": job["status"]}
 
 
@@ -93,6 +95,7 @@ def fetch(audio_id: str) -> dict[str, Any] | None:
         "feature": entry.get("feature", "F1"),
         "job_status": job["status"],
         "job_error": job.get("error"),
+        "role": entry.get("role"),
     }
     if job["status"] == "succeeded":
         result = service.result(job) or {}
@@ -229,7 +232,31 @@ def _f2_content(m: _Mapper) -> dict[str, Any]:
     return content
 
 
-_BUILDERS = {"F1": _f1_content, "F2": _f2_content}
+def _f4_content(m: _Mapper) -> dict[str, Any]:
+    """One progress-notes row: the note as said. Role, header and signature are added later."""
+    from .progress import PROGRESS_FORMAT
+
+    notes = [m.claim(it) for it in m.items("notes")]
+    return {"format": PROGRESS_FORMAT, "notes": notes, "not_documented": [] if notes else ["Notes"],
+            "needs_review": m.needs_review}
+
+
+def _f11_content(m: _Mapper) -> dict[str, Any]:
+    """Referral part one as dictated. Header, record summary and signature are added later."""
+    from .referral_form import REFERRAL_FORMAT, referral_type
+
+    kind = m.joined(m.items("referral_type"))
+    return {
+        "format": REFERRAL_FORMAT,
+        "referral_type": referral_type(kind["text"]) if kind else None,
+        "unit_chief": m.joined(m.items("unit_chief")),
+        "department": m.joined(m.items("department")),
+        "salient_details": [m.claim(it) for it in m.items("salient_details")],
+        "needs_review": m.needs_review,
+    }
+
+
+_BUILDERS = {"F1": _f1_content, "F2": _f2_content, "F4": _f4_content, "F11": _f11_content}
 
 
 def draft_content(feature: str, note: dict[str, Any], event_id: str, segments: list[dict[str, Any]]) -> dict[str, Any]:

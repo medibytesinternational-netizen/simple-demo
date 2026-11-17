@@ -233,13 +233,22 @@ class InvestigationRequestDraft(BaseModel):
 
 
 class ReferralDraft(BaseModel):
-    specialty: str
+    specialty: str = ""
     specialist: str = ""
-    question: Claim
-    history: Claim
+    question: Claim | None = None
+    history: Claim | None = None
     urgency: Literal["routine", "urgent", "emergency"] = "routine"
     relevant_results: list[Claim] = Field(default_factory=list)
     source_event_ids: list[str] = Field(default_factory=list)
+    # Hospital referral form, part one (format "referral_v2"), dictated by the referring doctor.
+    format: str | None = None
+    header: dict[str, str] = Field(default_factory=dict)
+    referral_type: Literal["immediate", "urgent", "routine"] | None = None
+    unit_chief: Claim | None = None
+    department: Claim | None = None
+    salient_details: list[Claim] = Field(default_factory=list)
+    not_documented: list[str] = Field(default_factory=list)
+    needs_review: list[dict[str, str]] = Field(default_factory=list)
 
 
 class OcrField(BaseModel):

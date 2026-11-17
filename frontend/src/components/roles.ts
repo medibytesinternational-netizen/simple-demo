@@ -39,14 +39,14 @@ export const ROLES: Record<AppRole, RoleConfig> = {
     home: "/tasks",
     pages: [
       "new-patient", "patients", "overview-patient", "timeline", "patient-progress",
-      "consult", "admission", "round", "progress", "icu", "referral",
+      "consult", "admission", "round", "progress", "icu", "referral", "discharge",
       "alerts", "meds", "labs", "inbound", "requisition", "tasks",
     ],
   },
   nurse: {
     label: "Nurse",
     home: "/tasks",
-    pages: ["patients", "overview-patient", "timeline", "round", "icu", "alerts", "meds", "labs", "tasks"],
+    pages: ["patients", "overview-patient", "timeline", "round", "progress", "icu", "discharge", "alerts", "meds", "labs", "tasks"],
   },
 };
 

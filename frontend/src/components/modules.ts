@@ -54,7 +54,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: "consult", label: "OPD consultation", to: "/notes?tab=consult", icon: "consult", hint: "Record a consultation and review the draft note", match: tabIs("/notes", "consult", true), keywords: ["opd", "voice", "transcript", "outpatient"] },
       { id: "admission", label: "Admission assessment", to: "/notes?tab=admission", icon: "admission", hint: "Admission note from the interview; verify allergies first", match: tabIs("/notes", "admission"), keywords: ["admit", "allergy"] },
       { id: "round", label: "Ward round", to: "/notes?tab=round", icon: "round", hint: "Round note, nursing entries and proposed tasks", match: tabIs("/notes", "round"), keywords: ["nursing", "handover"] },
-      { id: "progress", label: "Progress notes", to: "/notes?tab=progress", icon: "progress", hint: "Daily note; examination and plan written by the clinician", match: tabIs("/notes", "progress") },
+      { id: "progress", label: "Progress notes", to: "/notes?tab=progress", icon: "progress", hint: "Daily doctor and nurse progress notes, dictated and signed", match: tabIs("/notes", "progress") },
       { id: "icu", label: "ICU flow sheet", to: "/notes?tab=icu", icon: "icu", hint: "Device readings assembled into a chart", match: tabIs("/notes", "icu"), keywords: ["vitals", "device", "monitor"] },
       { id: "referral", label: "Referrals", to: "/notes?tab=referral", icon: "referral", hint: "Specialist referral and its status", match: tabIs("/notes", "referral") },
       { id: "discharge", label: "Discharge", to: "/discharge", icon: "discharge", hint: "Discharge summary, medicines and sign-off", match: (p) => p === "/discharge", keywords: ["summary", "sign off"] },

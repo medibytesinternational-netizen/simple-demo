@@ -176,8 +176,9 @@ class FakePipeline:
         self.transcript = PIPELINE_TRANSCRIPT
         self.feature = None
 
-    def submit(self, contents, filename, content_type, audio_id, feature="F1"):
+    def submit(self, contents, filename, content_type, audio_id, feature="F1", extra=None):
         self.feature = feature
+        self.role = (extra or {}).get("role")
         self.calls += 1
         self.last_file = (filename, contents, content_type)
         if self.error:
@@ -186,7 +187,8 @@ class FakePipeline:
 
     def fetch(self, audio_id):
         out = {"audio_id": audio_id, "feature": self.feature or "F1",
-               "job_status": self.job_status, "job_error": self.job_error}
+               "job_status": self.job_status, "job_error": self.job_error,
+               "role": getattr(self, "role", None)}
         if self.job_status == "succeeded":
             out.update(transcript=self.transcript, note=self.note)
         return out

@@ -158,7 +158,7 @@ def test_export_is_refused_for_a_request_that_is_not_approved(client):
         db.close()
     response = client.post(f"/api/investigation-requests/{request['id']}/export")
     assert response.status_code == 409
-    assert response.json()["detail"] == "Only approved requests can be exported"
+    assert response.json()["detail"] == "Only approved or requested investigations can be sent"
 
 
 def test_an_approved_request_can_be_exported(client):

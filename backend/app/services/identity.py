@@ -77,6 +77,10 @@ PERMISSIONS: dict[str, set[str]] = {
     "ingest": {SYSTEM_ROLE},
     "buy_credits": {"doctor"},
     "register_patient": {"doctor"},
+    # Dictate, edit and approve a referral (part one of the hospital referral form).
+    "refer": {"doctor", "senior_doctor"},
+    # Generate the discharge summary report from the record (everyone may view it).
+    "discharge_report": {"doctor", "senior_doctor", "junior_doctor"},
 }
 
 _user_id: ContextVar[str] = ContextVar("acting_user_id", default=DEFAULT_USER_ID)

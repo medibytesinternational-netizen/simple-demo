@@ -186,6 +186,22 @@ export async function intakeAudio(blob: Blob, filename = "consultation.webm") {
   throw new Error("The pipeline is taking too long. Try again in a minute.");
 }
 
+/** A dictated daily progress note: written by the MediBytes pipeline and signed by who recorded it. */
+export async function recordProgressNote(blob: Blob, filename = "progress.webm", role = "") {
+  const form = new FormData();
+  form.append("file", blob, filename);
+  form.append("role", role);
+  const receipt = await api<{ audio_id: string }>("/progress-notes/record", { method: "POST", body: form });
+  const deadline = Date.now() + 5 * 60 * 1000;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const status = await api<{ status: string; error?: string }>(`/progress-notes/record/${encodeURIComponent(receipt.audio_id)}`);
+    if (status.status === "succeeded") return status;
+    if (status.status === "failed") throw new Error(status.error || "The recording could not be processed");
+  }
+  throw new Error("The pipeline is taking too long. Try again in a minute.");
+}
+
 export async function transcribeAudio(blob: Blob, filename = "consultation.webm", feature = "F1") {
   const form = new FormData();
   form.append("file", blob, filename);

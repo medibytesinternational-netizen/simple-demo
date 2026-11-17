@@ -5,8 +5,10 @@ from .base import BASE_SECTIONS, NoteTemplate, SectionSpec
 from .discharge import DISCHARGE
 from .opd import OPD
 from .admission import ADMISSION
+from .progress import PROGRESS
+from .referral import REFERRAL
 
-TEMPLATES: dict[str, NoteTemplate] = {t.name: t for t in (DISCHARGE, OPD, ADMISSION)}
+TEMPLATES: dict[str, NoteTemplate] = {t.name: t for t in (DISCHARGE, OPD, ADMISSION, PROGRESS, REFERRAL)}
 
 
 def get(name: str | NoteTemplate | None) -> NoteTemplate:

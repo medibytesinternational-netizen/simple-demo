@@ -196,6 +196,7 @@ export type InvestigationRequest = {
   approved_by?: string;
   created_at: string;
   exported_at?: string | null;
+  source_event_id?: string | null;
 };
 
 export type TimelineEvent = {

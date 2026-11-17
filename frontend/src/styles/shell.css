@@ -215,3 +215,82 @@
 .opd-editor .hint { font-weight: 400; color: var(--muted); font-size: 11.5px; }
 .admit-item { display: flex; align-items: flex-start; gap: 8px; }
 .admit-item > :first-child { flex: 1; min-width: 0; }
+
+/* Progress notes page: padded cards with space between them. */
+.progress-notes { display: flex; flex-direction: column; gap: 16px; }
+.progress-notes > .card { padding: 16px 18px; }
+.progress-notes .card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.progress-notes .card-header h2 { margin: 0; }
+.progress-notes .card-body { display: flex; flex-direction: column; gap: 10px; }
+.progress-notes .table-wrap { overflow-x: auto; }
+.progress-notes .progress-table th, .progress-notes .progress-table td { padding: 8px 12px; vertical-align: top; }
+.progress-notes .progress-table td:first-child { white-space: nowrap; width: 180px; }
+.progress-notes .progress-table td:last-child { width: 220px; }
+.progress-notes .error-box { margin-bottom: 10px; }
+
+/* Referral form review. */
+.referral-head { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line, #c8d9f0); margin-bottom: 14px; }
+.referral-head > div { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; }
+.referral-head span { font-size: 12px; color: var(--muted, #4a5f80); }
+.referral-types { border: 0; padding: 0; margin: 0 0 10px; display: flex; flex-wrap: wrap; gap: 6px 20px; }
+.referral-types legend { font-weight: 600; margin-bottom: 6px; }
+.referral-types label { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; }
+@media (max-width: 640px) { .referral-head { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Patient Dashboard at-a-glance (MoSCoW) */
+.pt-banner { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); margin-bottom: 10px; }
+.pt-banner-id { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: var(--fs-sm); }
+.pt-name { font-size: 18px; font-weight: 700; color: var(--text); }
+.pt-banner-row, .pt-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.pt-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); min-width: 72px; }
+.pt-chip { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
+.pt-chip--danger { background: var(--critical-soft); border-color: var(--critical-line); color: var(--critical-strong); }
+.pt-chip--ok { background: var(--success-soft); border-color: var(--success-line); color: var(--success); }
+.pt-vitals-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); margin-bottom: 10px; font-size: var(--fs-sm); }
+.pt-vital b { font-size: 15px; }
+.pt-more { display: block; margin: 0; padding: 8px 12px; border-top: 1px solid var(--border); font-size: var(--fs-sm); font-weight: 600; text-align: right; }
+.pt-care, .pt-list { list-style: none; margin: 0; padding: 0 12px; }
+.pt-care li { display: grid; grid-template-columns: 140px 1fr auto 20px; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: var(--fs-sm); }
+.pt-care li:last-child, .pt-list li:last-child { border-bottom: 0; }
+.pt-care-label { font-weight: 600; }
+.pt-care--empty .pt-care-text { color: var(--muted); font-style: italic; }
+.pt-care-when { font-size: 12px; white-space: nowrap; }
+.pt-care-go { text-decoration: none; }
+.pt-list li { padding: 5px 0; border-bottom: 1px solid var(--border); font-size: var(--fs-sm); }
+.pt-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 10px 0; }
+.pt-tile { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); text-decoration: none; color: var(--text); font-size: 12px; }
+.pt-tile b { font-size: 18px; }
+.pt-tile:hover { border-color: var(--accent-line); }
+@media (max-width: 640px) {
+  .pt-care li { grid-template-columns: 1fr 20px; }
+  .pt-care-text, .pt-care-when { grid-column: 1; }
+}
+
+/* Patient Progress (MoSCoW) */
+.pg-score { display: flex; align-items: baseline; gap: 12px; }
+.pg-pct { font-size: 28px; font-weight: 800; color: var(--accent-strong); }
+.pg-stepper { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; }
+.pg-stepper li { min-width: 0; display: flex; }
+.pg-step { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 8px; border-radius: var(--radius); border: 1px solid var(--border); border-top-width: 4px; background: var(--surface); cursor: pointer; text-align: left; font: inherit; color: var(--text); }
+.pg-step-dot { font-size: 12px; font-weight: 800; }
+.pg-step-name { font-size: 12px; font-weight: 600; line-height: 1.2; }
+.pg-step-count { font-size: 11px; color: var(--muted); }
+.pg-step--done { border-top-color: var(--success); }
+.pg-step--done .pg-step-dot { color: var(--success); }
+.pg-step--pending { border-top-color: var(--warning-solid); }
+.pg-step--pending .pg-step-dot { color: var(--warning); }
+.pg-step--missing { border-top-color: var(--critical); background: var(--critical-soft); }
+.pg-step--missing .pg-step-dot { color: var(--critical); }
+.pg-today-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.pg-today-head { background: var(--his-menu, var(--surface-2)); border-bottom: 1px solid var(--border); padding-right: 10px; }
+.pg-today-head .his-box-title { flex: 1 1 auto; border: 0; background: none; }
+.pg-today-counts { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; font-size: var(--fs-sm); }
+.pg-today-head .pr-day { padding-right: 10px; }
+.pg-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pg-row > .muted { margin-left: auto; font-size: 12px; }
+.btn-link { background: none; border: 0; color: var(--accent); cursor: pointer; width: 100%; }
+
+/* Progress note: scans/reports the doctor asked for */
+.pn-orders { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.pn-order { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; text-decoration: none; background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--accent-strong); }
+.pn-order--urgent { background: var(--critical-soft); border-color: var(--critical-line); color: var(--critical-strong); }

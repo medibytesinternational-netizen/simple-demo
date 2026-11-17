@@ -16,7 +16,7 @@ import { Icon } from "../components/icons";
 
 function eventTone(type: string) {
   if (type === "lab_result") return "lab";
-  if (["consult_note", "admission_note", "round_note", "progress_note", "nursing_summary", "nursing_chart", "investigation_review", "discharge_summary"].includes(type)) return "ai";
+  if (["consult_note", "admission_note", "round_note", "progress_note", "nurse_progress_note", "nursing_summary", "nursing_chart", "investigation_review", "discharge_summary"].includes(type)) return "ai";
   if (["alert", "billing", "referral_consult"].includes(type)) return "critical";
   if (["consent", "referral_update", "device_reading"].includes(type)) return "";
   return "";
@@ -221,6 +221,9 @@ const EVENT_ICONS: Record<string, string> = {
   admission_note: "admission",
   round_note: "round",
   progress_note: "progress",
+  nurse_progress_note: "progress",
+  progress_report: "progress",
+  discharge_report: "discharge",
   nursing_summary: "round",
   nursing_chart: "round",
   nursing_note: "round",
