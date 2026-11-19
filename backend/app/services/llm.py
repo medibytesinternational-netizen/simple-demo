@@ -101,10 +101,19 @@ def validate_numbers(content: dict[str, Any], context: dict[str, Any]) -> list[s
     return missing
 
 
-def _live_call(feature: str, prompt: str, context: dict[str, Any], model_cls: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+def _client():
     from openai import OpenAI
 
-    client = OpenAI(api_key=settings.openai_api_key)
+    if settings.active_llm_provider == "huggingface":
+        return OpenAI(
+            base_url="https://router.huggingface.co/v1",
+            api_key=settings.hf_token,
+        )
+    return OpenAI(api_key=settings.openai_api_key)
+
+
+def _live_call(feature: str, prompt: str, context: dict[str, Any], model_cls: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+    client = _client()
     schema_text = json.dumps(model_cls.model_json_schema(), default=str)
     messages = [
         {
@@ -121,7 +130,7 @@ def _live_call(feature: str, prompt: str, context: dict[str, Any], model_cls: An
     ]
     started = time.perf_counter()
     completion = client.chat.completions.create(
-        model=settings.openai_model,
+        model=settings.active_model,
         messages=messages,
         temperature=0.1,
         response_format={"type": "json_object"},
@@ -146,9 +155,7 @@ def _repair_call(
     model_cls: Any,
     errors: list[str],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    from openai import OpenAI
-
-    client = OpenAI(api_key=settings.openai_api_key)
+    client = _client()
     schema_text = json.dumps(model_cls.model_json_schema(), default=str)
     messages = [
         {
@@ -167,7 +174,7 @@ def _repair_call(
     ]
     started = time.perf_counter()
     completion = client.chat.completions.create(
-        model=settings.openai_model,
+        model=settings.active_model,
         messages=messages,
         temperature=0.1,
         response_format={"type": "json_object"},
@@ -319,6 +326,8 @@ def generate_draft(
             errors.append(f"Live call failed: {type(exc).__name__}")
             if isinstance(exc, ValidationError):
                 reason = "The AI model returned a note in the wrong format, so the note was written by rules from the transcript."
+            elif getattr(exc, "status_code", None) == 402 and settings.active_llm_provider == "huggingface":
+                reason = "Hugging Face Inference Providers has no available credits, so the note was written by rules from the transcript."
             else:
                 reason = f"The AI model call failed ({type(exc).__name__}), so the note was written by rules from the transcript."
             content = cached_draft(feature, context)
@@ -326,6 +335,11 @@ def generate_draft(
             errors.append(FALLBACK_PREFIX + reason)
     else:
         content = cached_draft(feature, context)
+
+    if feature == "F3":
+        from .cached.f03_round import normalize_round_tasks
+
+        content = normalize_round_tasks(content, context)
 
     if feature == "F9":
         content["medications"] = _deterministic_medications(context)
@@ -365,7 +379,7 @@ def generate_draft(
             id=new_id("llm"),
             feature=feature,
             prompt_version=VERSIONS.get(feature, "v1"),
-            model=settings.openai_model if mode == "live" else "cached",
+            model=settings.active_model if mode == "live" else "cached",
             mode=mode,
             status="schema_error",
             validation_errors=[str(exc)],
@@ -383,7 +397,7 @@ def generate_draft(
         feature=feature,
         prompt_version=VERSIONS.get(feature, "v1"),
         prompt_hash=context_hash(context),
-        model=settings.openai_model if mode == "live" else "cached",
+        model=settings.active_model if mode == "live" else "cached",
         temperature=0.1,
         context_hash=context_hash(context),
         request_json={

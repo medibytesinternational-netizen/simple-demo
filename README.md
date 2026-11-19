@@ -8,8 +8,8 @@ Synthetic data only. Not for clinical use. No claim is submitted and nothing is 
 
 - **Backend** — Python 3.13, FastAPI, SQLAlchemy, SQLite
 - **Frontend** — React 18, Vite, TypeScript, React Query
-- **Model** — OpenAI `gpt-4o`, with a deterministic cached mode when no API key is present
-- **Transcription** — OpenAI `whisper-1`, live mode only
+- **Model** — OpenAI `gpt-4o` or Hugging Face Inference Providers, with a deterministic cached mode when no API key is present
+- **Transcription** — OpenAI `whisper-1` for consultation capture; Hugging Face Whisper for ward-round dictation
 
 The demo works fully without an API key. Cached drafts are generated from the same context objects as live drafts, and every screen, approval and audit path still works.
 
@@ -72,11 +72,15 @@ OPENAI_MODEL=gpt-4o
 LLM_MODE=auto
 ```
 
-`LLM_MODE=auto` uses live GPT-4o when a key is present, otherwise cached drafts. Set `LLM_MODE=cached` to force deterministic drafts even with a key. Audio transcription is only available in live mode.
+`LLM_MODE=auto` uses the configured live model when a key is present, otherwise cached drafts. Set `LLM_MODE=cached` to force deterministic drafts even with a key. Consultation audio uses the MediBytes pipeline; ward-round dictation uses Hugging Face Whisper.
 
 The header shows **Live GPT-4o** or **Cached demo**. Model, prompt version, latency and token counts are recorded in `llm_calls`; the UI shows them on every draft and in the audit log.
 
 Do not commit `backend/.env` or the API key.
+
+### Hugging Face inference (no OpenAI key required)
+
+Add a Hugging Face token with Inference Providers permission to `backend/.env` as `HF_TOKEN`. With `LLM_PROVIDER=auto`, the app uses Hugging Face when no OpenAI key is set. `HF_MODEL` selects the chat model; `HF_ASR_MODEL` selects the Whisper model used for ward-round audio transcription. Dictation requires recorded patient consent. Audio is sent to Hugging Face for transcription and is not stored by this app; the returned transcript stays editable before report generation.
 
 ## The 16 modules
 
@@ -84,7 +88,7 @@ Do not commit `backend/.env` or the API key.
 |---|---|---|
 | F1 Ambient OPD documentation | Notes → Consultation | Consent-gated transcript capture, live Whisper path, evidence-linked note draft |
 | F2 AI-assisted admission | Notes → Admission | Admission draft from held records/interview, proposed orders, allergy verification gate |
-| F3 Interdisciplinary handover | Notes → Round | Round note, proposed nursing-chart entries, proposed tasks accepted separately |
+| F3 Interdisciplinary handover | Notes → Round | Patient-specific dictation, round report, editable role-based task proposals with urgency, nursing-chart entries, doctor-approved assignment to staff queues |
 | F4 Daily progress notes | Notes → Progress | Drafts changes only; missing exam/plan stay empty and block signing until clinician-authored documentation is added |
 | F5 Clinical Guardrail | Safety → Alerts | Rules R1–R6 over drugs, labs, contradicting notes and unresolved actions, with evidence |
 | F6 Medication reconciliation | Safety → Medication reconciliation | Home vs current dose/route/frequency/indication, field-level differences |
@@ -108,9 +112,9 @@ Two support views are deliberately not counted as PRD modules: **Notes → Labs 
 3. **Every claim carries evidence.** Drafts cite `evt_` event ids and `seg_` transcript segment ids. The gateway checks unknown ids and re-prompts once in live mode; the UI shows a “No source” chip for unsourced claims.
 4. **Human approval is the only write path.** `/api/drafts/{id}/approve` is the single commit endpoint for notes, requests, referrals, discharge and revenue reviews. Rejection requires a reason.
 5. **Every write is audited.** Draft creation, edits, approvals, rejections, alert dismissal, lab review, OCR confirmation, task changes, referral transitions, transcription and claim preparation create `audit_entries`.
-6. **F1 consent is explicit.** Audio cannot be transcribed until a human records `consultation_capture` consent. The model cannot record consent.
+6. **F1 and F3 audio consent is explicit.** Audio cannot be transcribed until a human records `consultation_capture` consent for the active encounter. The model cannot record consent.
 7. **F2 allergies are verified by a human.** Approval is blocked until the documented allergy is confirmed or corrected.
-8. **F3 uses proposed tasks and proposed nursing entries.** Approving the note does not create tasks; accepting selected tasks does. Nursing entries become a separate nursing-chart event on note approval.
+8. **F3 uses proposed tasks and proposed nursing entries.** The doctor reviews each task's wording, role and priority. Approving the report does not create tasks; approving selected tasks assigns them to a Junior Doctor, Senior Doctor or Nurse queue. Explicit urgent, critical and stat dictation is carried into task priority. Nursing entries become a separate nursing-chart event on note approval.
 9. **F4 refuses to invent gaps.** Missing examination/plan sections stay visibly empty and signing stays blocked until a clinician documents them in the dedicated editor. That text is attributed to the clinician, not to the transcript.
 10. **F5 dismissal needs a reason.** “Dismiss” is not a one-click mute.
 11. **F8 keeps the source beside the value.** Low-confidence fields need human confirmation before commit. PDF text-layer extraction is supported; scanned PDFs without a text layer fall back honestly.

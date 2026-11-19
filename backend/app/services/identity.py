@@ -37,6 +37,7 @@ USERS = [
 ROLE_LABELS = {"doctor": "Admin", "senior_doctor": "Senior doctor", "junior_doctor": "Junior doctor", "nurse": "Nurse"}
 TASK_ROLES = ("senior_doctor", "junior_doctor", "nurse")
 DIRECTORY = {user.id: user for user in USERS}
+TASK_ASSIGNEES = {user.role: user for user in USERS if user.role in TASK_ROLES}
 DEFAULT_USER_ID = "u_meera"
 DEFAULT_PATIENT_ID = "pat_ravi"
 

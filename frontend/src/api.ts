@@ -217,3 +217,10 @@ export async function transcribeAudio(blob: Blob, filename = "consultation.webm"
   }
   throw new Error("The pipeline is taking too long. Try again in a minute.");
 }
+
+/** Transcribes ward-round audio into editable text without creating a report or task. */
+export async function transcribeRoundDictation(blob: Blob, filename = "ward-round.webm") {
+  const form = new FormData();
+  form.append("file", blob, filename);
+  return api<{ text: string; model: string }>("/notes/dictation/transcribe", { method: "POST", body: form });
+}

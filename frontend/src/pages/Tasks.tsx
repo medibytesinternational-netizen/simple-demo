@@ -53,7 +53,7 @@ export function TasksPage() {
   const [detail, setDetail] = useState("");
   const [assignee, setAssignee] = useState(ASSIGNABLE[0].id);
   const [category, setCategory] = useState("general");
-  const [priority, setPriority] = useState<"routine" | "urgent">("routine");
+  const [priority, setPriority] = useState<"routine" | "urgent" | "critical">("routine");
   const [dueHours, setDueHours] = useState(4);
 
   const [view, setView] = useState<View>("open");
@@ -144,7 +144,7 @@ export function TasksPage() {
         <div className="dc-form-top">
           <div className="tk-counts">
             <span><b>{openCount}</b> OPEN</span>
-            <span className="tk-red"><b>{urgentCount}</b> URGENT</span>
+            <span className="tk-red"><b>{urgentCount}</b> URGENT / CRITICAL</span>
             <span><b>{overdueCount}</b> OVERDUE</span>
           </div>
           <h1 className="dc-form-title">Tasks &amp; Escalation</h1>
@@ -186,6 +186,7 @@ export function TasksPage() {
               <div className="dc-radios tk-prio">
                 <label className="tk-green"><input type="radio" name="tk-prio" checked={priority === "routine"} onChange={() => setPriority("routine")} /> Normal</label>
                 <label className="tk-red"><input type="radio" name="tk-prio" checked={priority === "urgent"} onChange={() => setPriority("urgent")} /> Urgent</label>
+                <label className="tk-red"><input type="radio" name="tk-prio" checked={priority === "critical"} onChange={() => setPriority("critical")} /> Critical</label>
               </div>
             </div>
             <label className="gf">
@@ -249,7 +250,7 @@ export function TasksPage() {
                 <Fragment key={t.id}>
                   <tr className={isUrgent(t) && isOpen(t) ? "tk-row-urgent" : ""}>
                     <td>{i + 1}</td>
-                    <td><span className={`tk-tag ${isUrgent(t) ? "red" : "green"}`}>{isUrgent(t) ? "URGENT" : "NORMAL"}</span></td>
+                    <td><span className={`tk-tag ${isUrgent(t) ? "red" : "green"}`}>{t.priority === "critical" ? "CRITICAL" : t.priority === "urgent" ? "URGENT" : "NORMAL"}</span></td>
                     <td className="nowrap">{CATEGORY_LABEL[t.category || "general"] || t.category}</td>
                     <td>
                       <div className="tk-title">{t.title}</div>

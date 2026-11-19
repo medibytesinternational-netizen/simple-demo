@@ -7,7 +7,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .identity import acting_name
+from .identity import TASK_ASSIGNEES, acting_name, current_patient_id
 from ..db import utcnow
 from ..models import (
     Draft,
@@ -432,7 +432,8 @@ def approve_draft(
 
         role = payload.get("role") if payload.get("role") in EVENT_TYPE else "doctor"
         event_type, title = EVENT_TYPE[role], TITLE[role]
-    body_text = "\n".join(_flatten_text(payload))
+    body_source = payload.get("report") if draft.feature == "F3" and payload.get("report") else payload
+    body_text = "\n".join(_flatten_text(body_source))
     event_payload = dict(payload)
     event_payload["draft_id"] = draft.id
 
@@ -526,11 +527,15 @@ def accept_tasks(
 ) -> list[Task]:
     if draft.feature != "F3":
         raise ValueError("Only round drafts produce proposed tasks")
+    if draft.patient_id != current_patient_id():
+        raise ValueError("Draft not found")
+    if draft.status != "approved":
+        raise ValueError("Approve the ward-round report before assigning its tasks")
     proposed = (draft.content or {}).get("proposed_tasks", [])
     actor = acting_name()
     created: list[Task] = []
     now = utcnow()
-    for index in indices:
+    for index in dict.fromkeys(indices):
         if index < 0 or index >= len(proposed):
             continue
         item = proposed[index]
@@ -542,6 +547,10 @@ def accept_tasks(
         )
         if existing:
             continue
+        role = item.get("assignee_role")
+        if role not in TASK_ASSIGNEES:
+            role = "junior_doctor"
+        assignee = TASK_ASSIGNEES[role]
         due_hours = int(item.get("due_in_hours", 24) or 24)
         task = Task(
             id=new_id("tsk"),
@@ -552,10 +561,11 @@ def accept_tasks(
             status="accepted",
             priority=item.get("priority", "routine"),
             due_at=now + timedelta(hours=due_hours),
-            owner=actor,
-            assigned_to=actor,
+            owner=assignee.name,
+            assigned_to=assignee.name,
             assigned_at=now,
             assigned_by=actor,
+            assignee_role=role,
             source_event_id=draft.committed_event_id,
             accepted_from_draft_id=draft.id,
             created_by=actor,
@@ -570,7 +580,13 @@ def accept_tasks(
             task.id,
             draft.patient_id,
             actor_name=actor,
-            after={"title": task.title, "priority": task.priority, "due_at": task.due_at.isoformat()},
+            after={
+                "title": task.title,
+                "priority": task.priority,
+                "assigned_to": task.assigned_to,
+                "assignee_role": task.assignee_role,
+                "due_at": task.due_at.isoformat(),
+            },
             meta={"draft_id": draft.id, "proposed_index": index},
         )
     db.flush()

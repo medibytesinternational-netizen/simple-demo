@@ -67,7 +67,7 @@ class TaskCreateRequest(BaseModel):
     due_in_hours: int = 24
     owner: str | None = None
     category: Literal["general", "lab", "ct", "mri", "xray", "ultrasound", "ecg"] = "general"
-    assignee_role: Literal["senior_doctor", "nurse"] | None = None
+    assignee_role: Literal["senior_doctor", "junior_doctor", "nurse"] | None = None
 
 
 class TaskUpdateRequest(BaseModel):

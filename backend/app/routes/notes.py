@@ -4,6 +4,7 @@ import uuid
 
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -50,6 +51,22 @@ def _looks_like_audio(filename: str | None, content_type: str | None) -> bool:
     if extension:
         return extension in AUDIO_EXTENSIONS
     return declared.startswith("audio/")
+
+
+def _has_audio_consent(db: Session, patient_id: str, encounter_id: str) -> bool:
+    events = db.scalars(
+        select(TimelineEvent).where(
+            TimelineEvent.patient_id == patient_id,
+            TimelineEvent.encounter_id == encounter_id,
+            TimelineEvent.type == "consent",
+            TimelineEvent.status == "approved",
+        )
+    ).all()
+    return any(
+        (event.payload or {}).get("granted") is True
+        and (event.payload or {}).get("consent_type") in {"consultation_capture", "audio_recording"}
+        for event in events
+    )
 
 
 # --------------------------------------------------------------------------
@@ -111,6 +128,62 @@ async def transcribe_consultation(file: UploadFile = File(...), feature: str = F
     )
     db.commit()
     return {"audio_id": audio_id, "status": receipt.get("status", "running")}
+
+
+@router.post("/notes/dictation/transcribe", dependencies=[Depends(require("clinical_draft"))])
+async def transcribe_round_dictation(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Transcribe ward-round dictation with Hugging Face Whisper; audio itself is not retained."""
+    patient, encounter, _ = _state(db)
+    require_open_encounter(encounter)
+    if not _has_audio_consent(db, patient.id, encounter.id):
+        raise HTTPException(403, "Record patient consent before capturing ward-round audio")
+    if not _looks_like_audio(file.filename, file.content_type):
+        raise HTTPException(415, "That file is not audio. Upload mp3, wav, m4a, webm or ogg.")
+    contents = await file.read(MAX_AUDIO_BYTES + 1)
+    if len(contents) > MAX_AUDIO_BYTES:
+        raise HTTPException(413, "Audio too large (max 64 MB)")
+    if not contents:
+        raise HTTPException(400, "The audio file is empty")
+    if not settings.hf_token:
+        raise HTTPException(503, "Set HF_TOKEN in backend/.env to enable Hugging Face ward-round dictation")
+
+    url = f"https://router.huggingface.co/hf-inference/models/{settings.hf_asr_model}"
+    headers = {
+        "Authorization": f"Bearer {settings.hf_token}",
+        "Content-Type": file.content_type or "application/octet-stream",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=90) as client:
+            response = await client.post(url, headers=headers, content=contents)
+    except httpx.HTTPError as exc:
+        raise HTTPException(502, "Hugging Face transcription could not be reached") from exc
+    if response.status_code == 503:
+        raise HTTPException(503, "The speech model is loading. Please try again shortly.")
+    if response.status_code == 402:
+        raise HTTPException(402, "Hugging Face Inference Providers has no available credits for this token. Add credits or configure a provider key.")
+    if response.is_error:
+        raise HTTPException(502, f"Hugging Face transcription failed (HTTP {response.status_code})")
+    try:
+        result = response.json()
+    except ValueError as exc:
+        raise HTTPException(502, "Hugging Face returned an unreadable transcription response") from exc
+    text = result.get("text", "") if isinstance(result, dict) else ""
+    text = str(text).strip()
+    if not text:
+        raise HTTPException(422, "No speech was detected in the recording")
+
+    add_audit(
+        db,
+        "round_dictation_transcribed",
+        "patient",
+        patient.id,
+        patient.id,
+        actor_type="model",
+        actor_name=settings.hf_asr_model,
+        after={"encounter_id": encounter.id, "audio_bytes": len(contents)},
+    )
+    db.commit()
+    return {"text": text, "model": settings.hf_asr_model}
 
 
 @router.get("/notes/transcribe/{audio_id}", dependencies=[Depends(require("clinical_draft"))])

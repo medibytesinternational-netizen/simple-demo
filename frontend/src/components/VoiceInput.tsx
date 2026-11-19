@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { transcribeAudio } from "../api";
+import { transcribeAudio, transcribeRoundDictation } from "../api";
 import type { Draft } from "../types";
 
 // The only place in the app that captures voice. Record and Upload always come together: a screen that
@@ -18,6 +18,8 @@ type Props = {
   disabled?: boolean;
   /** Called with the draft the MediBytes pipeline produced from the recording. */
   onDraft?: (draft: Draft, source: VoiceSource) => void;
+  /** Called when ward-round audio is transcribed to editable text rather than directly to a draft. */
+  onTranscript?: (transcript: string, source: VoiceSource) => void;
   /** Which note the recording writes: F1 OPD report (default) or F2 admission note. */
   feature?: string;
   /** Send the audio somewhere else instead of the consultation note (the new patient intake). */
@@ -35,7 +37,7 @@ function looksLikeAudio(file: File): boolean {
   return (file.type || "").toLowerCase().startsWith("audio/");
 }
 
-export function VoiceInput({ consentGranted, disabled, onDraft, capture, feature = "F1", onBusyChange, onTranscribingChange }: Props) {
+export function VoiceInput({ consentGranted, disabled, onDraft, onTranscript, capture, feature = "F1", onBusyChange, onTranscribingChange }: Props) {
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState("");
@@ -45,8 +47,8 @@ export function VoiceInput({ consentGranted, disabled, onDraft, capture, feature
   const fileRef = useRef<HTMLInputElement | null>(null);
   const mountedRef = useRef(true);
   // Callbacks are read through a ref so a transcript that arrives later reaches the current handler.
-  const callbacks = useRef({ onDraft, capture, onBusyChange, onTranscribingChange });
-  callbacks.current = { onDraft, capture, onBusyChange, onTranscribingChange };
+  const callbacks = useRef({ onDraft, onTranscript, capture, onBusyChange, onTranscribingChange });
+  callbacks.current = { onDraft, onTranscript, capture, onBusyChange, onTranscribingChange };
 
   useEffect(() => {
     mountedRef.current = true;
@@ -76,6 +78,13 @@ export function VoiceInput({ consentGranted, disabled, onDraft, capture, feature
       if (callbacks.current.capture) {
         await callbacks.current.capture(body, filename, source);
         if (mountedRef.current) setError("");
+        return;
+      }
+      if (feature === "F3") {
+        const result = await transcribeRoundDictation(body, filename || "ward-round.webm");
+        if (!mountedRef.current) return;
+        setError("");
+        callbacks.current.onTranscript?.(result.text, source);
         return;
       }
       const result = await transcribeAudio(body, filename, feature);

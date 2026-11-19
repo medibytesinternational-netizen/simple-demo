@@ -142,16 +142,24 @@ class AdmissionNote(BaseModel):
 
 
 class ProposedTask(BaseModel):
-    title: str
+    title: str = Field(min_length=3, max_length=180)
     detail: str = ""
-    priority: Literal["routine", "urgent"] = "routine"
-    due_in_hours: int = 24
+    priority: Literal["routine", "urgent", "critical"] = "routine"
+    assignee_role: Literal["senior_doctor", "junior_doctor", "nurse"] = "junior_doctor"
+    due_in_hours: int = Field(default=24, ge=1, le=168)
     source_segment_ids: list[str] = Field(default_factory=list)
     confidence: float = 0.9
 
 
+class WardRoundReport(BaseModel):
+    findings: list[Claim] = Field(default_factory=list)
+    assessment: list[Claim] = Field(default_factory=list)
+    plan: list[Claim] = Field(default_factory=list)
+
+
 class RoundDraft(BaseModel):
     note_claims: list[Claim] = Field(default_factory=list)
+    report: WardRoundReport = Field(default_factory=WardRoundReport)
     nursing_entries: list[Claim] = Field(default_factory=list)
     proposed_tasks: list[ProposedTask] = Field(default_factory=list)
     not_documented: list[str] = Field(default_factory=list)

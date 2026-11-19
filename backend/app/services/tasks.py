@@ -119,10 +119,10 @@ def require_own_task(task: Task) -> None:
 
 
 def queue_key(task: Task) -> tuple:
-    """Queue order: bumped tasks first, then urgent before normal, then the earliest due."""
-    urgent = 0 if task.priority in {"urgent", "critical"} else 1
+    """Queue order: bumped tasks first, then critical, urgent, routine, then earliest due."""
+    priority = {"critical": 0, "urgent": 1}.get(task.priority, 2)
     due = task.due_at.isoformat() if task.due_at else "9999"
-    return (-(task.queue_rank or 0), urgent, due)
+    return (-(task.queue_rank or 0), priority, due)
 
 
 def bump_urgent(db: Session, task: Task) -> Task:
