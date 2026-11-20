@@ -163,6 +163,8 @@ def draft_accept_tasks(draft_id: str, body: AcceptTasksRequest, db: Session = De
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
-    tasks = accept_tasks(db, draft, body.indices, body.actor)
+    edits = [edit.model_dump(exclude_none=True) for edit in body.tasks]
+    indices = [edit["index"] for edit in edits] if edits else body.indices
+    tasks = accept_tasks(db, draft, indices, body.actor, edits={edit["index"]: edit for edit in edits})
     db.commit()
     return {"tasks": [_task_dict(task) for task in tasks]}

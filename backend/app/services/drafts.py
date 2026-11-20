@@ -7,7 +7,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .identity import acting_name
+from .identity import USERS, acting_name
 from ..db import utcnow
 from ..models import (
     Draft,
@@ -523,7 +523,10 @@ def accept_tasks(
     draft: Draft,
     indices: list[int],
     actor: str | None = None,
+    edits: dict[int, dict[str, Any]] | None = None,
 ) -> list[Task]:
+    """Create the chosen round tasks, each given to the junior doctor or the nurse (ward round)."""
+    from .round_tasks import fill
     if draft.feature != "F3":
         raise ValueError("Only round drafts produce proposed tasks")
     proposed = (draft.content or {}).get("proposed_tasks", [])
@@ -533,7 +536,9 @@ def accept_tasks(
     for index in indices:
         if index < 0 or index >= len(proposed):
             continue
-        item = proposed[index]
+        item = fill({**proposed[index], **{k: v for k, v in (edits or {}).get(index, {}).items() if k != "index"}})
+        role = item.get("assignee_role")
+        assignee = next((u.name for u in USERS if u.role == role), actor)
         existing = db.scalar(
             select(Task).where(
                 Task.accepted_from_draft_id == draft.id,
@@ -552,8 +557,10 @@ def accept_tasks(
             status="accepted",
             priority=item.get("priority", "routine"),
             due_at=now + timedelta(hours=due_hours),
-            owner=actor,
-            assigned_to=actor,
+            owner=assignee,
+            assigned_to=assignee,
+            assignee_role=role,
+            category=item.get("category") or "general",
             assigned_at=now,
             assigned_by=actor,
             source_event_id=draft.committed_event_id,
@@ -570,7 +577,8 @@ def accept_tasks(
             task.id,
             draft.patient_id,
             actor_name=actor,
-            after={"title": task.title, "priority": task.priority, "due_at": task.due_at.isoformat()},
+            after={"title": task.title, "priority": task.priority, "due_at": task.due_at.isoformat(),
+                   "assignee_role": role, "assigned_to": assignee},
             meta={"draft_id": draft.id, "proposed_index": index},
         )
     db.flush()

@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from .. import round_tasks
 from ..extract import Sentence, analyse, claim
 from .common import _segments, _transcript_event
 
@@ -70,7 +71,9 @@ def f3_round(context: dict[str, Any]) -> dict[str, Any]:
                 "title": sentence.text.rstrip(".")[:110],
                 "detail": f'Said on the round: "{sentence.text}"',
                 "priority": "urgent" if urgent else "routine",
-                "due_in_hours": 8 if urgent else 24,
+                "due_in_hours": round_tasks.due_in_hours(sentence.text, urgent),
+                "assignee_role": round_tasks.assignee_role(sentence.text),
+                "category": round_tasks.category(sentence.text),
                 "source_segment_ids": [sentence.segment_id],
                 "confidence": 0.6,
             }

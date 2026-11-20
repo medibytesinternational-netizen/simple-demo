@@ -42,9 +42,15 @@ export function TasksPage() {
   const queryClient = useQueryClient();
   const { showEvent } = useEvidence();
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta") });
-  const tasks = useQuery<{ tasks: AppTask[] }>({ queryKey: ["tasks"], queryFn: () => get("/tasks") });
-
   const role = meta.data?.user?.role || "doctor";
+  // Junior doctors, nurses and senior doctors work the whole ward: their own tasks across every patient.
+  const wardWide = !!meta.data && role !== "doctor";
+  const tasks = useQuery<{ tasks: AppTask[] }>({
+    queryKey: ["tasks", wardWide ? "mine" : "chart"],
+    queryFn: () => get(wardWide ? "/tasks?scope=mine" : "/tasks"),
+    enabled: !!meta.data,
+  });
+
   const me = meta.data?.user?.name || "";
   const isChief = role === "doctor";
 
@@ -216,7 +222,7 @@ export function TasksPage() {
             </button>
           ))}
         </div>
-        {isChief ? (
+        {isChief || role === "senior_doctor" ? (
           <label className="tk-filter">
             SHOW
             <select className="select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}>
@@ -253,6 +259,9 @@ export function TasksPage() {
                     <td className="nowrap">{CATEGORY_LABEL[t.category || "general"] || t.category}</td>
                     <td>
                       <div className="tk-title">{t.title}</div>
+                      {wardWide && t.patient_name ? (
+                        <div className="small"><strong>{t.patient_name}</strong>{t.ward || t.bed ? <span className="muted"> · {[t.ward, t.bed].filter(Boolean).join(" / ")}</span> : null}</div>
+                      ) : null}
                       {t.detail ? <div className="muted small">{t.detail}</div> : null}
                       {t.escalation_level ? <div className="small tk-red">Escalated (level {t.escalation_level}){t.escalation_reason ? `: ${t.escalation_reason}` : ""}</div> : null}
                     </td>

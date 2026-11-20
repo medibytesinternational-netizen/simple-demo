@@ -7,6 +7,7 @@ import { get, post } from "../api";
 import type { Draft, Lab, Meta } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { VoiceInput } from "../components/VoiceInput";
+import { RoundPatientPicker } from "../features/f03/RoundPatientPicker";
 import { useCan, usePatientId } from "../session";
 import { uploadReport } from "../features/f08/upload";
 import IcuReadingForm from "../features/f07/IcuReadingForm";
@@ -60,7 +61,7 @@ type Tab = {
 const TABS: Tab[] = [
   { key: "consult", label: "OPD consultation", feature: "F1", kind: "transcript", title: "OPD consultation", description: "Record or upload the consultation audio (with the patient's consent), or paste a transcript. The note drafts itself; you review, edit and sign it.", transcript: CONSULT_TRANSCRIPT },
   { key: "admission", label: "Admission assessment", feature: "F2", kind: "transcript", title: "Admission assessment", description: "MediBytes Analysis prepares the admission note from the interview. Verify the allergy record before approving; proposed orders stay as reports.", transcript: ADMISSION_TRANSCRIPT },
-  { key: "round", label: "Ward round", feature: "F3", kind: "transcript", title: "Ward round", description: "Dictate the round. The note, nursing-chart entries and proposed tasks are drafted; you choose which tasks to create.", transcript: ROUND_TRANSCRIPT },
+  { key: "round", label: "Ward round", feature: "F3", kind: "transcript", title: "Ward round", description: "Record or upload the round for each patient. The work said is split between the junior doctor and the nurse, with priority and a due time; you review it and assign.", transcript: ROUND_TRANSCRIPT },
   { key: "progress", label: "Progress notes", feature: "F4", kind: "transcript", title: "Progress notes", description: "MediBytes Analysis identifies what changed since the last note. Examination and plan must be written by the clinician before signing.", transcript: PROGRESS_TRANSCRIPT },
   { key: "icu", label: "ICU flow sheet", feature: "F7", kind: "icu", title: "ICU flow sheet", description: "Assembles device readings and structured observations into a flow sheet. It cannot add, estimate or silently round a value.", transcript: "" },
   { key: "referral", label: "Referral", feature: "F11", kind: "referral", title: "Referrals", description: "Prepares the right specialty, a specific clinical question and the documented history. A human approves before the referral status changes to sent.", transcript: "" },
@@ -142,7 +143,7 @@ export function NotesPage() {
   const consents = useQuery<{ consents: Array<{ id: string; granted: boolean; consent_type: string; occurred_at: string }> }>({
     queryKey: ["consents", "notes", patientId],
     queryFn: () => get(`/patients/${patientId}/consents`),
-    enabled: (tab.feature === "F1" || tab.feature === "F2") && !!patientId,
+    enabled: (tab.feature === "F1" || tab.feature === "F2" || tab.feature === "F3") && !!patientId,
   });
   const consentGranted = Boolean(consents.data?.consents?.some((entry) => entry.granted));
 
@@ -321,6 +322,23 @@ export function NotesPage() {
 
             {tab.kind === "transcript" ? (
               <>
+                {tab.feature === "F3" ? (
+                  <>
+                    <RoundPatientPicker />
+                    {consentGranted ? null : (
+                      <div className="banner warning mb-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span>Record the patient's consent before recording the round.</span>
+                          <button className="btn btn-sm btn-primary" onClick={() => recordConsent.mutate()} disabled={recordConsent.isPending}>
+                            {recordConsent.isPending ? "Saving..." : "Patient consents"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <VoiceInput consentGranted={consentGranted} feature="F3" onTranscribingChange={setTranscribing} onDraft={onVoiceDraft} />
+                    <div className="small muted mt-2 mb-2">Or type the round below.</div>
+                  </>
+                ) : null}
                 <label className="field-label">Conversation or dictation</label>
                 <textarea
                   className="textarea"
@@ -349,7 +367,7 @@ export function NotesPage() {
                     {generate.isPending ? <><span className="spinner" /> Generating draft…</> : "Generate draft"}
                   </button>
                   <button className="btn" onClick={() => setTranscript(tab.transcript)}>Load consultation transcript</button>
-                  {tab.feature === "F1" ? <span className="small muted">Paste text, record, or upload an audio file.</span> : <span className="small muted">Paste or type the text; this tab has no voice input.</span>}
+                  {tab.feature === "F1" || tab.feature === "F3" ? <span className="small muted">Paste text, record, or upload an audio file.</span> : <span className="small muted">Paste or type the text; this tab has no voice input.</span>}
                 </div>
                 {tab.feature === "F1" ? <ConsultNoteStatus result={consultResult} /> : null}
                 {tab.feature === "F1" || tab.feature === "F2" ? (

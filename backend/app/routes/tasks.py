@@ -37,13 +37,17 @@ router = APIRouter()
 def tasks_list(
     encounter_id: str | None = None,
     status: str | None = None,
+    scope: str | None = None,
     db: Session = Depends(get_db),
 ):
     # Overdue work escalates on its own; reading the board is enough to bring it up to date.
     run_escalations(db)
     db.commit()
     stmt = select(Task).order_by(Task.created_at.desc())
-    if encounter_id:
+    if scope == "mine":
+        # The ward list: every patient's tasks that this person may see (role-filtered below).
+        pass
+    elif encounter_id:
         stmt = stmt.where(Task.encounter_id == encounter_id)
     else:
         # The single-patient demo board shows the current encounter only. The
@@ -54,7 +58,26 @@ def tasks_list(
         stmt = stmt.where(Task.status == status)
     rows = [task for task in db.scalars(stmt) if engine.visible_to_actor(task)]
     rows.sort(key=engine.queue_key)
-    return {"tasks": [_task_dict(task) for task in rows]}
+    if scope != "mine":
+        return {"tasks": [_task_dict(task) for task in rows]}
+    from ..models import Encounter, Patient
+    from ..services.identity import is_browsable
+
+    rows = [task for task in rows if is_browsable(task.patient_id)]
+    patients = {p.id: p for p in db.scalars(select(Patient).where(Patient.id.in_({t.patient_id for t in rows})))}
+    encounters = {e.id: e for e in db.scalars(select(Encounter).where(Encounter.id.in_({t.encounter_id for t in rows if t.encounter_id})))}
+
+    def where(task: Task) -> dict:
+        patient = patients.get(task.patient_id)
+        encounter = encounters.get(task.encounter_id)
+        return {
+            "patient_id": task.patient_id,
+            "patient_name": patient.name if patient else "",
+            "ward": (encounter.ward if encounter else "") or "",
+            "bed": (encounter.bed if encounter else "") or "",
+        }
+
+    return {"tasks": [{**_task_dict(task), **where(task)} for task in rows]}
 
 
 @router.post("/tasks", dependencies=[Depends(require("manage_task"))])

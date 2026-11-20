@@ -36,6 +36,8 @@ export function DraftReview({ draft }: { draft: Draft }) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [selectedTasks, setSelectedTasks] = useState<number[]>([]);
+  // Ward round: the senior doctor's changes to each proposed task (role, priority, due time, wording).
+  const [taskEdits, setTaskEdits] = useState<Record<number, { assignee_role?: string; priority?: string; due_in_hours?: number; title?: string }>>({});
   const [f4Exam, setF4Exam] = useState("");
   const [f4Plan, setF4Plan] = useState("");
 
@@ -44,9 +46,10 @@ export function DraftReview({ draft }: { draft: Draft }) {
   useEffect(() => {
     const defaults = tasks
       .map((task: any, index: number) => ({ task, index }))
-      .filter(({ task }: any) => !String(task.title || "").toLowerCase().includes("ibuprofen") && Number(task.confidence ?? 1) >= 0.7)
+      .filter(({ task }: any) => !String(task.title || "").toLowerCase().includes("ibuprofen"))
       .map(({ index }: any) => index);
     setSelectedTasks(defaults);
+    setTaskEdits({});
     setEditText(JSON.stringify(draft.content, null, 2));
     setEditMode(openForEdit.delete(draft.id));
     setF4Exam(draft.content?.exam?.general?.text || "");
@@ -137,7 +140,11 @@ export function DraftReview({ draft }: { draft: Draft }) {
   });
 
   const accept = useMutation({
-    mutationFn: () => post<any>(`/drafts/${draft.id}/accept-tasks`, { indices: selectedTasks, actor: meta.data?.user.name }),
+    mutationFn: () =>
+      post<any>(`/drafts/${draft.id}/accept-tasks`, {
+        tasks: selectedTasks.map((index) => ({ index, ...taskEdits[index] })),
+        actor: meta.data?.user.name,
+      }),
     onSuccess: () => {
       setError("");
       invalidate();
@@ -180,6 +187,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
   });
 
   const isApproved = draft.status === "approved";
+  const canAssign = !!meta.data?.allowed_actions?.includes("accept_tasks");
   const opdNote = draft.feature === "F1" && isOpdV2(draft.content);
   // Admission notes in the hospital format use the same heading editor (before signing; signing admits).
   const admitNote = draft.feature === "F2" && isAdmitV2(draft.content);
@@ -409,16 +417,20 @@ export function DraftReview({ draft }: { draft: Draft }) {
         {draft.feature === "F3" && tasks.length ? (
           <section className="draft-tasks" aria-label="Proposed tasks">
             <h4 className="draft-section-title">
-              Proposed tasks<span className="draft-section-sub">Choose what becomes real</span>
+              Round tasks<span className="draft-section-sub">Check who does each task and when, then assign</span>
             </h4>
             <div className="rows">
               {tasks.map((task, index) => {
                 const checked = selectedTasks.includes(index);
+                const edit = { ...task, ...taskEdits[index] };
+                const change = (patch: Record<string, unknown>) =>
+                  setTaskEdits((current) => ({ ...current, [index]: { ...current[index], ...patch } }));
                 return (
-                  <label className={`lrow draft-task ${checked ? "selected" : ""}`} key={`${task.title}-${index}`}>
+                  <div className={`lrow draft-task ${checked ? "selected" : ""}`} key={`${task.title}-${index}`}>
                     <input
                       className="checkbox"
                       type="checkbox"
+                      aria-label={`Assign: ${edit.title}`}
                       checked={checked}
                       onChange={(event) => {
                         setSelectedTasks((current) =>
@@ -427,34 +439,56 @@ export function DraftReview({ draft }: { draft: Draft }) {
                       }}
                     />
                     <span className="lrow-main">
-                      <span className="lrow-title">{task.title}</span>
-                      <span className="lrow-chips">
-                        <Pill tone={priorityTone(task.priority)}>{task.priority}</Pill>
-                        <MetaChip icon="clock">due in {task.due_in_hours}h</MetaChip>
-                        <MetaChip>{Math.round((task.confidence ?? 1) * 100)}% confidence</MetaChip>
+                      <input
+                        className="input input-sm"
+                        value={edit.title}
+                        aria-label="Task"
+                        onChange={(event) => change({ title: event.target.value })}
+                        disabled={accept.isSuccess}
+                      />
+                      <span className="lrow-chips mt-1">
+                        <select className="input input-sm" aria-label="Assign to" value={edit.assignee_role || "junior_doctor"}
+                          onChange={(event) => change({ assignee_role: event.target.value })} disabled={accept.isSuccess}>
+                          <option value="junior_doctor">Junior doctor</option>
+                          <option value="nurse">Nurse</option>
+                        </select>
+                        <select className="input input-sm" aria-label="Priority" value={edit.priority || "routine"}
+                          onChange={(event) => change({ priority: event.target.value })} disabled={accept.isSuccess}>
+                          <option value="routine">Routine</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                        <label className="small muted">
+                          due in{" "}
+                          <input className="input input-sm" type="number" min={1} max={168} style={{ width: 64 }} aria-label="Due in hours"
+                            value={edit.due_in_hours ?? 24}
+                            onChange={(event) => change({ due_in_hours: Math.max(1, Math.min(168, Number(event.target.value) || 1)) })}
+                            disabled={accept.isSuccess} /> h
+                        </label>
+                        {task.category && task.category !== "general" ? <MetaChip>{String(task.category).toUpperCase()}</MetaChip> : null}
+                        <Pill tone={priorityTone(edit.priority)}>{edit.priority}</Pill>
                       </span>
                     </span>
                     <span className="lrow-side">
                       <EvidenceChip eventIds={[]} segmentIds={task.source_segment_ids} />
                     </span>
-                  </label>
+                  </div>
                 );
               })}
             </div>
             <div className="button-row mt-3">
               <button
                 className="btn btn-primary btn-sm"
-                disabled={!isApproved || accept.isPending || !selectedTasks.length}
+                disabled={!canAssign || accept.isPending || !selectedTasks.length}
                 onClick={() => accept.mutate()}
                 aria-busy={accept.isPending || undefined}
               >
                 {accept.isPending
-                  ? <><span className="spinner" /> Accepting…</>
-                  : `Accept ${selectedTasks.length} selected task${selectedTasks.length === 1 ? "" : "s"}`}
+                  ? <><span className="spinner" /> Assigning…</>
+                  : `Assign ${selectedTasks.length} task${selectedTasks.length === 1 ? "" : "s"}`}
               </button>
-              {!isApproved ? <span className="small muted">Approve the note first, then accept tasks.</span> : null}
+              {!canAssign ? <span className="small muted">Only the senior doctor or admin assigns round tasks.</span> : null}
             </div>
-            {accept.isSuccess ? <div className="success-box mt-2" role="status">Tasks accepted. They are now real work items.</div> : null}
+            {accept.isSuccess ? <div className="success-box mt-2" role="status">Tasks assigned. The junior doctor and the nurse now see their own tasks on their task lists.</div> : null}
           </section>
         ) : null}
       </div>

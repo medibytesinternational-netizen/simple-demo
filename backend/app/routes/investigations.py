@@ -97,3 +97,58 @@ def export_investigation_request(request_id: str, db: Session = Depends(get_db))
     )
     db.commit()
     return _investigation_dict(request)
+
+
+# --------------------------------------------------------------------------
+# Investigation & radiology request form, hospital format: one report per request,
+# stored as a document on the timeline so it can be reopened and printed.
+# --------------------------------------------------------------------------
+from ..config import settings  # noqa: E402
+from ..models import Encounter, Patient  # noqa: E402
+from ..services import investigation_form  # noqa: E402
+from ..services.identity import ROLE_LABELS, acting_name, acting_user  # noqa: E402
+from ..services.note_document import GENERATED_KIND  # noqa: E402
+from ..services.ocr import new_document  # noqa: E402
+from ..services.timeline import add_event  # noqa: E402
+
+
+@router.post("/investigation-requests/{request_id}/report", dependencies=[Depends(require("investigation_report"))])
+def investigation_request_report(request_id: str, db: Session = Depends(get_db)):
+    request = db.get(InvestigationRequest, request_id)
+    if not request:
+        raise HTTPException(404, "Investigation request not found")
+    patient = db.get(Patient, request.patient_id)
+    if not patient:
+        raise HTTPException(404, "Patient not found")
+    encounter = db.get(Encounter, request.encounter_id) if request.encounter_id else None
+    user = acting_user()
+    made_at = utcnow()
+    form = investigation_form.build(
+        db, request, patient, encounter,
+        {"name": user.name, "designation": ROLE_LABELS.get(user.role, user.role)}, made_at,
+    )
+    html = investigation_form.render_html(form)
+    event = add_event(
+        db, patient_id=patient.id, encounter_id=request.encounter_id, type=investigation_form.REPORT_TYPE, subtype="F10",
+        title=f"{investigation_form.TITLE}: {request.study}", body_text=f"Request form for {request.study}",
+        payload={"request_id": request.id, "study": request.study},
+        source="F10", author_type="human", author_name=acting_name(), status="approved",
+        occurred_at=made_at, approved_by=acting_name(),
+    )
+    folder = settings.uploads_dir / "notes"
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"{event.id}.html"
+    path.write_text(html, encoding="utf-8")
+    document = new_document(
+        db, patient_id=patient.id, encounter_id=request.encounter_id,
+        filename=f"{investigation_form.TITLE} {request.study} {patient.mrn} {made_at:%Y-%m-%d %H%M}.html", path=str(path),
+        mime="text/html", image_kind=GENERATED_KIND, doc_type=investigation_form.REPORT_TYPE,
+    )
+    document.ocr_status = "confirmed"
+    document.confirmed_by = acting_name()
+    document.confirmed_at = made_at
+    event.document_id = document.id
+    add_audit(db, "note_document_stored", "document", document.id, patient.id,
+              after={"event_id": event.id, "doc_type": investigation_form.REPORT_TYPE, "request_id": request.id})
+    db.commit()
+    return {"event_id": event.id, "document_id": document.id}

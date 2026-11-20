@@ -109,7 +109,7 @@ def visible_to_actor(task: Task) -> bool:
     user = acting_user()
     if user.role not in TASK_ROLES:
         return True
-    return task.assignee_role == user.role or task.assigned_to == user.name
+    return task.assignee_role == user.role or task.assigned_to == user.name or task.assigned_by == user.name
 
 
 def require_own_task(task: Task) -> None:
