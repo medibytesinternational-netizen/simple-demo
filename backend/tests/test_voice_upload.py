@@ -364,8 +364,10 @@ def test_voice_input_shows_record_and_upload_together():
 def test_only_the_opd_and_admission_capture_box_and_the_ward_round_get_voice_input():
     notes = _source("pages/Notes.tsx")
     assert notes.count("<VoiceInput") == 2
-    # The ward round records one patient at a time into an F3 round draft.
-    assert '<VoiceInput consentGranted={consentGranted} feature="F3"' in notes
+    # The ward round records one patient at a time; the dictation lands in the transcript to review.
+    round_recorder = notes[notes.index("<VoiceInput"):notes.index("/>", notes.index("<VoiceInput"))]
+    assert 'feature="F3"' in round_recorder and "consentGranted={consentGranted}" in round_recorder
+    assert "onTranscript=" in round_recorder
     # The recorder sits in the capture box shown only while there is no OPD report / admission note yet.
     start = notes.index(") : isOpd ? (")
     assert start < notes.rindex("<VoiceInput") < notes.index("Record the admission\" : \"Record the consultation") + 2000

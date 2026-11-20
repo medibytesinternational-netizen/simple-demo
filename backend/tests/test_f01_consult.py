@@ -100,7 +100,13 @@ def _live(monkeypatch, live_reply, repair_reply=None, repair_calls=None):
     """Make the model call return a canned reply, or raise, without any network."""
     monkeypatch.setattr(
         "app.services.llm.settings",
-        SimpleNamespace(effective_llm_mode="live", openai_model="gpt-test", openai_api_key="sk-test"),
+        SimpleNamespace(
+            effective_llm_mode="live",
+            active_llm_provider="openai",
+            active_model="gpt-test",
+            openai_model="gpt-test",
+            openai_api_key="sk-test",
+        ),
     )
 
     def live_call(feature, prompt, context, model_cls):

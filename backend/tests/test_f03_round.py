@@ -103,11 +103,15 @@ LONG = "Continue " + "intravenous flucloxacillin every six hours " * 4 + "and re
 @pytest.mark.parametrize(
     "sentence, priority, hours",
     [
-        ("Stop the aspirin.", "urgent", 8),
-        ("Hold the evening dose.", "urgent", 8),
-        ("Check the blood sugar.", "urgent", 8),
-        ("Give the potassium supplement.", "urgent", 8),
-        ("Repeat the renal profile on Friday.", "urgent", 8),
+        # Only an explicit, non-negated urgency word raises the priority.
+        ("Stop the aspirin.", "routine", 24),
+        ("Hold the evening dose.", "routine", 24),
+        ("Check the blood sugar.", "routine", 24),
+        ("Give the potassium supplement.", "routine", 24),
+        ("Repeat the renal profile on Friday.", "routine", 24),
+        ("Stop the aspirin urgently.", "urgent", 4),
+        ("Repeat the potassium, this is critical.", "critical", 1),
+        ("Review the leg, not urgent.", "routine", 24),
         ("Continue the antibiotics.", "routine", 24),
         ("Book a physiotherapy review.", "routine", 24),
         (LONG, "routine", 24),
@@ -160,10 +164,18 @@ def test_approving_writes_nursing_chart_entries_as_quoted_instructions(client):
     assert chart["payload"]["round_event_id"] == response.json()["event"]["id"]
 
 
+def test_tasks_cannot_be_assigned_before_the_report_is_approved(client):
+    draft = generate_note(client, "F3", ROUND)
+    response = client.post(f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [0]})
+    assert response.status_code == 400
+    assert "Approve the ward-round report" in response.json()["detail"]
+
+
 def test_accepting_tasks_creates_exactly_the_chosen_ones_for_their_roles(client):
     draft = generate_note(client, "F3", ROUND)
     proposed = draft["content"]["proposed_tasks"]
     assert len(proposed) == 3
+    assert client.post(f"/api/drafts/{draft['id']}/approve", json={}).status_code == 200
     before = _task_count(client)
     response = client.post(
         f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [1, 2], "actor": "Somebody Else"}
@@ -173,9 +185,9 @@ def test_accepting_tasks_creates_exactly_the_chosen_ones_for_their_roles(client)
     assert [t["title"] for t in created] == [proposed[1]["title"], proposed[2]["title"]]
     assert {t["status"] for t in created} == {"accepted"}
     # Each task goes to the person holding its role; the doctor who accepted is the assigner.
-    names = {"junior_doctor": "Dr. Kiran Patel", "nurse": "Nurse Anita Rao"}
+    names = {"senior_doctor": "Dr. Arjun Rao", "junior_doctor": "Dr. Kiran Patel", "nurse": "Nurse Anita Rao"}
     assert [t["owner"] for t in created] == [names[proposed[i]["assignee_role"]] for i in (1, 2)]
-    assert [t["priority"] for t in created] == ["urgent", "urgent"]
+    assert [t["priority"] for t in created] == [proposed[i]["priority"] for i in (1, 2)]
     board = client.get("/api/tasks").json()["tasks"]
     assert len(board) == before + 2
     from_draft = [t for t in board if t["accepted_from_draft_id"] == draft["id"]]
@@ -186,13 +198,14 @@ def test_accepting_tasks_creates_exactly_the_chosen_ones_for_their_roles(client)
 
 
 def test_accepted_task_is_due_after_the_proposed_hours(client):
-    draft = generate_note(client, "F3", "Doctor: Stop the aspirin.\nDoctor: Continue the antibiotics.")
+    draft = generate_note(client, "F3", "Doctor: Stop the aspirin urgently.\nDoctor: Continue the antibiotics.")
+    assert client.post(f"/api/drafts/{draft['id']}/approve", json={}).status_code == 200
     created = client.post(f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [0, 1]}).json()["tasks"]
     now = utcnow()
     from datetime import datetime
 
     due = [datetime.fromisoformat(t["due_at"]) for t in created]
-    assert abs(due[0] - (now + timedelta(hours=8))) < timedelta(minutes=5)
+    assert abs(due[0] - (now + timedelta(hours=4))) < timedelta(minutes=5)
     assert abs(due[1] - (now + timedelta(hours=24))) < timedelta(minutes=5)
 
 
