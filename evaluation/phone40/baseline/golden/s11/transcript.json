@@ -1,0 +1,485 @@
+{
+  "job_id": "s11-none",
+  "text": "68-year-old smoker with COPD, three days of worse breathlessness, yellow sputum and low fever. Denies chest pain. No penicillin allergy. COPD and hypertension. No infective exacerbation. Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit. Chest x-ray and sputum culture. Controlled oxygen, nebulized salbutamol, tiotropium, azithromycin 500 mg daily three days. Smoking cessation. Diet, small frequent high-protein meals. Warm water, avoid smoke. General. purse delip breathing.Daily walks. Emergency for blue lips or drowsiness. Fol up in three days.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "68-year-old smoker with COPD, three days of worse breathlessness, yellow sputum and low fever. Denies chest pain. No penicillin allergy. COPD and hypertension. No infective exacerbation. Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit. Chest x-ray and sputum culture. Controlled oxygen, nebulized salbutamol, tiotropium, azithromycin 500 mg daily three days. Smoking cessation. Diet, small frequent high-protein meals. Warm water, avoid smoke. General. purse delip breathing.Daily walks. Emergency for blue lips or drowsiness. Fol up in three days.",
+      "start": 0.0,
+      "end": 52.89,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "68-year-old",
+          "s": 0.0,
+          "e": 0.59
+        },
+        {
+          "w": "smoker",
+          "s": 0.59,
+          "e": 1.18
+        },
+        {
+          "w": "with",
+          "s": 1.18,
+          "e": 1.76
+        },
+        {
+          "w": "COPD,",
+          "s": 1.76,
+          "e": 2.35
+        },
+        {
+          "w": "three",
+          "s": 2.35,
+          "e": 2.94
+        },
+        {
+          "w": "days",
+          "s": 2.94,
+          "e": 3.53
+        },
+        {
+          "w": "of",
+          "s": 3.53,
+          "e": 4.11
+        },
+        {
+          "w": "worse",
+          "s": 4.11,
+          "e": 4.7
+        },
+        {
+          "w": "breathlessness,",
+          "s": 4.7,
+          "e": 5.29
+        },
+        {
+          "w": "yellow",
+          "s": 5.29,
+          "e": 5.88
+        },
+        {
+          "w": "sputum",
+          "s": 5.88,
+          "e": 6.46
+        },
+        {
+          "w": "and",
+          "s": 6.46,
+          "e": 7.05
+        },
+        {
+          "w": "low",
+          "s": 7.05,
+          "e": 7.64
+        },
+        {
+          "w": "fever.",
+          "s": 7.64,
+          "e": 8.23
+        },
+        {
+          "w": "Denies",
+          "s": 8.23,
+          "e": 8.81
+        },
+        {
+          "w": "chest",
+          "s": 8.81,
+          "e": 9.4
+        },
+        {
+          "w": "pain.",
+          "s": 9.4,
+          "e": 9.99
+        },
+        {
+          "w": "No",
+          "s": 9.99,
+          "e": 10.58
+        },
+        {
+          "w": "penicillin",
+          "s": 10.58,
+          "e": 11.16
+        },
+        {
+          "w": "allergy.",
+          "s": 11.16,
+          "e": 11.75
+        },
+        {
+          "w": "COPD",
+          "s": 11.75,
+          "e": 12.34
+        },
+        {
+          "w": "and",
+          "s": 12.34,
+          "e": 12.93
+        },
+        {
+          "w": "hypertension.",
+          "s": 12.93,
+          "e": 13.52
+        },
+        {
+          "w": "No",
+          "s": 13.52,
+          "e": 14.1
+        },
+        {
+          "w": "infective",
+          "s": 14.1,
+          "e": 14.69
+        },
+        {
+          "w": "exacerbation.",
+          "s": 14.69,
+          "e": 15.28
+        },
+        {
+          "w": "Saturation",
+          "s": 15.28,
+          "e": 15.87
+        },
+        {
+          "w": "91%",
+          "s": 15.87,
+          "e": 16.45
+        },
+        {
+          "w": "on",
+          "s": 16.45,
+          "e": 17.04
+        },
+        {
+          "w": "room",
+          "s": 17.04,
+          "e": 17.63
+        },
+        {
+          "w": "air,",
+          "s": 17.63,
+          "e": 18.22
+        },
+        {
+          "w": "respiratory",
+          "s": 18.22,
+          "e": 18.8
+        },
+        {
+          "w": "rate",
+          "s": 18.8,
+          "e": 19.39
+        },
+        {
+          "w": "24,",
+          "s": 19.39,
+          "e": 19.98
+        },
+        {
+          "w": "pulse",
+          "s": 19.98,
+          "e": 20.57
+        },
+        {
+          "w": "98",
+          "s": 20.57,
+          "e": 21.15
+        },
+        {
+          "w": "beats",
+          "s": 21.15,
+          "e": 21.74
+        },
+        {
+          "w": "per",
+          "s": 21.74,
+          "e": 22.33
+        },
+        {
+          "w": "minute,",
+          "s": 22.33,
+          "e": 22.92
+        },
+        {
+          "w": "blood",
+          "s": 22.92,
+          "e": 23.5
+        },
+        {
+          "w": "pressure",
+          "s": 23.5,
+          "e": 24.09
+        },
+        {
+          "w": "138/84",
+          "s": 24.09,
+          "e": 24.68
+        },
+        {
+          "w": "mmHg,",
+          "s": 24.68,
+          "e": 25.27
+        },
+        {
+          "w": "temperature",
+          "s": 25.27,
+          "e": 25.86
+        },
+        {
+          "w": "100",
+          "s": 25.86,
+          "e": 26.44
+        },
+        {
+          "w": "degrees",
+          "s": 26.44,
+          "e": 27.03
+        },
+        {
+          "w": "Fahrenheit.",
+          "s": 27.03,
+          "e": 27.62
+        },
+        {
+          "w": "Chest",
+          "s": 27.62,
+          "e": 28.21
+        },
+        {
+          "w": "x-ray",
+          "s": 28.21,
+          "e": 28.79
+        },
+        {
+          "w": "and",
+          "s": 28.79,
+          "e": 29.38
+        },
+        {
+          "w": "sputum",
+          "s": 29.38,
+          "e": 29.97
+        },
+        {
+          "w": "culture.",
+          "s": 29.97,
+          "e": 30.56
+        },
+        {
+          "w": "Controlled",
+          "s": 30.56,
+          "e": 31.14
+        },
+        {
+          "w": "oxygen,",
+          "s": 31.14,
+          "e": 31.73
+        },
+        {
+          "w": "nebulized",
+          "s": 31.73,
+          "e": 32.32
+        },
+        {
+          "w": "salbutamol,",
+          "s": 32.32,
+          "e": 32.91
+        },
+        {
+          "w": "tiotropium,",
+          "s": 32.91,
+          "e": 33.49
+        },
+        {
+          "w": "azithromycin",
+          "s": 33.49,
+          "e": 34.08
+        },
+        {
+          "w": "500",
+          "s": 34.08,
+          "e": 34.67
+        },
+        {
+          "w": "mg",
+          "s": 34.67,
+          "e": 35.26
+        },
+        {
+          "w": "daily",
+          "s": 35.26,
+          "e": 35.84
+        },
+        {
+          "w": "three",
+          "s": 35.84,
+          "e": 36.43
+        },
+        {
+          "w": "days.",
+          "s": 36.43,
+          "e": 37.02
+        },
+        {
+          "w": "Smoking",
+          "s": 37.02,
+          "e": 37.61
+        },
+        {
+          "w": "cessation.",
+          "s": 37.61,
+          "e": 38.19
+        },
+        {
+          "w": "Diet,",
+          "s": 38.19,
+          "e": 38.78
+        },
+        {
+          "w": "small",
+          "s": 38.78,
+          "e": 39.37
+        },
+        {
+          "w": "frequent",
+          "s": 39.37,
+          "e": 39.96
+        },
+        {
+          "w": "high-protein",
+          "s": 39.96,
+          "e": 40.55
+        },
+        {
+          "w": "meals.",
+          "s": 40.55,
+          "e": 41.13
+        },
+        {
+          "w": "Warm",
+          "s": 41.13,
+          "e": 41.72
+        },
+        {
+          "w": "water,",
+          "s": 41.72,
+          "e": 42.31
+        },
+        {
+          "w": "avoid",
+          "s": 42.31,
+          "e": 42.9
+        },
+        {
+          "w": "smoke.",
+          "s": 42.9,
+          "e": 43.48
+        },
+        {
+          "w": "General.",
+          "s": 43.48,
+          "e": 44.07
+        },
+        {
+          "w": "purse",
+          "s": 44.07,
+          "e": 44.66
+        },
+        {
+          "w": "delip",
+          "s": 44.66,
+          "e": 45.25
+        },
+        {
+          "w": "breathing.Daily",
+          "s": 45.25,
+          "e": 45.83
+        },
+        {
+          "w": "walks.",
+          "s": 45.83,
+          "e": 46.42
+        },
+        {
+          "w": "Emergency",
+          "s": 46.42,
+          "e": 47.01
+        },
+        {
+          "w": "for",
+          "s": 47.01,
+          "e": 47.6
+        },
+        {
+          "w": "blue",
+          "s": 47.6,
+          "e": 48.18
+        },
+        {
+          "w": "lips",
+          "s": 48.18,
+          "e": 48.77
+        },
+        {
+          "w": "or",
+          "s": 48.77,
+          "e": 49.36
+        },
+        {
+          "w": "drowsiness.",
+          "s": 49.36,
+          "e": 49.95
+        },
+        {
+          "w": "Fol",
+          "s": 49.95,
+          "e": 50.53
+        },
+        {
+          "w": "up",
+          "s": 50.53,
+          "e": 51.12
+        },
+        {
+          "w": "in",
+          "s": 51.12,
+          "e": 51.71
+        },
+        {
+          "w": "three",
+          "s": 51.71,
+          "e": 52.3
+        },
+        {
+          "w": "days.",
+          "s": 52.3,
+          "e": 52.89
+        }
+      ]
+    }
+  ],
+  "normalized_en": "68-year-old smoker with COPD, 3 days of worse breathlessness, yellow sputum and low fever. Denies chest pain. No penicillin allergy. COPD and hypertension. No infective exacerbation. Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit. Chest x-ray and sputum culture. Controlled oxygen, nebulized salbutamol, tiotropium, azithromycin 500 mg daily 3 days. Smoking cessation. Diet, small frequent high-protein meals. Warm water, avoid smoke. General. purse delip breathing.Daily walks. Emergency for blue lips or drowsiness. Fol up in 3 days.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s11-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

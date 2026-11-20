@@ -1,0 +1,278 @@
+{
+  "job_id": "s33-none",
+  "drugs": [
+    {
+      "name": "pantoprazole",
+      "dose": 40.0,
+      "unit": "mg",
+      "frequency": "daily",
+      "duration": "",
+      "confidence": 0.96,
+      "color": "GREEN",
+      "source_sentence": "Pantoprazole 40 mg daily before food, antaside as needed.",
+      "negated": false,
+      "start_char": 344,
+      "end_char": 356,
+      "span_status": "exact"
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "39-year-old female with two weeks upper abdominal burning, nausea, and bloating after knee pain clears plus one vomit.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Self-medicated knee pain.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "General, no pain killers.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "and advised return to written for blood vomit, black stools or severe pain.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Blood pressure 120/78",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit.",
+      "start_char": 224,
+      "end_char": 245,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 86",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit.",
+      "start_char": 252,
+      "end_char": 260,
+      "span_status": "exact"
+    },
+    {
+      "text": "temperature 98.4 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit.",
+      "start_char": 262,
+      "end_char": 297,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "Follow up in one week",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Follow up in one week",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "pantoprazole",
+        "dose": 40.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 20 mg tablet, 40 mg capsule, 40 mg granules, 40 mg tablet; 40 mg is plausible for this drug]",
+        "confidence": 0.96,
+        "source_sentence": "Pantoprazole 40 mg daily before food, antaside as needed."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 120/78",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 86",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "temperature 98.4 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 120/78 mmHg, pulse 86, temperature 98.4 degrees Fahrenheit."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "39-year-old female with two weeks upper abdominal burning, nausea, and bloating after knee pain clears plus one vomit."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Self-medicated knee pain."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "General, no pain killers."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "and advised return to written for blood vomit, black stools or severe pain."
+      },
+      {
+        "kind": "followup",
+        "text": "Follow up in one week",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Follow up in one week"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "39",
+          "40",
+          "78",
+          "86",
+          "98.4",
+          "120"
+        ],
+        "count": 8
+      },
+      "total": 9,
+      "drug_verified": 1,
+      "vital_verified": 3,
+      "symptom_verified": 4,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

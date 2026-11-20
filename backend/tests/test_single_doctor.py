@@ -25,8 +25,8 @@ NURSE_NAME = "Nurse Anita Rao"
 
 def test_users_are_the_chief_a_senior_doctor_and_a_nurse(client):
     body = client.get("/api/users").json()
-    assert [u["id"] for u in body["users"]] == ["u_meera", "u_arjun", "u_anita"]
-    assert [u["role"] for u in body["users"]] == ["doctor", "senior_doctor", "nurse"]
+    assert [u["id"] for u in body["users"]] == ["u_meera", "u_arjun", "u_kiran", "u_anita"]
+    assert [u["role"] for u in body["users"]] == ["doctor", "senior_doctor", "junior_doctor", "nurse"]
     assert body["users"][0]["name"] == "Dr. Meera Shah"
     assert body["acting"]["id"] == "u_meera"
 
@@ -44,10 +44,11 @@ def test_the_doctor_holds_every_action_except_ingest(client):
     assert set(me["allowed_actions"]) == set(identity.PERMISSIONS) - {"ingest"}
     assert me["user"]["role"] == "doctor"
     roles = set().union(*identity.PERMISSIONS.values())
-    assert roles == {"doctor", "senior_doctor", "nurse", identity.SYSTEM_ROLE}
-    # Staff roles hold task work only.
-    for role in ("senior_doctor", "nurse"):
-        assert {a for a, allowed in identity.PERMISSIONS.items() if role in allowed} == {"work_task"}
+    assert roles == {"doctor", "senior_doctor", "junior_doctor", "nurse", identity.SYSTEM_ROLE}
+    # Staff roles hold task work; a senior doctor may also refer and run the ward round (assigning its
+    # tasks); doctors generate the discharge summary and investigation request forms.
+    for role, extra in (("senior_doctor", {"refer", "discharge_report", "investigation_report", "ward_round", "accept_tasks"}), ("junior_doctor", {"discharge_report", "investigation_report"}), ("nurse", set())):
+        assert {a for a, allowed in identity.PERMISSIONS.items() if role in allowed} == {"work_task"} | extra
     assert identity.PERMISSIONS["ingest"] == {identity.SYSTEM_ROLE}
     assert not identity.can("ingest")
 

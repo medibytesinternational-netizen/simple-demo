@@ -1,3 +1,4 @@
+import type { Draft } from "./types";
 import { DEMO_MODE, PREVIEW_WRITE_MESSAGE } from "./demo/config";
 
 export class ApiError extends Error {
@@ -104,14 +105,122 @@ export function openApiWindow(path: string) {
   window.alert(PREVIEW_WRITE_MESSAGE);
 }
 
+/**
+ * A stored file (signed OPD note or uploaded report) as a local object URL. Fetched with the
+ * session headers, because a plain link would not say which patient is open.
+ */
+export async function storedFileUrl(documentId: string): Promise<string> {
+  if (DEMO_MODE) throw new ApiError(PREVIEW_WRITE_MESSAGE, 403);
+  const headers = new Headers();
+  const user = session.user();
+  const patient = session.patient();
+  if (user) headers.set("X-User-Id", user);
+  if (patient) headers.set("X-Patient-Id", patient);
+  let response: Response;
+  try {
+    response = await fetch(`/api/documents/${encodeURIComponent(documentId)}/file`, { headers });
+  } catch {
+    throw new ApiError(BACKEND_UNREACHABLE, 0);
+  }
+  if (!response.ok) throw new ApiError(response.status === 404 ? "The stored document was not found." : response.statusText, response.status);
+  return URL.createObjectURL(await response.blob());
+}
+
+/** Opens a stored document in a new tab, where it can be read and printed. */
+export async function openStoredFile(documentId: string) {
+  // Open the tab first, inside the click, so pop-up blockers allow it; fill it once the file arrives.
+  const tab = window.open("", "_blank");
+  try {
+    const url = await storedFileUrl(documentId);
+    if (tab) tab.location.href = url;
+    else window.open(url, "_blank");
+  } catch (error) {
+    tab?.close();
+    throw error;
+  }
+}
+
 export async function uploadDocument(file: File) {
   const form = new FormData();
   form.append("file", file);
   return api<any>("/documents/upload", { method: "POST", body: form });
 }
 
-export async function transcribeAudio(blob: Blob, filename = "consultation.webm") {
+/** What intake read from a recording or an old document, for the new patient form. */
+export type IntakeField = { value: any; confidence: number; source: string };
+export type Intake = {
+  intake_id: string;
+  kind: "audio" | "document";
+  filename: string;
+  status: "pending" | "running" | "ready" | "failed";
+  fields: Record<string, IntakeField>;
+  method?: string | null;
+  error?: string | null;
+  doc_type?: string | null;
+  /** Recording: the OPD report in the hospital format, shown before saving. */
+  preview?: Record<string, any> | null;
+  /** Document: values read from it (medicines, results). */
+  values?: { name: string; value: string; unit: string; reference_range: string }[];
+};
+
+export async function intakeDocument(file: File, docType: string) {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("doc_type", docType);
+  return api<Intake>("/intake/document", { method: "POST", body: form });
+}
+
+/** Sends the consented consultation recording and waits until its details have been read. */
+export async function intakeAudio(blob: Blob, filename = "consultation.webm") {
   const form = new FormData();
   form.append("file", blob, filename);
-  return api<{ text: string; model: string }>("/notes/transcribe", { method: "POST", body: form });
+  form.append("consent", "true");
+  const receipt = await api<Intake>("/intake/audio", { method: "POST", body: form });
+  const deadline = Date.now() + 5 * 60 * 1000;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const status = await api<Intake>(`/intake/${encodeURIComponent(receipt.intake_id)}`);
+    if (status.status === "ready") return status;
+    if (status.status === "failed") throw new Error(status.error || "The recording could not be processed");
+  }
+  throw new Error("The pipeline is taking too long. Try again in a minute.");
+}
+
+/** A dictated daily progress note: written by the MediBytes pipeline and signed by who recorded it. */
+export async function recordProgressNote(blob: Blob, filename = "progress.webm", role = "") {
+  const form = new FormData();
+  form.append("file", blob, filename);
+  form.append("role", role);
+  const receipt = await api<{ audio_id: string }>("/progress-notes/record", { method: "POST", body: form });
+  const deadline = Date.now() + 5 * 60 * 1000;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const status = await api<{ status: string; error?: string }>(`/progress-notes/record/${encodeURIComponent(receipt.audio_id)}`);
+    if (status.status === "succeeded") return status;
+    if (status.status === "failed") throw new Error(status.error || "The recording could not be processed");
+  }
+  throw new Error("The pipeline is taking too long. Try again in a minute.");
+}
+
+export async function transcribeAudio(blob: Blob, filename = "consultation.webm", feature = "F1") {
+  const form = new FormData();
+  form.append("file", blob, filename);
+  form.append("feature", feature);
+  const receipt = await api<{ audio_id: string; status: string }>("/notes/transcribe", { method: "POST", body: form });
+  // The MediBytes pipeline answers with a receipt; poll until the note is ready (usually under a minute).
+  const deadline = Date.now() + 5 * 60 * 1000;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const status = await api<{ status: string; error?: string; draft?: Draft }>(`/notes/transcribe/${encodeURIComponent(receipt.audio_id)}`);
+    if (status.status === "succeeded" && status.draft) return { draft: status.draft };
+    if (status.status === "failed") throw new Error(status.error || "The recording could not be processed");
+  }
+  throw new Error("The pipeline is taking too long. Try again in a minute.");
+}
+
+/** Transcribes ward-round audio into editable text without creating a report or task. */
+export async function transcribeRoundDictation(blob: Blob, filename = "ward-round.webm") {
+  const form = new FormData();
+  form.append("file", blob, filename);
+  return api<{ text: string; model: string }>("/notes/dictation/transcribe", { method: "POST", body: form });
 }

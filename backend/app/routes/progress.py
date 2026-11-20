@@ -78,7 +78,7 @@ def overall_progress(db: Session, patient, encounter, state: dict[str, Any]) -> 
     differences = readiness["warnings"]["unresolved_medicine_differences"]
     awaiting_docs = [d for d in documents if d.ocr_status in AWAITING_DOCUMENT]
     unreviewed = state.get("unreviewed_labs", [])
-    pending_requests = [r for r in requests if r.status == "approved"]
+    pending_requests = [r for r in requests if r.status in ("approved", "requested")]
     discharge_draft = next((d for d in drafts if d.feature == "F9"), None)
 
     stages = [

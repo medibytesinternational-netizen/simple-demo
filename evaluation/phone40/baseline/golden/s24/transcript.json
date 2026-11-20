@@ -1,0 +1,500 @@
+{
+  "job_id": "s24-none",
+  "text": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever. Denies diarrhea. No known drug allergy. Past diagnosis type one diabetes, now suspected ketoacidosis. Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath. Blood blood gas, ketones, electrolytes. ICU fluids, insulin infusion, potassium correction, harly monitoring. Diet, nil by mouth, then diabetic soft diet when stable. General, never stof insulin in illness, emergency for vomiting or drowsiness, shift to ICU now.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever. Denies diarrhea. No known drug allergy. Past diagnosis type one diabetes, now suspected ketoacidosis. Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath. Blood blood gas, ketones, electrolytes. ICU fluids, insulin infusion, potassium correction, harly monitoring. Diet, nil by mouth, then diabetic soft diet when stable. General, never stof insulin in illness, emergency for vomiting or drowsiness, shift to ICU now.",
+      "start": 0.0,
+      "end": 67.07,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "19-year-old",
+          "s": 0.0,
+          "e": 0.72
+        },
+        {
+          "w": "type",
+          "s": 0.72,
+          "e": 1.44
+        },
+        {
+          "w": "one",
+          "s": 1.44,
+          "e": 2.16
+        },
+        {
+          "w": "diabetic",
+          "s": 2.16,
+          "e": 2.88
+        },
+        {
+          "w": "with",
+          "s": 2.88,
+          "e": 3.61
+        },
+        {
+          "w": "two",
+          "s": 3.61,
+          "e": 4.33
+        },
+        {
+          "w": "days",
+          "s": 4.33,
+          "e": 5.05
+        },
+        {
+          "w": "of",
+          "s": 5.05,
+          "e": 5.77
+        },
+        {
+          "w": "vomiting,",
+          "s": 5.77,
+          "e": 6.49
+        },
+        {
+          "w": "abdominal",
+          "s": 6.49,
+          "e": 7.21
+        },
+        {
+          "w": "pain,",
+          "s": 7.21,
+          "e": 7.93
+        },
+        {
+          "w": "rapid",
+          "s": 7.93,
+          "e": 8.65
+        },
+        {
+          "w": "deep",
+          "s": 8.65,
+          "e": 9.38
+        },
+        {
+          "w": "breathing,",
+          "s": 9.38,
+          "e": 10.1
+        },
+        {
+          "w": "and",
+          "s": 10.1,
+          "e": 10.82
+        },
+        {
+          "w": "drowsiness",
+          "s": 10.82,
+          "e": 11.54
+        },
+        {
+          "w": "after",
+          "s": 11.54,
+          "e": 12.26
+        },
+        {
+          "w": "missing",
+          "s": 12.26,
+          "e": 12.98
+        },
+        {
+          "w": "insulin",
+          "s": 12.98,
+          "e": 13.7
+        },
+        {
+          "w": "with",
+          "s": 13.7,
+          "e": 14.42
+        },
+        {
+          "w": "fever.",
+          "s": 14.42,
+          "e": 15.15
+        },
+        {
+          "w": "Denies",
+          "s": 15.15,
+          "e": 15.87
+        },
+        {
+          "w": "diarrhea.",
+          "s": 15.87,
+          "e": 16.59
+        },
+        {
+          "w": "No",
+          "s": 16.59,
+          "e": 17.31
+        },
+        {
+          "w": "known",
+          "s": 17.31,
+          "e": 18.03
+        },
+        {
+          "w": "drug",
+          "s": 18.03,
+          "e": 18.75
+        },
+        {
+          "w": "allergy.",
+          "s": 18.75,
+          "e": 19.47
+        },
+        {
+          "w": "Past",
+          "s": 19.47,
+          "e": 20.19
+        },
+        {
+          "w": "diagnosis",
+          "s": 20.19,
+          "e": 20.91
+        },
+        {
+          "w": "type",
+          "s": 20.91,
+          "e": 21.64
+        },
+        {
+          "w": "one",
+          "s": 21.64,
+          "e": 22.36
+        },
+        {
+          "w": "diabetes,",
+          "s": 22.36,
+          "e": 23.08
+        },
+        {
+          "w": "now",
+          "s": 23.08,
+          "e": 23.8
+        },
+        {
+          "w": "suspected",
+          "s": 23.8,
+          "e": 24.52
+        },
+        {
+          "w": "ketoacidosis.",
+          "s": 24.52,
+          "e": 25.24
+        },
+        {
+          "w": "Glucose",
+          "s": 25.24,
+          "e": 25.96
+        },
+        {
+          "w": "480",
+          "s": 25.96,
+          "e": 26.68
+        },
+        {
+          "w": "mg/dL,",
+          "s": 26.68,
+          "e": 27.41
+        },
+        {
+          "w": "blood",
+          "s": 27.41,
+          "e": 28.13
+        },
+        {
+          "w": "pressure",
+          "s": 28.13,
+          "e": 28.85
+        },
+        {
+          "w": "100/60",
+          "s": 28.85,
+          "e": 29.57
+        },
+        {
+          "w": "mmHg,",
+          "s": 29.57,
+          "e": 30.29
+        },
+        {
+          "w": "pulse",
+          "s": 30.29,
+          "e": 31.01
+        },
+        {
+          "w": "112",
+          "s": 31.01,
+          "e": 31.73
+        },
+        {
+          "w": "beats",
+          "s": 31.73,
+          "e": 32.45
+        },
+        {
+          "w": "per",
+          "s": 32.45,
+          "e": 33.18
+        },
+        {
+          "w": "minute,",
+          "s": 33.18,
+          "e": 33.9
+        },
+        {
+          "w": "respiratory",
+          "s": 33.9,
+          "e": 34.62
+        },
+        {
+          "w": "rate",
+          "s": 34.62,
+          "e": 35.34
+        },
+        {
+          "w": "28,",
+          "s": 35.34,
+          "e": 36.06
+        },
+        {
+          "w": "saturation",
+          "s": 36.06,
+          "e": 36.78
+        },
+        {
+          "w": "98%",
+          "s": 36.78,
+          "e": 37.5
+        },
+        {
+          "w": "through",
+          "s": 37.5,
+          "e": 38.22
+        },
+        {
+          "w": "the",
+          "s": 38.22,
+          "e": 38.95
+        },
+        {
+          "w": "breath.",
+          "s": 38.95,
+          "e": 39.67
+        },
+        {
+          "w": "Blood",
+          "s": 39.67,
+          "e": 40.39
+        },
+        {
+          "w": "blood",
+          "s": 40.39,
+          "e": 41.11
+        },
+        {
+          "w": "gas,",
+          "s": 41.11,
+          "e": 41.83
+        },
+        {
+          "w": "ketones,",
+          "s": 41.83,
+          "e": 42.55
+        },
+        {
+          "w": "electrolytes.",
+          "s": 42.55,
+          "e": 43.27
+        },
+        {
+          "w": "ICU",
+          "s": 43.27,
+          "e": 43.99
+        },
+        {
+          "w": "fluids,",
+          "s": 43.99,
+          "e": 44.71
+        },
+        {
+          "w": "insulin",
+          "s": 44.71,
+          "e": 45.44
+        },
+        {
+          "w": "infusion,",
+          "s": 45.44,
+          "e": 46.16
+        },
+        {
+          "w": "potassium",
+          "s": 46.16,
+          "e": 46.88
+        },
+        {
+          "w": "correction,",
+          "s": 46.88,
+          "e": 47.6
+        },
+        {
+          "w": "harly",
+          "s": 47.6,
+          "e": 48.32
+        },
+        {
+          "w": "monitoring.",
+          "s": 48.32,
+          "e": 49.04
+        },
+        {
+          "w": "Diet,",
+          "s": 49.04,
+          "e": 49.76
+        },
+        {
+          "w": "nil",
+          "s": 49.76,
+          "e": 50.48
+        },
+        {
+          "w": "by",
+          "s": 50.48,
+          "e": 51.21
+        },
+        {
+          "w": "mouth,",
+          "s": 51.21,
+          "e": 51.93
+        },
+        {
+          "w": "then",
+          "s": 51.93,
+          "e": 52.65
+        },
+        {
+          "w": "diabetic",
+          "s": 52.65,
+          "e": 53.37
+        },
+        {
+          "w": "soft",
+          "s": 53.37,
+          "e": 54.09
+        },
+        {
+          "w": "diet",
+          "s": 54.09,
+          "e": 54.81
+        },
+        {
+          "w": "when",
+          "s": 54.81,
+          "e": 55.53
+        },
+        {
+          "w": "stable.",
+          "s": 55.53,
+          "e": 56.25
+        },
+        {
+          "w": "General,",
+          "s": 56.25,
+          "e": 56.98
+        },
+        {
+          "w": "never",
+          "s": 56.98,
+          "e": 57.7
+        },
+        {
+          "w": "stof",
+          "s": 57.7,
+          "e": 58.42
+        },
+        {
+          "w": "insulin",
+          "s": 58.42,
+          "e": 59.14
+        },
+        {
+          "w": "in",
+          "s": 59.14,
+          "e": 59.86
+        },
+        {
+          "w": "illness,",
+          "s": 59.86,
+          "e": 60.58
+        },
+        {
+          "w": "emergency",
+          "s": 60.58,
+          "e": 61.3
+        },
+        {
+          "w": "for",
+          "s": 61.3,
+          "e": 62.02
+        },
+        {
+          "w": "vomiting",
+          "s": 62.02,
+          "e": 62.74
+        },
+        {
+          "w": "or",
+          "s": 62.74,
+          "e": 63.47
+        },
+        {
+          "w": "drowsiness,",
+          "s": 63.47,
+          "e": 64.19
+        },
+        {
+          "w": "shift",
+          "s": 64.19,
+          "e": 64.91
+        },
+        {
+          "w": "to",
+          "s": 64.91,
+          "e": 65.63
+        },
+        {
+          "w": "ICU",
+          "s": 65.63,
+          "e": 66.35
+        },
+        {
+          "w": "now.",
+          "s": 66.35,
+          "e": 67.07
+        }
+      ]
+    }
+  ],
+  "normalized_en": "19-year-old type 1 diabetic with 2 days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever. Denies diarrhea. No known drug allergy. Past diagnosis type 1 diabetes, now suspected ketoacidosis. Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath. Blood blood gas, ketones, electrolytes. ICU fluids, insulin infusion, potassium correction, harly monitoring. Diet, nil by mouth, then diabetic soft diet when stable. General, never stof insulin in illness, emergency for vomiting or drowsiness, shift to ICU now.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s24-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

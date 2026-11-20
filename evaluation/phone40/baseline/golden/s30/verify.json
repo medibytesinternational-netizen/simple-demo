@@ -1,0 +1,125 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "vitamin",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: vitamin; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Stannding knee x-ray, vitamin D."
+    },
+    {
+      "kind": "drug",
+      "name": "calcium",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: calcium; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Low low-calorie, low-salt, calcium pro protein, 2 L water, gentle."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure for- 142/88",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure for- 142/88 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "Pulse 84",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Pulse 84."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "58-year-old female with one year bilateral knee pain, burs on stairs and morning, stiffness under 30 minutes, grinding sensation."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Denies injury and fever."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Review for locking or night pain."
+    },
+    {
+      "kind": "followup",
+      "text": "Follow up in one month",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "Follow up in one month"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "2",
+        "30",
+        "58",
+        "78",
+        "84",
+        "88",
+        "142"
+      ],
+      "count": 8
+    },
+    "total": 8,
+    "drug_needs_review": 2,
+    "vital_verified": 2,
+    "symptom_verified": 3,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

@@ -66,6 +66,9 @@ def _ensure_sqlite_columns() -> None:
         "bill_line_items": {
             "expected_amount": "FLOAT",
         },
+        "investigation_requests": {
+            "source_event_id": "VARCHAR",
+        },
         "alerts": {
             "dismissal_category": "VARCHAR",
             "resolution": "TEXT",

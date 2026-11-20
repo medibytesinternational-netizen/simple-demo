@@ -1,0 +1,123 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "paracetamol",
+      "dose": 650.0,
+      "unit": "mg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mcg/mg/ml; listed strengths: 1 g solution, 1 g tablet, 300 mcg suspension, 1 mg solution; 650 mg is plausible for this drug]",
+      "confidence": 0.88,
+      "source_sentence": "Paracetamole 650 mg, platelet monitoring, fluids if needed."
+    },
+    {
+      "kind": "vital",
+      "text": "Temperature 102 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 100/70",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 100",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air."
+    },
+    {
+      "kind": "vital",
+      "text": "98% on room air",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "29-year-old male with five days high fever, body ache, eye pain, two vomits and now mild abdominal pain."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "29-year-old male with five days high fever, body ache, eye pain, two vomits and now mild abdominal pain."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "reeport bleeding, black stools, severe pain or drowsiness."
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "2",
+        "5",
+        "29",
+        "70",
+        "98",
+        "100",
+        "102",
+        "650"
+      ],
+      "count": 9
+    },
+    "total": 8,
+    "drug_verified": 1,
+    "vital_verified": 4,
+    "symptom_verified": 3
+  },
+  "brand_mentions": []
+}

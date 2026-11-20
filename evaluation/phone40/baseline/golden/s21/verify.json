@@ -1,0 +1,145 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "paracetamol",
+      "dose": 650.0,
+      "unit": "mg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mcg/mg/ml; listed strengths: 1 g solution, 1 g tablet, 300 mcg suspension, 1 mg solution; 650 mg is plausible for this drug]",
+      "confidence": 0.7,
+      "source_sentence": "Paracetame 650 mg at onset."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 118/76",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 118/76 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "Pulse 80",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Pulse 80 beats per minute."
+    },
+    {
+      "kind": "vital",
+      "text": "Temperature 98.4 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 98.4 degrees Fahrenheit."
+    },
+    {
+      "kind": "symptom",
+      "text": "headache",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "ge -year-old female with six months of one-sided throbbing headache, nausea, light sensitive and vomiting lasting 6 to 8 hos."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "ge -year-old female with six months of one-sided throbbing headache, nausea, light sensitive and vomiting lasting 6 to 8 hos."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Denies fever, weakness, and vision loss."
+    },
+    {
+      "kind": "symptom",
+      "text": "headache",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Headache daily."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Avoid overuse, emergency for tendderclap pain, weakness, or speech clap."
+    },
+    {
+      "kind": "followup",
+      "text": "Follow up in two weeks",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "Follow up in two weeks"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "2",
+        "6",
+        "8",
+        "76",
+        "80",
+        "98.4",
+        "118",
+        "650"
+      ],
+      "count": 9
+    },
+    "total": 10,
+    "drug_verified": 1,
+    "vital_verified": 3,
+    "symptom_verified": 5,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

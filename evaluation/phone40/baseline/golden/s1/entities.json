@@ -1,0 +1,567 @@
+{
+  "job_id": "s1-none",
+  "drugs": [
+    {
+      "name": "paracetamol",
+      "dose": 650.0,
+      "unit": "mg",
+      "frequency": "twice daily",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Piracetamol 650 mg twice daily.",
+      "negated": false,
+      "note": "fuzzy piracetamol->paracetamol (0.91) | ambiguous: both candidates are plausible at 650 mg and the sentence does not specify indication",
+      "raw_token": "piracetamol",
+      "candidates": [
+        {
+          "name": "paracetamol",
+          "score": 0.909,
+          "matched_alias": "paracetamol",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "acetaminophen",
+            "substances": [
+              "acetaminophen"
+            ],
+            "units": [
+              "g",
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.3,
+              1000.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "solution",
+              "suppository",
+              "suspension",
+              "syrup"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mcg",
+                "value": 300.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 2.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 2.5
+              }
+            ]
+          }
+        },
+        {
+          "name": "piracetam",
+          "score": 0.9,
+          "matched_alias": "piracetam",
+          "source": "reference",
+          "reference": {
+            "kind": "substance",
+            "name": "piracetam",
+            "substances": [
+              "piracetam"
+            ],
+            "units": [
+              "g",
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.5,
+              1200.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "solution",
+              "syrup",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "tablet",
+                "unit": "g",
+                "value": 1.2
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 500.0
+              },
+              {
+                "form": "injection",
+                "unit": "mg",
+                "value": 200.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 333.3
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 400.0
+              },
+              {
+                "form": "capsule",
+                "unit": "mg",
+                "value": 400.0
+              }
+            ]
+          }
+        }
+      ],
+      "matcher_pick": "paracetamol",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "Piracetamol 650 mg twice daily.",
+        "final_output_sentence": "Piracetamol 650 mg twice daily.",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.5,
+        "reason": "both candidates are plausible at 650 mg and the sentence does not specify indication",
+        "engine": "llm:gpt-4.1"
+      }
+    },
+    {
+      "name": "amoxicillin",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found"
+    },
+    {
+      "name": "clavulanic acid",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm",
+      "start_char": 481,
+      "end_char": 496,
+      "span_status": "exact"
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "cough",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "negated": false,
+      "start_char": 50,
+      "end_char": 55,
+      "span_status": "exact"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "This is vomiting and wheezing.",
+      "negated": false,
+      "start_char": 129,
+      "end_char": 137,
+      "span_status": "exact"
+    },
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Return for worsening rethlessness or high fever.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Temperature 101 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "start_char": 255,
+      "end_char": 289,
+      "span_status": "exact"
+    },
+    {
+      "text": "blood pressure 130/85",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "start_char": 291,
+      "end_char": 312,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 92",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "start_char": 319,
+      "end_char": 327,
+      "span_status": "exact"
+    },
+    {
+      "text": "respiratory rate 22",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "start_char": 346,
+      "end_char": 365,
+      "span_status": "exact"
+    },
+    {
+      "text": "94% on room air",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "start_char": 378,
+      "end_char": 393,
+      "span_status": "exact"
+    },
+    {
+      "text": "blood pressure 130 and 30 over 85",
+      "confidence": 0.7,
+      "color": "YELLOW",
+      "source_sentence": "As a smith of 52 year old male with 3 days of fever, predictive cough, chest discomfort, breathlessness, fatigue and reduced appetite, Dennis vomiting and wheezing, no known drug allergy, past history of hypertension and type 2 diabetes, professional diagnosis, community acquired pneumonia, examination, temperature 101 degrees Fahrenheit, blood pressure 130 and 30 over 85 mm of necuri, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air, investigations, complete bed count and chest x-ray, plan, paracetamol 650 milligrams, triazole, amoxaline with clavineic acid as advised, glucose monitoring, diet, light home diet, warm fluids, dal rice, adequate water, general, complete antibiotics, daily temperature check, written for worsening, breathlessness for high fever, follow up in 3 days.",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "note": "heard only by small-int8, not by the primary decoder",
+      "second_pass": "small-int8"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "Follow up in three days",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Follow up in three days",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "drug_second_pass": {
+    "vitals_added": 1
+  },
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 3.787,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 1,
+    "calls": 1,
+    "llm_seconds": 2.714,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [
+      {
+        "heard": "Amoxicilin",
+        "sentence": "Amoxicilin with clavulanic acid as advised.",
+        "shortlist": [
+          [
+            "amoxicillin",
+            0.952
+          ]
+        ],
+        "outcome": "duplicate",
+        "chosen": "amoxicillin",
+        "confidence": 1.0
+      }
+    ],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "paracetamol",
+        "dose": 650.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mcg/mg/ml; listed strengths: 1 g solution, 1 g tablet, 300 mcg suspension, 1 mg solution; 650 mg is plausible for this drug]",
+        "confidence": 0.7,
+        "source_sentence": "Piracetamol 650 mg twice daily."
+      },
+      {
+        "kind": "drug",
+        "name": "amoxicillin",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Amoxicilin with clavulanic acid as advised."
+      },
+      {
+        "kind": "drug",
+        "name": "clavulanic acid",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Amoxicilin with clavulanic acid as advised."
+      },
+      {
+        "kind": "vital",
+        "text": "Temperature 101 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+      },
+      {
+        "kind": "vital",
+        "text": "blood pressure 130/85",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 92",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+      },
+      {
+        "kind": "vital",
+        "text": "respiratory rate 22",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+      },
+      {
+        "kind": "vital",
+        "text": "94% on room air",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+      },
+      {
+        "kind": "vital",
+        "text": "blood pressure 130 and 30 over 85",
+        "status": "needs_review",
+        "checks": [
+          "plausibility:verified",
+          "proof:needs_review"
+        ],
+        "notes": "vital proof not verbatim in transcript",
+        "confidence": 0.7,
+        "source_sentence": "As a smith of 52 year old male with 3 days of fever, predictive cough, chest discomfort, breathlessness, fatigue and reduced appetite, Dennis vomiting and wheezing, no known drug allergy, past history of hypertension and type 2 diabetes, professional diagnosis, community acquired pneumonia, examination, temperature 101 degrees Fahrenheit, blood pressure 130 and 30 over 85 mm of necuri, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air, investigations, complete bed count and chest x-ray, plan, paracetamol 650 milligrams, triazole, amoxaline with clavineic acid as advised, glucose monitoring, diet, light home diet, warm fluids, dal rice, adequate water, general, complete antibiotics, daily temperature check, written for worsening, breathlessness for high fever, follow up in 3 days."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite."
+      },
+      {
+        "kind": "symptom",
+        "text": "cough",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "This is vomiting and wheezing."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Return for worsening rethlessness or high fever."
+      },
+      {
+        "kind": "followup",
+        "text": "Follow up in three days",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Follow up in three days"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "2",
+          "3",
+          "22",
+          "52",
+          "85",
+          "92",
+          "94",
+          "101",
+          "130",
+          "650"
+        ],
+        "count": 10
+      },
+      "total": 14,
+      "drug_verified": 1,
+      "drug_needs_review": 2,
+      "vital_verified": 5,
+      "vital_needs_review": 1,
+      "symptom_verified": 4,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

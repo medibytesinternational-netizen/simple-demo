@@ -1,0 +1,157 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "water",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "fuzzy top-candidate agreement; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Six-year-old female with two days of four to five watery motions, mild vomiting, and low fever."
+    },
+    {
+      "kind": "drug",
+      "name": "zinc",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: zinc; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Oral dehydration soal each motion, zinc as advised."
+    },
+    {
+      "kind": "vital",
+      "text": "Temperature 99.2 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 99.2 degrees Fahrenheit, pulse 100 beats per minute."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 100",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 99.2 degrees Fahrenheit, pulse 100 beats per minute."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Six-year-old female with two days of four to five watery motions, mild vomiting, and low fever."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Six-year-old female with two days of four to five watery motions, mild vomiting, and low fever."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Painful with normal urine."
+    },
+    {
+      "kind": "symptom",
+      "text": "diarrhea",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Viral diarrhea."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Generleal hand washingReport bled high fever."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Repeated vomiting."
+    },
+    {
+      "kind": "followup",
+      "text": "Follow up in two days",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "Follow up in two days"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "2",
+        "4",
+        "5",
+        "6",
+        "80",
+        "99.2",
+        "100"
+      ],
+      "count": 7
+    },
+    "total": 11,
+    "drug_needs_review": 2,
+    "vital_verified": 2,
+    "symptom_verified": 6,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

@@ -1,0 +1,435 @@
+{
+  "job_id": "s17-none",
+  "text": "45-year-old male with two months thirst, frequent urination, tiredness and fklow loss. Denies fever. No known drug allergy. High cholesterol. New type two diabetes with hyperglycemia. Random glucose 286 mg/dL. Blood pressure 136/86 mmHg, pulse 88. Saturation 99%. Fasting glucose, HbA1c, lipids. Metformin 500 mg twice daily after food. Glucometer training. Whole grain, swgetables, dull. no sugar or switdings. Fixer timings. General, 30-minute walk daily. food care. Return for vomiting, pain or way high readings. Follow up in two weeks.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "45-year-old male with two months thirst, frequent urination, tiredness and fklow loss. Denies fever. No known drug allergy. High cholesterol. New type two diabetes with hyperglycemia. Random glucose 286 mg/dL. Blood pressure 136/86 mmHg, pulse 88. Saturation 99%. Fasting glucose, HbA1c, lipids. Metformin 500 mg twice daily after food. Glucometer training. Whole grain, swgetables, dull. no sugar or switdings. Fixer timings. General, 30-minute walk daily. food care. Return for vomiting, pain or way high readings. Follow up in two weeks.",
+      "start": 0.0,
+      "end": 47.62,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "45-year-old",
+          "s": 0.0,
+          "e": 0.6
+        },
+        {
+          "w": "male",
+          "s": 0.6,
+          "e": 1.19
+        },
+        {
+          "w": "with",
+          "s": 1.19,
+          "e": 1.79
+        },
+        {
+          "w": "two",
+          "s": 1.79,
+          "e": 2.38
+        },
+        {
+          "w": "months",
+          "s": 2.38,
+          "e": 2.98
+        },
+        {
+          "w": "thirst,",
+          "s": 2.98,
+          "e": 3.57
+        },
+        {
+          "w": "frequent",
+          "s": 3.57,
+          "e": 4.17
+        },
+        {
+          "w": "urination,",
+          "s": 4.17,
+          "e": 4.76
+        },
+        {
+          "w": "tiredness",
+          "s": 4.76,
+          "e": 5.36
+        },
+        {
+          "w": "and",
+          "s": 5.36,
+          "e": 5.95
+        },
+        {
+          "w": "fklow",
+          "s": 5.95,
+          "e": 6.55
+        },
+        {
+          "w": "loss.",
+          "s": 6.55,
+          "e": 7.14
+        },
+        {
+          "w": "Denies",
+          "s": 7.14,
+          "e": 7.74
+        },
+        {
+          "w": "fever.",
+          "s": 7.74,
+          "e": 8.33
+        },
+        {
+          "w": "No",
+          "s": 8.33,
+          "e": 8.93
+        },
+        {
+          "w": "known",
+          "s": 8.93,
+          "e": 9.52
+        },
+        {
+          "w": "drug",
+          "s": 9.52,
+          "e": 10.12
+        },
+        {
+          "w": "allergy.",
+          "s": 10.12,
+          "e": 10.71
+        },
+        {
+          "w": "High",
+          "s": 10.71,
+          "e": 11.31
+        },
+        {
+          "w": "cholesterol.",
+          "s": 11.31,
+          "e": 11.9
+        },
+        {
+          "w": "New",
+          "s": 11.9,
+          "e": 12.5
+        },
+        {
+          "w": "type",
+          "s": 12.5,
+          "e": 13.09
+        },
+        {
+          "w": "two",
+          "s": 13.09,
+          "e": 13.69
+        },
+        {
+          "w": "diabetes",
+          "s": 13.69,
+          "e": 14.28
+        },
+        {
+          "w": "with",
+          "s": 14.28,
+          "e": 14.88
+        },
+        {
+          "w": "hyperglycemia.",
+          "s": 14.88,
+          "e": 15.48
+        },
+        {
+          "w": "Random",
+          "s": 15.48,
+          "e": 16.07
+        },
+        {
+          "w": "glucose",
+          "s": 16.07,
+          "e": 16.67
+        },
+        {
+          "w": "286",
+          "s": 16.67,
+          "e": 17.26
+        },
+        {
+          "w": "mg/dL.",
+          "s": 17.26,
+          "e": 17.86
+        },
+        {
+          "w": "Blood",
+          "s": 17.86,
+          "e": 18.45
+        },
+        {
+          "w": "pressure",
+          "s": 18.45,
+          "e": 19.05
+        },
+        {
+          "w": "136/86",
+          "s": 19.05,
+          "e": 19.64
+        },
+        {
+          "w": "mmHg,",
+          "s": 19.64,
+          "e": 20.24
+        },
+        {
+          "w": "pulse",
+          "s": 20.24,
+          "e": 20.83
+        },
+        {
+          "w": "88.",
+          "s": 20.83,
+          "e": 21.43
+        },
+        {
+          "w": "Saturation",
+          "s": 21.43,
+          "e": 22.02
+        },
+        {
+          "w": "99%.",
+          "s": 22.02,
+          "e": 22.62
+        },
+        {
+          "w": "Fasting",
+          "s": 22.62,
+          "e": 23.21
+        },
+        {
+          "w": "glucose,",
+          "s": 23.21,
+          "e": 23.81
+        },
+        {
+          "w": "HbA1c,",
+          "s": 23.81,
+          "e": 24.4
+        },
+        {
+          "w": "lipids.",
+          "s": 24.4,
+          "e": 25.0
+        },
+        {
+          "w": "Metformin",
+          "s": 25.0,
+          "e": 25.59
+        },
+        {
+          "w": "500",
+          "s": 25.59,
+          "e": 26.19
+        },
+        {
+          "w": "mg",
+          "s": 26.19,
+          "e": 26.78
+        },
+        {
+          "w": "twice",
+          "s": 26.78,
+          "e": 27.38
+        },
+        {
+          "w": "daily",
+          "s": 27.38,
+          "e": 27.97
+        },
+        {
+          "w": "after",
+          "s": 27.97,
+          "e": 28.57
+        },
+        {
+          "w": "food.",
+          "s": 28.57,
+          "e": 29.16
+        },
+        {
+          "w": "Glucometer",
+          "s": 29.16,
+          "e": 29.76
+        },
+        {
+          "w": "training.",
+          "s": 29.76,
+          "e": 30.36
+        },
+        {
+          "w": "Whole",
+          "s": 30.36,
+          "e": 30.95
+        },
+        {
+          "w": "grain,",
+          "s": 30.95,
+          "e": 31.55
+        },
+        {
+          "w": "swgetables,",
+          "s": 31.55,
+          "e": 32.14
+        },
+        {
+          "w": "dull.",
+          "s": 32.14,
+          "e": 32.74
+        },
+        {
+          "w": "no",
+          "s": 32.74,
+          "e": 33.33
+        },
+        {
+          "w": "sugar",
+          "s": 33.33,
+          "e": 33.93
+        },
+        {
+          "w": "or",
+          "s": 33.93,
+          "e": 34.52
+        },
+        {
+          "w": "switdings.",
+          "s": 34.52,
+          "e": 35.12
+        },
+        {
+          "w": "Fixer",
+          "s": 35.12,
+          "e": 35.71
+        },
+        {
+          "w": "timings.",
+          "s": 35.71,
+          "e": 36.31
+        },
+        {
+          "w": "General,",
+          "s": 36.31,
+          "e": 36.9
+        },
+        {
+          "w": "30-minute",
+          "s": 36.9,
+          "e": 37.5
+        },
+        {
+          "w": "walk",
+          "s": 37.5,
+          "e": 38.09
+        },
+        {
+          "w": "daily.",
+          "s": 38.09,
+          "e": 38.69
+        },
+        {
+          "w": "food",
+          "s": 38.69,
+          "e": 39.28
+        },
+        {
+          "w": "care.",
+          "s": 39.28,
+          "e": 39.88
+        },
+        {
+          "w": "Return",
+          "s": 39.88,
+          "e": 40.47
+        },
+        {
+          "w": "for",
+          "s": 40.47,
+          "e": 41.07
+        },
+        {
+          "w": "vomiting,",
+          "s": 41.07,
+          "e": 41.66
+        },
+        {
+          "w": "pain",
+          "s": 41.66,
+          "e": 42.26
+        },
+        {
+          "w": "or",
+          "s": 42.26,
+          "e": 42.85
+        },
+        {
+          "w": "way",
+          "s": 42.85,
+          "e": 43.45
+        },
+        {
+          "w": "high",
+          "s": 43.45,
+          "e": 44.04
+        },
+        {
+          "w": "readings.",
+          "s": 44.04,
+          "e": 44.64
+        },
+        {
+          "w": "Follow",
+          "s": 44.64,
+          "e": 45.24
+        },
+        {
+          "w": "up",
+          "s": 45.24,
+          "e": 45.83
+        },
+        {
+          "w": "in",
+          "s": 45.83,
+          "e": 46.43
+        },
+        {
+          "w": "two",
+          "s": 46.43,
+          "e": 47.02
+        },
+        {
+          "w": "weeks.",
+          "s": 47.02,
+          "e": 47.62
+        }
+      ]
+    }
+  ],
+  "normalized_en": "45-year-old male with 2 months thirst, frequent urination, tiredness and fklow loss. Denies fever. No known drug allergy. High cholesterol. New type 2 diabetes with hyperglycemia. Random glucose 286 mg/dL. Blood pressure 136/86 mmHg, pulse 88. Saturation 99%. Fasting glucose, HbA1c, lipids. Metformin 500 mg twice daily after food. Glucometer training. Whole grain, swgetables, dull. no sugar or switdings. Fixer timings. General, 30-minute walk daily. food care. Return for vomiting, pain or way high readings. Follow up in 2 weeks.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s17-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

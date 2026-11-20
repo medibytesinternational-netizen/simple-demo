@@ -25,13 +25,13 @@
 .pg-documents .doc-save-hint { flex: 1 1 160px; }
 
 /* manual entry (inline or inside a disclosure) */
-.pg-documents .manual-entry { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--border); }
+.pg-documents .manual-entry, .npf-doc .manual-entry { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--border); }
 .pg-documents .disclosure .manual-entry { padding-top: 0; border-top: 0; }
-.pg-documents .manual-entry-grid { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
-.pg-documents .manual-entry-grid .input { width: auto; min-height: 34px; padding: 6px 10px; font-size: var(--fs-sm); flex: 1 1 110px; }
-.pg-documents .manual-entry-grid .manual-name { flex-basis: 160px; }
-.pg-documents .manual-entry-grid .manual-text { flex-basis: 100%; }
-.pg-documents .manual-entry-grid .manual-unit { flex: 0 1 80px; }
+.pg-documents .manual-entry-grid, .npf-doc .manual-entry-grid { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
+.pg-documents .manual-entry-grid .input, .npf-doc .manual-entry-grid .input { width: auto; min-height: 34px; padding: 6px 10px; font-size: var(--fs-sm); flex: 1 1 110px; }
+.pg-documents .manual-entry-grid .manual-name, .npf-doc .manual-entry-grid .manual-name { flex-basis: 160px; }
+.pg-documents .manual-entry-grid .manual-text, .npf-doc .manual-entry-grid .manual-text { flex-basis: 100%; }
+.pg-documents .manual-entry-grid .manual-unit, .npf-doc .manual-entry-grid .manual-unit { flex: 0 1 80px; }
 
 /* follow-up actions cell */
 .pg-documents .doc-row-actions { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }

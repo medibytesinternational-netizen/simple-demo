@@ -1,0 +1,224 @@
+{
+  "job_id": "s6-none",
+  "drugs": [
+    {
+      "name": "insulin",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Elderly diabetic father, took morning insulin, but skip breakfast, then sweating, shakiness, dizziness, and confusion within one hour.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "name": "metformin",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Type two diabetes, on insulin and metformin.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm",
+      "start_char": 237,
+      "end_char": 246,
+      "span_status": "exact"
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies vomiting and fever.",
+      "negated": false,
+      "start_char": 175,
+      "end_char": 180,
+      "span_status": "exact"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies vomiting and fever.",
+      "negated": false,
+      "start_char": 162,
+      "end_char": 170,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Glucose 54",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Glucose 54 mg/ddL, rising to 72 after we drink.",
+      "start_char": 280,
+      "end_char": 290,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "Followup in two days",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Followup in two days",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "insulin",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Elderly diabetic father, took morning insulin, but skip breakfast, then sweating, shakiness, dizziness, and confusion within one hour."
+      },
+      {
+        "kind": "drug",
+        "name": "metformin",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Type two diabetes, on insulin and metformin."
+      },
+      {
+        "kind": "vital",
+        "text": "Glucose 54",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Glucose 54 mg/ddL, rising to 72 after we drink."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies vomiting and fever."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies vomiting and fever."
+      },
+      {
+        "kind": "followup",
+        "text": "Followup in two days",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Followup in two days"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "15",
+          "24",
+          "30",
+          "54",
+          "72"
+        ],
+        "count": 7
+      },
+      "total": 6,
+      "drug_needs_review": 2,
+      "vital_verified": 1,
+      "symptom_verified": 2,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

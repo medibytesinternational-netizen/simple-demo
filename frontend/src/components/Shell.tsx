@@ -5,23 +5,27 @@ import { ApiError, get, post, session } from "../api";
 import type { AppState, Credits, Meta } from "../types";
 import { EvidenceDrawer } from "./Evidence";
 import { Modal } from "./Modal";
-import { FooterBar, MenuBar, StatusBar } from "./legacy/HisChrome";
-import { findActive } from "./modules";
+import { Launchpad } from "./Launchpad";
+import { NotForRole, PatientBar, Sidebar, TopBar } from "./Chrome";
+import { findActive, isPatientRoute } from "./modules";
+import { DEFAULT_STAFF_ID, ROLES, STAFF, canSee, currentRole, staffById } from "./roles";
 import { DEMO_MODE, PREVIEW_LABEL } from "../demo/config";
 
 // This file stays ASCII-only: a backend test reads it with the platform default encoding.
 const SEP = String.fromCharCode(183);
-
+const COLLAPSE_KEY = "mb.nav.collapsed";
 
 // Documents still waiting for a person to confirm what OCR read.
 const AWAITING_REVIEW = new Set(["needs_confirmation", "pending", "needs_manual_entry"]);
 
-// One doctor and one browsable patient (Ravi). A browser that last ran when the app had roles or a
-// patient picker may still hold those ids; drop them once at load so the first request is not refused.
-// Known staff accounts: the chief doctor, a senior doctor and a nurse. Anything else is stale.
-if (!["u_meera", "u_arjun", "u_anita"].includes(session.user() || "u_meera")) session.setUser(null);
-if (session.patient() !== "pat_ravi") session.setPatient(null);
+// A browser that last ran with an older staff list may hold a user id that no longer exists; drop it
+// once at load. A stale patient id is handled below: the server refuses it and the shell falls back.
+if (!STAFF.some((s) => s.id === (session.user() || DEFAULT_STAFF_ID))) session.setUser(null);
 
+function readCollapsed() {
+  try { return window.localStorage.getItem(COLLAPSE_KEY) === "1"; } catch { return false; }
+}
+const isNarrow = () => window.matchMedia("(max-width: 900px)").matches;
 
 export function Shell() {
   const queryClient = useQueryClient();
@@ -29,6 +33,10 @@ export function Shell() {
   const location = useLocation();
   const tab = new URLSearchParams(location.search).get("tab");
   const [resetOpen, setResetOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [role, setRole] = useState(currentRole);
 
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
   const patientId = meta.data?.patient.id;
@@ -40,7 +48,8 @@ export function Shell() {
   // Credits are not in the preview fixtures; the preview does not ask for them.
   const credits = useQuery<Credits>({ queryKey: ["credits"], queryFn: () => get<Credits>("/credits"), refetchInterval: 15000, enabled: !DEMO_MODE });
 
-  // A patient the server refuses (a stale id) falls back to Ravi instead of leaving every page in error.
+  // A patient the server refuses (a stale or removed id) falls back to the default patient instead of
+  // leaving every page in error.
   useEffect(() => {
     if (meta.error instanceof ApiError && meta.error.status === 403 && session.patient()) {
       session.setPatient(null);
@@ -48,12 +57,27 @@ export function Shell() {
     }
   }, [meta.error, queryClient]);
 
+  // Ctrl+K / Cmd+K opens search from anywhere.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // A page change closes the phone navigation drawer.
+  useEffect(() => setNavOpen(false), [location.pathname, location.search]);
+
   const reset = useMutation({
     mutationFn: (mode: string) => post(`/demo/reset?mode=${mode}`),
     onSuccess: () => {
       queryClient.clear();
       setResetOpen(false);
-      navigate("/dashboard");
+      navigate(ROLES[role].home);
     },
   });
 
@@ -67,52 +91,77 @@ export function Shell() {
   const documents = state.data?.documents.filter((d) => AWAITING_REVIEW.has(d.ocr_status)).length || 0;
   const labs = state.data?.unreviewed_labs.length || 0;
   const counts = { alerts: openAlerts, overdue, documents, labs };
-  const user = meta.data?.user?.name || meta.data?.demo_user || "Dr. Meera Shah";
-  const hospital = "MediBytes Hospital";
+  const inPatient = isPatientRoute(location.pathname);
+  const allowed = !active || canSee(role, active.id);
+  const userId = session.user() || DEFAULT_STAFF_ID;
+
+  const toggleNav = () => {
+    if (isNarrow()) { setNavOpen((v) => !v); return; }
+    setCollapsed((v) => {
+      try { window.localStorage.setItem(COLLAPSE_KEY, v ? "0" : "1"); } catch { /* storage blocked */ }
+      return !v;
+    });
+  };
 
   return (
-    <div className="app">
+    <div className="app hx-app">
       <a className="skip-link" href="#main-content">Skip to content</a>
 
-      <div className="app-main">
-        <StatusBar
-          loginId={(meta.data?.user as { id?: string } | undefined)?.id?.replace(/\D/g, "") || "22149"}
-          user={user}
-          hospital={hospital}
-          screen={active?.label || "Dashboard"}
-          onControls={() => setResetOpen(true)}
-          userId={meta.data?.user?.id || "u_meera"}
-          onSwitchUser={(id) => {
-            session.setUser(id === "u_meera" ? null : id);
-            queryClient.clear();
-          }}
-        />
-        <MenuBar
+      <TopBar
+        role={role}
+        userId={userId}
+        counts={counts}
+        preview={DEMO_MODE ? PREVIEW_LABEL : undefined}
+        onMenu={toggleNav}
+        onSearch={() => setSearchOpen(true)}
+        onControls={() => setResetOpen(true)}
+        onSwitchUser={(id) => {
+          const next = staffById(id);
+          session.setUser(next.id === DEFAULT_STAFF_ID ? null : next.id);
+          setRole(next.app);
+          queryClient.clear();
+          navigate(ROLES[next.app].home);
+        }}
+      />
+
+      <div className={`hx-body${collapsed ? " nav-collapsed" : ""}`}>
+        <Sidebar
+          role={role}
           counts={counts}
-          patient={meta.data ? {
-            name: meta.data.patient.name,
-            mrn: meta.data.patient.mrn,
-            age: meta.data.patient.age,
-            sex: meta.data.patient.sex,
-            place: [meta.data.encounter?.ward, meta.data.encounter?.bed].filter(Boolean).join(" / "),
-            allergies: meta.data.patient.allergies || [],
-          } : null}
+          patientName={meta.data?.patient.name}
+          inPatient={inPatient}
+          open={navOpen}
+          collapsed={collapsed}
+          onClose={() => setNavOpen(false)}
+          onToggleCollapsed={toggleNav}
         />
 
-        <main className="content-scroll" id="main-content" tabIndex={-1}>
-          <div className="content">
-            <Outlet />
-          </div>
-        </main>
+        <div className="app-main">
+          {inPatient && meta.data ? (
+            <PatientBar patient={{
+              name: meta.data.patient.name,
+              mrn: meta.data.patient.mrn,
+              age: meta.data.patient.age,
+              sex: meta.data.patient.sex,
+              place: [meta.data.encounter?.ward, meta.data.encounter?.bed].filter(Boolean).join(" / "),
+              allergies: meta.data.patient.allergies || [],
+            }} />
+          ) : null}
 
-        <FooterBar hospital={hospital} status={DEMO_MODE ? PREVIEW_LABEL : `${openAlerts} open alerts ${SEP} ${overdue} overdue tasks`} />
+          <main className="content-scroll" id="main-content" tabIndex={-1}>
+            <div className="content">
+              {allowed ? <Outlet /> : <NotForRole role={role} page={active!.label} />}
+            </div>
+          </main>
+        </div>
       </div>
 
+      {searchOpen ? <Launchpad role={role} counts={counts} onClose={() => setSearchOpen(false)} /> : null}
       <EvidenceDrawer />
 
       {resetOpen ? (
         <Modal
-          title="Workspace controls"
+          title="Workspace"
           onClose={() => setResetOpen(false)}
           footer={<button className="btn" onClick={() => setResetOpen(false)}>Close</button>}
         >
@@ -136,6 +185,12 @@ export function Shell() {
               <span className="card-title">Rehearsal data</span>
               <span className="small muted mt-1">Existing admission, labs, medicines, tasks, alerts, bill and outside scan.</span>
             </button>
+          </div>
+          <div className="button-row mt-3">
+            <button className="btn" onClick={() => {
+              if (document.fullscreenElement) void document.exitFullscreen();
+              else void document.documentElement.requestFullscreen?.();
+            }}>Toggle full screen</button>
           </div>
           {reset.isPending ? <div className="banner mt-3" role="status"><span className="spinner" /> Resetting the patient workspace...</div> : null}
           {reset.isError ? <div className="error-box mt-3" role="alert">The patient workspace was not reset: {(reset.error as Error).message}</div> : null}

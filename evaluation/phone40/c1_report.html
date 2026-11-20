@@ -1,0 +1,336 @@
+<title>Phone40 Pipeline Accuracy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: a single reading column (lab-report style) with full-width tables that scroll on their own; chart colours reuse the pipeline's GREEN/YELLOW/RED row codes. */
+:root {
+  --paper: #f5f7f8; --sheet: #ffffff; --ink: #16212a; --muted: #586874; --rule: #d3dce1;
+  --accent: #1c5a89; --accent-soft: #e2ecf4;
+  --red: #b3261e; --amber: #946000; --green: #2c7a4c; --pending: #6d6a86;
+  --red-soft: #f8e5e3; --amber-soft: #f7ecd6; --green-soft: #e1f0e6;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0e151a; --sheet: #141d24; --ink: #e2e9ee; --muted: #94a5b1; --rule: #2a3843;
+  --accent: #74b2e2; --accent-soft: #172a3a;
+  --red: #f08a80; --amber: #e9b552; --green: #7ac698; --pending: #a9a4cf;
+  --red-soft: #3a1f1d; --amber-soft: #352a14; --green-soft: #183024; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #0e151a; --sheet: #141d24; --ink: #e2e9ee; --muted: #94a5b1; --rule: #2a3843;
+  --accent: #74b2e2; --accent-soft: #172a3a;
+  --red: #f08a80; --amber: #e9b552; --green: #7ac698; --pending: #a9a4cf;
+  --red-soft: #3a1f1d; --amber-soft: #352a14; --green-soft: #183024; color-scheme: dark }
+
+body { background: var(--paper); color: var(--ink); font: 400 15px/1.6 var(--f-body); }
+.wrap { max-width: 940px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 64px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; line-height: 1.2; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); letter-spacing: -0.01em; }
+h2 { font-size: 1.45rem; margin-top: 2.6rem; padding-top: 1.1rem; border-top: 1px solid var(--rule); }
+h3 { font-size: 1.08rem; margin-top: 1.6rem; }
+p, li { max-width: 68ch; }
+p { margin: .7rem 0; }
+ul, ol { padding-left: 1.25rem; margin: .6rem 0; }
+li { margin: .25rem 0; }
+code, .mono { font-family: var(--f-mono); font-size: .86em; }
+code { background: var(--accent-soft); padding: .05em .35em; border-radius: 3px; overflow-wrap: anywhere; }
+a { color: var(--accent); }
+.eyebrow { font: 500 .74rem/1 var(--f-mono); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-top: .9rem; color: var(--muted); font-size: .9rem; }
+.chip { display: inline-flex; align-items: center; gap: .4rem; font: 500 .75rem/1 var(--f-mono); padding: .32rem .55rem; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.chip.pending { color: var(--pending); border-style: dashed; }
+.chip.done { color: var(--green); }
+.win { color: var(--green); font-weight: 600; } .lose { color: var(--red); font-weight: 600; }
+.lede { font-size: 1.08rem; margin-top: 1.4rem; }
+
+.verdict { margin-top: 1.6rem; background: var(--sheet); border: 1px solid var(--rule); border-left: 4px solid var(--accent); padding: 1rem 1.25rem; }
+.verdict p { margin: .35rem 0; }
+.verdict strong { font-weight: 600; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin-top: 1.4rem; }
+.kpi { background: var(--sheet); padding: .9rem 1rem; display: grid; gap: .2rem; align-content: start; }
+.kpi .v { font: 600 1.7rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: .84rem; color: var(--muted); }
+
+.tbl { overflow-x: auto; margin-top: 1rem; border: 1px solid var(--rule); background: var(--sheet); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { padding: .55rem .7rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
+thead th { font: 500 .74rem/1.3 var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); background: var(--paper); white-space: nowrap; }
+tbody tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td .sub { display: block; color: var(--muted); font-size: .78rem; }
+td.pend { color: var(--pending); font-style: italic; }
+tr.arm-new td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+
+.funnel { margin-top: 1rem; display: grid; gap: .6rem; }
+.frow { display: grid; grid-template-columns: minmax(150px, 15rem) 1fr 4.6rem; gap: .75rem; align-items: center; }
+.frow .lab { font-size: .9rem; min-width: 0; }
+.frow .lab small { display: block; color: var(--muted); font-size: .76rem; }
+.track { background: var(--accent-soft); height: 22px; position: relative; }
+.bar { height: 100%; background: var(--accent); }
+.bar.ok { background: var(--green); } .bar.warn { background: var(--amber); }
+.frow .num { font: 500 .9rem var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+
+.steps { counter-reset: s; list-style: none; padding: 0; display: grid; gap: .9rem; margin-top: 1rem; }
+.steps > li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: .6rem; max-width: none; }
+.steps > li::before { content: counter(s); font: 600 1.05rem/1.6 var(--f-display); color: var(--accent); }
+.steps > li > div { min-width: 0; }
+.ex { margin-top: 1rem; display: grid; gap: .6rem; }
+.excase { background: var(--sheet); border: 1px solid var(--rule); padding: .75rem .9rem; display: grid; grid-template-columns: auto 1fr; gap: .2rem .9rem; align-items: baseline; }
+.excase .tag { font: 500 .7rem/1 var(--f-mono); padding: .3rem .45rem; border-radius: 3px; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.tag.g { background: var(--green-soft); color: var(--green); }
+.tag.y { background: var(--amber-soft); color: var(--amber); }
+.tag.r { background: var(--red-soft); color: var(--red); }
+.excase .what { font-family: var(--f-mono); font-size: .86rem; overflow-wrap: anywhere; min-width: 0; }
+.excase .why { grid-column: 2; color: var(--muted); font-size: .88rem; min-width: 0; }
+
+.loss { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: .8rem; margin-top: 1rem; }
+.loss > div { background: var(--sheet); border: 1px solid var(--rule); padding: .8rem .95rem; min-width: 0; }
+.loss .k { font: 600 1.4rem/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.loss .t { font-weight: 600; margin-top: .3rem; }
+.loss p { font-size: .88rem; color: var(--muted); margin: .3rem 0 0; }
+pre { background: var(--sheet); border: 1px solid var(--rule); padding: .8rem 1rem; overflow-x: auto; font: .8rem/1.55 var(--f-mono); margin: .8rem 0; }
+.note { color: var(--muted); font-size: .88rem; }
+@media (max-width: 560px) {
+  .frow { grid-template-columns: 1fr 3.8rem; } .frow .track { grid-column: 1 / -1; grid-row: 2; }
+  .excase { grid-template-columns: 1fr; } .excase .why { grid-column: 1; }
+}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">MediBytes · speech-to-chart evaluation · phone40 set</div>
+  <h1>Phone40 Pipeline Accuracy</h1>
+  <div class="meta">
+    <span>11 October 2026</span>
+    <span>40 phone recordings · 39 min · 2 devices</span>
+    <span class="chip done">both pipelines scored</span>
+  </div>
+
+  <p class="lede">This page measures how accurately two speech pipelines turn 40 recorded doctor dictations into chart facts (drugs, doses, vitals, allergies), where the medical words are lost, and whether gpt-4.1's output is always correctly formatted.</p>
+
+  <div class="verdict">
+    <p><strong>Use C1 (MedASR + fuzzy matcher + gpt-4.1) as the pipeline stands today.</strong> It gets 92.6% of facts right (212 of 229). C2 (Whisper large-v3 + MedASR second pass + fuzzy matcher + gpt-4.1) gets 84.3% (193 of 229). On the same facts C1 wins 22 to 3, exact McNemar p = 0.0002.</p>
+    <p><strong>C2 actually hears better.</strong> Its word error rate is 7.2% against 17.6%, it gets 55 of 61 drug names exactly against 47, and it invents fewer drugs (4 against 9). It loses because large-v3 writes 16 of the 40 dictations as one long comma-joined sentence. The extractor reads "denies… no known drug allergy" in that same sentence and marks 11 prescribed drugs as not given, which also voids their doses. That accounts for 20 of the 22 facts C2 loses.</p>
+    <p><strong>gpt-4.1 is well behaved but adds no accuracy in either pipeline.</strong> All 40 replies were valid JSON inside the closed shortlist, no correct fact was damaged, and each pipeline scores exactly the same with and without it.</p>
+    <p>If the negation scope is fixed to stop at commas, C2 is the likely winner: with negation set aside it scores 93.9% against C1's 92.6%. Because its transcripts are cached, C2 can be re-scored in minutes once that fix exists.</p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><span class="v">92.6%</span><span class="l">facts correct, C1 (MedASR first)</span></div>
+    <div class="kpi"><span class="v">84.3%</span><span class="l">facts correct, C2 (large-v3 first)</span></div>
+    <div class="kpi"><span class="v">7.2% · 17.6%</span><span class="l">word error rate, C2 · C1</span></div>
+    <div class="kpi"><span class="v">40 / 40</span><span class="l">gpt-4.1 replies valid JSON and in the closed set</span></div>
+    <div class="kpi"><span class="v">11</span><span class="l">prescribed drugs C2 marked "not given"</span></div>
+  </div>
+
+  <h2 id="overall">Overall pipeline accuracy</h2>
+  <p>One row per stage in pipeline order, then the end-to-end result. Recall counts gold facts that reached the chart; precision counts chart rows that are right. The better value in each row is marked.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Stage</th><th>Measure</th><th class="n">C1 · MedASR first</th><th class="n">C2 · large-v3 first</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Speech recognition</td><td>Word accuracy (100 − WER)</td><td class="n">82.4%</td><td class="n win">92.8%</td></tr>
+      <tr><td>2 · Medical words heard</td><td>Gold drugs in the transcript, similarity ≥ 0.80</td><td class="n">96.7%<span class="sub">59/61</span></td><td class="n">96.7%<span class="sub">59/61</span></td></tr>
+      <tr><td></td><td>Gold drugs heard exactly, ≥ 0.95</td><td class="n">77.0%<span class="sub">47/61</span></td><td class="n win">90.2%<span class="sub">55/61</span></td></tr>
+      <tr><td>3 · Fuzzy shortlist</td><td>Misheard drugs whose correct name made a shortlist</td><td class="n win">64.3%<span class="sub">9/14</span></td><td class="n">33.3%<span class="sub">2/6</span></td></tr>
+      <tr><td>4 · gpt-4.1 pick</td><td>Changes that were correct</td><td class="n">83.3%<span class="sub">10/12</span></td><td class="n">85.7%<span class="sub">6/7</span></td></tr>
+      <tr><td></td><td>Replies correctly formatted</td><td class="n">100%<span class="sub">24/24</span></td><td class="n">100%<span class="sub">16/16</span></td></tr>
+      <tr><td>5 · On the chart</td><td><strong>Facts correct (recall)</strong></td><td class="n win">92.6%<span class="sub">212/229 · CI 88.4–95.3</span></td><td class="n lose">84.3%<span class="sub">193/229 · CI 79.0–88.4</span></td></tr>
+      <tr><td></td><td>Chart rows that are right (precision)</td><td class="n">86.9%<span class="sub">212/244</span></td><td class="n win">88.5%<span class="sub">193/218</span></td></tr>
+      <tr><td></td><td>Drugs: recall · precision · F1</td><td class="n win">85.2% · 66.7% · 74.8%</td><td class="n">73.8% · 69.2% · 71.4%</td></tr>
+      <tr><td></td><td>Doses correct</td><td class="n win">22/23</td><td class="n lose">10/23</td></tr>
+      <tr><td></td><td>Vitals: recall · precision · F1</td><td class="n">95.1% · 95.7% · 95.4%</td><td class="n">95.1% · 96.4% · 95.7%</td></tr>
+      <tr><td></td><td>Allergies</td><td class="n">3/3</td><td class="n">3/3</td></tr>
+      <tr><td>Diagnostic</td><td>Facts correct if drug negation is ignored</td><td class="n">92.6%</td><td class="n win">93.9%</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">The shortlist row favours C1 only because C1 mishears more: C2 has 6 inexact drug names to repair against C1's 14. The diagnostic row scores every drug as positive in both the gold and the output, so it shows recognition quality without the negation bug. It is not the official score.</p>
+
+  <h2 id="results">All arms</h2>
+  <p>Same 40 clips, denoiser <code>none</code>, same gold. The no-LLM arms isolate what gpt-4.1 adds. Intervals are Wilson 95%.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Arm</th><th>Pipeline</th><th class="n">Facts correct</th><th class="n">Dev (odd)</th><th class="n">Held-out (even)</th><th class="n">Drugs</th><th class="n">Doses</th><th class="n">Vitals</th><th class="n">Allergies</th><th class="n">Extra drug rows</th><th class="n">WER</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">A0</td><td>MedASR → small-int8 second pass → fuzzy · <em>no LLM</em></td><td class="n">92.6%<span class="sub">212/229</span></td><td class="n">89.9%</td><td class="n">95.5%</td><td class="n">52/61</td><td class="n">22/23</td><td class="n">135/142</td><td class="n">3/3</td><td class="n">27</td><td class="n">17.6%</td></tr>
+      <tr class="arm-new"><td class="mono">C1</td><td>MedASR → small-int8 second pass → fuzzy → <strong>gpt-4.1</strong></td><td class="n">92.6%<span class="sub">212/229</span></td><td class="n">89.9%</td><td class="n">95.5%</td><td class="n">52/61</td><td class="n">22/23</td><td class="n">135/142</td><td class="n">3/3</td><td class="n">26</td><td class="n">17.6%</td></tr>
+      <tr><td class="mono">A0-L</td><td>large-v3 (prompted beam) → MedASR second pass → fuzzy · <em>no LLM</em></td><td class="n">84.3%<span class="sub">193/229</span></td><td class="n">80.7%</td><td class="n">88.2%</td><td class="n">45/61</td><td class="n">10/23</td><td class="n">135/142</td><td class="n">3/3</td><td class="n">20</td><td class="n">7.2%</td></tr>
+      <tr class="arm-new"><td class="mono">C2</td><td>large-v3 (prompted beam) → MedASR second pass → fuzzy → <strong>gpt-4.1</strong></td><td class="n">84.3%<span class="sub">193/229</span></td><td class="n">80.7%</td><td class="n">88.2%</td><td class="n">45/61</td><td class="n">10/23</td><td class="n">135/142</td><td class="n">3/3</td><td class="n">20</td><td class="n">7.2%</td></tr>
+    </tbody>
+  </table></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Paired comparison (229 facts)</th><th class="n">Only first right</th><th class="n">Only second right</th><th class="n">Exact McNemar p</th></tr></thead>
+    <tbody>
+      <tr><td>C2 vs C1</td><td class="n">3</td><td class="n">22</td><td class="n">0.0002</td></tr>
+      <tr><td>C1 vs A0 (gpt-4.1's effect, MedASR)</td><td class="n">0</td><td class="n">0</td><td class="n">1.0</td></tr>
+      <tr><td>C2 vs A0-L (gpt-4.1's effect, large-v3)</td><td class="n">0</td><td class="n">0</td><td class="n">1.0</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">C2's 3 wins are drugs C1 missed: amoxicillin in s23, and paracetamol in s30 and s37, which MedASR heard as "parasitamol". Of its 22 losses, 20 are the drug and dose facts of the 11 negation errors. The other 2 are doses (s28, s33).</p>
+
+  <h2 id="negation">Why C2 scores lower: one punctuation problem</h2>
+  <p>MedASR writes short sentences. large-v3, with the medical prompt, often writes the whole dictation as one sentence joined by commas. In 16 of the 40 C2 transcripts there are more than 40 words per full stop; C1 has none.</p>
+<pre>s14, large-v3: "… denies breathlessness, no known drug allergy, no past major illness, … plan,
+               ciprofloxacin 500 mg twice daily, paracetamol, hydration watch, …"
+extractor:     ciprofloxacin 500 mg  →  negated = true   (scored wrong: drug and dose)</pre>
+  <p>The extractor looks for a negation word anywhere in the sentence that holds the drug. With the whole dictation in one sentence, "denies" and "no known drug allergy" negate every prescription. Affected: azithromycin (s11), ciprofloxacin (s14), nitrofurantoin (s15), metformin (s17), albendazole (s19), ondansetron (s20), pantoprazole (s29, s35), paracetamol (s31), aspirin and atorvastatin (s40). This is a fault in how the pipeline reads large-v3's punctuation, not in what large-v3 heard.</p>
+
+  <h2 id="funnel">Where medical words are lost</h2>
+  <p>Each of the 61 gold drugs followed to the stage where it was lost. Bars are drawn to the same scale for both pipelines.</p>
+  <h3>C1 · MedASR first</h3>
+  <div class="funnel" role="img" aria-label="C1 funnel: 61 gold, 59 heard, 47 heard exactly, 52 correct on the chart">
+    <div class="frow"><div class="lab">Gold drugs in the scripts</div><div class="track"><div class="bar" style="width:100%"></div></div><div class="num">61</div></div>
+    <div class="frow"><div class="lab">Heard in transcript<small>similarity ≥ 0.80</small></div><div class="track"><div class="bar" style="width:96.7%"></div></div><div class="num">59</div></div>
+    <div class="frow"><div class="lab">Heard exactly<small>similarity ≥ 0.95</small></div><div class="track"><div class="bar warn" style="width:77.0%"></div></div><div class="num">47</div></div>
+    <div class="frow"><div class="lab">Correct on the chart<small>the scored drug fact</small></div><div class="track"><div class="bar ok" style="width:85.2%"></div></div><div class="num">52</div></div>
+  </div>
+  <h3>C2 · large-v3 first</h3>
+  <div class="funnel" role="img" aria-label="C2 funnel: 61 gold, 59 heard, 55 heard exactly, 56 named on a row, 45 correct on the chart">
+    <div class="frow"><div class="lab">Gold drugs in the scripts</div><div class="track"><div class="bar" style="width:100%"></div></div><div class="num">61</div></div>
+    <div class="frow"><div class="lab">Heard in transcript<small>similarity ≥ 0.80</small></div><div class="track"><div class="bar" style="width:96.7%"></div></div><div class="num">59</div></div>
+    <div class="frow"><div class="lab">Heard exactly<small>similarity ≥ 0.95</small></div><div class="track"><div class="bar warn" style="width:90.2%"></div></div><div class="num">55</div></div>
+    <div class="frow"><div class="lab">Named on a drug row<small>any polarity</small></div><div class="track"><div class="bar" style="width:91.8%"></div></div><div class="num">56</div></div>
+    <div class="frow"><div class="lab">Correct on the chart<small>11 lost to negation</small></div><div class="track"><div class="bar ok" style="width:73.8%"></div></div><div class="num">45</div></div>
+  </div>
+
+  <h3>What gpt-4.1 did</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Measure</th><th class="n">C1</th><th class="n">C2</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>LLM calls (term validation + context repair)</td><td class="n">24</td><td class="n">16</td><td>40 s and 24 s of gpt-4.1 time for 40 clips: about 1 s per clip or less</td></tr>
+      <tr><td>Matcher ties sent to a human, no LLM call</td><td class="n">6</td><td class="n">2</td><td>Spelling scores too close to separate; the row goes RED</td></tr>
+      <tr><td>Changes that were correct</td><td class="n">10/12</td><td class="n">6/7</td><td>Wrong ones are harmless non-drugs: <code>waters → water</code>, <code>clucose → glucose</code></td></tr>
+      <tr><td>Correct name offered and picked</td><td class="n">10/15</td><td class="n">6/7</td><td>Declines include <code>piracetamol</code> with paracetamol and piracetam both offered</td></tr>
+      <tr><td>Damage (a correct name lost)</td><td class="n">0</td><td class="n">0</td><td></td></tr>
+      <tr><td>Facts changed vs the no-LLM arm</td><td class="n">0</td><td class="n">0</td><td>Correct picks confirmed names the fuzzy matcher had already chosen</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">In C1, gpt-4.1's one visible change was in s40. The second-pass decoder heard "statin", the matcher picked nystatin, and gpt-4.1 corrected it to atorvastatin, which was already on the chart, leaving a duplicate RED row.</p>
+
+  <h2 id="fuzzy">How the fuzzy search works in this pipeline</h2>
+  <p>The fuzzy search sits between the transcript and the chart. It decides which odd-looking words might be misheard medicines, finds the closest real names, and passes a short list to gpt-4.1, which may only answer from that list.</p>
+  <ol class="steps">
+    <li><div><strong>Pick candidate words.</strong> A word is considered if it is at least 6 letters, not an ordinary English word or stopword, not already an exact drug name, and not already on a drug row. Context repair also needs a medicine cue word in the sentence (take, tablet, injection, given, prescribed…). A word followed by a dose ("Amoxyclin 500 mg") goes down the dosed path instead.</div></li>
+    <li><div><strong>Score it against the drug reference.</strong> The word is compared with names in the India drug reference (about 2,500 substances and 72,000 brands) using <code>difflib</code>'s ratio: 2 × matching letters ÷ total letters. Only names of similar length are scanned, with two cheap pre-filters before the full score.</div></li>
+    <li><div><strong>Keep a shortlist.</strong> A name stays if it clears the floor for its path (0.84 for a mention with no dose, 0.78 for context repair, 0.55–0.60 against the 33-drug mini list when a dose follows) and is within a band of the best score (0.06–0.10). Synonyms are merged and the list is cut to the top 4–6.</div></li>
+    <li><div><strong>Ask gpt-4.1.</strong> The sentence and shortlist go to gpt-4.1, which must return strict JSON: <code>{"decision": "candidate"|"none", "chosen": …, "confidence": …}</code> for context repair, or <code>{"status": "corrected"|"ambiguous", "chosen_token": …, "semantic_confidence_score": …}</code> for term validation.</div></li>
+    <li><div><strong>Check the answer.</strong> The JSON must parse, the chosen name must be on the shortlist, and confidence must be at least 0.85; anything else counts as "none". A repaired row is never better than RED and a validated row never better than YELLOW, so a person confirms it.</div></li>
+  </ol>
+  <h3>Worked examples from these recordings</h3>
+  <div class="ex">
+    <div class="excase"><span class="tag g">Fixed</span><span class="what">"Paracetamole 650 mg" → paracetamol · ratio 0.957</span><span class="why">Dosed path. Clear winner on spelling; gpt-4.1 confirmed it (C1: s13, s27).</span></div>
+    <div class="excase"><span class="tag y">Ambiguous</span><span class="what">"Piracetamol 650 mg" → paracetamol 0.909 vs piracetam 0.900</span><span class="why">Both inside the band, so both offered. gpt-4.1 answered "ambiguous" even though fever and 650 mg point to paracetamol, so the row stays RED (C1: s1).</span></div>
+    <div class="excase"><span class="tag r">Missed</span><span class="what">"Parasitamol as needed" → paracetamol · ratio 0.818</span><span class="why">No dose follows, so the 0.84 floor applies and it fails. "As needed" is not a cue word, so context repair never looks at it (C1: s30, s37). large-v3 heard "paracetamol" correctly here.</span></div>
+    <div class="excase"><span class="tag r">Invented</span><span class="what">"abazol 400 mg" (albendazole) → tramadol</span><span class="why">Albendazole scores only 0.706. The dosed path's low mini-list floor let tramadol through, and a matcher tie meant the LLM was never asked (both pipelines: s19).</span></div>
+  </div>
+
+  <h2 id="misses">Why drugs were missed</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Cause</th><th class="n">C1</th><th class="n">C2</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td>Prescribed drug marked "not given" (run-on sentence)</td><td class="n">0</td><td class="n">11</td><td>ciprofloxacin s14, metformin s17, paracetamol s31…</td></tr>
+      <tr><td>Negated mention not written as a negated row</td><td class="n">3</td><td class="n">3</td><td>"No aspirin or ibuprofen" (s13), "No food or aspirin" (s3)</td></tr>
+      <tr><td>Below the fuzzy floor</td><td class="n">2</td><td class="n">0</td><td>"Parasitamol" 0.818 vs 0.84 (s30, s37)</td></tr>
+      <tr><td>Misheard beyond repair or partial name</td><td class="n">2</td><td class="n">1</td><td>"abazol" for albendazole; "ferrous sulfate" written as a bare "ferrous" row (s19)</td></tr>
+      <tr><td>Combination name</td><td class="n">1</td><td class="n">0</td><td>"Amoxilin clavulanate": only clavulanic acid found (C1 s23)</td></tr>
+      <tr><td>Heard, but no reference data</td><td class="n">1</td><td class="n">1</td><td>"tiotropium", spelled perfectly, has no dispensing data, so no row (s11)</td></tr>
+      <tr><td><strong>Total missed</strong></td><td class="n"><strong>9</strong></td><td class="n"><strong>16</strong></td><td>of 61 gold drugs</td></tr>
+    </tbody>
+  </table></div>
+  <p>Both pipelines miss the same 7 vitals, mostly numbers dropped in long examination sentences: s28 temperature and BP, s39 BP, s5 and s12 pulse, s6 the first glucose reading, s7 saturation.</p>
+
+  <h2 id="spurious">Drugs that should not be on the chart</h2>
+  <p>Extra drug rows fall into three groups. Only the last is a real safety risk, and C2 has fewer of them.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Kind</th><th class="n">C1</th><th class="n">C2</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td>Borderline gold item (not scored by rule)</td><td class="n">5</td><td class="n">5</td><td>adrenaline "if anaphylaxis", furosemide "only if advised", zinc, calcium, potassium correction</td></tr>
+      <tr><td>Said in the script but not prescribed</td><td class="n">12</td><td class="n">11</td><td>"coconut water", "low potassium" diet; investigations: calcium, vitamin D, amylase, glucose</td></tr>
+      <tr><td><strong>Invented by the fuzzy matcher</strong></td><td class="n">9</td><td class="n">4</td><td>Both: tramadol (abazol), pancreatin (pancreatitis), human menopausal gonadotropin (menopause), iodine (iodised salt). C1 only: metformin (toin), levothyroxine, omeprazole (prasol), aspirin, paracetamol (disol)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="format">Is the LLM output correctly formatted?</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Check</th><th class="n">C1</th><th class="n">C2</th></tr></thead>
+    <tbody>
+      <tr><td>gpt-4.1 replies that parse as JSON</td><td class="n">24 / 24</td><td class="n">16 / 16</td></tr>
+      <tr><td>Replies with the required keys and an allowed decision</td><td class="n">24 / 24</td><td class="n">16 / 16</td></tr>
+      <tr><td>Chosen name inside the closed shortlist</td><td class="n">24 / 24</td><td class="n">16 / 16</td></tr>
+      <tr><td>Transport errors or timeouts</td><td class="n">0</td><td class="n">0</td></tr>
+      <tr><td>Output files that validate against <code>entities.schema.json</code></td><td class="n">40 / 40</td><td class="n">40 / 40</td></tr>
+      <tr><td>Clips transcribed with a mock instead of real speech</td><td class="n">0</td><td class="n">0</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Every LLM call was logged with its prompt and raw reply (<code>MEDIBYTES_LLM_TRACE</code>), so these counts come from the raw replies, not from what the pipeline kept.</p>
+
+  <h2 id="denoiser">Denoiser: GTCRN, none, or an SNR threshold</h2>
+  <p>The main pipeline does not route by SNR; the denoiser is fixed per run. To answer the question, every clip was run both ways with the MedASR no-LLM pipeline, and a gate was simulated: use GTCRN when the measured SNR is below T, otherwise none.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Routing</th><th class="n">Clips denoised</th><th class="n">Dev facts</th><th class="n">Held-out facts</th><th class="n">vs none</th></tr></thead>
+    <tbody>
+      <tr><td>Always none</td><td class="n">0</td><td class="n">89.9%</td><td class="n">95.5%</td><td class="n">—</td></tr>
+      <tr><td>Always GTCRN</td><td class="n">40</td><td class="n">89.9%</td><td class="n">95.5%</td><td class="n">+2 / −2</td></tr>
+      <tr><td>GTCRN if SNR &lt; 10 dB</td><td class="n">1</td><td class="n">89.1%</td><td class="n">95.5%</td><td class="n">+0 / −1</td></tr>
+      <tr><td>GTCRN if SNR &lt; 15 dB</td><td class="n">4</td><td class="n">89.1%</td><td class="n">95.5%</td><td class="n">+0 / −1</td></tr>
+      <tr><td>GTCRN if SNR &lt; 20 dB</td><td class="n">9</td><td class="n">88.2%</td><td class="n">95.5%</td><td class="n">+0 / −2</td></tr>
+    </tbody>
+  </table></div>
+  <p>These recordings are clean: SNR 9.1–34.4 dB, median 24.3 dB, and every Samsung clip is at least 24.8 dB. No threshold helps, so keep <code>none</code>.</p>
+
+  <h2 id="devices">By device</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Device</th><th class="n">Clips</th><th class="n">Gold drugs</th><th class="n">Heard exactly · C1</th><th class="n">Heard exactly · C2</th><th class="n">Named on a row · C1</th><th class="n">Named on a row · C2</th></tr></thead>
+    <tbody>
+      <tr><td>Samsung, Android 16 (s11–s20)</td><td class="n">10</td><td class="n">21</td><td class="n">18</td><td class="n">18</td><td class="n">17</td><td class="n">18</td></tr>
+      <tr><td>Other phone, Android 15</td><td class="n">30</td><td class="n">40</td><td class="n">29</td><td class="n">37</td><td class="n">36</td><td class="n">39</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">large-v3's recognition gain is on the other phone's 30 clips; on the Samsung clips both decoders hear the same 18 of 21 exactly.</p>
+
+  <h2 id="data">Data and ground truth</h2>
+  <ul>
+    <li><strong>Audio:</strong> <code>s1.mp4</code>–<code>s40.mp4</code>, AAC, 45–72 s each, recorded 10 October 2026 on two Android phones.</li>
+    <li><strong>Scripts:</strong> 40 synthetic dictations from <code>Markdown to PDF (6).md</code>, with PDF watermark text removed and line-broken words rejoined. Generic drug names only, numbers spelled out.</li>
+    <li><strong>Clip-to-script mapping by content:</strong> six recordings are not in script order. s11 reads Script 12, s12 reads 11, s27 reads 29, s29 reads 27, s32 reads 35, s35 reads 32. Every match beats its runner-up by at least 0.38.</li>
+    <li><strong>Gold:</strong> drafted from the script text by the pipeline's extractor plus a reference scan, then 28 logged corrections (investigations and diet words removed, negations fixed, conditional drugs and supplements marked borderline, as in the earlier gold). The user approved it on 11 October 2026, before any arm was scored. It totals 61 drugs, 23 doses, 142 vitals and 3 allergies.</li>
+    <li><strong>Split:</strong> odd clips as dev, even clips as held-out, each with 5 Samsung clips. Both are reported because no tuning was done in this round.</li>
+  </ul>
+
+  <h2 id="limits">Limitations</h2>
+  <ul>
+    <li>Read synthetic scripts with common generic names. There are few misspellings for the fuzzy matcher or LLM to fix, so this set cannot show much LLM gain. Brand-heavy or conversational speech would test it harder.</li>
+    <li>The C2 result depends on one large-v3 setting (prompted beam search). A setting that punctuates differently could avoid the run-on sentences.</li>
+    <li>Speakers sometimes depart from the script; s1 says "twice daily" where the script says "thrice daily". Gold follows the script.</li>
+    <li>The gold was checked by one reviewer and is not clinician-reviewed. The extra-row counts depend on gold choices, such as treating investigations as non-drugs.</li>
+    <li>Only gpt-4.1 with the shipped repair prompt was tested; prompt tuning was deferred.</li>
+    <li>40 clips give intervals of about ±4 points. The C2 vs C1 gap is significant; differences of 1–2 facts are not.</li>
+    <li>WER counts British and US spellings as errors (anaemia vs anemia).</li>
+  </ul>
+
+  <h2 id="next">Recommendations</h2>
+  <ol>
+    <li><strong>Ship C1 (MedASR first) for now.</strong> It is the more accurate pipeline as built: 92.6% against 84.3%.</li>
+    <li><strong>Fix negation scope, then re-score C2.</strong> Stop a negation at the next comma or clause boundary, or re-punctuate large-v3 output before extraction. C2's transcripts are cached, so the re-score takes minutes and needs no new decoding. If C2 then beats C1, prefer it: it hears drug names better (55 vs 47 exact) and invents fewer drugs (4 vs 9).</li>
+    <li><strong>Fix the misses before the LLM.</strong> Add "as needed" and similar phrases to the cue words, or let a ≥ 0.80 match reach context repair. Write negated drug mentions as negated rows. Split hyphenated combination names. Add dispensing data for tiotropium.</li>
+    <li><strong>Stop the mini-list matcher from inventing drugs.</strong> Raise its 0.55–0.60 floor, or send its low-score matches to the LLM instead of straight to a RED row.</li>
+    <li><strong>Keep gpt-4.1 term validation as a safety check, not an accuracy lever.</strong> It is cheap, always well formed, and caused no damage, but it changed no scored fact in either pipeline.</li>
+    <li>Keep the denoiser at <code>none</code> for phone dictation of this quality.</li>
+  </ol>
+
+  <h2 id="repro">Reproduce</h2>
+<pre># C1 (MedASR first)
+MEDIBYTES_LLM_TRACE=runs/phone40/C1/trace.jsonl python -m base_pipeline.run &lt;audio&gt; --preset context-repair \
+  --model medasr --llm-url https://api.openai.com/v1 --llm-model gpt-4.1 --llm-env .env --out runs/phone40/C1
+# C2 (large-v3 first, MedASR second pass)
+MEDIBYTES_ASR_STRICT=1 MEDIBYTES_ASR_CACHE=runs/phone40/asr_cache MEDIBYTES_LLM_TRACE=runs/phone40/C2/trace.jsonl \
+  python -m base_pipeline.run &lt;audio&gt; --preset context-repair --model large-v3 --decode beam5-en-fallback-prompt \
+  --second-pass medasr --llm-url https://api.openai.com/v1 --llm-model gpt-4.1 --llm-env .env --out runs/phone40/C2
+# No-LLM controls: the same commands with --preset regex-only (A0, A0_large)
+# Score
+python -m clinical_eval.fact_score runs/phone40/C2 --gold experiments/phone40/gold.json --split experiments/phone40/split.json --compare runs/phone40/C1
+python -m clinical_eval.repair_score runs/phone40/C2 --gold experiments/phone40/gold.json --split experiments/phone40/split.json --baseline runs/phone40/A0_large
+python -m clinical_eval.repair_score runs/phone40/A0 --gold experiments/phone40/gold.json --gate sherpa-gtcrn-simple
+python experiments/phone40/collect.py &gt; runs/phone40/summary.json</pre>
+  <p class="note">Code and data: <code>clinical_eval/script_align.py</code>, <code>script_gold.py</code>, <code>repair_score.py</code>; <code>experiments/phone40/</code> (DESIGN.md, mapping.json, gold.json, gold_corrections.py, split.json, collect.py). All numbers on this page come from <code>runs/phone40/summary.json</code>. The OpenAI key is read from <code>.env</code> and is not written into any run output.</p>
+</div>

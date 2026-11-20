@@ -1,0 +1,91 @@
+{
+  "facts": [
+    {
+      "kind": "vital",
+      "text": "Pulse 120",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Pulse 120 beats per minute, irre- irregular."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 130/80",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 130/80 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "96%",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Saturation 96%."
+    },
+    {
+      "kind": "symptom",
+      "text": "chest pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.91,
+      "source_sentence": "Denies chest pain and fainting."
+    },
+    {
+      "kind": "symptom",
+      "text": "chest pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Report chest pain, fainting, severe breathlessness or one-sided weakness, Cardiology in two days."
+    },
+    {
+      "kind": "symptom",
+      "text": "breathlessness",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Report chest pain, fainting, severe breathlessness or one-sided weakness, Cardiology in two days."
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "2",
+        "66",
+        "80",
+        "96",
+        "120",
+        "130"
+      ],
+      "count": 7
+    },
+    "total": 6,
+    "vital_verified": 3,
+    "symptom_verified": 3
+  },
+  "brand_mentions": []
+}

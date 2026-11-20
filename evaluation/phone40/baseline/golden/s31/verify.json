@@ -1,0 +1,167 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "paracetamol",
+      "dose": 500.0,
+      "unit": "mg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mcg/mg/ml; listed strengths: 1 g solution, 1 g tablet, 300 mcg suspension, 1 mg solution; 500 mg is plausible for this drug]",
+      "confidence": 0.96,
+      "source_sentence": "Paracetamol 500 mg, Gglestream."
+    },
+    {
+      "kind": "vital",
+      "text": "Temperature 99.6 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "E examination, Temperature 99.6 degrees Fahrenheit, pulse 88 beats per minute, blood pressure 118/74 mmHg, saturation 99%."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 88",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "E examination, Temperature 99.6 degrees Fahrenheit, pulse 88 beats per minute, blood pressure 118/74 mmHg, saturation 99%."
+    },
+    {
+      "kind": "vital",
+      "text": "blood pressure 118/74",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "E examination, Temperature 99.6 degrees Fahrenheit, pulse 88 beats per minute, blood pressure 118/74 mmHg, saturation 99%."
+    },
+    {
+      "kind": "vital",
+      "text": "99%",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "E examination, Temperature 99.6 degrees Fahrenheit, pulse 88 beats per minute, blood pressure 118/74 mmHg, saturation 99%."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "24-year-old male with two days runny nose, sneezing, sore throat, mild cough, and low fever."
+    },
+    {
+      "kind": "symptom",
+      "text": "cough",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "24-year-old male with two days runny nose, sneezing, sore throat, mild cough, and low fever."
+    },
+    {
+      "kind": "symptom",
+      "text": "sore throat",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "24-year-old male with two days runny nose, sneezing, sore throat, mild cough, and low fever."
+    },
+    {
+      "kind": "symptom",
+      "text": "chest pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.91,
+      "source_sentence": "Denies breathlessness and chest pain."
+    },
+    {
+      "kind": "symptom",
+      "text": "breathlessness",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.91,
+      "source_sentence": "Denies breathlessness and chest pain."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Writen for breathlessness, fever over three days of colored sputum."
+    },
+    {
+      "kind": "symptom",
+      "text": "breathlessness",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Writen for breathlessness, fever over three days of colored sputum."
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "2",
+        "3",
+        "24",
+        "74",
+        "88",
+        "99",
+        "99.6",
+        "118",
+        "500"
+      ],
+      "count": 9
+    },
+    "total": 12,
+    "drug_verified": 1,
+    "vital_verified": 4,
+    "symptom_verified": 7
+  },
+  "brand_mentions": []
+}

@@ -6,6 +6,7 @@ import { useEvidence } from "../components/Evidence";
 import { usePatientId } from "../session";
 import { buildTimelineQuery, hasFilters } from "../features/f16/filters";
 import { ProvenanceFacts } from "../features/f16/Provenance";
+import { EventBody } from "../features/f16/EventBody";
 import { NO_FILTERS, type TimelineFilters, type TimelineResponse } from "../features/f16/types";
 import { PageHeader } from "../components/PageHeader";
 import { EmptyState, Field, ListRow, Menu, MenuItem, Panel, Pill, Skeleton, Toolbar } from "../components/ui";
@@ -15,7 +16,7 @@ import { Icon } from "../components/icons";
 
 function eventTone(type: string) {
   if (type === "lab_result") return "lab";
-  if (["consult_note", "admission_note", "round_note", "progress_note", "nursing_summary", "nursing_chart", "investigation_review", "discharge_summary"].includes(type)) return "ai";
+  if (["consult_note", "admission_note", "round_note", "progress_note", "nurse_progress_note", "nursing_summary", "nursing_chart", "investigation_review", "discharge_summary"].includes(type)) return "ai";
   if (["alert", "billing", "referral_consult"].includes(type)) return "critical";
   if (["consent", "referral_update", "device_reading"].includes(type)) return "";
   return "";
@@ -192,7 +193,7 @@ export function TimelinePage() {
                               ) : null}
                             </span>
                           }
-                          body={event.body_text ? <span className="tl-preview">{event.body_text}</span> : undefined}
+                          body={<EventBody event={event} />}
                           chips={<ProvenanceFacts event={event} />}
                           side={
                             <span className="tl-when">
@@ -220,6 +221,9 @@ const EVENT_ICONS: Record<string, string> = {
   admission_note: "admission",
   round_note: "round",
   progress_note: "progress",
+  nurse_progress_note: "progress",
+  progress_report: "progress",
+  discharge_report: "discharge",
   nursing_summary: "round",
   nursing_chart: "round",
   nursing_note: "round",
@@ -237,6 +241,7 @@ const EVENT_ICONS: Record<string, string> = {
   allergy_record: "alert",
   document_request: "request",
   document_review: "scan",
+  registration: "user_check",
 };
 
 function eventIcon(type: string) {

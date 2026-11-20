@@ -1,0 +1,329 @@
+{
+  "job_id": "s37-none",
+  "drugs": [
+    {
+      "name": "calcium",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Postcorrection calcium, vitamin D.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm (national drug list, not this pipeline's own)",
+      "start_char": 411,
+      "end_char": 418,
+      "span_status": "exact"
+    },
+    {
+      "name": "vitamin",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Postcorrection calcium, vitamin D.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm (national drug list, not this pipeline's own)",
+      "start_char": 420,
+      "end_char": 427,
+      "span_status": "exact"
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "headache",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "A1-year-old female with three months neck pain to right shoulder, headache, finger tingling, and morning stiffness.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "A1-year-old female with three months neck pain to right shoulder, headache, finger tingling, and morning stiffness.",
+      "negated": false,
+      "start_char": 38,
+      "end_char": 42,
+      "span_status": "exact"
+    },
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies injury, fever, and weakness.",
+      "negated": false,
+      "start_char": 127,
+      "end_char": 132,
+      "span_status": "exact"
+    },
+    {
+      "text": "headache",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Cervical spondylosis with tension headache.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "headache",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "worsening num- numbness or severe headache.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Blood pressure 132/84",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 132/84 mmHg.",
+      "start_char": 229,
+      "end_char": 250,
+      "span_status": "exact"
+    },
+    {
+      "text": "Pulse 80",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Pulse 80 beats per minute.",
+      "start_char": 257,
+      "end_char": 265,
+      "span_status": "exact"
+    },
+    {
+      "text": "Temperature 98.2 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 98.2 degrees Fahrenheit.",
+      "start_char": 284,
+      "end_char": 319,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "Follow up in two weeks",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Follow up in two weeks",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "calcium",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: calcium; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Postcorrection calcium, vitamin D."
+      },
+      {
+        "kind": "drug",
+        "name": "vitamin",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: vitamin; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Postcorrection calcium, vitamin D."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 132/84",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 132/84 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "Pulse 80",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Pulse 80 beats per minute."
+      },
+      {
+        "kind": "vital",
+        "text": "Temperature 98.2 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 98.2 degrees Fahrenheit."
+      },
+      {
+        "kind": "symptom",
+        "text": "headache",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "A1-year-old female with three months neck pain to right shoulder, headache, finger tingling, and morning stiffness."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "A1-year-old female with three months neck pain to right shoulder, headache, finger tingling, and morning stiffness."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies injury, fever, and weakness."
+      },
+      {
+        "kind": "symptom",
+        "text": "headache",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Cervical spondylosis with tension headache."
+      },
+      {
+        "kind": "symptom",
+        "text": "headache",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "worsening num- numbness or severe headache."
+      },
+      {
+        "kind": "followup",
+        "text": "Follow up in two weeks",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Follow up in two weeks"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "3",
+          "80",
+          "84",
+          "98.2",
+          "132"
+        ],
+        "count": 7
+      },
+      "total": 11,
+      "drug_needs_review": 2,
+      "vital_verified": 3,
+      "symptom_verified": 5,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

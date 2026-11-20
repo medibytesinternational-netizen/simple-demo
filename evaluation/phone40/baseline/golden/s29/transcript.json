@@ -1,0 +1,485 @@
+{
+  "job_id": "s29-none",
+  "text": "42-year-old male with one day severe abdominal pain radiating to back after alcohol plus three vomits. Denies fever and chest pain. No known drug allergy. Alcohol use. High triglycerides. Acute pancreatis. Temperature 100 degrees Fahrenheit. Pulse 106 beats per minute. Blood pressure 120/80 mmHg. Saturation 97%. Tender epigastrium. Amylase, lipase, ultrasound. Nil by mouth, IV fluids, pantoprazole 40 mg IV, paracetamale anagnesia, analgesia, no alcohol diet. Mil 24 hours then clear fluids to low-fatsft diet. General, complete abstinence. Return for worse pain, vomiting, or breathlessness. Follow upp in two days.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "42-year-old male with one day severe abdominal pain radiating to back after alcohol plus three vomits. Denies fever and chest pain. No known drug allergy. Alcohol use. High triglycerides. Acute pancreatis. Temperature 100 degrees Fahrenheit. Pulse 106 beats per minute. Blood pressure 120/80 mmHg. Saturation 97%. Tender epigastrium. Amylase, lipase, ultrasound. Nil by mouth, IV fluids, pantoprazole 40 mg IV, paracetamale anagnesia, analgesia, no alcohol diet. Mil 24 hours then clear fluids to low-fatsft diet. General, complete abstinence. Return for worse pain, vomiting, or breathlessness. Follow upp in two days.",
+      "start": 0.0,
+      "end": 63.15,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "42-year-old",
+          "s": 0.0,
+          "e": 0.7
+        },
+        {
+          "w": "male",
+          "s": 0.7,
+          "e": 1.4
+        },
+        {
+          "w": "with",
+          "s": 1.4,
+          "e": 2.1
+        },
+        {
+          "w": "one",
+          "s": 2.1,
+          "e": 2.81
+        },
+        {
+          "w": "day",
+          "s": 2.81,
+          "e": 3.51
+        },
+        {
+          "w": "severe",
+          "s": 3.51,
+          "e": 4.21
+        },
+        {
+          "w": "abdominal",
+          "s": 4.21,
+          "e": 4.91
+        },
+        {
+          "w": "pain",
+          "s": 4.91,
+          "e": 5.61
+        },
+        {
+          "w": "radiating",
+          "s": 5.61,
+          "e": 6.31
+        },
+        {
+          "w": "to",
+          "s": 6.31,
+          "e": 7.02
+        },
+        {
+          "w": "back",
+          "s": 7.02,
+          "e": 7.72
+        },
+        {
+          "w": "after",
+          "s": 7.72,
+          "e": 8.42
+        },
+        {
+          "w": "alcohol",
+          "s": 8.42,
+          "e": 9.12
+        },
+        {
+          "w": "plus",
+          "s": 9.12,
+          "e": 9.82
+        },
+        {
+          "w": "three",
+          "s": 9.82,
+          "e": 10.52
+        },
+        {
+          "w": "vomits.",
+          "s": 10.52,
+          "e": 11.23
+        },
+        {
+          "w": "Denies",
+          "s": 11.23,
+          "e": 11.93
+        },
+        {
+          "w": "fever",
+          "s": 11.93,
+          "e": 12.63
+        },
+        {
+          "w": "and",
+          "s": 12.63,
+          "e": 13.33
+        },
+        {
+          "w": "chest",
+          "s": 13.33,
+          "e": 14.03
+        },
+        {
+          "w": "pain.",
+          "s": 14.03,
+          "e": 14.73
+        },
+        {
+          "w": "No",
+          "s": 14.73,
+          "e": 15.44
+        },
+        {
+          "w": "known",
+          "s": 15.44,
+          "e": 16.14
+        },
+        {
+          "w": "drug",
+          "s": 16.14,
+          "e": 16.84
+        },
+        {
+          "w": "allergy.",
+          "s": 16.84,
+          "e": 17.54
+        },
+        {
+          "w": "Alcohol",
+          "s": 17.54,
+          "e": 18.24
+        },
+        {
+          "w": "use.",
+          "s": 18.24,
+          "e": 18.94
+        },
+        {
+          "w": "High",
+          "s": 18.94,
+          "e": 19.65
+        },
+        {
+          "w": "triglycerides.",
+          "s": 19.65,
+          "e": 20.35
+        },
+        {
+          "w": "Acute",
+          "s": 20.35,
+          "e": 21.05
+        },
+        {
+          "w": "pancreatis.",
+          "s": 21.05,
+          "e": 21.75
+        },
+        {
+          "w": "Temperature",
+          "s": 21.75,
+          "e": 22.45
+        },
+        {
+          "w": "100",
+          "s": 22.45,
+          "e": 23.15
+        },
+        {
+          "w": "degrees",
+          "s": 23.15,
+          "e": 23.86
+        },
+        {
+          "w": "Fahrenheit.",
+          "s": 23.86,
+          "e": 24.56
+        },
+        {
+          "w": "Pulse",
+          "s": 24.56,
+          "e": 25.26
+        },
+        {
+          "w": "106",
+          "s": 25.26,
+          "e": 25.96
+        },
+        {
+          "w": "beats",
+          "s": 25.96,
+          "e": 26.66
+        },
+        {
+          "w": "per",
+          "s": 26.66,
+          "e": 27.36
+        },
+        {
+          "w": "minute.",
+          "s": 27.36,
+          "e": 28.07
+        },
+        {
+          "w": "Blood",
+          "s": 28.07,
+          "e": 28.77
+        },
+        {
+          "w": "pressure",
+          "s": 28.77,
+          "e": 29.47
+        },
+        {
+          "w": "120/80",
+          "s": 29.47,
+          "e": 30.17
+        },
+        {
+          "w": "mmHg.",
+          "s": 30.17,
+          "e": 30.87
+        },
+        {
+          "w": "Saturation",
+          "s": 30.87,
+          "e": 31.57
+        },
+        {
+          "w": "97%.",
+          "s": 31.57,
+          "e": 32.27
+        },
+        {
+          "w": "Tender",
+          "s": 32.27,
+          "e": 32.98
+        },
+        {
+          "w": "epigastrium.",
+          "s": 32.98,
+          "e": 33.68
+        },
+        {
+          "w": "Amylase,",
+          "s": 33.68,
+          "e": 34.38
+        },
+        {
+          "w": "lipase,",
+          "s": 34.38,
+          "e": 35.08
+        },
+        {
+          "w": "ultrasound.",
+          "s": 35.08,
+          "e": 35.78
+        },
+        {
+          "w": "Nil",
+          "s": 35.78,
+          "e": 36.48
+        },
+        {
+          "w": "by",
+          "s": 36.48,
+          "e": 37.19
+        },
+        {
+          "w": "mouth,",
+          "s": 37.19,
+          "e": 37.89
+        },
+        {
+          "w": "IV",
+          "s": 37.89,
+          "e": 38.59
+        },
+        {
+          "w": "fluids,",
+          "s": 38.59,
+          "e": 39.29
+        },
+        {
+          "w": "pantoprazole",
+          "s": 39.29,
+          "e": 39.99
+        },
+        {
+          "w": "40",
+          "s": 39.99,
+          "e": 40.69
+        },
+        {
+          "w": "mg",
+          "s": 40.69,
+          "e": 41.4
+        },
+        {
+          "w": "IV,",
+          "s": 41.4,
+          "e": 42.1
+        },
+        {
+          "w": "paracetamale",
+          "s": 42.1,
+          "e": 42.8
+        },
+        {
+          "w": "anagnesia,",
+          "s": 42.8,
+          "e": 43.5
+        },
+        {
+          "w": "analgesia,",
+          "s": 43.5,
+          "e": 44.2
+        },
+        {
+          "w": "no",
+          "s": 44.2,
+          "e": 44.9
+        },
+        {
+          "w": "alcohol",
+          "s": 44.9,
+          "e": 45.61
+        },
+        {
+          "w": "diet.",
+          "s": 45.61,
+          "e": 46.31
+        },
+        {
+          "w": "Mil",
+          "s": 46.31,
+          "e": 47.01
+        },
+        {
+          "w": "24",
+          "s": 47.01,
+          "e": 47.71
+        },
+        {
+          "w": "hours",
+          "s": 47.71,
+          "e": 48.41
+        },
+        {
+          "w": "then",
+          "s": 48.41,
+          "e": 49.11
+        },
+        {
+          "w": "clear",
+          "s": 49.11,
+          "e": 49.82
+        },
+        {
+          "w": "fluids",
+          "s": 49.82,
+          "e": 50.52
+        },
+        {
+          "w": "to",
+          "s": 50.52,
+          "e": 51.22
+        },
+        {
+          "w": "low-fatsft",
+          "s": 51.22,
+          "e": 51.92
+        },
+        {
+          "w": "diet.",
+          "s": 51.92,
+          "e": 52.62
+        },
+        {
+          "w": "General,",
+          "s": 52.62,
+          "e": 53.32
+        },
+        {
+          "w": "complete",
+          "s": 53.32,
+          "e": 54.03
+        },
+        {
+          "w": "abstinence.",
+          "s": 54.03,
+          "e": 54.73
+        },
+        {
+          "w": "Return",
+          "s": 54.73,
+          "e": 55.43
+        },
+        {
+          "w": "for",
+          "s": 55.43,
+          "e": 56.13
+        },
+        {
+          "w": "worse",
+          "s": 56.13,
+          "e": 56.83
+        },
+        {
+          "w": "pain,",
+          "s": 56.83,
+          "e": 57.53
+        },
+        {
+          "w": "vomiting,",
+          "s": 57.53,
+          "e": 58.24
+        },
+        {
+          "w": "or",
+          "s": 58.24,
+          "e": 58.94
+        },
+        {
+          "w": "breathlessness.",
+          "s": 58.94,
+          "e": 59.64
+        },
+        {
+          "w": "Follow",
+          "s": 59.64,
+          "e": 60.34
+        },
+        {
+          "w": "upp",
+          "s": 60.34,
+          "e": 61.04
+        },
+        {
+          "w": "in",
+          "s": 61.04,
+          "e": 61.74
+        },
+        {
+          "w": "two",
+          "s": 61.74,
+          "e": 62.45
+        },
+        {
+          "w": "days.",
+          "s": 62.45,
+          "e": 63.15
+        }
+      ]
+    }
+  ],
+  "normalized_en": "42-year-old male with 1 day severe abdominal pain radiating to back after alcohol plus 3 vomits. Denies fever and chest pain. No known drug allergy. Alcohol use. High triglycerides. Acute pancreatis. Temperature 100 degrees Fahrenheit. Pulse 106 beats per minute. Blood pressure 120/80 mmHg. Saturation 97%. Tender epigastrium. Amylase, lipase, ultrasound. Nil by mouth, IV fluids, pantoprazole 40 mg IV, paracetamale anagnesia, analgesia, no alcohol diet. Mil 24 hours then clear fluids to low-fatsft diet. General, complete abstinence. Return for worse pain, vomiting, or breathlessness. Follow upp in 2 days.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s29-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

@@ -1,0 +1,629 @@
+{
+  "job_id": "s19-none",
+  "drugs": [
+    {
+      "name": "tramadol",
+      "dose": 400.0,
+      "unit": "mg",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Ferrous sulfate with folic acid daily after food plus abazol 400 mg single dose.",
+      "negated": false,
+      "note": "fuzzy abazol->salbutamol (0.62); salbutamol ruled out on dose; pack prefers tramadol | ambiguous: matcher tie: tramadol, pantoprazole",
+      "raw_token": "abazol",
+      "candidates": [
+        {
+          "name": "tramadol",
+          "score": 0.571,
+          "matched_alias": "tramadol",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "tramadol",
+            "substances": [
+              "tramadol"
+            ],
+            "units": [
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              1.0,
+              400.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "solution",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 18.75
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 25.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 37.5
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 50.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 50.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "pantoprazole",
+          "score": 0.556,
+          "matched_alias": "pantoprazole",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "pantoprazole",
+            "substances": [
+              "pantoprazole"
+            ],
+            "units": [
+              "mg"
+            ],
+            "mass_mg": [
+              20.0,
+              40.0
+            ],
+            "forms": [
+              "capsule",
+              "granules",
+              "injection",
+              "tablet"
+            ],
+            "strengths": [
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 20.0
+              },
+              {
+                "form": "capsule",
+                "unit": "mg",
+                "value": 40.0
+              },
+              {
+                "form": "granules",
+                "unit": "mg",
+                "value": 40.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 40.0
+              },
+              {
+                "form": "injection",
+                "unit": "mg",
+                "value": 40.0
+              }
+            ]
+          }
+        },
+        {
+          "name": "salbutamol",
+          "score": 0.625,
+          "matched_alias": "salbutamol",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "albuterol",
+            "substances": [
+              "albuterol"
+            ],
+            "units": [
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.05,
+              8.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "powder",
+              "solution",
+              "spray",
+              "suspension"
+            ],
+            "strengths": [
+              {
+                "form": "spray",
+                "unit": "mcg",
+                "value": 50.0
+              },
+              {
+                "form": "powder",
+                "unit": "mcg",
+                "value": 95.0
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 100.0
+              },
+              {
+                "form": "powder",
+                "unit": "mcg",
+                "value": 100.0
+              },
+              {
+                "form": "injection",
+                "unit": "mcg",
+                "value": 100.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mcg",
+                "value": 100.0
+              }
+            ]
+          },
+          "dose_implausible": true
+        }
+      ],
+      "matcher_pick": "salbutamol",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "Ferrous sulfate with folic acid daily after food plus abazol 400 mg single dose.",
+        "final_output_sentence": "Ferrous sulfate with folic acid daily after food plus abazol 400 mg single dose.",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.0,
+        "reason": "matcher tie: tramadol, pantoprazole",
+        "engine": "llm:gpt-4.1"
+      }
+    },
+    {
+      "name": "ferrous",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Ferrous sulfate with folic acid daily after food plus abazol 400 mg single dose.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm (national drug list, not this pipeline's own)",
+      "start_char": 326,
+      "end_char": 333,
+      "span_status": "exact"
+    },
+    {
+      "name": "folic acid",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Ferrous sulfate with folic acid daily after food plus abazol 400 mg single dose.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm (national drug list, not this pipeline's own)",
+      "start_char": 347,
+      "end_char": 357,
+      "span_status": "exact"
+    },
+    {
+      "name": "paracetamol",
+      "dose": 400.0,
+      "unit": "mg",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "28-year-old female with two months tiredness, pallor, star breathlessness, hair fall and a clay craving with heavy periods, a denies piles bleeding and weight loss, no known drug allergy, past diagnosis, iron deficiency, now moderate anemia, examination, pallor, pulse, 96 beats per minute, blood pressure 104 over 66 millimeters of mercury, saturation 99% investigations, blood count and ferritin, plant, ferrous sulphate with folic acid daily after foot plus album disol 400 milligrams single dose, diet, leafy vegetables, jaggery, ground nuts, dates, lemon, no tea near tablets, general, continue three months, repeat hemoglobin one month, gynecology review for periods.",
+      "negated": true,
+      "note": "fuzzy disol->paracetamol (0.67) | heard only by small-int8, not by the primary decoder | ambiguous: neither candidate matches the clinical context of iron deficiency anemia treatment",
+      "raw_token": "disol",
+      "candidates": [
+        {
+          "name": "paracetamol",
+          "score": 0.667,
+          "matched_alias": "dolo",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "acetaminophen",
+            "substances": [
+              "acetaminophen"
+            ],
+            "units": [
+              "g",
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.3,
+              1000.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "solution",
+              "suppository",
+              "suspension",
+              "syrup"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mcg",
+                "value": 300.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 2.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 2.5
+              }
+            ]
+          }
+        },
+        {
+          "name": "prednisolone",
+          "score": 0.588,
+          "matched_alias": "prednisolone",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "prednisolone",
+            "substances": [
+              "prednisolone"
+            ],
+            "units": [
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.01,
+              100.0
+            ],
+            "forms": [
+              "drops",
+              "injection",
+              "ointment",
+              "solution",
+              "suppository",
+              "suspension"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 10.0
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 30.0
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 100.0
+              },
+              {
+                "form": "solution",
+                "unit": "mcg",
+                "value": 300.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mg",
+                "value": 1.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 1.0
+              }
+            ]
+          }
+        }
+      ],
+      "matcher_pick": "paracetamol",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "second_pass": "small-int8",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "28-year-old female with two months tiredness, pallor, star breathlessness, hair fall and a clay craving with heavy periods, a denies piles bleeding and weight loss, no known drug allergy, past diagnosis, iron deficiency, now moderate anemia, examination, pallor, pulse, 96 beats per minute, blood pressure 104 over 66 millimeters of mercury, saturation 99% investigations, blood count and ferritin, plant, ferrous sulphate with folic acid daily after foot plus album disol 400 milligrams single dose, diet, leafy vegetables, jaggery, ground nuts, dates, lemon, no tea near tablets, general, continue three months, repeat hemoglobin one month, gynecology review for periods.",
+        "final_output_sentence": "28-year-old female with two months tiredness, pallor, star breathlessness, hair fall and a clay craving with heavy periods, a denies piles bleeding and weight loss, no known drug allergy, past diagnosis, iron deficiency, now moderate anemia, examination, pallor, pulse, 96 beats per minute, blood pressure 104 over 66 millimeters of mercury, saturation 99% investigations, blood count and ferritin, plant, ferrous sulphate with folic acid daily after foot plus album disol 400 milligrams single dose, diet, leafy vegetables, jaggery, ground nuts, dates, lemon, no tea near tablets, general, continue three months, repeat hemoglobin one month, gynecology review for periods.",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.0,
+        "reason": "neither candidate matches the clinical context of iron deficiency anemia treatment",
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "breathlessness",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "28-year-old female with two months tiredness, pallor, stare breathlessness, harful and clake craving with heavy periods.",
+      "negated": false,
+      "start_char": 58,
+      "end_char": 72,
+      "span_status": "exact"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Pulse 96",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Pulse 96 beats per minute.",
+      "start_char": 230,
+      "end_char": 238,
+      "span_status": "exact"
+    },
+    {
+      "text": "Blood pressure 104/66",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 104/66 mmHg.",
+      "start_char": 257,
+      "end_char": 278,
+      "span_status": "exact"
+    },
+    {
+      "text": "99%",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Sturation 99%.",
+      "start_char": 295,
+      "end_char": 298,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {},
+  "drug_second_pass": {
+    "model": "small-int8",
+    "added": [
+      "paracetamol"
+    ]
+  },
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 2.346,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "tramadol",
+        "dose": 400.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg/ml; listed strengths: 1 mg solution, 18.75 mg tablet, 25 mg tablet, 37.5 mg tablet; 400 mg is plausible for this drug]",
+        "confidence": 0.7,
+        "source_sentence": "Ferrous sulfate with folic acid daily after food plus abazol 400 mg single dose."
+      },
+      {
+        "kind": "drug",
+        "name": "ferrous",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: ferrous; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Ferrous sulfate with folic acid daily after food plus abazol 400 mg single dose."
+      },
+      {
+        "kind": "drug",
+        "name": "folic acid",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: folic acid; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Ferrous sulfate with folic acid daily after food plus abazol 400 mg single dose."
+      },
+      {
+        "kind": "drug",
+        "name": "paracetamol",
+        "dose": 400.0,
+        "unit": "mg",
+        "negated": true,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:needs_review",
+          "polarity:negated-preserved"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mcg/mg/ml; listed strengths: 1 g solution, 1 g tablet, 300 mcg suspension, 1 mg solution; 400 mg is plausible for this drug]; source_sentence not verbatim in transcript",
+        "confidence": 0.7,
+        "source_sentence": "28-year-old female with two months tiredness, pallor, star breathlessness, hair fall and a clay craving with heavy periods, a denies piles bleeding and weight loss, no known drug allergy, past diagnosis, iron deficiency, now moderate anemia, examination, pallor, pulse, 96 beats per minute, blood pressure 104 over 66 millimeters of mercury, saturation 99% investigations, blood count and ferritin, plant, ferrous sulphate with folic acid daily after foot plus album disol 400 milligrams single dose, diet, leafy vegetables, jaggery, ground nuts, dates, lemon, no tea near tablets, general, continue three months, repeat hemoglobin one month, gynecology review for periods."
+      },
+      {
+        "kind": "vital",
+        "text": "Pulse 96",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Pulse 96 beats per minute."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 104/66",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 104/66 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "99%",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Sturation 99%."
+      },
+      {
+        "kind": "symptom",
+        "text": "breathlessness",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "28-year-old female with two months tiredness, pallor, stare breathlessness, harful and clake craving with heavy periods."
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "3",
+          "11",
+          "28",
+          "66",
+          "96",
+          "99",
+          "104",
+          "400"
+        ],
+        "count": 10
+      },
+      "total": 8,
+      "drug_verified": 1,
+      "drug_needs_review": 3,
+      "vital_verified": 3,
+      "symptom_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

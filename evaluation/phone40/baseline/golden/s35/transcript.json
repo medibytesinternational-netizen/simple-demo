@@ -1,0 +1,525 @@
+{
+  "job_id": "s35-none",
+  "text": "36-year-old male with three months heartburn, sore bleaching, postmel chest discomfort and night regurgitation, worse with spicy food and late nights. Denies vomiting, blood, and weight loss. No known drug allergy. No past major illness. Reflux disease. Blood pressure 124/80 mmHg, pulse 82. Weight 74 kilo. System system system is normal. Pantoprazole 40 mg daily before breakfast four weeks day- weight loss. Small frequent meals. No spicy oildy or late heavy meals. Noy, coffee-cola, empty stomach. Head end raised. General, no late eating. Stop smoking, return for blood vomit, black stools, or dysphagia. Follow up in four weeks.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "36-year-old male with three months heartburn, sore bleaching, postmel chest discomfort and night regurgitation, worse with spicy food and late nights. Denies vomiting, blood, and weight loss. No known drug allergy. No past major illness. Reflux disease. Blood pressure 124/80 mmHg, pulse 82. Weight 74 kilo. System system system is normal. Pantoprazole 40 mg daily before breakfast four weeks day- weight loss. Small frequent meals. No spicy oildy or late heavy meals. Noy, coffee-cola, empty stomach. Head end raised. General, no late eating. Stop smoking, return for blood vomit, black stools, or dysphagia. Follow up in four weeks.",
+      "start": 0.0,
+      "end": 61.61,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "36-year-old",
+          "s": 0.0,
+          "e": 0.63
+        },
+        {
+          "w": "male",
+          "s": 0.63,
+          "e": 1.26
+        },
+        {
+          "w": "with",
+          "s": 1.26,
+          "e": 1.89
+        },
+        {
+          "w": "three",
+          "s": 1.89,
+          "e": 2.51
+        },
+        {
+          "w": "months",
+          "s": 2.51,
+          "e": 3.14
+        },
+        {
+          "w": "heartburn,",
+          "s": 3.14,
+          "e": 3.77
+        },
+        {
+          "w": "sore",
+          "s": 3.77,
+          "e": 4.4
+        },
+        {
+          "w": "bleaching,",
+          "s": 4.4,
+          "e": 5.03
+        },
+        {
+          "w": "postmel",
+          "s": 5.03,
+          "e": 5.66
+        },
+        {
+          "w": "chest",
+          "s": 5.66,
+          "e": 6.29
+        },
+        {
+          "w": "discomfort",
+          "s": 6.29,
+          "e": 6.92
+        },
+        {
+          "w": "and",
+          "s": 6.92,
+          "e": 7.54
+        },
+        {
+          "w": "night",
+          "s": 7.54,
+          "e": 8.17
+        },
+        {
+          "w": "regurgitation,",
+          "s": 8.17,
+          "e": 8.8
+        },
+        {
+          "w": "worse",
+          "s": 8.8,
+          "e": 9.43
+        },
+        {
+          "w": "with",
+          "s": 9.43,
+          "e": 10.06
+        },
+        {
+          "w": "spicy",
+          "s": 10.06,
+          "e": 10.69
+        },
+        {
+          "w": "food",
+          "s": 10.69,
+          "e": 11.32
+        },
+        {
+          "w": "and",
+          "s": 11.32,
+          "e": 11.94
+        },
+        {
+          "w": "late",
+          "s": 11.94,
+          "e": 12.57
+        },
+        {
+          "w": "nights.",
+          "s": 12.57,
+          "e": 13.2
+        },
+        {
+          "w": "Denies",
+          "s": 13.2,
+          "e": 13.83
+        },
+        {
+          "w": "vomiting,",
+          "s": 13.83,
+          "e": 14.46
+        },
+        {
+          "w": "blood,",
+          "s": 14.46,
+          "e": 15.09
+        },
+        {
+          "w": "and",
+          "s": 15.09,
+          "e": 15.72
+        },
+        {
+          "w": "weight",
+          "s": 15.72,
+          "e": 16.35
+        },
+        {
+          "w": "loss.",
+          "s": 16.35,
+          "e": 16.97
+        },
+        {
+          "w": "No",
+          "s": 16.97,
+          "e": 17.6
+        },
+        {
+          "w": "known",
+          "s": 17.6,
+          "e": 18.23
+        },
+        {
+          "w": "drug",
+          "s": 18.23,
+          "e": 18.86
+        },
+        {
+          "w": "allergy.",
+          "s": 18.86,
+          "e": 19.49
+        },
+        {
+          "w": "No",
+          "s": 19.49,
+          "e": 20.12
+        },
+        {
+          "w": "past",
+          "s": 20.12,
+          "e": 20.75
+        },
+        {
+          "w": "major",
+          "s": 20.75,
+          "e": 21.38
+        },
+        {
+          "w": "illness.",
+          "s": 21.38,
+          "e": 22.0
+        },
+        {
+          "w": "Reflux",
+          "s": 22.0,
+          "e": 22.63
+        },
+        {
+          "w": "disease.",
+          "s": 22.63,
+          "e": 23.26
+        },
+        {
+          "w": "Blood",
+          "s": 23.26,
+          "e": 23.89
+        },
+        {
+          "w": "pressure",
+          "s": 23.89,
+          "e": 24.52
+        },
+        {
+          "w": "124/80",
+          "s": 24.52,
+          "e": 25.15
+        },
+        {
+          "w": "mmHg,",
+          "s": 25.15,
+          "e": 25.78
+        },
+        {
+          "w": "pulse",
+          "s": 25.78,
+          "e": 26.4
+        },
+        {
+          "w": "82.",
+          "s": 26.4,
+          "e": 27.03
+        },
+        {
+          "w": "Weight",
+          "s": 27.03,
+          "e": 27.66
+        },
+        {
+          "w": "74",
+          "s": 27.66,
+          "e": 28.29
+        },
+        {
+          "w": "kilo.",
+          "s": 28.29,
+          "e": 28.92
+        },
+        {
+          "w": "System",
+          "s": 28.92,
+          "e": 29.55
+        },
+        {
+          "w": "system",
+          "s": 29.55,
+          "e": 30.18
+        },
+        {
+          "w": "system",
+          "s": 30.18,
+          "e": 30.81
+        },
+        {
+          "w": "is",
+          "s": 30.81,
+          "e": 31.43
+        },
+        {
+          "w": "normal.",
+          "s": 31.43,
+          "e": 32.06
+        },
+        {
+          "w": "Pantoprazole",
+          "s": 32.06,
+          "e": 32.69
+        },
+        {
+          "w": "40",
+          "s": 32.69,
+          "e": 33.32
+        },
+        {
+          "w": "mg",
+          "s": 33.32,
+          "e": 33.95
+        },
+        {
+          "w": "daily",
+          "s": 33.95,
+          "e": 34.58
+        },
+        {
+          "w": "before",
+          "s": 34.58,
+          "e": 35.21
+        },
+        {
+          "w": "breakfast",
+          "s": 35.21,
+          "e": 35.83
+        },
+        {
+          "w": "four",
+          "s": 35.83,
+          "e": 36.46
+        },
+        {
+          "w": "weeks",
+          "s": 36.46,
+          "e": 37.09
+        },
+        {
+          "w": "day-",
+          "s": 37.09,
+          "e": 37.72
+        },
+        {
+          "w": "weight",
+          "s": 37.72,
+          "e": 38.35
+        },
+        {
+          "w": "loss.",
+          "s": 38.35,
+          "e": 38.98
+        },
+        {
+          "w": "Small",
+          "s": 38.98,
+          "e": 39.61
+        },
+        {
+          "w": "frequent",
+          "s": 39.61,
+          "e": 40.24
+        },
+        {
+          "w": "meals.",
+          "s": 40.24,
+          "e": 40.86
+        },
+        {
+          "w": "No",
+          "s": 40.86,
+          "e": 41.49
+        },
+        {
+          "w": "spicy",
+          "s": 41.49,
+          "e": 42.12
+        },
+        {
+          "w": "oildy",
+          "s": 42.12,
+          "e": 42.75
+        },
+        {
+          "w": "or",
+          "s": 42.75,
+          "e": 43.38
+        },
+        {
+          "w": "late",
+          "s": 43.38,
+          "e": 44.01
+        },
+        {
+          "w": "heavy",
+          "s": 44.01,
+          "e": 44.64
+        },
+        {
+          "w": "meals.",
+          "s": 44.64,
+          "e": 45.26
+        },
+        {
+          "w": "Noy,",
+          "s": 45.26,
+          "e": 45.89
+        },
+        {
+          "w": "coffee-cola,",
+          "s": 45.89,
+          "e": 46.52
+        },
+        {
+          "w": "empty",
+          "s": 46.52,
+          "e": 47.15
+        },
+        {
+          "w": "stomach.",
+          "s": 47.15,
+          "e": 47.78
+        },
+        {
+          "w": "Head",
+          "s": 47.78,
+          "e": 48.41
+        },
+        {
+          "w": "end",
+          "s": 48.41,
+          "e": 49.04
+        },
+        {
+          "w": "raised.",
+          "s": 49.04,
+          "e": 49.67
+        },
+        {
+          "w": "General,",
+          "s": 49.67,
+          "e": 50.29
+        },
+        {
+          "w": "no",
+          "s": 50.29,
+          "e": 50.92
+        },
+        {
+          "w": "late",
+          "s": 50.92,
+          "e": 51.55
+        },
+        {
+          "w": "eating.",
+          "s": 51.55,
+          "e": 52.18
+        },
+        {
+          "w": "Stop",
+          "s": 52.18,
+          "e": 52.81
+        },
+        {
+          "w": "smoking,",
+          "s": 52.81,
+          "e": 53.44
+        },
+        {
+          "w": "return",
+          "s": 53.44,
+          "e": 54.07
+        },
+        {
+          "w": "for",
+          "s": 54.07,
+          "e": 54.7
+        },
+        {
+          "w": "blood",
+          "s": 54.7,
+          "e": 55.32
+        },
+        {
+          "w": "vomit,",
+          "s": 55.32,
+          "e": 55.95
+        },
+        {
+          "w": "black",
+          "s": 55.95,
+          "e": 56.58
+        },
+        {
+          "w": "stools,",
+          "s": 56.58,
+          "e": 57.21
+        },
+        {
+          "w": "or",
+          "s": 57.21,
+          "e": 57.84
+        },
+        {
+          "w": "dysphagia.",
+          "s": 57.84,
+          "e": 58.47
+        },
+        {
+          "w": "Follow",
+          "s": 58.47,
+          "e": 59.1
+        },
+        {
+          "w": "up",
+          "s": 59.1,
+          "e": 59.72
+        },
+        {
+          "w": "in",
+          "s": 59.72,
+          "e": 60.35
+        },
+        {
+          "w": "four",
+          "s": 60.35,
+          "e": 60.98
+        },
+        {
+          "w": "weeks.",
+          "s": 60.98,
+          "e": 61.61
+        }
+      ]
+    }
+  ],
+  "normalized_en": "36-year-old male with 3 months heartburn, sore bleaching, postmel chest discomfort and night regurgitation, worse with spicy food and late nights. Denies vomiting, blood, and weight loss. No known drug allergy. No past major illness. Reflux disease. Blood pressure 124/80 mmHg, pulse 82. Weight 74 kilo. System system system is normal. Pantoprazole 40 mg daily before breakfast 4 weeks day- weight loss. Small frequent meals. No spicy oildy or late heavy meals. Noy, coffee-cola, empty stomach. Head end raised. General, no late eating. Stop smoking, return for blood vomit, black stools, or dysphagia. Follow up in 4 weeks.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s35-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

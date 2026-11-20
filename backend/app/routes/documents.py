@@ -21,6 +21,7 @@ from ..models import (
     Document,
     TimelineEvent,
 )
+from ..services.note_document import GENERATED_KIND
 from ..services.ocr import DOC_TYPES, new_document, run_ocr, sample_svg
 from ..services.rules import evaluate_rules
 from ..services.timeline import (
@@ -88,12 +89,15 @@ def _lab_flag(value: Any, reference: str) -> str:
 # Documents
 # --------------------------------------------------------------------------
 @router.get("/documents")
-def documents_list(encounter_id: str | None = None, db: Session = Depends(get_db)):
+def documents_list(encounter_id: str | None = None, include_generated: bool = False, db: Session = Depends(get_db)):
     stmt = (
         select(Document)
         .where(Document.patient_id == current_patient_id())
         .order_by(Document.uploaded_at.desc())
     )
+    # Signed notes stored by the app are records, not inbound reports to review.
+    if not include_generated:
+        stmt = stmt.where(Document.image_kind != GENERATED_KIND)
     if encounter_id:
         stmt = stmt.where(Document.encounter_id == encounter_id)
     rows = list(db.scalars(stmt))
@@ -193,6 +197,12 @@ def document_image(document_id: str, db: Session = Depends(get_db)):
     if not path.exists():
         raise HTTPException(404, "Stored image missing")
     return FileResponse(path, media_type=document.mime or "application/octet-stream")
+
+
+@router.get("/documents/{document_id}/file")
+def document_file(document_id: str, db: Session = Depends(get_db)):
+    """The stored file (uploaded scan or signed note), for viewing and printing."""
+    return document_image(document_id, db)
 
 
 @router.post("/documents/{document_id}/confirm-field", dependencies=[Depends(require("confirm_document"))])

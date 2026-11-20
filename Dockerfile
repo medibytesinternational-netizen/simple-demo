@@ -8,7 +8,9 @@ RUN npm run build
 FROM python:3.13-slim
 WORKDIR /app/backend
 COPY backend/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements-medibytes.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt -r /app/requirements-medibytes.txt
+COPY medibytes/ /app/medibytes/
 COPY backend/ ./
 COPY --from=frontend /build/frontend/dist /app/frontend/dist
 ENV PYTHONUNBUFFERED=1

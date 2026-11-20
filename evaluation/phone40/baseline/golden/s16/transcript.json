@@ -1,0 +1,520 @@
+{
+  "job_id": "s16-none",
+  "text": "62-year-old male with two weeks exertional and night breathlessness, leg swelling and low urine. Denies chest pain and fever. No known drug allergy. Hypertension and old infarct. Congestive failure. Blood pressure 140/90 mmHg, pulse 96 beats per minute, respiratory rate 22, saturation 94% on room air. Ankle edema, basal crackles. Chest x-ray, ECG, echo. Furosemide 40 mg morning, atorvastatin 10 mg night. Daily weight chart. DiET Salt under 2 g. Fluids 112 L. No picks. Gentle, daily weight urine check, leg elevation, emergency for 2 kilog gain, severe breathlessness or chest pain. followol up in one week.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "62-year-old male with two weeks exertional and night breathlessness, leg swelling and low urine. Denies chest pain and fever. No known drug allergy. Hypertension and old infarct. Congestive failure. Blood pressure 140/90 mmHg, pulse 96 beats per minute, respiratory rate 22, saturation 94% on room air. Ankle edema, basal crackles. Chest x-ray, ECG, echo. Furosemide 40 mg morning, atorvastatin 10 mg night. Daily weight chart. DiET Salt under 2 g. Fluids 112 L. No picks. Gentle, daily weight urine check, leg elevation, emergency for 2 kilog gain, severe breathlessness or chest pain. followol up in one week.",
+      "start": 0.0,
+      "end": 53.25,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "62-year-old",
+          "s": 0.0,
+          "e": 0.55
+        },
+        {
+          "w": "male",
+          "s": 0.55,
+          "e": 1.1
+        },
+        {
+          "w": "with",
+          "s": 1.1,
+          "e": 1.65
+        },
+        {
+          "w": "two",
+          "s": 1.65,
+          "e": 2.2
+        },
+        {
+          "w": "weeks",
+          "s": 2.2,
+          "e": 2.74
+        },
+        {
+          "w": "exertional",
+          "s": 2.74,
+          "e": 3.29
+        },
+        {
+          "w": "and",
+          "s": 3.29,
+          "e": 3.84
+        },
+        {
+          "w": "night",
+          "s": 3.84,
+          "e": 4.39
+        },
+        {
+          "w": "breathlessness,",
+          "s": 4.39,
+          "e": 4.94
+        },
+        {
+          "w": "leg",
+          "s": 4.94,
+          "e": 5.49
+        },
+        {
+          "w": "swelling",
+          "s": 5.49,
+          "e": 6.04
+        },
+        {
+          "w": "and",
+          "s": 6.04,
+          "e": 6.59
+        },
+        {
+          "w": "low",
+          "s": 6.59,
+          "e": 7.14
+        },
+        {
+          "w": "urine.",
+          "s": 7.14,
+          "e": 7.69
+        },
+        {
+          "w": "Denies",
+          "s": 7.69,
+          "e": 8.23
+        },
+        {
+          "w": "chest",
+          "s": 8.23,
+          "e": 8.78
+        },
+        {
+          "w": "pain",
+          "s": 8.78,
+          "e": 9.33
+        },
+        {
+          "w": "and",
+          "s": 9.33,
+          "e": 9.88
+        },
+        {
+          "w": "fever.",
+          "s": 9.88,
+          "e": 10.43
+        },
+        {
+          "w": "No",
+          "s": 10.43,
+          "e": 10.98
+        },
+        {
+          "w": "known",
+          "s": 10.98,
+          "e": 11.53
+        },
+        {
+          "w": "drug",
+          "s": 11.53,
+          "e": 12.08
+        },
+        {
+          "w": "allergy.",
+          "s": 12.08,
+          "e": 12.63
+        },
+        {
+          "w": "Hypertension",
+          "s": 12.63,
+          "e": 13.17
+        },
+        {
+          "w": "and",
+          "s": 13.17,
+          "e": 13.72
+        },
+        {
+          "w": "old",
+          "s": 13.72,
+          "e": 14.27
+        },
+        {
+          "w": "infarct.",
+          "s": 14.27,
+          "e": 14.82
+        },
+        {
+          "w": "Congestive",
+          "s": 14.82,
+          "e": 15.37
+        },
+        {
+          "w": "failure.",
+          "s": 15.37,
+          "e": 15.92
+        },
+        {
+          "w": "Blood",
+          "s": 15.92,
+          "e": 16.47
+        },
+        {
+          "w": "pressure",
+          "s": 16.47,
+          "e": 17.02
+        },
+        {
+          "w": "140/90",
+          "s": 17.02,
+          "e": 17.57
+        },
+        {
+          "w": "mmHg,",
+          "s": 17.57,
+          "e": 18.12
+        },
+        {
+          "w": "pulse",
+          "s": 18.12,
+          "e": 18.66
+        },
+        {
+          "w": "96",
+          "s": 18.66,
+          "e": 19.21
+        },
+        {
+          "w": "beats",
+          "s": 19.21,
+          "e": 19.76
+        },
+        {
+          "w": "per",
+          "s": 19.76,
+          "e": 20.31
+        },
+        {
+          "w": "minute,",
+          "s": 20.31,
+          "e": 20.86
+        },
+        {
+          "w": "respiratory",
+          "s": 20.86,
+          "e": 21.41
+        },
+        {
+          "w": "rate",
+          "s": 21.41,
+          "e": 21.96
+        },
+        {
+          "w": "22,",
+          "s": 21.96,
+          "e": 22.51
+        },
+        {
+          "w": "saturation",
+          "s": 22.51,
+          "e": 23.06
+        },
+        {
+          "w": "94%",
+          "s": 23.06,
+          "e": 23.6
+        },
+        {
+          "w": "on",
+          "s": 23.6,
+          "e": 24.15
+        },
+        {
+          "w": "room",
+          "s": 24.15,
+          "e": 24.7
+        },
+        {
+          "w": "air.",
+          "s": 24.7,
+          "e": 25.25
+        },
+        {
+          "w": "Ankle",
+          "s": 25.25,
+          "e": 25.8
+        },
+        {
+          "w": "edema,",
+          "s": 25.8,
+          "e": 26.35
+        },
+        {
+          "w": "basal",
+          "s": 26.35,
+          "e": 26.9
+        },
+        {
+          "w": "crackles.",
+          "s": 26.9,
+          "e": 27.45
+        },
+        {
+          "w": "Chest",
+          "s": 27.45,
+          "e": 28.0
+        },
+        {
+          "w": "x-ray,",
+          "s": 28.0,
+          "e": 28.55
+        },
+        {
+          "w": "ECG,",
+          "s": 28.55,
+          "e": 29.09
+        },
+        {
+          "w": "echo.",
+          "s": 29.09,
+          "e": 29.64
+        },
+        {
+          "w": "Furosemide",
+          "s": 29.64,
+          "e": 30.19
+        },
+        {
+          "w": "40",
+          "s": 30.19,
+          "e": 30.74
+        },
+        {
+          "w": "mg",
+          "s": 30.74,
+          "e": 31.29
+        },
+        {
+          "w": "morning,",
+          "s": 31.29,
+          "e": 31.84
+        },
+        {
+          "w": "atorvastatin",
+          "s": 31.84,
+          "e": 32.39
+        },
+        {
+          "w": "10",
+          "s": 32.39,
+          "e": 32.94
+        },
+        {
+          "w": "mg",
+          "s": 32.94,
+          "e": 33.49
+        },
+        {
+          "w": "night.",
+          "s": 33.49,
+          "e": 34.03
+        },
+        {
+          "w": "Daily",
+          "s": 34.03,
+          "e": 34.58
+        },
+        {
+          "w": "weight",
+          "s": 34.58,
+          "e": 35.13
+        },
+        {
+          "w": "chart.",
+          "s": 35.13,
+          "e": 35.68
+        },
+        {
+          "w": "DiET",
+          "s": 35.68,
+          "e": 36.23
+        },
+        {
+          "w": "Salt",
+          "s": 36.23,
+          "e": 36.78
+        },
+        {
+          "w": "under",
+          "s": 36.78,
+          "e": 37.33
+        },
+        {
+          "w": "2",
+          "s": 37.33,
+          "e": 37.88
+        },
+        {
+          "w": "g.",
+          "s": 37.88,
+          "e": 38.43
+        },
+        {
+          "w": "Fluids",
+          "s": 38.43,
+          "e": 38.98
+        },
+        {
+          "w": "112",
+          "s": 38.98,
+          "e": 39.52
+        },
+        {
+          "w": "L.",
+          "s": 39.52,
+          "e": 40.07
+        },
+        {
+          "w": "No",
+          "s": 40.07,
+          "e": 40.62
+        },
+        {
+          "w": "picks.",
+          "s": 40.62,
+          "e": 41.17
+        },
+        {
+          "w": "Gentle,",
+          "s": 41.17,
+          "e": 41.72
+        },
+        {
+          "w": "daily",
+          "s": 41.72,
+          "e": 42.27
+        },
+        {
+          "w": "weight",
+          "s": 42.27,
+          "e": 42.82
+        },
+        {
+          "w": "urine",
+          "s": 42.82,
+          "e": 43.37
+        },
+        {
+          "w": "check,",
+          "s": 43.37,
+          "e": 43.92
+        },
+        {
+          "w": "leg",
+          "s": 43.92,
+          "e": 44.46
+        },
+        {
+          "w": "elevation,",
+          "s": 44.46,
+          "e": 45.01
+        },
+        {
+          "w": "emergency",
+          "s": 45.01,
+          "e": 45.56
+        },
+        {
+          "w": "for",
+          "s": 45.56,
+          "e": 46.11
+        },
+        {
+          "w": "2",
+          "s": 46.11,
+          "e": 46.66
+        },
+        {
+          "w": "kilog",
+          "s": 46.66,
+          "e": 47.21
+        },
+        {
+          "w": "gain,",
+          "s": 47.21,
+          "e": 47.76
+        },
+        {
+          "w": "severe",
+          "s": 47.76,
+          "e": 48.31
+        },
+        {
+          "w": "breathlessness",
+          "s": 48.31,
+          "e": 48.86
+        },
+        {
+          "w": "or",
+          "s": 48.86,
+          "e": 49.41
+        },
+        {
+          "w": "chest",
+          "s": 49.41,
+          "e": 49.95
+        },
+        {
+          "w": "pain.",
+          "s": 49.95,
+          "e": 50.5
+        },
+        {
+          "w": "followol",
+          "s": 50.5,
+          "e": 51.05
+        },
+        {
+          "w": "up",
+          "s": 51.05,
+          "e": 51.6
+        },
+        {
+          "w": "in",
+          "s": 51.6,
+          "e": 52.15
+        },
+        {
+          "w": "one",
+          "s": 52.15,
+          "e": 52.7
+        },
+        {
+          "w": "week.",
+          "s": 52.7,
+          "e": 53.25
+        }
+      ]
+    }
+  ],
+  "normalized_en": "62-year-old male with 2 weeks exertional and night breathlessness, leg swelling and low urine. Denies chest pain and fever. No known drug allergy. Hypertension and old infarct. Congestive failure. Blood pressure 140/90 mmHg, pulse 96 beats per minute, respiratory rate 22, saturation 94% on room air. Ankle edema, basal crackles. Chest x-ray, ECG, echo. Furosemide 40 mg morning, atorvastatin 10 mg night. Daily weight chart. DiET Salt under 2 g. Fluids 112 L. No picks. Gentle, daily weight urine check, leg elevation, emergency for 2 kilog gain, severe breathlessness or chest pain. followol up in 1 week.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s16-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

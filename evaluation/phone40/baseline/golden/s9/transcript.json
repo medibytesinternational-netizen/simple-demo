@@ -1,0 +1,500 @@
+{
+  "job_id": "s9-none",
+  "text": "Severe anemic female, bedven, one unit red cells, started 40 minutes, now sudden chills, back pain and feeling veryo. No breathlessness. Denies prior transfusion reaction. No known drug allergy. Severe anemia. No suspected acute transfusion reaction. Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg. Saturation 96% on room air. Stoart transfusion. Saline ne openRecheck IV and bath. Snd samples to lab. hardly vitals and urine chats. Diet, wm fluids normally diet when stable. General, report hypotension, peze, chest pain or ure fa. Note this done without senia review.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "Severe anemic female, bedven, one unit red cells, started 40 minutes, now sudden chills, back pain and feeling veryo. No breathlessness. Denies prior transfusion reaction. No known drug allergy. Severe anemia. No suspected acute transfusion reaction. Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg. Saturation 96% on room air. Stoart transfusion. Saline ne openRecheck IV and bath. Snd samples to lab. hardly vitals and urine chats. Diet, wm fluids normally diet when stable. General, report hypotension, peze, chest pain or ure fa. Note this done without senia review.",
+      "start": 0.0,
+      "end": 62.23,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "Severe",
+          "s": 0.0,
+          "e": 0.67
+        },
+        {
+          "w": "anemic",
+          "s": 0.67,
+          "e": 1.34
+        },
+        {
+          "w": "female,",
+          "s": 1.34,
+          "e": 2.01
+        },
+        {
+          "w": "bedven,",
+          "s": 2.01,
+          "e": 2.68
+        },
+        {
+          "w": "one",
+          "s": 2.68,
+          "e": 3.35
+        },
+        {
+          "w": "unit",
+          "s": 3.35,
+          "e": 4.01
+        },
+        {
+          "w": "red",
+          "s": 4.01,
+          "e": 4.68
+        },
+        {
+          "w": "cells,",
+          "s": 4.68,
+          "e": 5.35
+        },
+        {
+          "w": "started",
+          "s": 5.35,
+          "e": 6.02
+        },
+        {
+          "w": "40",
+          "s": 6.02,
+          "e": 6.69
+        },
+        {
+          "w": "minutes,",
+          "s": 6.69,
+          "e": 7.36
+        },
+        {
+          "w": "now",
+          "s": 7.36,
+          "e": 8.03
+        },
+        {
+          "w": "sudden",
+          "s": 8.03,
+          "e": 8.7
+        },
+        {
+          "w": "chills,",
+          "s": 8.7,
+          "e": 9.37
+        },
+        {
+          "w": "back",
+          "s": 9.37,
+          "e": 10.04
+        },
+        {
+          "w": "pain",
+          "s": 10.04,
+          "e": 10.71
+        },
+        {
+          "w": "and",
+          "s": 10.71,
+          "e": 11.38
+        },
+        {
+          "w": "feeling",
+          "s": 11.38,
+          "e": 12.04
+        },
+        {
+          "w": "veryo.",
+          "s": 12.04,
+          "e": 12.71
+        },
+        {
+          "w": "No",
+          "s": 12.71,
+          "e": 13.38
+        },
+        {
+          "w": "breathlessness.",
+          "s": 13.38,
+          "e": 14.05
+        },
+        {
+          "w": "Denies",
+          "s": 14.05,
+          "e": 14.72
+        },
+        {
+          "w": "prior",
+          "s": 14.72,
+          "e": 15.39
+        },
+        {
+          "w": "transfusion",
+          "s": 15.39,
+          "e": 16.06
+        },
+        {
+          "w": "reaction.",
+          "s": 16.06,
+          "e": 16.73
+        },
+        {
+          "w": "No",
+          "s": 16.73,
+          "e": 17.4
+        },
+        {
+          "w": "known",
+          "s": 17.4,
+          "e": 18.07
+        },
+        {
+          "w": "drug",
+          "s": 18.07,
+          "e": 18.74
+        },
+        {
+          "w": "allergy.",
+          "s": 18.74,
+          "e": 19.4
+        },
+        {
+          "w": "Severe",
+          "s": 19.4,
+          "e": 20.07
+        },
+        {
+          "w": "anemia.",
+          "s": 20.07,
+          "e": 20.74
+        },
+        {
+          "w": "No",
+          "s": 20.74,
+          "e": 21.41
+        },
+        {
+          "w": "suspected",
+          "s": 21.41,
+          "e": 22.08
+        },
+        {
+          "w": "acute",
+          "s": 22.08,
+          "e": 22.75
+        },
+        {
+          "w": "transfusion",
+          "s": 22.75,
+          "e": 23.42
+        },
+        {
+          "w": "reaction.",
+          "s": 23.42,
+          "e": 24.09
+        },
+        {
+          "w": "Temperature",
+          "s": 24.09,
+          "e": 24.76
+        },
+        {
+          "w": "101.4",
+          "s": 24.76,
+          "e": 25.43
+        },
+        {
+          "w": "degrees",
+          "s": 25.43,
+          "e": 26.1
+        },
+        {
+          "w": "Fahrenheit,",
+          "s": 26.1,
+          "e": 26.77
+        },
+        {
+          "w": "pulse",
+          "s": 26.77,
+          "e": 27.43
+        },
+        {
+          "w": "106",
+          "s": 27.43,
+          "e": 28.1
+        },
+        {
+          "w": "beats",
+          "s": 28.1,
+          "e": 28.77
+        },
+        {
+          "w": "per",
+          "s": 28.77,
+          "e": 29.44
+        },
+        {
+          "w": "minute,",
+          "s": 29.44,
+          "e": 30.11
+        },
+        {
+          "w": "blood",
+          "s": 30.11,
+          "e": 30.78
+        },
+        {
+          "w": "pressure",
+          "s": 30.78,
+          "e": 31.45
+        },
+        {
+          "w": "100/65",
+          "s": 31.45,
+          "e": 32.12
+        },
+        {
+          "w": "mmHg.",
+          "s": 32.12,
+          "e": 32.79
+        },
+        {
+          "w": "Saturation",
+          "s": 32.79,
+          "e": 33.46
+        },
+        {
+          "w": "96%",
+          "s": 33.46,
+          "e": 34.13
+        },
+        {
+          "w": "on",
+          "s": 34.13,
+          "e": 34.79
+        },
+        {
+          "w": "room",
+          "s": 34.79,
+          "e": 35.46
+        },
+        {
+          "w": "air.",
+          "s": 35.46,
+          "e": 36.13
+        },
+        {
+          "w": "Stoart",
+          "s": 36.13,
+          "e": 36.8
+        },
+        {
+          "w": "transfusion.",
+          "s": 36.8,
+          "e": 37.47
+        },
+        {
+          "w": "Saline",
+          "s": 37.47,
+          "e": 38.14
+        },
+        {
+          "w": "ne",
+          "s": 38.14,
+          "e": 38.81
+        },
+        {
+          "w": "openRecheck",
+          "s": 38.81,
+          "e": 39.48
+        },
+        {
+          "w": "IV",
+          "s": 39.48,
+          "e": 40.15
+        },
+        {
+          "w": "and",
+          "s": 40.15,
+          "e": 40.82
+        },
+        {
+          "w": "bath.",
+          "s": 40.82,
+          "e": 41.49
+        },
+        {
+          "w": "Snd",
+          "s": 41.49,
+          "e": 42.16
+        },
+        {
+          "w": "samples",
+          "s": 42.16,
+          "e": 42.82
+        },
+        {
+          "w": "to",
+          "s": 42.82,
+          "e": 43.49
+        },
+        {
+          "w": "lab.",
+          "s": 43.49,
+          "e": 44.16
+        },
+        {
+          "w": "hardly",
+          "s": 44.16,
+          "e": 44.83
+        },
+        {
+          "w": "vitals",
+          "s": 44.83,
+          "e": 45.5
+        },
+        {
+          "w": "and",
+          "s": 45.5,
+          "e": 46.17
+        },
+        {
+          "w": "urine",
+          "s": 46.17,
+          "e": 46.84
+        },
+        {
+          "w": "chats.",
+          "s": 46.84,
+          "e": 47.51
+        },
+        {
+          "w": "Diet,",
+          "s": 47.51,
+          "e": 48.18
+        },
+        {
+          "w": "wm",
+          "s": 48.18,
+          "e": 48.85
+        },
+        {
+          "w": "fluids",
+          "s": 48.85,
+          "e": 49.52
+        },
+        {
+          "w": "normally",
+          "s": 49.52,
+          "e": 50.18
+        },
+        {
+          "w": "diet",
+          "s": 50.18,
+          "e": 50.85
+        },
+        {
+          "w": "when",
+          "s": 50.85,
+          "e": 51.52
+        },
+        {
+          "w": "stable.",
+          "s": 51.52,
+          "e": 52.19
+        },
+        {
+          "w": "General,",
+          "s": 52.19,
+          "e": 52.86
+        },
+        {
+          "w": "report",
+          "s": 52.86,
+          "e": 53.53
+        },
+        {
+          "w": "hypotension,",
+          "s": 53.53,
+          "e": 54.2
+        },
+        {
+          "w": "peze,",
+          "s": 54.2,
+          "e": 54.87
+        },
+        {
+          "w": "chest",
+          "s": 54.87,
+          "e": 55.54
+        },
+        {
+          "w": "pain",
+          "s": 55.54,
+          "e": 56.21
+        },
+        {
+          "w": "or",
+          "s": 56.21,
+          "e": 56.88
+        },
+        {
+          "w": "ure",
+          "s": 56.88,
+          "e": 57.55
+        },
+        {
+          "w": "fa.",
+          "s": 57.55,
+          "e": 58.21
+        },
+        {
+          "w": "Note",
+          "s": 58.21,
+          "e": 58.88
+        },
+        {
+          "w": "this",
+          "s": 58.88,
+          "e": 59.55
+        },
+        {
+          "w": "done",
+          "s": 59.55,
+          "e": 60.22
+        },
+        {
+          "w": "without",
+          "s": 60.22,
+          "e": 60.89
+        },
+        {
+          "w": "senia",
+          "s": 60.89,
+          "e": 61.56
+        },
+        {
+          "w": "review.",
+          "s": 61.56,
+          "e": 62.23
+        }
+      ]
+    }
+  ],
+  "normalized_en": "Severe anemic female, bedven, 1 unit red cells, started 40 minutes, now sudden chills, back pain and feeling veryo. No breathlessness. Denies prior transfusion reaction. No known drug allergy. Severe anemia. No suspected acute transfusion reaction. Temperature 101.4 degrees Fahrenheit, pulse 106 beats per minute, blood pressure 100/65 mmHg. Saturation 96% on room air. Stoart transfusion. Saline ne openRecheck IV and bath. Snd samples to lab. hardly vitals and urine chats. Diet, wm fluids normally diet when stable. General, report hypotension, peze, chest pain or ure fa. Note this done without senia review.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s9-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

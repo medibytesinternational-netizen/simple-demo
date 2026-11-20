@@ -11,7 +11,9 @@ from app.services import credits
 from app.services.context import segments_from_transcript
 from app.services.extract import analyse
 
-from .helpers import ASTHMA, SHORT_VISIT
+from fastapi import HTTPException
+
+from .helpers import ASTHMA, SHORT_VISIT, FakePipeline
 
 CHEST = (
     "Doctor: What brings you in?\n"
@@ -29,18 +31,22 @@ NO_EXAM = (
     "Doctor: Review in one week if it is not better."
 )
 EMPTY_NOTE = {
-    "chief_complaint": None,
-    "hpi": None,
-    "exam": {"general": None, "systemic": None},
-    "assessment": [],
-    "plan": [],
-    "medication_mentions": [],
-    "follow_up": None,
+    "format": "opd_v2",
+    "mode_of_admission": None,
+    "referring_physician": None,
+    "previous_admission": None,
+    "previous_diagnosis": [],
+    "allergies": [],
+    "pain": None,
+    "occupation": None,
+    "source_of_history": None,
+    "chief_complaints": [],
+    "history_of_present_illness": None,
     "not_documented": [],
 }
 REAL_NOTE = {
     **EMPTY_NOTE,
-    "chief_complaint": {"text": "Dry cough and wheeze.", "source_event_ids": [], "source_segment_ids": ["seg_2"]},
+    "chief_complaints": [{"text": "Dry cough and wheeze.", "source_event_ids": [], "source_segment_ids": ["seg_2"]}],
 }
 USAGE = {"latency_ms": 1, "input_tokens": 2, "output_tokens": 3, "request_json": {}}
 
@@ -120,24 +126,28 @@ def test_every_claim_is_a_quote_that_cites_a_real_segment(client):
     transcript_event = result["transcript_event_id"]
     segment_ids = {s["segment_id"] for s in segments_from_transcript(ASTHMA)}
     claims = _claims(content)
-    assert len(claims) >= 5, "complaint, hpi, exam, assessment, plan and follow-up were all said"
+    assert len(claims) >= 2, "the complaint and the history were said"
     for claim in claims:
-        assert claim["text"] in ASTHMA, claim["text"]
+        assert _only_quotes(claim["text"], ASTHMA), claim["text"]
         assert claim["source_event_ids"] == [transcript_event]
         assert claim["source_segment_ids"] and set(claim["source_segment_ids"]) <= segment_ids
-    assert "wheeze" in content["chief_complaint"]["text"]
-    assert "mild persistent asthma" in content["assessment"][0]["text"]
-    assert content["not_documented"] == []
+    assert "wheeze" in content["chief_complaints"][0]["text"]
+    assert content["format"] == "opd_v2"
+    # Nobody said how the patient came, who referred them, or their work.
+    assert {"Mode of admission", "Referring physician", "Occupation"} <= set(content["not_documented"])
 
 
-def test_medicines_come_from_the_words_spoken_with_their_segment(client):
+def test_the_opd_format_has_the_hospital_headings_only(client):
     content = _generate(client, ASTHMA)["draft"]["content"]
-    meds = {m["drug"].lower(): m for m in content["medication_mentions"]}
-    assert set(meds) == {"salbutamol", "beclometasone"}
-    assert meds["beclometasone"]["dose"].lower() == "100 micrograms"
-    assert meds["beclometasone"]["frequency"].lower() == "twice daily"
-    assert meds["salbutamol"]["frequency"].lower() == "as needed"
-    assert meds["salbutamol"]["source_segment_ids"] == ["seg_6"]
+    # Examination, impression, medicines and plan are not headings of the hospital OPD format.
+    assert not _claims({k: content.get(k) for k in ("exam", "assessment", "plan", "follow_up", "chief_complaint", "hpi")})
+    assert not content.get("medication_mentions")
+    text = " ".join(c["text"] for c in _claims(content)).lower()
+    assert "salbutamol" not in text and "beclometasone" not in text
+    # The record headings are filled from registration, not from speech.
+    header = content["header"]
+    assert header["patient_name"] == "Ravi Menon" and header["hospital_number"] == "MB-1001"
+    assert header["recorded_by"] == "Dr. Meera Shah"
 
 
 def test_a_multi_turn_visit_quotes_only_sentences_that_were_said(client):
@@ -146,12 +156,8 @@ def test_a_multi_turn_visit_quotes_only_sentences_that_were_said(client):
     assert any("cough" in c["text"] for c in claims)
     for claim in claims:
         assert _only_quotes(claim["text"], CHEST), claim["text"]
-    # History is the patient's words across two turns; both turns are cited.
-    assert content["hpi"]["text"] == "Yes, I felt feverish last night."
-    assert content["exam"]["general"]["source_segment_ids"] == ["seg_5"]
-    assert "chest infection" in content["assessment"][0]["text"]
-    assert "amoxicillin" in " ".join(c["text"] for c in content["plan"])
-    assert content["follow_up"]["text"] == "Review in one week."
+    assert "cough" in content["chief_complaints"][0]["text"]
+    assert content["history_of_present_illness"]["text"] == "Yes, I felt feverish last night."
 
 
 def test_a_note_does_not_use_the_patient_record(client):
@@ -161,18 +167,32 @@ def test_a_note_does_not_use_the_patient_record(client):
         assert record_fact not in text
 
 
-def test_a_consultation_with_no_exam_leaves_exam_empty_and_says_so(client):
-    content = _generate(client, NO_EXAM)["draft"]["content"]
-    assert content["exam"] == {"general": None, "systemic": None}
-    assert "Examination" in content["not_documented"]
-    assert content["assessment"] and "viral throat infection" in content["assessment"][0]["text"]
+def test_headings_that_were_spoken_about_are_filled_and_the_rest_listed(client):
+    said = (
+        "Doctor: What brings you in?\n"
+        "Patient: I have had pain in my lower back for three weeks, it goes down my left leg.\n"
+        "Patient: I work as a school teacher.\n"
+        "Patient: I am allergic to penicillin, it gives me a rash.\n"
+        "Patient: I am a known diabetic for ten years.\n"
+        "Patient: I came on my own, I walked in this morning."
+    )
+    content = _generate(client, said)["draft"]["content"]
+    assert "lower back" in content["pain"]["text"]
+    assert "school teacher" in content["occupation"]["text"]
+    assert "penicillin" in content["allergies"][0]["text"]
+    assert "known diabetic" in content["previous_diagnosis"][0]["text"]
+    assert "walked in" in content["mode_of_admission"]["text"]
+    for claim in _claims(content):
+        assert _only_quotes(claim["text"], said), claim["text"]
+    assert "Referring physician" in content["not_documented"]
+    assert "Pain (site, duration, score, frequency, referral or radiation)" not in content["not_documented"]
 
 
 def test_a_visit_with_nothing_clinical_lists_every_missing_section(client):
     content = _generate(client, SHORT_VISIT)["draft"]["content"]
-    assert content["assessment"] == [] and content["plan"] == [] and content["follow_up"] is None
-    assert content["hpi"] is None
-    assert {"Examination", "Assessment", "Plan", "History"} <= set(content["not_documented"])
+    assert content["allergies"] == [] and content["pain"] is None and content["occupation"] is None
+    assert {"Allergies (food, drugs, other)", "Pain (site, duration, score, frequency, referral or radiation)",
+            "Occupation", "Source of history and reliability"} <= set(content["not_documented"])
 
 
 def test_cached_mode_by_configuration_is_not_reported_as_a_fallback(client):
@@ -194,7 +214,7 @@ def test_empty_live_output_is_repaired_then_falls_back_with_a_reason(client, mon
     assert llm["mode"] == "cached", "the call must not be labelled live when rules wrote the note"
     assert llm["model"] == "cached"
     content = result["draft"]["content"]
-    assert "wheeze" in content["chief_complaint"]["text"]
+    assert "wheeze" in content["chief_complaints"][0]["text"]
     assert result["draft"]["model"] == "cached"
     from app.models import LLMCall
 
@@ -213,7 +233,7 @@ def test_a_repair_that_returns_a_real_note_stays_live(client, monkeypatch):
     result = _generate(client, ASTHMA)
     assert len(repairs) == 1
     assert result["llm"]["mode"] == "live" and result["llm"]["fallback"] is False
-    assert result["draft"]["content"]["chief_complaint"]["text"] == "Dry cough and wheeze."
+    assert result["draft"]["content"]["chief_complaints"][0]["text"] == "Dry cough and wheeze."
 
 
 def test_a_repair_that_is_still_empty_falls_back(client, monkeypatch):
@@ -222,7 +242,7 @@ def test_a_repair_that_is_still_empty_falls_back(client, monkeypatch):
     result = _generate(client, ASTHMA)
     assert len(repairs) == 1
     assert result["llm"]["fallback"] is True and result["llm"]["mode"] == "cached"
-    assert "wheeze" in result["draft"]["content"]["chief_complaint"]["text"]
+    assert "wheeze" in result["draft"]["content"]["chief_complaints"][0]["text"]
 
 
 def test_a_failed_live_call_falls_back_with_a_reason_and_no_repair(client, monkeypatch):
@@ -234,7 +254,7 @@ def test_a_failed_live_call_falls_back_with_a_reason_and_no_repair(client, monke
     assert llm["fallback"] is True and llm["mode"] == "cached"
     assert "TimeoutError" in llm["fallback_reason"]
     assert "sk-secret" not in llm["fallback_reason"], "the model's error text must not reach the page"
-    assert "wheeze" in result["draft"]["content"]["chief_complaint"]["text"]
+    assert "wheeze" in result["draft"]["content"]["chief_complaints"][0]["text"]
 
 
 def test_a_live_reply_in_the_wrong_format_falls_back_with_a_reason(client, monkeypatch):
@@ -252,7 +272,7 @@ def test_a_draft_citing_a_segment_that_does_not_exist_cannot_be_approved(client)
     _consent(client)
     draft = _generate(client, ASTHMA)["draft"]
     content = draft["content"]
-    content["chief_complaint"]["source_segment_ids"] = ["seg_99"]
+    content["chief_complaints"][0]["source_segment_ids"] = ["seg_99"]
     response = client.post(f"/api/drafts/{draft['id']}/approve", json={"content": content})
     assert response.status_code == 400
     assert "seg_99" in response.json()["detail"]
@@ -300,30 +320,9 @@ def test_audio_with_consent_but_no_key_is_refused_and_costs_nothing(fresh):
     assert _balance(fresh) == before
 
 
-class _FakeOpenAI:
-    text = "Patient has a cough."
-    calls = 0
-
-    def __init__(self, api_key=None):
-        outer = type(self)
-
-        class Transcriptions:
-            def create(self, **kwargs):
-                outer.calls += 1
-                if isinstance(outer.text, Exception):
-                    raise outer.text
-                return SimpleNamespace(text=outer.text)
-
-        self.audio = SimpleNamespace(transcriptions=Transcriptions())
-
-
 @pytest.fixture()
 def keyed(monkeypatch):
-    monkeypatch.setattr("app.routes.notes.settings", SimpleNamespace(openai_api_key="sk-test"))
-    monkeypatch.setattr("openai.OpenAI", _FakeOpenAI)
-    _FakeOpenAI.text = "Patient has a cough."
-    _FakeOpenAI.calls = 0
-    return _FakeOpenAI
+    return FakePipeline().install(monkeypatch)
 
 
 def test_a_transcription_that_runs_costs_a_voice_note_of_two_credits(fresh, keyed):
@@ -331,26 +330,18 @@ def test_a_transcription_that_runs_costs_a_voice_note_of_two_credits(fresh, keye
     before = _balance(fresh)
     response = fresh.post("/api/notes/transcribe", files=_audio())
     assert response.status_code == 200, response.text
-    assert response.json()["text"] == "Patient has a cough."
+    assert response.json()["status"] == "running" and response.json()["audio_id"]
     assert before - _balance(fresh) == 2
     ledger = fresh.get("/api/credits").json()["ledger"]
     assert ledger[0]["operation"] == "voice_note" and ledger[0]["units"] == 2 and ledger[0]["feature"] == "F1"
 
 
-def test_a_failed_transcription_costs_nothing(fresh, keyed):
+def test_a_failed_upload_costs_nothing(fresh, keyed):
     _consent(fresh)
-    keyed.text = RuntimeError("provider down")
+    keyed.error = HTTPException(502, "Could not reach the MediBytes pipeline")
     before = _balance(fresh)
     response = fresh.post("/api/notes/transcribe", files=_audio())
     assert response.status_code == 502
-    assert _balance(fresh) == before
-
-
-def test_a_recording_with_no_speech_costs_nothing(fresh, keyed):
-    _consent(fresh)
-    keyed.text = "   "
-    before = _balance(fresh)
-    assert fresh.post("/api/notes/transcribe", files=_audio()).status_code == 422
     assert _balance(fresh) == before
 
 
@@ -364,5 +355,5 @@ def test_transcription_stops_with_402_when_credits_are_used_up(fresh, keyed):
         db.close()
     response = fresh.post("/api/notes/transcribe", files=_audio())
     assert response.status_code == 402
-    assert keyed.calls == 0, "the model must not be called when the pack cannot pay for it"
+    assert keyed.calls == 0, "the pipeline must not be called when the pack cannot pay for it"
     assert _balance(fresh) == 1

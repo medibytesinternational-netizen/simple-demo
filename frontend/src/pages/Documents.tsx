@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { get, post } from "../api";
+import { get, post, storedFileUrl } from "../api";
 import type { DocumentRequest, DocumentSummary, Draft, InvestigationRequest } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { useCan } from "../session";
@@ -50,6 +50,7 @@ function statusTone(status: string): Tone {
 export function DocumentsPage() {
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") || "inbound";
+  const isRequisition = tab === "requisition";
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -58,6 +59,7 @@ export function DocumentsPage() {
   const [docType, setDocType] = useState<DocType>("lab_report");
   const canUpload = useCan("upload_document");
   const canConfirm = useCan("confirm_document");
+  const canReport = useCan("investigation_report");
 
   const documents = useQuery<{ documents: DocumentSummary[] }>({
     queryKey: ["documents"],
@@ -76,12 +78,12 @@ export function DocumentsPage() {
   const investigations = useQuery<{ requests: InvestigationRequest[] }>({
     queryKey: ["investigation-requests"],
     queryFn: () => get("/investigation-requests"),
-    enabled: tab === "requisition",
+    enabled: isRequisition,
   });
   const drafts = useQuery<{ drafts: Draft[] }>({
     queryKey: ["drafts", "F10"],
     queryFn: () => get("/drafts?feature=F10&limit=1"),
-    enabled: tab === "requisition",
+    enabled: isRequisition,
   });
 
   useEffect(() => {
@@ -145,6 +147,24 @@ export function DocumentsPage() {
     },
     onError: (err: any) => setError(String(err?.message || err)),
   });
+  const [reportFor, setReportFor] = useState<string | null>(null);
+  const investigationReport = useMutation({
+    mutationFn: (id: string) => {
+      setReportFor(id);
+      // Open the tab inside the click so pop-up blockers allow it; point it at the form once stored.
+      const tab = window.open("", "_blank");
+      return post<{ document_id: string }>(`/investigation-requests/${id}/report`)
+        .then(async (done) => {
+          const url = await storedFileUrl(done.document_id);
+          if (tab) tab.location.href = url; else window.open(url, "_blank");
+          return done;
+        })
+        .catch((error) => { tab?.close(); throw error; });
+    },
+    onSettled: () => setReportFor(null),
+    onSuccess: () => setSuccess("Request form generated in the hospital format and stored on the timeline."),
+  });
+
   const exportInvestigation = useMutation({
     mutationFn: (id: string) => post(`/investigation-requests/${id}/export`),
     onSuccess: () => {
@@ -177,17 +197,18 @@ export function DocumentsPage() {
   const confirmedDocs = documents.data?.documents.filter((item) => ["confirmed", "reviewed"].includes(item.ocr_status)) || [];
   const loadedFields = document.data?.extracted?.fields || [];
   const confidentCount = loadedFields.filter((field) => field.confidence >= 0.8).length;
+  const reqRows = investigations.data?.requests || [];
   const tabItems = [
     { key: "inbound", label: "Inbound reports" },
-    { key: "requisition", label: "Investigation requests" },
+    { key: "requisition", label: "Investigation & radiology" },
     { key: "followup", label: "Records follow-up" },
   ];
 
   return (
     <div className="pg-documents">
       <PageHeader
-        title={tab === "requisition" ? "Investigation requests" : tab === "followup" ? "Records follow-up" : "Inbound reports"}
-        description={tab === "requisition"
+        title={tab === "requisition" ? "Investigation & radiology requests" : tab === "followup" ? "Records follow-up" : "Inbound reports"}
+        description={isRequisition
           ? "Imaging and laboratory requests pre-filled from the record. Allergies must be checked before a request is approved."
           : tab === "followup"
             ? "Requests for missing outside records and pre-authorisation, and matching what arrives."
@@ -408,14 +429,14 @@ export function DocumentsPage() {
             </Disclosure>
           </div>
         </div>
-      ) : tab === "requisition" ? (
+      ) : isRequisition ? (
         <>
           <Panel
-            title="Investigation and radiology requisitions"
+            title="Investigation & radiology requests"
             sub="Pre-filled from the documented record. Allergies are carried forward and must be verified before use."
           >
             <Toolbar label="Requisition actions">
-              <span className="small muted">{investigations.data?.requests.length || 0} requests</span>
+              <span className="small muted">{reqRows.length} requests</span>
               <span className="toolbar-spacer" />
               <button
                 className="btn btn-primary btn-sm"
@@ -428,7 +449,7 @@ export function DocumentsPage() {
             </Toolbar>
             <DataTable<InvestigationRequest>
               caption="Investigation requests"
-              rows={investigations.data?.requests || []}
+              rows={reqRows}
               rowKey={(request) => request.id}
               loading={investigations.isLoading}
               empty={
@@ -443,8 +464,8 @@ export function DocumentsPage() {
                   sort: (request) => request.study,
                   cell: (request) => (
                     <>
-                      <div className="cell-strong">{request.study}</div>
-                      <div className="cell-sub">{request.request_type} · {request.indication}</div>
+                      <div className="cell-strong">{request.study}{request.source_event_id ? <> <Pill tone="info">From progress note</Pill></> : null}</div>
+                      <div className="cell-sub">{request.request_type === "imaging" ? "Radiology" : "Investigation"} · {request.indication}</div>
                     </>
                   ),
                 },
@@ -474,18 +495,31 @@ export function DocumentsPage() {
                   key: "status",
                   header: "Status",
                   sort: (request) => request.status,
-                  cell: (request) => <Pill tone={request.status === "exported" ? "success" : "neutral"} dot>{request.status}</Pill>,
+                  cell: (request) => <Pill tone={request.status === "exported" ? "success" : request.status === "requested" ? "warning" : "neutral"} dot>{request.status === "exported" ? "sent" : request.status}</Pill>,
                 },
                 {
                   key: "action",
                   header: "Action",
                   align: "right",
-                  cell: (request) =>
-                    request.status !== "exported" ? (
-                      <button className="btn btn-sm" onClick={() => exportInvestigation.mutate(request.id)} disabled={exportInvestigation.isPending}>
-                        Mark exported
-                      </button>
-                    ) : <span className="small muted">Export complete</span>,
+                  cell: (request) => (
+                    <span className="pill-row" style={{ justifyContent: "flex-end" }}>
+                      {canReport ? (
+                        <button
+                          className="btn btn-sm"
+                          onClick={() => investigationReport.mutate(request.id)}
+                          disabled={investigationReport.isPending}
+                          aria-busy={reportFor === request.id || undefined}
+                        >
+                          {reportFor === request.id ? <><span className="spinner" /> Generating…</> : "Generate report"}
+                        </button>
+                      ) : null}
+                      {request.status !== "exported" ? (
+                        <button className="btn btn-sm" onClick={() => exportInvestigation.mutate(request.id)} disabled={exportInvestigation.isPending}>
+                          {request.status === "requested" ? "Send request" : "Mark exported"}
+                        </button>
+                      ) : <span className="small muted">Export complete</span>}
+                    </span>
+                  ),
                 },
               ]}
             />

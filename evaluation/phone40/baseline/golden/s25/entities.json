@@ -1,0 +1,341 @@
+{
+  "job_id": "s25-none",
+  "drugs": [
+    {
+      "name": "furosemide",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Furosemide only is advised.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm",
+      "start_char": 437,
+      "end_char": 447,
+      "span_status": "exact"
+    },
+    {
+      "name": "potassium",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Diet, low-salt, lowpotassium.",
+      "negated": false,
+      "raw_token": "lowpotassium",
+      "candidates": [
+        {
+          "name": "potassium",
+          "kind": "substance",
+          "substances": [
+            "potassium"
+          ],
+          "units": [
+            "g",
+            "mg"
+          ],
+          "strengths": [
+            {
+              "form": "tablet",
+              "unit": "g",
+              "value": 1.08
+            },
+            {
+              "form": "tablet",
+              "unit": "g",
+              "value": 2.5
+            },
+            {
+              "form": "solution",
+              "unit": "g",
+              "value": 3.0
+            },
+            {
+              "form": "suspension",
+              "unit": "mg",
+              "value": 100.0
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 110.0
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 312.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 540.0
+            }
+          ],
+          "forms": [
+            "solution",
+            "suspension",
+            "tablet"
+          ],
+          "mass_mg": [
+            100.0,
+            3000.0
+          ],
+          "score": 0.857,
+          "matched_name": "potassium"
+        }
+      ],
+      "matcher_pick": "potassium",
+      "note": "fuzzy lowpotassium->potassium (0.86), no dose dictated - physician must confirm | ambiguous: sentence refers to dietary restriction not drug therapy",
+      "start_char": 484,
+      "end_char": 493,
+      "span_status": "exact",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "Diet, low-salt, lowpotassium.",
+        "final_output_sentence": "Diet, low-salt, lowpotassium.",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.0,
+        "reason": "sentence refers to dietary restriction not drug therapy",
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "breathlessness",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "7-year-old female with three days low urine, face swelling, tiredness, and breathlessness after lose motion and poor intake.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "chest pain",
+      "confidence": 0.91,
+      "color": "GREEN",
+      "source_sentence": "Denies chest pain.",
+      "negated": true,
+      "note": "DENIED - excluded",
+      "start_char": 128,
+      "end_char": 138,
+      "span_status": "exact"
+    },
+    {
+      "text": "breathlessness",
+      "confidence": 0.91,
+      "color": "GREEN",
+      "source_sentence": "Urine chart, daily weight, emergency for no urine ight hos or severe breathlessness.",
+      "negated": true,
+      "note": "DENIED - excluded",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Blood pressure 150/90",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 150/90 mmHg, pulse 90 beats per minute, saturation 96%.",
+      "start_char": 228,
+      "end_char": 249,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 90",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 150/90 mmHg, pulse 90 beats per minute, saturation 96%.",
+      "start_char": 256,
+      "end_char": 264,
+      "span_status": "exact"
+    },
+    {
+      "text": "96%",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 150/90 mmHg, pulse 90 beats per minute, saturation 96%.",
+      "start_char": 294,
+      "end_char": 297,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {},
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 2.613,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "furosemide",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Furosemide only is advised."
+      },
+      {
+        "kind": "drug",
+        "name": "potassium",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: potassium; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Diet, low-salt, lowpotassium."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 150/90",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 150/90 mmHg, pulse 90 beats per minute, saturation 96%."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 90",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 150/90 mmHg, pulse 90 beats per minute, saturation 96%."
+      },
+      {
+        "kind": "vital",
+        "text": "96%",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 150/90 mmHg, pulse 90 beats per minute, saturation 96%."
+      },
+      {
+        "kind": "symptom",
+        "text": "breathlessness",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "7-year-old female with three days low urine, face swelling, tiredness, and breathlessness after lose motion and poor intake."
+      },
+      {
+        "kind": "symptom",
+        "text": "chest pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.91,
+        "source_sentence": "Denies chest pain."
+      },
+      {
+        "kind": "symptom",
+        "text": "breathlessness",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.91,
+        "source_sentence": "Urine chart, daily weight, emergency for no urine ight hos or severe breathlessness."
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "3",
+          "7",
+          "90",
+          "96",
+          "150"
+        ],
+        "count": 5
+      },
+      "total": 8,
+      "drug_needs_review": 2,
+      "vital_verified": 3,
+      "symptom_verified": 3
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

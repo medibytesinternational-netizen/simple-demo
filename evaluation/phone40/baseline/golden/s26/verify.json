@@ -1,0 +1,129 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "furosemide",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated."
+    },
+    {
+      "kind": "drug",
+      "name": "lactulose",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: lactulose; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated."
+    },
+    {
+      "kind": "drug",
+      "name": "thiamine",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: thiamine; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 110/68",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 88",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit."
+    },
+    {
+      "kind": "vital",
+      "text": "temperature 98.6 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Report bleeding, confusion, fever or low urine followup in one week."
+    },
+    {
+      "kind": "followup",
+      "text": "followup in one week",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "followup in one week"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "55",
+        "68",
+        "88",
+        "98.6",
+        "110"
+      ],
+      "count": 6
+    },
+    "total": 8,
+    "drug_needs_review": 3,
+    "vital_verified": 3,
+    "symptom_verified": 1,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

@@ -1,0 +1,490 @@
+{
+  "job_id": "s4-none",
+  "text": "58-year-old male smoker with 30 minutes of heavy central chest pressure radiating to the left arm, breathlessness and sweating. Denies fever and cough. No known drug allergy. Hypertension and high cholesterol. Acute coronary syndrome. Blood pressure 145/90 mmHg, pulse 96 beats per minute, respiratory rate 20, saturation 95% on room air. ECG and troponin. Aspirin as advised. Continuous rhythm and BP monitoring. Diet, light low-salt, low-fat diet. No smoking or alcohol. General. Complete bedrest. Report worsening pain, sweatching, b reathlessness or fainting at once. Follow upp in cardiology in two days.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "58-year-old male smoker with 30 minutes of heavy central chest pressure radiating to the left arm, breathlessness and sweating. Denies fever and cough. No known drug allergy. Hypertension and high cholesterol. Acute coronary syndrome. Blood pressure 145/90 mmHg, pulse 96 beats per minute, respiratory rate 20, saturation 95% on room air. ECG and troponin. Aspirin as advised. Continuous rhythm and BP monitoring. Diet, light low-salt, low-fat diet. No smoking or alcohol. General. Complete bedrest. Report worsening pain, sweatching, b reathlessness or fainting at once. Follow upp in cardiology in two days.",
+      "start": 0.0,
+      "end": 57.07,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "58-year-old",
+          "s": 0.0,
+          "e": 0.63
+        },
+        {
+          "w": "male",
+          "s": 0.63,
+          "e": 1.25
+        },
+        {
+          "w": "smoker",
+          "s": 1.25,
+          "e": 1.88
+        },
+        {
+          "w": "with",
+          "s": 1.88,
+          "e": 2.51
+        },
+        {
+          "w": "30",
+          "s": 2.51,
+          "e": 3.14
+        },
+        {
+          "w": "minutes",
+          "s": 3.14,
+          "e": 3.76
+        },
+        {
+          "w": "of",
+          "s": 3.76,
+          "e": 4.39
+        },
+        {
+          "w": "heavy",
+          "s": 4.39,
+          "e": 5.02
+        },
+        {
+          "w": "central",
+          "s": 5.02,
+          "e": 5.64
+        },
+        {
+          "w": "chest",
+          "s": 5.64,
+          "e": 6.27
+        },
+        {
+          "w": "pressure",
+          "s": 6.27,
+          "e": 6.9
+        },
+        {
+          "w": "radiating",
+          "s": 6.9,
+          "e": 7.53
+        },
+        {
+          "w": "to",
+          "s": 7.53,
+          "e": 8.15
+        },
+        {
+          "w": "the",
+          "s": 8.15,
+          "e": 8.78
+        },
+        {
+          "w": "left",
+          "s": 8.78,
+          "e": 9.41
+        },
+        {
+          "w": "arm,",
+          "s": 9.41,
+          "e": 10.03
+        },
+        {
+          "w": "breathlessness",
+          "s": 10.03,
+          "e": 10.66
+        },
+        {
+          "w": "and",
+          "s": 10.66,
+          "e": 11.29
+        },
+        {
+          "w": "sweating.",
+          "s": 11.29,
+          "e": 11.92
+        },
+        {
+          "w": "Denies",
+          "s": 11.92,
+          "e": 12.54
+        },
+        {
+          "w": "fever",
+          "s": 12.54,
+          "e": 13.17
+        },
+        {
+          "w": "and",
+          "s": 13.17,
+          "e": 13.8
+        },
+        {
+          "w": "cough.",
+          "s": 13.8,
+          "e": 14.42
+        },
+        {
+          "w": "No",
+          "s": 14.42,
+          "e": 15.05
+        },
+        {
+          "w": "known",
+          "s": 15.05,
+          "e": 15.68
+        },
+        {
+          "w": "drug",
+          "s": 15.68,
+          "e": 16.3
+        },
+        {
+          "w": "allergy.",
+          "s": 16.3,
+          "e": 16.93
+        },
+        {
+          "w": "Hypertension",
+          "s": 16.93,
+          "e": 17.56
+        },
+        {
+          "w": "and",
+          "s": 17.56,
+          "e": 18.19
+        },
+        {
+          "w": "high",
+          "s": 18.19,
+          "e": 18.81
+        },
+        {
+          "w": "cholesterol.",
+          "s": 18.81,
+          "e": 19.44
+        },
+        {
+          "w": "Acute",
+          "s": 19.44,
+          "e": 20.07
+        },
+        {
+          "w": "coronary",
+          "s": 20.07,
+          "e": 20.69
+        },
+        {
+          "w": "syndrome.",
+          "s": 20.69,
+          "e": 21.32
+        },
+        {
+          "w": "Blood",
+          "s": 21.32,
+          "e": 21.95
+        },
+        {
+          "w": "pressure",
+          "s": 21.95,
+          "e": 22.58
+        },
+        {
+          "w": "145/90",
+          "s": 22.58,
+          "e": 23.2
+        },
+        {
+          "w": "mmHg,",
+          "s": 23.2,
+          "e": 23.83
+        },
+        {
+          "w": "pulse",
+          "s": 23.83,
+          "e": 24.46
+        },
+        {
+          "w": "96",
+          "s": 24.46,
+          "e": 25.08
+        },
+        {
+          "w": "beats",
+          "s": 25.08,
+          "e": 25.71
+        },
+        {
+          "w": "per",
+          "s": 25.71,
+          "e": 26.34
+        },
+        {
+          "w": "minute,",
+          "s": 26.34,
+          "e": 26.97
+        },
+        {
+          "w": "respiratory",
+          "s": 26.97,
+          "e": 27.59
+        },
+        {
+          "w": "rate",
+          "s": 27.59,
+          "e": 28.22
+        },
+        {
+          "w": "20,",
+          "s": 28.22,
+          "e": 28.85
+        },
+        {
+          "w": "saturation",
+          "s": 28.85,
+          "e": 29.47
+        },
+        {
+          "w": "95%",
+          "s": 29.47,
+          "e": 30.1
+        },
+        {
+          "w": "on",
+          "s": 30.1,
+          "e": 30.73
+        },
+        {
+          "w": "room",
+          "s": 30.73,
+          "e": 31.36
+        },
+        {
+          "w": "air.",
+          "s": 31.36,
+          "e": 31.98
+        },
+        {
+          "w": "ECG",
+          "s": 31.98,
+          "e": 32.61
+        },
+        {
+          "w": "and",
+          "s": 32.61,
+          "e": 33.24
+        },
+        {
+          "w": "troponin.",
+          "s": 33.24,
+          "e": 33.86
+        },
+        {
+          "w": "Aspirin",
+          "s": 33.86,
+          "e": 34.49
+        },
+        {
+          "w": "as",
+          "s": 34.49,
+          "e": 35.12
+        },
+        {
+          "w": "advised.",
+          "s": 35.12,
+          "e": 35.75
+        },
+        {
+          "w": "Continuous",
+          "s": 35.75,
+          "e": 36.37
+        },
+        {
+          "w": "rhythm",
+          "s": 36.37,
+          "e": 37.0
+        },
+        {
+          "w": "and",
+          "s": 37.0,
+          "e": 37.63
+        },
+        {
+          "w": "BP",
+          "s": 37.63,
+          "e": 38.25
+        },
+        {
+          "w": "monitoring.",
+          "s": 38.25,
+          "e": 38.88
+        },
+        {
+          "w": "Diet,",
+          "s": 38.88,
+          "e": 39.51
+        },
+        {
+          "w": "light",
+          "s": 39.51,
+          "e": 40.13
+        },
+        {
+          "w": "low-salt,",
+          "s": 40.13,
+          "e": 40.76
+        },
+        {
+          "w": "low-fat",
+          "s": 40.76,
+          "e": 41.39
+        },
+        {
+          "w": "diet.",
+          "s": 41.39,
+          "e": 42.02
+        },
+        {
+          "w": "No",
+          "s": 42.02,
+          "e": 42.64
+        },
+        {
+          "w": "smoking",
+          "s": 42.64,
+          "e": 43.27
+        },
+        {
+          "w": "or",
+          "s": 43.27,
+          "e": 43.9
+        },
+        {
+          "w": "alcohol.",
+          "s": 43.9,
+          "e": 44.52
+        },
+        {
+          "w": "General.",
+          "s": 44.52,
+          "e": 45.15
+        },
+        {
+          "w": "Complete",
+          "s": 45.15,
+          "e": 45.78
+        },
+        {
+          "w": "bedrest.",
+          "s": 45.78,
+          "e": 46.41
+        },
+        {
+          "w": "Report",
+          "s": 46.41,
+          "e": 47.03
+        },
+        {
+          "w": "worsening",
+          "s": 47.03,
+          "e": 47.66
+        },
+        {
+          "w": "pain,",
+          "s": 47.66,
+          "e": 48.29
+        },
+        {
+          "w": "sweatching,",
+          "s": 48.29,
+          "e": 48.91
+        },
+        {
+          "w": "b",
+          "s": 48.91,
+          "e": 49.54
+        },
+        {
+          "w": "reathlessness",
+          "s": 49.54,
+          "e": 50.17
+        },
+        {
+          "w": "or",
+          "s": 50.17,
+          "e": 50.8
+        },
+        {
+          "w": "fainting",
+          "s": 50.8,
+          "e": 51.42
+        },
+        {
+          "w": "at",
+          "s": 51.42,
+          "e": 52.05
+        },
+        {
+          "w": "once.",
+          "s": 52.05,
+          "e": 52.68
+        },
+        {
+          "w": "Follow",
+          "s": 52.68,
+          "e": 53.3
+        },
+        {
+          "w": "upp",
+          "s": 53.3,
+          "e": 53.93
+        },
+        {
+          "w": "in",
+          "s": 53.93,
+          "e": 54.56
+        },
+        {
+          "w": "cardiology",
+          "s": 54.56,
+          "e": 55.19
+        },
+        {
+          "w": "in",
+          "s": 55.19,
+          "e": 55.81
+        },
+        {
+          "w": "two",
+          "s": 55.81,
+          "e": 56.44
+        },
+        {
+          "w": "days.",
+          "s": 56.44,
+          "e": 57.07
+        }
+      ]
+    }
+  ],
+  "normalized_en": "58-year-old male smoker with 30 minutes of heavy central chest pressure radiating to the left arm, breathlessness and sweating. Denies fever and cough. No known drug allergy. Hypertension and high cholesterol. Acute coronary syndrome. Blood pressure 145/90 mmHg, pulse 96 beats per minute, respiratory rate 20, saturation 95% on room air. ECG and troponin. Aspirin as advised. Continuous rhythm and BP monitoring. Diet, light low-salt, low-fat diet. No smoking or alcohol. General. Complete bedrest. Report worsening pain, sweatching, b reathlessness or fainting at once. Follow upp in cardiology in 2 days.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s4-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

@@ -1,0 +1,480 @@
+{
+  "job_id": "s26-none",
+  "text": "55-year-old chronic alcohol user with one month abdominal distention, leg swelling, tiredness, appetite loss and one week LOS. Denies vomited, blood and black stools. No known drug allergy. Liveru liver disease, now decompensated keratosis with ascites. Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit. Edema, shifting dullness. liiver function, blood count ultrasound. Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated. No alcohol or Rw salads. General, daily gth weight. Report bleeding, confusion, fever or low urine followup in one week.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "55-year-old chronic alcohol user with one month abdominal distention, leg swelling, tiredness, appetite loss and one week LOS. Denies vomited, blood and black stools. No known drug allergy. Liveru liver disease, now decompensated keratosis with ascites. Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit. Edema, shifting dullness. liiver function, blood count ultrasound. Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated. No alcohol or Rw salads. General, daily gth weight. Report bleeding, confusion, fever or low urine followup in one week.",
+      "start": 0.0,
+      "end": 71.47,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "55-year-old",
+          "s": 0.0,
+          "e": 0.8
+        },
+        {
+          "w": "chronic",
+          "s": 0.8,
+          "e": 1.61
+        },
+        {
+          "w": "alcohol",
+          "s": 1.61,
+          "e": 2.41
+        },
+        {
+          "w": "user",
+          "s": 2.41,
+          "e": 3.21
+        },
+        {
+          "w": "with",
+          "s": 3.21,
+          "e": 4.01
+        },
+        {
+          "w": "one",
+          "s": 4.01,
+          "e": 4.82
+        },
+        {
+          "w": "month",
+          "s": 4.82,
+          "e": 5.62
+        },
+        {
+          "w": "abdominal",
+          "s": 5.62,
+          "e": 6.42
+        },
+        {
+          "w": "distention,",
+          "s": 6.42,
+          "e": 7.23
+        },
+        {
+          "w": "leg",
+          "s": 7.23,
+          "e": 8.03
+        },
+        {
+          "w": "swelling,",
+          "s": 8.03,
+          "e": 8.83
+        },
+        {
+          "w": "tiredness,",
+          "s": 8.83,
+          "e": 9.64
+        },
+        {
+          "w": "appetite",
+          "s": 9.64,
+          "e": 10.44
+        },
+        {
+          "w": "loss",
+          "s": 10.44,
+          "e": 11.24
+        },
+        {
+          "w": "and",
+          "s": 11.24,
+          "e": 12.04
+        },
+        {
+          "w": "one",
+          "s": 12.04,
+          "e": 12.85
+        },
+        {
+          "w": "week",
+          "s": 12.85,
+          "e": 13.65
+        },
+        {
+          "w": "LOS.",
+          "s": 13.65,
+          "e": 14.45
+        },
+        {
+          "w": "Denies",
+          "s": 14.45,
+          "e": 15.26
+        },
+        {
+          "w": "vomited,",
+          "s": 15.26,
+          "e": 16.06
+        },
+        {
+          "w": "blood",
+          "s": 16.06,
+          "e": 16.86
+        },
+        {
+          "w": "and",
+          "s": 16.86,
+          "e": 17.67
+        },
+        {
+          "w": "black",
+          "s": 17.67,
+          "e": 18.47
+        },
+        {
+          "w": "stools.",
+          "s": 18.47,
+          "e": 19.27
+        },
+        {
+          "w": "No",
+          "s": 19.27,
+          "e": 20.07
+        },
+        {
+          "w": "known",
+          "s": 20.07,
+          "e": 20.88
+        },
+        {
+          "w": "drug",
+          "s": 20.88,
+          "e": 21.68
+        },
+        {
+          "w": "allergy.",
+          "s": 21.68,
+          "e": 22.48
+        },
+        {
+          "w": "Liveru",
+          "s": 22.48,
+          "e": 23.29
+        },
+        {
+          "w": "liver",
+          "s": 23.29,
+          "e": 24.09
+        },
+        {
+          "w": "disease,",
+          "s": 24.09,
+          "e": 24.89
+        },
+        {
+          "w": "now",
+          "s": 24.89,
+          "e": 25.7
+        },
+        {
+          "w": "decompensated",
+          "s": 25.7,
+          "e": 26.5
+        },
+        {
+          "w": "keratosis",
+          "s": 26.5,
+          "e": 27.3
+        },
+        {
+          "w": "with",
+          "s": 27.3,
+          "e": 28.1
+        },
+        {
+          "w": "ascites.",
+          "s": 28.1,
+          "e": 28.91
+        },
+        {
+          "w": "Blood",
+          "s": 28.91,
+          "e": 29.71
+        },
+        {
+          "w": "pressure",
+          "s": 29.71,
+          "e": 30.51
+        },
+        {
+          "w": "110/68",
+          "s": 30.51,
+          "e": 31.32
+        },
+        {
+          "w": "mmHg,",
+          "s": 31.32,
+          "e": 32.12
+        },
+        {
+          "w": "pulse",
+          "s": 32.12,
+          "e": 32.92
+        },
+        {
+          "w": "88,",
+          "s": 32.92,
+          "e": 33.73
+        },
+        {
+          "w": "temperature",
+          "s": 33.73,
+          "e": 34.53
+        },
+        {
+          "w": "98.6",
+          "s": 34.53,
+          "e": 35.33
+        },
+        {
+          "w": "degrees",
+          "s": 35.33,
+          "e": 36.13
+        },
+        {
+          "w": "Fahrenheit.",
+          "s": 36.13,
+          "e": 36.94
+        },
+        {
+          "w": "Edema,",
+          "s": 36.94,
+          "e": 37.74
+        },
+        {
+          "w": "shifting",
+          "s": 37.74,
+          "e": 38.54
+        },
+        {
+          "w": "dullness.",
+          "s": 38.54,
+          "e": 39.35
+        },
+        {
+          "w": "liiver",
+          "s": 39.35,
+          "e": 40.15
+        },
+        {
+          "w": "function,",
+          "s": 40.15,
+          "e": 40.95
+        },
+        {
+          "w": "blood",
+          "s": 40.95,
+          "e": 41.76
+        },
+        {
+          "w": "count",
+          "s": 41.76,
+          "e": 42.56
+        },
+        {
+          "w": "ultrasound.",
+          "s": 42.56,
+          "e": 43.36
+        },
+        {
+          "w": "Furosemide",
+          "s": 43.36,
+          "e": 44.16
+        },
+        {
+          "w": "has",
+          "s": 44.16,
+          "e": 44.97
+        },
+        {
+          "w": "advised,",
+          "s": 44.97,
+          "e": 45.77
+        },
+        {
+          "w": "lactulose,",
+          "s": 45.77,
+          "e": 46.57
+        },
+        {
+          "w": "thiamine,",
+          "s": 46.57,
+          "e": 47.38
+        },
+        {
+          "w": "alcohol",
+          "s": 47.38,
+          "e": 48.18
+        },
+        {
+          "w": "counseling,",
+          "s": 48.18,
+          "e": 48.98
+        },
+        {
+          "w": "diet,",
+          "s": 48.98,
+          "e": 49.79
+        },
+        {
+          "w": "ow-salt,",
+          "s": 49.79,
+          "e": 50.59
+        },
+        {
+          "w": "high-protein",
+          "s": 50.59,
+          "e": 51.39
+        },
+        {
+          "w": "vegetarian",
+          "s": 51.39,
+          "e": 52.19
+        },
+        {
+          "w": "diet,",
+          "s": 52.19,
+          "e": 53.0
+        },
+        {
+          "w": "milk",
+          "s": 53.0,
+          "e": 53.8
+        },
+        {
+          "w": "if",
+          "s": 53.8,
+          "e": 54.6
+        },
+        {
+          "w": "tolerated.",
+          "s": 54.6,
+          "e": 55.41
+        },
+        {
+          "w": "No",
+          "s": 55.41,
+          "e": 56.21
+        },
+        {
+          "w": "alcohol",
+          "s": 56.21,
+          "e": 57.01
+        },
+        {
+          "w": "or",
+          "s": 57.01,
+          "e": 57.82
+        },
+        {
+          "w": "Rw",
+          "s": 57.82,
+          "e": 58.62
+        },
+        {
+          "w": "salads.",
+          "s": 58.62,
+          "e": 59.42
+        },
+        {
+          "w": "General,",
+          "s": 59.42,
+          "e": 60.22
+        },
+        {
+          "w": "daily",
+          "s": 60.22,
+          "e": 61.03
+        },
+        {
+          "w": "gth",
+          "s": 61.03,
+          "e": 61.83
+        },
+        {
+          "w": "weight.",
+          "s": 61.83,
+          "e": 62.63
+        },
+        {
+          "w": "Report",
+          "s": 62.63,
+          "e": 63.44
+        },
+        {
+          "w": "bleeding,",
+          "s": 63.44,
+          "e": 64.24
+        },
+        {
+          "w": "confusion,",
+          "s": 64.24,
+          "e": 65.04
+        },
+        {
+          "w": "fever",
+          "s": 65.04,
+          "e": 65.85
+        },
+        {
+          "w": "or",
+          "s": 65.85,
+          "e": 66.65
+        },
+        {
+          "w": "low",
+          "s": 66.65,
+          "e": 67.45
+        },
+        {
+          "w": "urine",
+          "s": 67.45,
+          "e": 68.25
+        },
+        {
+          "w": "followup",
+          "s": 68.25,
+          "e": 69.06
+        },
+        {
+          "w": "in",
+          "s": 69.06,
+          "e": 69.86
+        },
+        {
+          "w": "one",
+          "s": 69.86,
+          "e": 70.66
+        },
+        {
+          "w": "week.",
+          "s": 70.66,
+          "e": 71.47
+        }
+      ]
+    }
+  ],
+  "normalized_en": "55-year-old chronic alcohol user with 1 month abdominal distention, leg swelling, tiredness, appetite loss 1 week LOS. Denies vomited, blood and black stools. No known drug allergy. Liveru liver disease, now decompensated keratosis with ascites. Blood pressure 110/68 mmHg, pulse 88, temperature 98.6 degrees Fahrenheit. Edema, shifting dullness. liiver function, blood count ultrasound. Furosemide has advised, lactulose, thiamine, alcohol counseling, diet, ow-salt, high-protein vegetarian diet, milk if tolerated. No alcohol or Rw salads. General, daily gth weight. Report bleeding, confusion, fever or low urine followup in 1 week.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s26-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

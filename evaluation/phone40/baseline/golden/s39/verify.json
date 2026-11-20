@@ -1,0 +1,137 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "ondansetron",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Hardly neuro checks paracetamale ondansetron."
+    },
+    {
+      "kind": "drug",
+      "name": "paracetamol",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Hardly neuro checks paracetamale ondansetron."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 120/80",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 120/80 mmHg, pulse 88."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 88",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 120/80 mmHg, pulse 88."
+    },
+    {
+      "kind": "vital",
+      "text": "99%",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Saturation 99%."
+    },
+    {
+      "kind": "symptom",
+      "text": "headache",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Brief under one minute blanckout, now alert with headache and vomit."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "If vomiting, no sedation, CT if worsening."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Diet, light productive vomiting settles."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Return for repeated vomiting, confusion, seizure or fluid leaks."
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "1",
+        "2",
+        "15",
+        "29",
+        "48",
+        "80",
+        "88",
+        "99",
+        "120"
+      ],
+      "count": 9
+    },
+    "total": 9,
+    "drug_needs_review": 2,
+    "vital_verified": 3,
+    "symptom_verified": 4
+  },
+  "brand_mentions": []
+}

@@ -1,0 +1,135 @@
+{
+  "sections": {
+    "present_illness": {
+      "items": [
+        {
+          "text": "pain",
+          "source_sentence": "No rest pain.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F8",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pain",
+          "source_sentence": "General, daily workk, carry nitroglycerin emergency for 10 minutes rest pain.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F9",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "examination_findings": {
+      "items": [
+        {
+          "text": "Blood pressure 130/82",
+          "source_sentence": "Blood pressure 130/82 mmHg, pulse 78.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F5",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pulse 78",
+          "source_sentence": "Blood pressure 130/82 mmHg, pulse 78.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F6",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "98%",
+          "source_sentence": "Saturation 98%.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F7",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "previous_diagnosis": {
+      "items": []
+    },
+    "plan_of_management": {
+      "items": [
+        {
+          "text": "nitroglycerin no dose",
+          "source_sentence": "Aorvastatin 20 mg night, nitroglycerin training.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F3",
+          "verified_kind": "drug",
+          "verified_status": "needs_review"
+        },
+        {
+          "text": "Followup in one month",
+          "source_sentence": "Followup in one month",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F10",
+          "verified_kind": "followup",
+          "verified_status": "verified"
+        },
+        {
+          "text": "aspirin 75 mg",
+          "source_sentence": "ECG aspirin 75 mg daily.",
+          "seg_id": null,
+          "confidence": 0.88,
+          "verified_kind": "drug",
+          "verified_status": "verified"
+        },
+        {
+          "text": "atorvastatin 20 mg",
+          "source_sentence": "Aorvastatin 20 mg night, nitroglycerin training.",
+          "seg_id": null,
+          "confidence": 0.88,
+          "verified_kind": "drug",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "diet_instructions": {
+      "items": []
+    },
+    "general_instructions": {
+      "items": []
+    }
+  },
+  "provenance": {
+    "llm_engine": "discharge:gpt-4.1",
+    "dropped_unproven": 2,
+    "verified_summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "10",
+          "20",
+          "61",
+          "75",
+          "78",
+          "82",
+          "98",
+          "130"
+        ],
+        "count": 10
+      },
+      "total": 10,
+      "drug_verified": 2,
+      "drug_needs_review": 2,
+      "vital_verified": 3,
+      "symptom_verified": 2,
+      "followup_verified": 1
+    },
+    "canonicalized": 0,
+    "llm_extractive": 0,
+    "prefilled": 2,
+    "schema": "valid"
+  }
+}

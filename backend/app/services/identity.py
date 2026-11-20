@@ -2,8 +2,9 @@
 
 The demo has no passwords. The browser sends ``X-User-Id`` and ``X-Patient-Id``; a middleware
 stores them in a per-request context so routes and services can read them without a request
-object. There is one staff user, the attending physician (Dr. Meera Shah), and the patient is
-Ravi. Task assignees ("Nurse Anita Rao") are data on a task, not accounts.
+object. Staff roles are Admin (Dr. Meera Shah, role id ``doctor``, holds every action), Senior
+doctor, Junior doctor and Nurse; the last three work the tasks given to their role. The patient
+is Ravi.
 
 ``ingest`` belongs to a system actor (the hospital system link). It is not selectable and is
 not a person: it is chosen by the ``X-System-Id`` header on the ingest routes only.
@@ -26,21 +27,20 @@ class User:
 
 
 USERS = [
-    # The chief doctor ("doctor" role) walks the ward and hands out tasks.
+    # Admin ("doctor" role id, kept for compatibility): holds every action and hands out tasks.
     User("u_meera", "Dr. Meera Shah", "doctor", "/timeline"),
     # Staff who receive tasks. They see and work only the tasks given to their role.
     User("u_arjun", "Dr. Arjun Rao", "senior_doctor", "/tasks"),
+    User("u_kiran", "Dr. Kiran Patel", "junior_doctor", "/tasks"),
     User("u_anita", "Nurse Anita Rao", "nurse", "/tasks"),
 ]
-ROLE_LABELS = {"doctor": "Chief doctor", "senior_doctor": "Senior doctor", "nurse": "Nurse"}
-TASK_ROLES = ("senior_doctor", "nurse")
+ROLE_LABELS = {"doctor": "Admin", "senior_doctor": "Senior doctor", "junior_doctor": "Junior doctor", "nurse": "Nurse"}
+TASK_ROLES = ("senior_doctor", "junior_doctor", "nurse")
 DIRECTORY = {user.id: user for user in USERS}
+TASK_ASSIGNEES = {user.role: user for user in USERS if user.role in TASK_ROLES}
 DEFAULT_USER_ID = "u_meera"
 DEFAULT_PATIENT_ID = "pat_ravi"
 
-# Clinical screens show these patients only. The rest of the seeded cohort feeds the hospital
-# dashboard and is never opened as a record.
-BROWSABLE_PATIENT_IDS = frozenset({"pat_ravi"})
 
 # System actors are not people and cannot be named in X-User-Id.
 SYSTEM_ROLE = "integration"
@@ -56,7 +56,7 @@ PERMISSIONS: dict[str, set[str]] = {
     "approve_draft": {"doctor"},
     "reject_draft": {"doctor"},
     "verify_allergy": {"doctor"},
-    "accept_tasks": {"doctor"},
+    "accept_tasks": {"doctor", "senior_doctor"},
     "clinical_draft": {"doctor"},
     "discharge_draft": {"doctor"},
     "review_lab": {"doctor"},
@@ -65,7 +65,7 @@ PERMISSIONS: dict[str, set[str]] = {
     "dismiss_alert": {"doctor"},
     "reconcile": {"doctor"},
     "manage_task": {"doctor"},
-    "work_task": {"doctor", "senior_doctor", "nurse"},
+    "work_task": {"doctor", "senior_doctor", "junior_doctor", "nurse"},
     "upload_document": {"doctor"},
     "confirm_document": {"doctor"},
     "send_request": {"doctor"},
@@ -77,6 +77,15 @@ PERMISSIONS: dict[str, set[str]] = {
     "record_reading": {"doctor"},
     "ingest": {SYSTEM_ROLE},
     "buy_credits": {"doctor"},
+    "register_patient": {"doctor"},
+    # Dictate, edit and approve a referral (part one of the hospital referral form).
+    "refer": {"doctor", "senior_doctor"},
+    # Generate the discharge summary report from the record (everyone may view it).
+    "discharge_report": {"doctor", "senior_doctor", "junior_doctor"},
+    # Generate the hospital investigation & radiology request form for one request.
+    "investigation_report": {"doctor", "senior_doctor", "junior_doctor"},
+    # Run the ward round: dictate or upload a round per patient and assign its tasks.
+    "ward_round": {"doctor", "senior_doctor"},
 }
 
 _user_id: ContextVar[str] = ContextVar("acting_user_id", default=DEFAULT_USER_ID)
@@ -113,7 +122,14 @@ def current_patient_id() -> str:
 
 
 def is_browsable(patient_id: str | None) -> bool:
-    return patient_id in BROWSABLE_PATIENT_IDS
+    """A record opens when the patient is registered (Ravi, or anyone added through POST /patients)."""
+    if not patient_id:
+        return False
+    from ..db import SessionLocal
+    from ..models import Patient
+
+    with SessionLocal() as db:
+        return db.get(Patient, patient_id) is not None
 
 
 def require_browsable_patient(request: Request) -> None:
@@ -129,6 +145,37 @@ def require_browsable_patient(request: Request) -> None:
 
 def can(action: str, user: User | None = None) -> bool:
     return (user or acting_user()).role in PERMISSIONS[action]
+
+
+def require_any(*actions: str):
+    """Route dependency: 403 unless the actor holds at least one of ``actions``."""
+    for action in actions:
+        if action not in PERMISSIONS:
+            raise KeyError(f"Unknown action {action}")
+
+    def check() -> User:
+        user = acting_user()
+        if not any(user.role in PERMISSIONS[action] for action in actions):
+            raise HTTPException(403, f"{user.name} ({user.role}) may not {actions[0].replace('_', ' ')}")
+        return user
+
+    return check
+
+
+def require_feature_draft(feature: str | None) -> None:
+    """A ward round (F3) is drafted by the admin or a senior doctor; every other note by the admin."""
+    action = "ward_round" if feature == "F3" else "clinical_draft"
+    if not can(action):
+        user = acting_user()
+        raise HTTPException(403, f"{user.name} ({user.role}) may not {action.replace('_', ' ')}")
+
+
+def require_draft_action(action: str, feature: str | None) -> None:
+    """Edit, approve or reject a draft. The senior doctor who runs a ward round (F3) finishes it too."""
+    if can(action) or (feature == "F3" and can("ward_round")):
+        return
+    user = acting_user()
+    raise HTTPException(403, f"{user.name} ({user.role}) may not {action.replace('_', ' ')}")
 
 
 def require(action: str):

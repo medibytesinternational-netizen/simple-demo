@@ -1,4 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { OPD_HEADER_FIELDS, OPD_HEARD_SECTIONS, isOpdV2 } from "../features/f01/opdFormat";
+import { OpdEditor } from "../features/f01/OpdEditor";
+import { ADMIT_HEADER_FIELDS, ADMIT_HEARD_SECTIONS, isAdmitV2 } from "../features/f02/admitFormat";
+
+// A revision just started from a signed note opens straight in the editor.
+const openForEdit = new Set<string>();
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, patch, post } from "../api";
 import type { Claim, Draft, Meta } from "../types";
@@ -6,7 +12,6 @@ import { EvidenceChip } from "./Evidence";
 import { Modal } from "./Modal";
 import { Icon } from "./icons";
 import { Banner, Field, MetaChip, Pill } from "./ui";
-import type { Tone } from "./ui";
 
 const FEATURE_LABELS: Record<string, string> = {
   F1: "Consultation note",
@@ -30,35 +35,69 @@ export function DraftReview({ draft }: { draft: Draft }) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [selectedTasks, setSelectedTasks] = useState<number[]>([]);
+  const [taskEdits, setTaskEdits] = useState<any[]>([]);
   const [f4Exam, setF4Exam] = useState("");
   const [f4Plan, setF4Plan] = useState("");
 
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta") });
   const tasks = useMemo<any[]>(() => draft.content?.proposed_tasks || [], [draft.content]);
+  const assignedTasks = useQuery<{ tasks: Array<{ title: string; accepted_from_draft_id?: string | null }> }>({
+    queryKey: ["tasks"],
+    queryFn: () => get<{ tasks: Array<{ title: string; accepted_from_draft_id?: string | null }> }>("/tasks"),
+    enabled: draft.feature === "F3",
+  });
+  const assignedRoundTitles = useMemo(
+    () => new Set((assignedTasks.data?.tasks || []).filter((task) => task.accepted_from_draft_id === draft.id).map((task) => task.title)),
+    [assignedTasks.data?.tasks, draft.id],
+  );
   useEffect(() => {
     const defaults = tasks
       .map((task: any, index: number) => ({ task, index }))
-      .filter(({ task }: any) => !String(task.title || "").toLowerCase().includes("ibuprofen") && Number(task.confidence ?? 1) >= 0.7)
+      .filter(({ task }: any) => !assignedRoundTitles.has(String(task.title || "")) && !String(task.title || "").toLowerCase().includes("ibuprofen") && Number(task.confidence ?? 1) >= 0.7)
       .map(({ index }: any) => index);
     setSelectedTasks(defaults);
+    setTaskEdits(tasks.map((task: any) => ({ ...task })));
     setEditText(JSON.stringify(draft.content, null, 2));
-    setEditMode(false);
+    setEditMode(openForEdit.delete(draft.id));
     setF4Exam(draft.content?.exam?.general?.text || "");
     setF4Plan(draft.content?.plan?.text || "");
-  }, [draft.id, draft.content, tasks]);
+  }, [draft.id, draft.content, tasks, assignedRoundTitles]);
+
+  const updateTask = (index: number, change: Record<string, unknown>) => {
+    setTaskEdits((current) => current.map((task, itemIndex) => itemIndex === index ? { ...task, ...change } : task));
+  };
 
   const invalidate = () => queryClient.invalidateQueries();
 
   const approve = useMutation({
     mutationFn: async () => {
       let content: any = undefined;
-      if (editMode) content = JSON.parse(editText);
+      if (editMode && !isOpdV2(draft.content)) {
+        content = JSON.parse(editText);
+      } else if (draft.feature === "F3") {
+        content = { ...draft.content, proposed_tasks: taskEdits };
+      }
+      if (content && JSON.stringify(content) !== JSON.stringify(draft.content)) {
+        await patch(`/drafts/${draft.id}`, { content, editor: meta.data?.user.name });
+        content = undefined;
+      }
       return post<any>(`/drafts/${draft.id}/approve`, {
         content,
         approved_by: meta.data?.user.name || "Dr. Meera Shah",
       });
     },
     onSuccess: () => {
+      setError("");
+      invalidate();
+    },
+    onError: (err: any) => setError(String(err?.message || err)),
+  });
+
+  // Correct a signed OPD report: a new draft with its content; signing it replaces the timeline entry.
+  const revise = useMutation({
+    mutationFn: () => post<Draft>(`/drafts/${draft.id}/revise`),
+    onSuccess: (revision) => {
+      openForEdit.add(revision.id);
       setError("");
       invalidate();
     },
@@ -120,7 +159,11 @@ export function DraftReview({ draft }: { draft: Draft }) {
   });
 
   const accept = useMutation({
-    mutationFn: () => post<any>(`/drafts/${draft.id}/accept-tasks`, { indices: selectedTasks, actor: meta.data?.user.name }),
+    mutationFn: () =>
+      post<any>(`/drafts/${draft.id}/accept-tasks`, {
+        tasks: selectedTasks.map((index) => ({ index, ...taskEdits[index] })),
+        actor: meta.data?.user.name,
+      }),
     onSuccess: () => {
       setError("");
       invalidate();
@@ -163,6 +206,10 @@ export function DraftReview({ draft }: { draft: Draft }) {
   });
 
   const isApproved = draft.status === "approved";
+  const canAssign = !!meta.data?.allowed_actions?.includes("accept_tasks");
+  const opdNote = draft.feature === "F1" && isOpdV2(draft.content);
+  // Admission notes in the hospital format use the same heading editor (before signing; signing admits).
+  const admitNote = draft.feature === "F2" && isAdmitV2(draft.content);
   const isRejected = draft.status === "rejected";
   const f4Incomplete =
     draft.feature === "F4" &&
@@ -224,7 +271,13 @@ export function DraftReview({ draft }: { draft: Draft }) {
         {!isApproved && !isRejected ? (
           <button className="btn btn-sm" aria-pressed={editMode} onClick={() => setEditMode((value) => !value)}>
             <Icon name="edit" size={14} />
-            {editMode ? "Stop editing" : "Edit draft (advanced)"}
+            {editMode ? "Stop editing" : opdNote || admitNote ? "Edit" : "Edit draft (advanced)"}
+          </button>
+        ) : null}
+        {isApproved && opdNote ? (
+          <button className="btn btn-sm" onClick={() => revise.mutate()} disabled={revise.isPending} aria-busy={revise.isPending || undefined}>
+            <Icon name="edit" size={14} />
+            {revise.isPending ? "Opening..." : "Edit"}
           </button>
         ) : null}
       </div>
@@ -350,7 +403,9 @@ export function DraftReview({ draft }: { draft: Draft }) {
         ) : null}
 
         <article className="draft-paper">
-          {editMode ? (
+          {editMode && (opdNote || admitNote) ? (
+            <OpdEditor draft={draft} onDone={() => setEditMode(false)} sections={admitNote ? ADMIT_HEARD_SECTIONS : undefined} />
+          ) : editMode ? (
             <div className="draft-editing">
               <label className="field-label" htmlFor={`draft-json-${draft.id}`}>Draft content (JSON)</label>
               <div className="field-hint mb-2">
@@ -378,20 +433,25 @@ export function DraftReview({ draft }: { draft: Draft }) {
           )}
         </article>
 
-        {draft.feature === "F3" && tasks.length ? (
+        {draft.feature === "F3" && !editMode ? (
           <section className="draft-tasks" aria-label="Proposed tasks">
             <h4 className="draft-section-title">
-              Proposed tasks<span className="draft-section-sub">Choose what becomes real</span>
+              Proposed tasks<span className="draft-section-sub">{isApproved ? "Approve selected items to assign" : "Edit and review before approval"}</span>
             </h4>
-            <div className="rows">
-              {tasks.map((task, index) => {
+            {taskEdits.length ? <div className="small muted mb-2">Selected items are still proposals. Approve the report, then approve selected tasks to place them in staff queues.</div> : null}
+            {taskEdits.length ? <div className="rows">
+              {taskEdits.map((task, index) => {
                 const checked = selectedTasks.includes(index);
+                const alreadyAssigned = assignedRoundTitles.has(String(task.title || ""));
+                const taskLocked = isApproved || isRejected || alreadyAssigned;
                 return (
-                  <label className={`lrow draft-task ${checked ? "selected" : ""}`} key={`${task.title}-${index}`}>
+                  <div className={`lrow draft-task ${checked ? "selected" : ""}`} key={`${task.title}-${index}`}>
                     <input
                       className="checkbox"
                       type="checkbox"
                       checked={checked}
+                      disabled={isRejected || alreadyAssigned}
+                      aria-label={`Select task ${task.title} for approval`}
                       onChange={(event) => {
                         setSelectedTasks((current) =>
                           event.target.checked ? [...current, index] : current.filter((item) => item !== index),
@@ -399,34 +459,83 @@ export function DraftReview({ draft }: { draft: Draft }) {
                       }}
                     />
                     <span className="lrow-main">
-                      <span className="lrow-title">{task.title}</span>
+                      <input
+                        className="input input-sm"
+                        aria-label={`Task ${index + 1} action`}
+                        value={task.title || ""}
+                        disabled={taskLocked}
+                        onChange={(event) => updateTask(index, { title: event.target.value })}
+                      />
+                      <textarea
+                        className="textarea mt-1"
+                        rows={2}
+                        aria-label={`Task ${index + 1} details`}
+                        value={task.detail || ""}
+                        disabled={taskLocked}
+                        onChange={(event) => updateTask(index, { detail: event.target.value })}
+                      />
                       <span className="lrow-chips">
-                        <Pill tone={priorityTone(task.priority)}>{task.priority}</Pill>
-                        <MetaChip icon="clock">due in {task.due_in_hours}h</MetaChip>
+                        <span className="small muted">Assign role</span>
+                        <select
+                          className="select select-sm"
+                          aria-label={`Task ${index + 1} assignee role`}
+                          value={task.assignee_role || "junior_doctor"}
+                          disabled={taskLocked}
+                          onChange={(event) => updateTask(index, { assignee_role: event.target.value })}
+                        >
+                          <option value="senior_doctor">Senior doctor</option>
+                          <option value="junior_doctor">Junior doctor</option>
+                          <option value="nurse">Nurse</option>
+                        </select>
+                        <span className="small muted">Priority</span>
+                        {["routine", "urgent", "critical"].map((priority) => (
+                          <button
+                            key={priority}
+                            type="button"
+                            className={`btn btn-sm ${task.priority === priority ? "btn-primary" : ""}`}
+                            aria-pressed={task.priority === priority}
+                            disabled={taskLocked}
+                            onClick={() => updateTask(index, { priority })}
+                          >
+                            {priority === "routine" ? "Routine" : priority[0].toUpperCase() + priority.slice(1)}
+                          </button>
+                        ))}
+                        <label className="small muted">
+                          due in{" "}
+                          <input className="input input-sm" type="number" min={1} max={168} style={{ width: 64 }}
+                            aria-label={`Task ${index + 1} due in hours`}
+                            value={task.due_in_hours ?? 24}
+                            disabled={taskLocked}
+                            onChange={(event) => updateTask(index, { due_in_hours: Math.max(1, Math.min(168, Number(event.target.value) || 1)) })} /> h
+                        </label>
+                        {task.category && task.category !== "general" ? <MetaChip>{String(task.category).toUpperCase()}</MetaChip> : null}
                         <MetaChip>{Math.round((task.confidence ?? 1) * 100)}% confidence</MetaChip>
+                        {alreadyAssigned ? <Pill tone="success">Assigned</Pill> : null}
                       </span>
                     </span>
                     <span className="lrow-side">
                       <EvidenceChip eventIds={[]} segmentIds={task.source_segment_ids} />
                     </span>
-                  </label>
+                  </div>
                 );
               })}
-            </div>
+            </div> : <div className="empty-field">No action items were extracted from this round. Add the actions to the dictation and generate the report again.</div>}
             <div className="button-row mt-3">
               <button
                 className="btn btn-primary btn-sm"
-                disabled={!isApproved || accept.isPending || !selectedTasks.length}
+                disabled={!canAssign || !isApproved || isRejected || accept.isPending || !selectedTasks.some((index) => !assignedRoundTitles.has(String(taskEdits[index]?.title || "")))}
                 onClick={() => accept.mutate()}
                 aria-busy={accept.isPending || undefined}
               >
                 {accept.isPending
                   ? <><span className="spinner" /> Accepting…</>
-                  : `Accept ${selectedTasks.length} selected task${selectedTasks.length === 1 ? "" : "s"}`}
+                  : `Approve & assign ${selectedTasks.filter((index) => !assignedRoundTitles.has(String(taskEdits[index]?.title || ""))).length} selected task${selectedTasks.filter((index) => !assignedRoundTitles.has(String(taskEdits[index]?.title || ""))).length === 1 ? "" : "s"}`}
               </button>
-              {!isApproved ? <span className="small muted">Approve the note first, then accept tasks.</span> : null}
+              {!isApproved ? <span className="small muted">Approve the report first. No task reaches a queue before task approval.</span> : null}
+              {isApproved && !selectedTasks.some((index) => !assignedRoundTitles.has(String(taskEdits[index]?.title || ""))) ? <span className="small muted">Select one or more unassigned tasks to approve.</span> : null}
+              {!canAssign ? <span className="small muted">Only the senior doctor or admin assigns round tasks.</span> : null}
             </div>
-            {accept.isSuccess ? <div className="success-box mt-2" role="status">Tasks accepted. They are now real work items.</div> : null}
+            {accept.isSuccess ? <div className="success-box mt-2" role="status">Tasks assigned. The junior doctor and the nurse now see their own tasks on their task lists.</div> : null}
           </section>
         ) : null}
       </div>
@@ -498,13 +607,6 @@ function GateMark({ ok }: { ok: boolean }) {
   );
 }
 
-function priorityTone(priority: unknown): Tone {
-  const value = String(priority || "").toLowerCase();
-  if (/stat|urgent|critical|immediate/.test(value)) return "critical";
-  if (/high/.test(value)) return "warning";
-  return "neutral";
-}
-
 /** Shown in a table cell or quoted value when the source carries nothing. */
 function Blank({ label = "Not recorded" }: { label?: string }) {
   return <span className="muted">{label}</span>;
@@ -572,6 +674,30 @@ function DraftContent({
   const content = draft.content || {};
   switch (draft.feature) {
     case "F1":
+      if (isOpdV2(content)) {
+        return (
+          <>
+            <Section title="Patient record" sub="From registration">
+              <dl className="opd-record">
+                {OPD_HEADER_FIELDS.map(([key, label]) => (
+                  <div key={key}><dt>{label}</dt><dd>{content.header?.[key] || <Blank />}</dd></div>
+                ))}
+              </dl>
+            </Section>
+            {OPD_HEARD_SECTIONS.map(([key, label, many]) => (
+              <Section key={key} title={label}>
+                {many ? <ClaimList claims={content[key]} emptyLabel="Not documented" /> : <ClaimLine claim={content[key]} emptyLabel="Not documented" />}
+              </Section>
+            ))}
+            {content.needs_review?.length ? (
+              <Banner tone="warning">
+                <strong>Check these first</strong>: the pipeline could not fully confirm them against the recording:
+                <ul>{content.needs_review.map((item: any, i: number) => <li key={i}><b>{item.section}:</b> {item.text}</li>)}</ul>
+              </Banner>
+            ) : null}
+          </>
+        );
+      }
       return (
         <>
           <Section title="Chief complaint"><ClaimLine claim={content.chief_complaint} /></Section>
@@ -603,9 +729,52 @@ function DraftContent({
           ) : null}
           <Section title="Follow-up"><ClaimLine claim={content.follow_up} /></Section>
           <NotDocumented items={content.not_documented} />
+          {content.needs_review?.length ? (
+            <Banner tone="warning">
+              <strong>Check these first</strong> — the pipeline could not fully confirm them against the recording:
+              <ul>
+                {content.needs_review.map((item: { section: string; text: string }, i: number) => (
+                  <li key={i}>{item.section}: {item.text}</li>
+                ))}
+              </ul>
+            </Banner>
+          ) : null}
         </>
       );
     case "F2":
+      if (isAdmitV2(content)) {
+        return (
+          <>
+            <Section title="Patient record" sub="From registration">
+              <dl className="opd-record">
+                {ADMIT_HEADER_FIELDS.map(([key, label]) => (
+                  <div key={key}><dt>{label}</dt><dd>{content.header?.[key] || <Blank />}</dd></div>
+                ))}
+              </dl>
+            </Section>
+            {ADMIT_HEARD_SECTIONS.map(([key, label, many]) => {
+              const items: any[] = many ? content[key] || [] : content[key] ? [content[key]] : [];
+              return (
+                <Section key={key} title={label}>
+                  {items.length ? items.map((claim: any, i: number) => (
+                    <div key={i} className="admit-item">
+                      <ClaimLine claim={claim} />
+                      {claim.origin === "opd" ? <Pill tone="info">from OPD report</Pill> : claim.human_authored ? null : <Pill tone="neutral">from recording</Pill>}
+                    </div>
+                  )) : <div className="empty-field">Not documented</div>}
+                </Section>
+              );
+            })}
+            {content.needs_review?.length ? (
+              <Banner tone="warning">
+                <strong>Check these first</strong>: the pipeline could not fully confirm them against the recording:
+                <ul>{content.needs_review.map((item: any, i: number) => <li key={i}><b>{item.section}:</b> {item.text}</li>)}</ul>
+              </Banner>
+            ) : null}
+            <div className="small muted">Signing admits the patient to the ward above. Proposed treatment is not ordered by signing.</div>
+          </>
+        );
+      }
       return (
         <>
           <Section title="Chief complaint"><ClaimLine claim={content.chief_complaint} /></Section>
@@ -639,7 +808,13 @@ function DraftContent({
     case "F3":
       return (
         <>
-          <Section title="Round note"><ClaimList claims={content.note_claims} /></Section>
+          {content.report && (content.report.findings?.length || content.report.assessment?.length || content.report.plan?.length) ? (
+            <>
+              <Section title="Findings"><ClaimList claims={content.report.findings} /></Section>
+              <Section title="Assessment"><ClaimList claims={content.report.assessment} /></Section>
+              <Section title="Plan"><ClaimList claims={content.report.plan} /></Section>
+            </>
+          ) : <Section title="Round note"><ClaimList claims={content.note_claims} /></Section>}
           <Section title="Proposed nursing chart entries" sub="Committed on note approval">
             {content.nursing_entries?.length ? (
               <ClaimList claims={content.nursing_entries} />

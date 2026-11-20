@@ -147,3 +147,165 @@ def complete_referral(referral_id: str, body: ReferralCompleteRequest, db: Sessi
     )
     db.commit()
     return _referral_dict(referral)
+
+
+# --------------------------------------------------------------------------
+# Referral form, part one: dictated by the referring doctor, filled with the
+# patient's earlier record, approved by the same doctor, stored on the timeline.
+# --------------------------------------------------------------------------
+import uuid  # noqa: E402
+
+from fastapi import File, UploadFile  # noqa: E402
+
+from ..models import Draft, TimelineEvent  # noqa: E402
+from ..services import credits, pipeline  # noqa: E402
+from ..services import referral_form  # noqa: E402
+from ..services.cached.f11_referral import _history  # noqa: E402
+from ..services.context import create_transcript_event  # noqa: E402
+from ..services.drafts import approve_draft, update_draft  # noqa: E402
+from ..services.timeline import require_open_encounter  # noqa: E402
+from .notes import MAX_AUDIO_BYTES, _looks_like_audio  # noqa: E402
+
+
+class ReferralFormBody(BaseModel):
+    content: dict
+
+
+def _form_content(db: Session, patient, encounter, state, heard: dict) -> dict:
+    """The dictation first; the patient's earlier record is added to the salient details."""
+    context = build_context(db, patient, encounter, state, "F11")
+    record = _history(context)
+    details = [{**c, "origin": "recording"} for c in heard.get("salient_details") or []]
+    if record and str(record.get("text") or "").strip():
+        details.append({**record, "origin": "record"})
+    content = {
+        **heard,
+        "format": referral_form.REFERRAL_FORMAT,
+        "header": referral_form.header(patient, encounter),
+        "salient_details": details,
+        "urgency": referral_form.URGENCY.get(heard.get("referral_type") or "", "routine"),
+        "specialty": str((heard.get("department") or {}).get("text") or ""),
+        "specialist": str((heard.get("unit_chief") or {}).get("text") or ""),
+    }
+    content["not_documented"] = referral_form.missing(content)
+    return content
+
+
+def _latest_form(db: Session, patient_id: str) -> Draft | None:
+    drafts = db.scalars(
+        select(Draft).where(Draft.feature == "F11", Draft.patient_id == patient_id).order_by(Draft.created_at.desc())
+    ).all()
+    return next((d for d in drafts if (d.content or {}).get("format") == referral_form.REFERRAL_FORMAT), None)
+
+
+@router.post("/referrals/record", dependencies=[Depends(require("refer"))])
+async def record_referral(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    patient, encounter, _ = _state(db)
+    require_open_encounter(encounter)
+    if not _looks_like_audio(file.filename, file.content_type):
+        raise HTTPException(415, "That file is not audio. Upload mp3, wav, m4a, webm or ogg.")
+    contents = await file.read(MAX_AUDIO_BYTES + 1)
+    if len(contents) > MAX_AUDIO_BYTES:
+        raise HTTPException(413, "Audio too large (max 64 MB)")
+    if not contents:
+        raise HTTPException(400, "The audio file is empty")
+    if not pipeline.configured():
+        raise HTTPException(400, "Voice notes need the MediBytes pipeline; set OPENAI_API_KEY")
+    credits.charge(db, "voice_note", feature="F11", mode="live")
+    audio_id = str(uuid.uuid4())
+    receipt = pipeline.submit(contents, file.filename or "referral.webm", file.content_type or "audio/webm", audio_id, "F11")
+    add_audit(db, "referral_dictation_submitted", "patient", patient.id, patient.id,
+              after={"audio_id": audio_id, "encounter_id": encounter.id})
+    db.commit()
+    return {"audio_id": audio_id, "status": receipt.get("status", "running")}
+
+
+@router.get("/referrals/record/{audio_id}", dependencies=[Depends(require("refer"))])
+def referral_dictation_status(audio_id: str, db: Session = Depends(get_db)):
+    patient, encounter, state = _state(db)
+    for event in db.scalars(select(TimelineEvent).where(
+        TimelineEvent.patient_id == patient.id, TimelineEvent.type == "transcript", TimelineEvent.subtype == "F11"
+    )).all():
+        if (event.payload or {}).get("audio_id") == audio_id:
+            drafts = db.scalars(select(Draft).where(Draft.feature == "F11", Draft.patient_id == patient.id)).all()
+            match = next((d for d in drafts if event.id in (d.created_from_event_ids or [])), None)
+            if match:
+                return {"status": "succeeded", "draft": draft_to_dict(match)}
+    if not pipeline.configured():
+        raise HTTPException(400, "Voice notes need the MediBytes pipeline; set OPENAI_API_KEY")
+    result = pipeline.fetch(audio_id)
+    if result is None:
+        raise HTTPException(404, "No recording with that id")
+    if result.get("job_status") == "failed":
+        return {"status": "failed", "error": result.get("job_error") or "The recording could not be processed"}
+    if result.get("job_status") != "succeeded":
+        return {"status": result.get("job_status") or "running"}
+    require_open_encounter(encounter)
+    note = result.get("note") or {}
+    text = str(result.get("transcript") or "").strip()
+    if not text or not pipeline.has_items(note):
+        return {"status": "failed", "error": "No speech was detected in the recording"}
+    event = create_transcript_event(db, patient, encounter, "F11", text, "Referral dictation (MediBytes pipeline)")
+    event.payload = {**(event.payload or {}), "audio_id": audio_id, "pipeline_note": note}
+    heard = pipeline.draft_content("F11", note, event.id, event.payload.get("segments") or [])
+    draft = create_draft(db, feature="F11", patient=patient, encounter=encounter,
+                         content=_form_content(db, patient, encounter, state, heard), created_from_event_ids=[event.id])
+    db.commit()
+    return {"status": "succeeded", "draft": draft_to_dict(draft)}
+
+
+@router.get("/referrals/form", dependencies=[Depends(require("refer"))])
+def latest_referral_form(db: Session = Depends(get_db)):
+    patient, _, _ = _state(db)
+    draft = _latest_form(db, patient.id)
+    return {"draft": draft_to_dict(draft) if draft else None}
+
+
+def _open_form(db: Session, draft_id: str) -> Draft:
+    patient, _, _ = _state(db)
+    draft = db.get(Draft, draft_id)
+    if not draft or draft.patient_id != patient.id or (draft.content or {}).get("format") != referral_form.REFERRAL_FORMAT:
+        raise HTTPException(404, "Referral form not found")
+    return draft
+
+
+@router.patch("/referrals/form/{draft_id}", dependencies=[Depends(require("refer"))])
+def edit_referral_form(draft_id: str, body: ReferralFormBody, db: Session = Depends(get_db)):
+    draft = _open_form(db, draft_id)
+    content = {**(draft.content or {}), **body.content, "format": referral_form.REFERRAL_FORMAT,
+               "header": (draft.content or {}).get("header") or {}}
+    content["urgency"] = referral_form.URGENCY.get(content.get("referral_type") or "", "routine")
+    content["specialty"] = str((content.get("department") or {}).get("text") or "")
+    content["specialist"] = str((content.get("unit_chief") or {}).get("text") or "")
+    content["not_documented"] = referral_form.missing(content)
+    try:
+        update_draft(db, draft, content)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    db.commit()
+    return {"draft": draft_to_dict(draft)}
+
+
+@router.post("/referrals/form/{draft_id}/approve", dependencies=[Depends(require("refer"))])
+def approve_referral_form(draft_id: str, db: Session = Depends(get_db)):
+    draft = _open_form(db, draft_id)
+    try:
+        event = approve_draft(db, draft, None)
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(400, str(exc)) from exc
+    db.commit()
+    return {"draft": draft_to_dict(draft), "event_id": event.id, "document_id": event.document_id}
+
+
+@router.post("/referrals/form/{draft_id}/discard", dependencies=[Depends(require("refer"))])
+def discard_referral_form(draft_id: str, db: Session = Depends(get_db)):
+    from ..services.drafts import reject_draft
+
+    draft = _open_form(db, draft_id)
+    try:
+        reject_draft(db, draft, "Discarded by the referring doctor")
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    db.commit()
+    return {"draft": draft_to_dict(draft)}

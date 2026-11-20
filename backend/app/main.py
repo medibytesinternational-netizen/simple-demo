@@ -8,10 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import background
+from . import background, clock
 from .api import router
 from .db import SessionLocal, init_db
-from .seed import ensure_seed
+from .seed import ensure_seed, latest_recorded_time
 from .services import identity
 from .services.credits import CreditsExhausted
 from .services.llm import DraftGenerationError
@@ -24,6 +24,7 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         ensure_seed(db)
+        clock.resume_after(latest_recorded_time(db))
     finally:
         db.close()
     tasks = background.start()

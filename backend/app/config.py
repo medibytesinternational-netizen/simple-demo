@@ -17,7 +17,15 @@ def _bool(value: str | None) -> bool:
 class Settings:
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4o")
+    hf_token: str = os.getenv("HF_TOKEN", "")
+    hf_model: str = os.getenv("HF_MODEL", "deepseek-ai/DeepSeek-V4.1-Flash:fastest")
+    hf_asr_model: str = os.getenv("HF_ASR_MODEL", "openai/whisper-large-v3")
+    llm_provider: str = os.getenv("LLM_PROVIDER", "auto").lower()
     llm_mode: str = os.getenv("LLM_MODE", "auto").lower()
+    medibytes_runs_dir: Path = Path(os.getenv("MEDIBYTES_RUNS_DIR") or BASE_DIR / "runs")
+    # "real": every record is stamped with the actual current time (local wall clock).
+    # "demo": the fixed scenario clock starting at demo_now (tests use this so they repeat exactly).
+    clock_mode: str = os.getenv("MEDIBYTES_CLOCK", "real").lower()
     demo_now: datetime = datetime.fromisoformat(
         os.getenv("DEMO_NOW", "2026-10-20T09:00:00")
     )
@@ -32,9 +40,19 @@ class Settings:
     def live_llm(self) -> bool:
         if self.llm_mode == "cached":
             return False
-        if self.llm_mode == "live":
-            return bool(self.openai_api_key)
+        if self.active_llm_provider == "huggingface":
+            return bool(self.hf_token)
         return bool(self.openai_api_key)
+
+    @property
+    def active_llm_provider(self) -> str:
+        if self.llm_provider in {"openai", "huggingface"}:
+            return self.llm_provider
+        return "huggingface" if self.hf_token and not self.openai_api_key else "openai"
+
+    @property
+    def active_model(self) -> str:
+        return self.hf_model if self.active_llm_provider == "huggingface" else self.openai_model
 
     @property
     def effective_llm_mode(self) -> str:

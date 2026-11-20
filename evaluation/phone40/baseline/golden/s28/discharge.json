@@ -1,0 +1,151 @@
+{
+  "sections": {
+    "present_illness": {
+      "items": [
+        {
+          "text": "fever",
+          "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F7",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "vomiting",
+          "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F8",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pain",
+          "source_sentence": "47-year-old female with one day up right upper abdominal pain after fatty food, vomiting and fever, radiating to shoulder.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F9",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "vomiting",
+          "source_sentence": "General, avoid fatty food, report jaundice, persistent vomiting or severe pain, surgery followup in two days.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F10",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pain",
+          "source_sentence": "General, avoid fatty food, report jaundice, persistent vomiting or severe pain, surgery followup in two days.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F11",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "examination_findings": {
+      "items": [
+        {
+          "text": "Temperature 106 degrees Fahrenheit",
+          "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F4",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pulse 98",
+          "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F5",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "blood pressure 126/90",
+          "source_sentence": "Temperature 106 degrees Fahrenheit, pulse 98 beats per minute, blood pressure 126/90 mmHg.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F6",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "previous_diagnosis": {
+      "items": []
+    },
+    "plan_of_management": {
+      "items": [
+        {
+          "text": "pantoprazole no dose",
+          "source_sentence": "Pantoprazole, surgery surgical review, diet, then low-fat small frequent meals.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F2",
+          "verified_kind": "drug",
+          "verified_status": "needs_review"
+        },
+        {
+          "text": "followup in two days",
+          "source_sentence": "followup in two days",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F12",
+          "verified_kind": "followup",
+          "verified_status": "verified"
+        },
+        {
+          "text": "ceftriaxone 1 g",
+          "source_sentence": "Ceftriaxone 1 g as advised.",
+          "seg_id": null,
+          "confidence": 0.88,
+          "verified_kind": "drug",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "diet_instructions": {
+      "items": []
+    },
+    "general_instructions": {
+      "items": []
+    }
+  },
+  "provenance": {
+    "llm_engine": "discharge:gpt-4.1",
+    "dropped_unproven": 2,
+    "verified_summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "47",
+          "90",
+          "98",
+          "106",
+          "126"
+        ],
+        "count": 7
+      },
+      "total": 12,
+      "drug_verified": 1,
+      "drug_needs_review": 2,
+      "vital_verified": 3,
+      "symptom_verified": 5,
+      "followup_verified": 1
+    },
+    "canonicalized": 0,
+    "llm_extractive": 0,
+    "prefilled": 1,
+    "schema": "valid"
+  }
+}

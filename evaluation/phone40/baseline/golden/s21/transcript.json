@@ -1,0 +1,510 @@
+{
+  "job_id": "s21-none",
+  "text": "ge -year-old female with six months of one-sided throbbing headache, nausea, light sensitive and vomiting lasting 6 to 8 hos. triggered by fasting and sleep loss. Denies fever, weakness, and vision loss. No known drug allergy. Past major illness. Migraine without aura. Blood pressure 118/76 mmHg. Pulse 80 beats per minute. Temperature 98.4 degrees Fahrenheit. Neurology normal. Paracetame 650 mg at onset. Headache daily. Sleep hygiene.Dired. Regular meals. No fasting. Adequate water. Limit te coffee chocolate. General, dark quite dressed. Avoid overuse, emergency for tendderclap pain, weakness, or speech clap. Follow up in two weeks.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "ge -year-old female with six months of one-sided throbbing headache, nausea, light sensitive and vomiting lasting 6 to 8 hos. triggered by fasting and sleep loss. Denies fever, weakness, and vision loss. No known drug allergy. Past major illness. Migraine without aura. Blood pressure 118/76 mmHg. Pulse 80 beats per minute. Temperature 98.4 degrees Fahrenheit. Neurology normal. Paracetame 650 mg at onset. Headache daily. Sleep hygiene.Dired. Regular meals. No fasting. Adequate water. Limit te coffee chocolate. General, dark quite dressed. Avoid overuse, emergency for tendderclap pain, weakness, or speech clap. Follow up in two weeks.",
+      "start": 0.0,
+      "end": 59.86,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "ge",
+          "s": 0.0,
+          "e": 0.63
+        },
+        {
+          "w": "-year-old",
+          "s": 0.63,
+          "e": 1.26
+        },
+        {
+          "w": "female",
+          "s": 1.26,
+          "e": 1.89
+        },
+        {
+          "w": "with",
+          "s": 1.89,
+          "e": 2.52
+        },
+        {
+          "w": "six",
+          "s": 2.52,
+          "e": 3.15
+        },
+        {
+          "w": "months",
+          "s": 3.15,
+          "e": 3.78
+        },
+        {
+          "w": "of",
+          "s": 3.78,
+          "e": 4.41
+        },
+        {
+          "w": "one-sided",
+          "s": 4.41,
+          "e": 5.04
+        },
+        {
+          "w": "throbbing",
+          "s": 5.04,
+          "e": 5.67
+        },
+        {
+          "w": "headache,",
+          "s": 5.67,
+          "e": 6.3
+        },
+        {
+          "w": "nausea,",
+          "s": 6.3,
+          "e": 6.93
+        },
+        {
+          "w": "light",
+          "s": 6.93,
+          "e": 7.56
+        },
+        {
+          "w": "sensitive",
+          "s": 7.56,
+          "e": 8.19
+        },
+        {
+          "w": "and",
+          "s": 8.19,
+          "e": 8.82
+        },
+        {
+          "w": "vomiting",
+          "s": 8.82,
+          "e": 9.45
+        },
+        {
+          "w": "lasting",
+          "s": 9.45,
+          "e": 10.08
+        },
+        {
+          "w": "6",
+          "s": 10.08,
+          "e": 10.71
+        },
+        {
+          "w": "to",
+          "s": 10.71,
+          "e": 11.34
+        },
+        {
+          "w": "8",
+          "s": 11.34,
+          "e": 11.97
+        },
+        {
+          "w": "hos.",
+          "s": 11.97,
+          "e": 12.6
+        },
+        {
+          "w": "triggered",
+          "s": 12.6,
+          "e": 13.23
+        },
+        {
+          "w": "by",
+          "s": 13.23,
+          "e": 13.86
+        },
+        {
+          "w": "fasting",
+          "s": 13.86,
+          "e": 14.49
+        },
+        {
+          "w": "and",
+          "s": 14.49,
+          "e": 15.12
+        },
+        {
+          "w": "sleep",
+          "s": 15.12,
+          "e": 15.75
+        },
+        {
+          "w": "loss.",
+          "s": 15.75,
+          "e": 16.38
+        },
+        {
+          "w": "Denies",
+          "s": 16.38,
+          "e": 17.01
+        },
+        {
+          "w": "fever,",
+          "s": 17.01,
+          "e": 17.64
+        },
+        {
+          "w": "weakness,",
+          "s": 17.64,
+          "e": 18.27
+        },
+        {
+          "w": "and",
+          "s": 18.27,
+          "e": 18.9
+        },
+        {
+          "w": "vision",
+          "s": 18.9,
+          "e": 19.53
+        },
+        {
+          "w": "loss.",
+          "s": 19.53,
+          "e": 20.16
+        },
+        {
+          "w": "No",
+          "s": 20.16,
+          "e": 20.79
+        },
+        {
+          "w": "known",
+          "s": 20.79,
+          "e": 21.42
+        },
+        {
+          "w": "drug",
+          "s": 21.42,
+          "e": 22.05
+        },
+        {
+          "w": "allergy.",
+          "s": 22.05,
+          "e": 22.68
+        },
+        {
+          "w": "Past",
+          "s": 22.68,
+          "e": 23.31
+        },
+        {
+          "w": "major",
+          "s": 23.31,
+          "e": 23.94
+        },
+        {
+          "w": "illness.",
+          "s": 23.94,
+          "e": 24.57
+        },
+        {
+          "w": "Migraine",
+          "s": 24.57,
+          "e": 25.2
+        },
+        {
+          "w": "without",
+          "s": 25.2,
+          "e": 25.83
+        },
+        {
+          "w": "aura.",
+          "s": 25.83,
+          "e": 26.47
+        },
+        {
+          "w": "Blood",
+          "s": 26.47,
+          "e": 27.1
+        },
+        {
+          "w": "pressure",
+          "s": 27.1,
+          "e": 27.73
+        },
+        {
+          "w": "118/76",
+          "s": 27.73,
+          "e": 28.36
+        },
+        {
+          "w": "mmHg.",
+          "s": 28.36,
+          "e": 28.99
+        },
+        {
+          "w": "Pulse",
+          "s": 28.99,
+          "e": 29.62
+        },
+        {
+          "w": "80",
+          "s": 29.62,
+          "e": 30.25
+        },
+        {
+          "w": "beats",
+          "s": 30.25,
+          "e": 30.88
+        },
+        {
+          "w": "per",
+          "s": 30.88,
+          "e": 31.51
+        },
+        {
+          "w": "minute.",
+          "s": 31.51,
+          "e": 32.14
+        },
+        {
+          "w": "Temperature",
+          "s": 32.14,
+          "e": 32.77
+        },
+        {
+          "w": "98.4",
+          "s": 32.77,
+          "e": 33.4
+        },
+        {
+          "w": "degrees",
+          "s": 33.4,
+          "e": 34.03
+        },
+        {
+          "w": "Fahrenheit.",
+          "s": 34.03,
+          "e": 34.66
+        },
+        {
+          "w": "Neurology",
+          "s": 34.66,
+          "e": 35.29
+        },
+        {
+          "w": "normal.",
+          "s": 35.29,
+          "e": 35.92
+        },
+        {
+          "w": "Paracetame",
+          "s": 35.92,
+          "e": 36.55
+        },
+        {
+          "w": "650",
+          "s": 36.55,
+          "e": 37.18
+        },
+        {
+          "w": "mg",
+          "s": 37.18,
+          "e": 37.81
+        },
+        {
+          "w": "at",
+          "s": 37.81,
+          "e": 38.44
+        },
+        {
+          "w": "onset.",
+          "s": 38.44,
+          "e": 39.07
+        },
+        {
+          "w": "Headache",
+          "s": 39.07,
+          "e": 39.7
+        },
+        {
+          "w": "daily.",
+          "s": 39.7,
+          "e": 40.33
+        },
+        {
+          "w": "Sleep",
+          "s": 40.33,
+          "e": 40.96
+        },
+        {
+          "w": "hygiene.Dired.",
+          "s": 40.96,
+          "e": 41.59
+        },
+        {
+          "w": "Regular",
+          "s": 41.59,
+          "e": 42.22
+        },
+        {
+          "w": "meals.",
+          "s": 42.22,
+          "e": 42.85
+        },
+        {
+          "w": "No",
+          "s": 42.85,
+          "e": 43.48
+        },
+        {
+          "w": "fasting.",
+          "s": 43.48,
+          "e": 44.11
+        },
+        {
+          "w": "Adequate",
+          "s": 44.11,
+          "e": 44.74
+        },
+        {
+          "w": "water.",
+          "s": 44.74,
+          "e": 45.37
+        },
+        {
+          "w": "Limit",
+          "s": 45.37,
+          "e": 46.0
+        },
+        {
+          "w": "te",
+          "s": 46.0,
+          "e": 46.63
+        },
+        {
+          "w": "coffee",
+          "s": 46.63,
+          "e": 47.26
+        },
+        {
+          "w": "chocolate.",
+          "s": 47.26,
+          "e": 47.89
+        },
+        {
+          "w": "General,",
+          "s": 47.89,
+          "e": 48.52
+        },
+        {
+          "w": "dark",
+          "s": 48.52,
+          "e": 49.15
+        },
+        {
+          "w": "quite",
+          "s": 49.15,
+          "e": 49.78
+        },
+        {
+          "w": "dressed.",
+          "s": 49.78,
+          "e": 50.41
+        },
+        {
+          "w": "Avoid",
+          "s": 50.41,
+          "e": 51.04
+        },
+        {
+          "w": "overuse,",
+          "s": 51.04,
+          "e": 51.67
+        },
+        {
+          "w": "emergency",
+          "s": 51.67,
+          "e": 52.3
+        },
+        {
+          "w": "for",
+          "s": 52.3,
+          "e": 52.93
+        },
+        {
+          "w": "tendderclap",
+          "s": 52.93,
+          "e": 53.56
+        },
+        {
+          "w": "pain,",
+          "s": 53.56,
+          "e": 54.19
+        },
+        {
+          "w": "weakness,",
+          "s": 54.19,
+          "e": 54.82
+        },
+        {
+          "w": "or",
+          "s": 54.82,
+          "e": 55.45
+        },
+        {
+          "w": "speech",
+          "s": 55.45,
+          "e": 56.08
+        },
+        {
+          "w": "clap.",
+          "s": 56.08,
+          "e": 56.71
+        },
+        {
+          "w": "Follow",
+          "s": 56.71,
+          "e": 57.34
+        },
+        {
+          "w": "up",
+          "s": 57.34,
+          "e": 57.97
+        },
+        {
+          "w": "in",
+          "s": 57.97,
+          "e": 58.6
+        },
+        {
+          "w": "two",
+          "s": 58.6,
+          "e": 59.23
+        },
+        {
+          "w": "weeks.",
+          "s": 59.23,
+          "e": 59.86
+        }
+      ]
+    }
+  ],
+  "normalized_en": "ge -year-old female with 6 months of 1-sided throbbing headache, nausea, light sensitive and vomiting lasting 6 to 8 hos. triggered by fasting and sleep loss. Denies fever, weakness, and vision loss. No known drug allergy. Past major illness. Migraine without aura. Blood pressure 118/76 mmHg. Pulse 80 beats per minute. Temperature 98.4 degrees Fahrenheit. Neurology normal. Paracetame 650 mg at onset. Headache daily. Sleep hygiene.Dired. Regular meals. No fasting. Adequate water. Limit te coffee chocolate. General, dark quite dressed. Avoid overuse, emergency for tendderclap pain, weakness, or speech clap. Follow up in 2 weeks.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s21-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

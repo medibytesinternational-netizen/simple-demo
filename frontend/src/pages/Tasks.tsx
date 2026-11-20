@@ -6,7 +6,8 @@ import { useEvidence } from "../components/Evidence";
 import { ReasonForm } from "../features/f15/ReasonForm";
 import type { ReasonTarget } from "../features/f15/types";
 import { Banner, Skeleton } from "../components/ui";
-import { STAFF } from "../components/legacy/HisChrome";
+import { NextStepCta } from "../components/NextStepCta";
+import { STAFF } from "../components/roles";
 
 const CATEGORIES: { key: string; label: string }[] = [
   { key: "general", label: "General" },
@@ -18,7 +19,7 @@ const CATEGORIES: { key: string; label: string }[] = [
   { key: "ecg", label: "ECG" },
 ];
 const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.label]));
-const ROLE_LABEL: Record<string, string> = { senior_doctor: "Senior doctor", nurse: "Nurse", doctor: "Chief doctor" };
+const ROLE_LABEL: Record<string, string> = Object.fromEntries(STAFF.map((s) => [s.role, s.label]));
 const ASSIGNABLE = STAFF.filter((s) => s.role !== "doctor");
 
 const STATUS_LABEL: Record<string, string> = {
@@ -41,9 +42,15 @@ export function TasksPage() {
   const queryClient = useQueryClient();
   const { showEvent } = useEvidence();
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta") });
-  const tasks = useQuery<{ tasks: AppTask[] }>({ queryKey: ["tasks"], queryFn: () => get("/tasks") });
-
   const role = meta.data?.user?.role || "doctor";
+  // Junior doctors, nurses and senior doctors work the whole ward: their own tasks across every patient.
+  const wardWide = !!meta.data && role !== "doctor";
+  const tasks = useQuery<{ tasks: AppTask[] }>({
+    queryKey: ["tasks", wardWide ? "mine" : "chart"],
+    queryFn: () => get(wardWide ? "/tasks?scope=mine" : "/tasks"),
+    enabled: !!meta.data,
+  });
+
   const me = meta.data?.user?.name || "";
   const isChief = role === "doctor";
 
@@ -52,11 +59,11 @@ export function TasksPage() {
   const [detail, setDetail] = useState("");
   const [assignee, setAssignee] = useState(ASSIGNABLE[0].id);
   const [category, setCategory] = useState("general");
-  const [priority, setPriority] = useState<"routine" | "urgent">("routine");
+  const [priority, setPriority] = useState<"routine" | "urgent" | "critical">("routine");
   const [dueHours, setDueHours] = useState(4);
 
   const [view, setView] = useState<View>("open");
-  const [roleFilter, setRoleFilter] = useState<"all" | "senior_doctor" | "nurse">("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | "senior_doctor" | "junior_doctor" | "nurse">("all");
   const [reasonFor, setReasonFor] = useState<ReasonTarget | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -143,7 +150,7 @@ export function TasksPage() {
         <div className="dc-form-top">
           <div className="tk-counts">
             <span><b>{openCount}</b> OPEN</span>
-            <span className="tk-red"><b>{urgentCount}</b> URGENT</span>
+            <span className="tk-red"><b>{urgentCount}</b> URGENT / CRITICAL</span>
             <span><b>{overdueCount}</b> OVERDUE</span>
           </div>
           <h1 className="dc-form-title">Tasks &amp; Escalation</h1>
@@ -185,6 +192,7 @@ export function TasksPage() {
               <div className="dc-radios tk-prio">
                 <label className="tk-green"><input type="radio" name="tk-prio" checked={priority === "routine"} onChange={() => setPriority("routine")} /> Normal</label>
                 <label className="tk-red"><input type="radio" name="tk-prio" checked={priority === "urgent"} onChange={() => setPriority("urgent")} /> Urgent</label>
+                <label className="tk-red"><input type="radio" name="tk-prio" checked={priority === "critical"} onChange={() => setPriority("critical")} /> Critical</label>
               </div>
             </div>
             <label className="gf">
@@ -205,6 +213,7 @@ export function TasksPage() {
 
       {error ? <Banner tone="danger" role="alert">{error}</Banner> : null}
       {notice && !error ? <Banner tone="success" role="status">{notice}</Banner> : null}
+      {all.length > 0 && openCount === 0 ? <NextStepCta id="tasks" className="mb-3" /> : null}
 
       <div className="tk-bar">
         <div className="tabs" role="tablist" aria-label="Task view">
@@ -214,12 +223,13 @@ export function TasksPage() {
             </button>
           ))}
         </div>
-        {isChief ? (
+        {isChief || role === "senior_doctor" ? (
           <label className="tk-filter">
             SHOW
             <select className="select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}>
               <option value="all">All staff</option>
               <option value="senior_doctor">Senior doctors</option>
+              <option value="junior_doctor">Junior doctors</option>
               <option value="nurse">Nurses</option>
             </select>
           </label>
@@ -246,10 +256,13 @@ export function TasksPage() {
                 <Fragment key={t.id}>
                   <tr className={isUrgent(t) && isOpen(t) ? "tk-row-urgent" : ""}>
                     <td>{i + 1}</td>
-                    <td><span className={`tk-tag ${isUrgent(t) ? "red" : "green"}`}>{isUrgent(t) ? "URGENT" : "NORMAL"}</span></td>
+                    <td><span className={`tk-tag ${isUrgent(t) ? "red" : "green"}`}>{t.priority === "critical" ? "CRITICAL" : t.priority === "urgent" ? "URGENT" : "NORMAL"}</span></td>
                     <td className="nowrap">{CATEGORY_LABEL[t.category || "general"] || t.category}</td>
                     <td>
                       <div className="tk-title">{t.title}</div>
+                      {wardWide && t.patient_name ? (
+                        <div className="small"><strong>{t.patient_name}</strong>{t.ward || t.bed ? <span className="muted"> · {[t.ward, t.bed].filter(Boolean).join(" / ")}</span> : null}</div>
+                      ) : null}
                       {t.detail ? <div className="muted small">{t.detail}</div> : null}
                       {t.escalation_level ? <div className="small tk-red">Escalated (level {t.escalation_level}){t.escalation_reason ? `: ${t.escalation_reason}` : ""}</div> : null}
                     </td>

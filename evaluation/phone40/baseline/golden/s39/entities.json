@@ -1,0 +1,394 @@
+{
+  "job_id": "s39-none",
+  "drugs": [
+    {
+      "name": "ondansetron",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Hardly neuro checks paracetamale ondansetron.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm",
+      "start_char": 377,
+      "end_char": 388,
+      "span_status": "exact"
+    },
+    {
+      "name": "paracetamol",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Hardly neuro checks paracetamale ondansetron.",
+      "negated": false,
+      "raw_token": "paracetamale",
+      "candidates": [
+        {
+          "name": "acetaminophen",
+          "kind": "substance",
+          "substances": [
+            "acetaminophen"
+          ],
+          "units": [
+            "g",
+            "mcg",
+            "mg",
+            "ml"
+          ],
+          "strengths": [
+            {
+              "form": "solution",
+              "unit": "g",
+              "value": 1.0
+            },
+            {
+              "form": "tablet",
+              "unit": "g",
+              "value": 1.0
+            },
+            {
+              "form": "suspension",
+              "unit": "mcg",
+              "value": 300.0
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 1.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 2.0
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 2.5
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 2.5
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 3.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 4.0
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 5.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 5.0
+            },
+            {
+              "form": "capsule",
+              "unit": "mg",
+              "value": 5.0
+            }
+          ],
+          "forms": [
+            "capsule",
+            "injection",
+            "solution",
+            "suppository",
+            "suspension",
+            "syrup"
+          ],
+          "mass_mg": [
+            0.3,
+            1000.0
+          ],
+          "score": 0.87,
+          "matched_name": "paracetamol"
+        }
+      ],
+      "matcher_pick": "paracetamol",
+      "note": "fuzzy paracetamale->paracetamol (0.87), no dose dictated - physician must confirm | ambiguous: no dose or context to confirm acetaminophen",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "Hardly neuro checks paracetamale ondansetron.",
+        "final_output_sentence": "Hardly neuro checks paracetamale ondansetron.",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.3,
+        "reason": "no dose or context to confirm acetaminophen",
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "headache",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Brief under one minute blanckout, now alert with headache and vomit.",
+      "negated": false,
+      "start_char": 106,
+      "end_char": 114,
+      "span_status": "exact"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "If vomiting, no sedation, CT if worsening.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Diet, light productive vomiting settles.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Return for repeated vomiting, confusion, seizure or fluid leaks.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Blood pressure 120/80",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 120/80 mmHg, pulse 88.",
+      "start_char": 257,
+      "end_char": 278,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 88",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 120/80 mmHg, pulse 88.",
+      "start_char": 285,
+      "end_char": 293,
+      "span_status": "exact"
+    },
+    {
+      "text": "99%",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 99%.",
+      "start_char": 306,
+      "end_char": 309,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {},
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 2.551,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "ondansetron",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Hardly neuro checks paracetamale ondansetron."
+      },
+      {
+        "kind": "drug",
+        "name": "paracetamol",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Hardly neuro checks paracetamale ondansetron."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 120/80",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 120/80 mmHg, pulse 88."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 88",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 120/80 mmHg, pulse 88."
+      },
+      {
+        "kind": "vital",
+        "text": "99%",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 99%."
+      },
+      {
+        "kind": "symptom",
+        "text": "headache",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Brief under one minute blanckout, now alert with headache and vomit."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "If vomiting, no sedation, CT if worsening."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Diet, light productive vomiting settles."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Return for repeated vomiting, confusion, seizure or fluid leaks."
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "15",
+          "29",
+          "48",
+          "80",
+          "88",
+          "99",
+          "120"
+        ],
+        "count": 9
+      },
+      "total": 9,
+      "drug_needs_review": 2,
+      "vital_verified": 3,
+      "symptom_verified": 4
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

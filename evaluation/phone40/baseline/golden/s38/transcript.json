@@ -1,0 +1,550 @@
+{
+  "job_id": "s38-none",
+  "text": "30-year-old farmer bit turn on right foot two hours ago. Now local pain and ankle swelling with two fandmarks consciousness. No bleeding, reathlessness, or eyelid droop. Denies drug allergy. No past major illness. Nke bite under observation. No system systemic sign. Blood pressure 120/80 mmHg, pulse 92, saturation 99% swallen food. No active bleed. InVEstIigation clotting time, blood count, urine output, plan to hard by mouth. Iimmobilize below heart level. tetanus cover and devanium. only if indicated, hardly check diet, light fluids when labeled. No alcohol orHz. general keps still. No cutting or tie tight die. Report bleeding, vomiting or droo Admit 24Hz.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "30-year-old farmer bit turn on right foot two hours ago. Now local pain and ankle swelling with two fandmarks consciousness. No bleeding, reathlessness, or eyelid droop. Denies drug allergy. No past major illness. Nke bite under observation. No system systemic sign. Blood pressure 120/80 mmHg, pulse 92, saturation 99% swallen food. No active bleed. InVEstIigation clotting time, blood count, urine output, plan to hard by mouth. Iimmobilize below heart level. tetanus cover and devanium. only if indicated, hardly check diet, light fluids when labeled. No alcohol orHz. general keps still. No cutting or tie tight die. Report bleeding, vomiting or droo Admit 24Hz.",
+      "start": 0.0,
+      "end": 64.77,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "30-year-old",
+          "s": 0.0,
+          "e": 0.63
+        },
+        {
+          "w": "farmer",
+          "s": 0.63,
+          "e": 1.26
+        },
+        {
+          "w": "bit",
+          "s": 1.26,
+          "e": 1.89
+        },
+        {
+          "w": "turn",
+          "s": 1.89,
+          "e": 2.52
+        },
+        {
+          "w": "on",
+          "s": 2.52,
+          "e": 3.14
+        },
+        {
+          "w": "right",
+          "s": 3.14,
+          "e": 3.77
+        },
+        {
+          "w": "foot",
+          "s": 3.77,
+          "e": 4.4
+        },
+        {
+          "w": "two",
+          "s": 4.4,
+          "e": 5.03
+        },
+        {
+          "w": "hours",
+          "s": 5.03,
+          "e": 5.66
+        },
+        {
+          "w": "ago.",
+          "s": 5.66,
+          "e": 6.29
+        },
+        {
+          "w": "Now",
+          "s": 6.29,
+          "e": 6.92
+        },
+        {
+          "w": "local",
+          "s": 6.92,
+          "e": 7.55
+        },
+        {
+          "w": "pain",
+          "s": 7.55,
+          "e": 8.17
+        },
+        {
+          "w": "and",
+          "s": 8.17,
+          "e": 8.8
+        },
+        {
+          "w": "ankle",
+          "s": 8.8,
+          "e": 9.43
+        },
+        {
+          "w": "swelling",
+          "s": 9.43,
+          "e": 10.06
+        },
+        {
+          "w": "with",
+          "s": 10.06,
+          "e": 10.69
+        },
+        {
+          "w": "two",
+          "s": 10.69,
+          "e": 11.32
+        },
+        {
+          "w": "fandmarks",
+          "s": 11.32,
+          "e": 11.95
+        },
+        {
+          "w": "consciousness.",
+          "s": 11.95,
+          "e": 12.58
+        },
+        {
+          "w": "No",
+          "s": 12.58,
+          "e": 13.21
+        },
+        {
+          "w": "bleeding,",
+          "s": 13.21,
+          "e": 13.83
+        },
+        {
+          "w": "reathlessness,",
+          "s": 13.83,
+          "e": 14.46
+        },
+        {
+          "w": "or",
+          "s": 14.46,
+          "e": 15.09
+        },
+        {
+          "w": "eyelid",
+          "s": 15.09,
+          "e": 15.72
+        },
+        {
+          "w": "droop.",
+          "s": 15.72,
+          "e": 16.35
+        },
+        {
+          "w": "Denies",
+          "s": 16.35,
+          "e": 16.98
+        },
+        {
+          "w": "drug",
+          "s": 16.98,
+          "e": 17.61
+        },
+        {
+          "w": "allergy.",
+          "s": 17.61,
+          "e": 18.24
+        },
+        {
+          "w": "No",
+          "s": 18.24,
+          "e": 18.86
+        },
+        {
+          "w": "past",
+          "s": 18.86,
+          "e": 19.49
+        },
+        {
+          "w": "major",
+          "s": 19.49,
+          "e": 20.12
+        },
+        {
+          "w": "illness.",
+          "s": 20.12,
+          "e": 20.75
+        },
+        {
+          "w": "Nke",
+          "s": 20.75,
+          "e": 21.38
+        },
+        {
+          "w": "bite",
+          "s": 21.38,
+          "e": 22.01
+        },
+        {
+          "w": "under",
+          "s": 22.01,
+          "e": 22.64
+        },
+        {
+          "w": "observation.",
+          "s": 22.64,
+          "e": 23.27
+        },
+        {
+          "w": "No",
+          "s": 23.27,
+          "e": 23.89
+        },
+        {
+          "w": "system",
+          "s": 23.89,
+          "e": 24.52
+        },
+        {
+          "w": "systemic",
+          "s": 24.52,
+          "e": 25.15
+        },
+        {
+          "w": "sign.",
+          "s": 25.15,
+          "e": 25.78
+        },
+        {
+          "w": "Blood",
+          "s": 25.78,
+          "e": 26.41
+        },
+        {
+          "w": "pressure",
+          "s": 26.41,
+          "e": 27.04
+        },
+        {
+          "w": "120/80",
+          "s": 27.04,
+          "e": 27.67
+        },
+        {
+          "w": "mmHg,",
+          "s": 27.67,
+          "e": 28.3
+        },
+        {
+          "w": "pulse",
+          "s": 28.3,
+          "e": 28.93
+        },
+        {
+          "w": "92,",
+          "s": 28.93,
+          "e": 29.55
+        },
+        {
+          "w": "saturation",
+          "s": 29.55,
+          "e": 30.18
+        },
+        {
+          "w": "99%",
+          "s": 30.18,
+          "e": 30.81
+        },
+        {
+          "w": "swallen",
+          "s": 30.81,
+          "e": 31.44
+        },
+        {
+          "w": "food.",
+          "s": 31.44,
+          "e": 32.07
+        },
+        {
+          "w": "No",
+          "s": 32.07,
+          "e": 32.7
+        },
+        {
+          "w": "active",
+          "s": 32.7,
+          "e": 33.33
+        },
+        {
+          "w": "bleed.",
+          "s": 33.33,
+          "e": 33.96
+        },
+        {
+          "w": "InVEstIigation",
+          "s": 33.96,
+          "e": 34.58
+        },
+        {
+          "w": "clotting",
+          "s": 34.58,
+          "e": 35.21
+        },
+        {
+          "w": "time,",
+          "s": 35.21,
+          "e": 35.84
+        },
+        {
+          "w": "blood",
+          "s": 35.84,
+          "e": 36.47
+        },
+        {
+          "w": "count,",
+          "s": 36.47,
+          "e": 37.1
+        },
+        {
+          "w": "urine",
+          "s": 37.1,
+          "e": 37.73
+        },
+        {
+          "w": "output,",
+          "s": 37.73,
+          "e": 38.36
+        },
+        {
+          "w": "plan",
+          "s": 38.36,
+          "e": 38.99
+        },
+        {
+          "w": "to",
+          "s": 38.99,
+          "e": 39.62
+        },
+        {
+          "w": "hard",
+          "s": 39.62,
+          "e": 40.24
+        },
+        {
+          "w": "by",
+          "s": 40.24,
+          "e": 40.87
+        },
+        {
+          "w": "mouth.",
+          "s": 40.87,
+          "e": 41.5
+        },
+        {
+          "w": "Iimmobilize",
+          "s": 41.5,
+          "e": 42.13
+        },
+        {
+          "w": "below",
+          "s": 42.13,
+          "e": 42.76
+        },
+        {
+          "w": "heart",
+          "s": 42.76,
+          "e": 43.39
+        },
+        {
+          "w": "level.",
+          "s": 43.39,
+          "e": 44.02
+        },
+        {
+          "w": "tetanus",
+          "s": 44.02,
+          "e": 44.65
+        },
+        {
+          "w": "cover",
+          "s": 44.65,
+          "e": 45.27
+        },
+        {
+          "w": "and",
+          "s": 45.27,
+          "e": 45.9
+        },
+        {
+          "w": "devanium.",
+          "s": 45.9,
+          "e": 46.53
+        },
+        {
+          "w": "only",
+          "s": 46.53,
+          "e": 47.16
+        },
+        {
+          "w": "if",
+          "s": 47.16,
+          "e": 47.79
+        },
+        {
+          "w": "indicated,",
+          "s": 47.79,
+          "e": 48.42
+        },
+        {
+          "w": "hardly",
+          "s": 48.42,
+          "e": 49.05
+        },
+        {
+          "w": "check",
+          "s": 49.05,
+          "e": 49.68
+        },
+        {
+          "w": "diet,",
+          "s": 49.68,
+          "e": 50.31
+        },
+        {
+          "w": "light",
+          "s": 50.31,
+          "e": 50.93
+        },
+        {
+          "w": "fluids",
+          "s": 50.93,
+          "e": 51.56
+        },
+        {
+          "w": "when",
+          "s": 51.56,
+          "e": 52.19
+        },
+        {
+          "w": "labeled.",
+          "s": 52.19,
+          "e": 52.82
+        },
+        {
+          "w": "No",
+          "s": 52.82,
+          "e": 53.45
+        },
+        {
+          "w": "alcohol",
+          "s": 53.45,
+          "e": 54.08
+        },
+        {
+          "w": "orHz.",
+          "s": 54.08,
+          "e": 54.71
+        },
+        {
+          "w": "general",
+          "s": 54.71,
+          "e": 55.34
+        },
+        {
+          "w": "keps",
+          "s": 55.34,
+          "e": 55.96
+        },
+        {
+          "w": "still.",
+          "s": 55.96,
+          "e": 56.59
+        },
+        {
+          "w": "No",
+          "s": 56.59,
+          "e": 57.22
+        },
+        {
+          "w": "cutting",
+          "s": 57.22,
+          "e": 57.85
+        },
+        {
+          "w": "or",
+          "s": 57.85,
+          "e": 58.48
+        },
+        {
+          "w": "tie",
+          "s": 58.48,
+          "e": 59.11
+        },
+        {
+          "w": "tight",
+          "s": 59.11,
+          "e": 59.74
+        },
+        {
+          "w": "die.",
+          "s": 59.74,
+          "e": 60.37
+        },
+        {
+          "w": "Report",
+          "s": 60.37,
+          "e": 61.0
+        },
+        {
+          "w": "bleeding,",
+          "s": 61.0,
+          "e": 61.62
+        },
+        {
+          "w": "vomiting",
+          "s": 61.62,
+          "e": 62.25
+        },
+        {
+          "w": "or",
+          "s": 62.25,
+          "e": 62.88
+        },
+        {
+          "w": "droo",
+          "s": 62.88,
+          "e": 63.51
+        },
+        {
+          "w": "Admit",
+          "s": 63.51,
+          "e": 64.14
+        },
+        {
+          "w": "24Hz.",
+          "s": 64.14,
+          "e": 64.77
+        }
+      ]
+    }
+  ],
+  "normalized_en": "30-year-old farmer bit turn on right foot 2 hours ago. Now local pain and ankle swelling with 2 fandmarks consciousness. No bleeding, reathlessness, or eyelid droop. Denies drug allergy. No past major illness. Nke bite under observation. No system systemic sign. Blood pressure 120/80 mmHg, pulse 92, saturation 99% swallen food. No active bleed. InVEstIigation clotting time, blood count, urine output, plan to hard by mouth. Iimmobilize below heart level. tetanus cover and devanium. only if indicated, hardly check diet, light fluids when labeled. No alcohol orHz. general keps still. No cutting or tie tight die. Report bleeding, vomiting or droo Admit 24Hz.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s38-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

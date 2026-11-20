@@ -1,0 +1,80 @@
+{
+  "facts": [
+    {
+      "kind": "vital",
+      "text": "Blood pressure 120/80",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 120/80 mmHg, pulse 92, saturation 99% swallen food."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 92",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 120/80 mmHg, pulse 92, saturation 99% swallen food."
+    },
+    {
+      "kind": "vital",
+      "text": "99% ",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 120/80 mmHg, pulse 92, saturation 99% swallen food."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Now local pain and ankle swelling with two fandmarks consciousness."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Report bleeding, vomiting or droo Admit 24Hz."
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "2",
+        "24",
+        "30",
+        "80",
+        "92",
+        "99",
+        "120"
+      ],
+      "count": 7
+    },
+    "total": 5,
+    "vital_verified": 3,
+    "symptom_verified": 2
+  },
+  "brand_mentions": []
+}

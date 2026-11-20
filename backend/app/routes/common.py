@@ -50,8 +50,21 @@ class RejectRequest(BaseModel):
     actor: str | None = None
 
 
+class RoundTaskEdit(BaseModel):
+    """One proposed round task as the senior doctor left it on review."""
+    index: int
+    title: str | None = None
+    detail: str | None = None
+    assignee_role: Literal["senior_doctor", "junior_doctor", "nurse"] | None = None
+    priority: Literal["routine", "urgent", "critical"] | None = None
+    due_in_hours: int | None = Field(default=None, ge=1, le=168)
+    category: Literal["general", "lab", "ct", "mri", "xray", "ultrasound", "ecg"] | None = None
+
+
 class AcceptTasksRequest(BaseModel):
-    indices: list[int]
+    indices: list[int] = Field(default_factory=list)
+    # Ward round: the reviewed tasks, with role and timing. When given, these are what is assigned.
+    tasks: list[RoundTaskEdit] = Field(default_factory=list)
     actor: str | None = None
 
 
@@ -67,7 +80,7 @@ class TaskCreateRequest(BaseModel):
     due_in_hours: int = 24
     owner: str | None = None
     category: Literal["general", "lab", "ct", "mri", "xray", "ultrasound", "ecg"] = "general"
-    assignee_role: Literal["senior_doctor", "nurse"] | None = None
+    assignee_role: Literal["senior_doctor", "junior_doctor", "nurse"] | None = None
 
 
 class TaskUpdateRequest(BaseModel):
@@ -203,6 +216,7 @@ def _investigation_dict(request: InvestigationRequest) -> dict[str, Any]:
         "approved_by": request.approved_by,
         "created_at": request.created_at.isoformat() if request.created_at else None,
         "exported_at": request.exported_at.isoformat() if request.exported_at else None,
+        "source_event_id": getattr(request, "source_event_id", None),
     }
 
 

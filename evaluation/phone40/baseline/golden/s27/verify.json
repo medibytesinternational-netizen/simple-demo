@@ -1,0 +1,148 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "human menopausal gonadotropin",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: human menopausal gonadotropin; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Menopause."
+    },
+    {
+      "kind": "drug",
+      "name": "calcium",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: calcium; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Briast x-ray, calcium,/vitamin D."
+    },
+    {
+      "kind": "drug",
+      "name": "vitamin",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: vitamin; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "Briast x-ray, calcium,/vitamin D."
+    },
+    {
+      "kind": "drug",
+      "name": "paracetamol",
+      "dose": 650.0,
+      "unit": "mg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mcg/mg/ml; listed strengths: 1 g solution, 1 g tablet, 300 mcg suspension, 1 mg solution; 650 mg is plausible for this drug]",
+      "confidence": 0.88,
+      "source_sentence": "Planslab elevation paracetamole 650 mg, ortho paortic reduction review."
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 130/80",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 130/80 mmHg."
+    },
+    {
+      "kind": "vital",
+      "text": "Pulse 88",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Pulse 88."
+    },
+    {
+      "kind": "vital",
+      "text": "Glucose 140",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Glucose 140 mg/dL."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "60-year-old female, slipped six hours ago, injuring right wrist, now swelling, deformity, severe pain."
+    },
+    {
+      "kind": "symptom",
+      "text": "pain",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Rriettenn to wri return for numbness, blow fingers or rising pain."
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "2",
+        "6",
+        "60",
+        "80",
+        "88",
+        "130",
+        "140",
+        "650"
+      ],
+      "count": 8
+    },
+    "total": 9,
+    "drug_needs_review": 3,
+    "drug_verified": 1,
+    "vital_verified": 3,
+    "symptom_verified": 2
+  },
+  "brand_mentions": []
+}

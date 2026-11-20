@@ -1,0 +1,107 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "pantoprazole",
+      "dose": 40.0,
+      "unit": "mg",
+      "negated": false,
+      "status": "verified",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:verified"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 20 mg tablet, 40 mg capsule, 40 mg granules, 40 mg tablet; 40 mg is plausible for this drug]",
+      "confidence": 0.96,
+      "source_sentence": "Pantoprazole 40 mg daily before breakfast four weeks day- weight loss."
+    },
+    {
+      "kind": "drug",
+      "name": "omeprazole",
+      "dose": 40.0,
+      "unit": "mg",
+      "negated": true,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:verified",
+        "numeral:verified",
+        "proof:needs_review",
+        "polarity:negated-preserved"
+      ],
+      "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 2 mg suspension, 4 mg suspension, 10 mg capsule, 10 mg tablet; 40 mg is plausible for this drug]; source_sentence not verbatim in transcript",
+      "confidence": 0.7,
+      "source_sentence": "36 year old male with 3 months heartburn, sore bleaching, post-meal chest discomfort and night regurgitation, worse with spicy food and late nights, denies warm-meter blood and weight loss, no known drug allergy, no past major illness, diagnosis, reflex disease, examination, blood pressure 124 over 80 millimeters of mercury, pulse 82 weight 74 kilos, system at system system is normal, plan panto-prasol 40 milligrams daily before breakfast four weeks they weight loss, diet, small-frequency meals, no spicy oily or late heavy meals, no tea coffee cola empty stomach, head end raised, general no late eating, stop smoking, return for blood vomit, black stools or dysphagia follow up in four weeks"
+    },
+    {
+      "kind": "vital",
+      "text": "Blood pressure 124/80",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 124/80 mmHg, pulse 82."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 82",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Blood pressure 124/80 mmHg, pulse 82."
+    },
+    {
+      "kind": "symptom",
+      "text": "vomiting",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Denies vomiting, blood, and weight loss."
+    },
+    {
+      "kind": "followup",
+      "text": "Follow up in four weeks",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.88,
+      "source_sentence": "Follow up in four weeks"
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "3",
+        "4",
+        "36",
+        "40",
+        "74",
+        "80",
+        "82",
+        "124"
+      ],
+      "count": 8
+    },
+    "total": 6,
+    "drug_verified": 1,
+    "drug_needs_review": 1,
+    "vital_verified": 2,
+    "symptom_verified": 1,
+    "followup_verified": 1
+  },
+  "brand_mentions": []
+}

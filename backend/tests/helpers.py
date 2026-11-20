@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Any
@@ -121,3 +123,78 @@ def as_patient(patient_id: str):
         yield
     finally:
         identity.reset_context(tokens)
+
+
+# ---------- a stand-in for the MediBytes pipeline API (no network) ----------
+
+PIPELINE_TRANSCRIPT = (
+    "Swelling and redness of the right leg since Tuesday. Denies fever. "
+    "Pulse 104 beats per minute, the right calf is warm and tender. "
+    "This looks like right leg cellulitis. Start IV cefazolin 2 g every eight hours. "
+    "Get a complete blood count. Keep the leg elevated. Review in two days."
+)
+
+
+def _item(text, sentence, status=None):
+    item = {"text": text, "source_sentence": sentence, "seg_id": 0, "confidence": 0.8}
+    if status:
+        item["verified_status"] = status
+    return item
+
+
+PIPELINE_NOTE = {
+    "sections": {
+        "mode_of_admission": {"items": []},
+        "referring_physician": {"items": []},
+        "previous_admission": {"items": []},
+        "previous_diagnosis": {"items": []},
+        "allergies": {"items": []},
+        "pain": {"items": [_item("Right calf warm and tender",
+                                  "Pulse 104 beats per minute, the right calf is warm and tender.")]},
+        "occupation": {"items": []},
+        "source_of_history": {"items": []},
+        "chief_complaints": {"items": [_item("Swelling and redness of the right leg since Tuesday",
+                                             "Swelling and redness of the right leg since Tuesday.")]},
+        "history_of_present_illness": {"items": [_item("DENIED: fever", "Denies fever.", "verified"),
+                                                 _item("Started on Tuesday", "Swelling and redness of the right leg since Tuesday.",
+                                                       "needs_review")]},
+    },
+    "provenance": {"template": "opd", "schema": "valid"},
+}
+
+
+class FakePipeline:
+    """Installed over app.services.pipeline's network calls by the `keyed` fixtures."""
+
+    def __init__(self):
+        self.calls = 0
+        self.last_file = None
+        self.error = None  # an HTTPException to raise from submit
+        self.job_status = "succeeded"
+        self.job_error = None
+        self.note = json.loads(json.dumps(PIPELINE_NOTE))
+        self.transcript = PIPELINE_TRANSCRIPT
+        self.feature = None
+
+    def submit(self, contents, filename, content_type, audio_id, feature="F1", extra=None):
+        self.feature = feature
+        self.role = (extra or {}).get("role")
+        self.calls += 1
+        self.last_file = (filename, contents, content_type)
+        if self.error:
+            raise self.error
+        return {"audio_id": audio_id, "job_id": "job-test", "status": "running"}
+
+    def fetch(self, audio_id):
+        out = {"audio_id": audio_id, "feature": self.feature or "F1",
+               "job_status": self.job_status, "job_error": self.job_error,
+               "role": getattr(self, "role", None)}
+        if self.job_status == "succeeded":
+            out.update(transcript=self.transcript, note=self.note)
+        return out
+
+    def install(self, monkeypatch):
+        monkeypatch.setattr("app.services.pipeline.configured", lambda: True)
+        monkeypatch.setattr("app.services.pipeline.submit", self.submit)
+        monkeypatch.setattr("app.services.pipeline.fetch", self.fetch)
+        return self

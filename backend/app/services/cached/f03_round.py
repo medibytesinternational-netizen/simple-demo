@@ -10,10 +10,21 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from .. import round_tasks
 from ..extract import Sentence, analyse, claim
 from .common import _segments, _transcript_event
 
-_URGENT = re.compile(r"\b(stop|hold|check|potassium|renal)\b", re.I)
+_EXPLICIT_URGENCY = re.compile(r"\b(urgent(?:ly)?|critical(?:ly)?|stat)\b", re.I)
+_NEGATED_URGENCY = re.compile(
+    r"\b(?:not|never|no|without)\s+(?:currently\s+)?(?:urgent(?:ly)?|critical(?:ly)?|stat)\b",
+    re.I,
+)
+_NURSE_ACTION = re.compile(
+    r"\b(nurse|observations?|obs|vitals?|monitor|monitoring|wound care|dressing|chart|charted|record obs|"
+    r"collect (?:a )?(?:sample|specimen|bloods?)|fluid balance|intake and output)\b",
+    re.I,
+)
+_SENIOR_ACTION = re.compile(r"\b(senior doctor|consultant|attending)\b", re.I)
 _ACKNOWLEDGEMENT = re.compile(
     r"\b(understood|noted|acknowledg\w*|will|okay|ok|got it|on it|sure)\b|\bI'll\b", re.I
 )
@@ -64,13 +75,15 @@ def f3_round(context: dict[str, Any]) -> dict[str, Any]:
 
     tasks = []
     for sentence in plan:
-        urgent = bool(_URGENT.search(sentence.text))
+        urgency = explicit_urgency(sentence.text) if sentence.role == "clinician" else "routine"
         tasks.append(
             {
                 "title": sentence.text.rstrip(".")[:110],
                 "detail": f'Said on the round: "{sentence.text}"',
-                "priority": "urgent" if urgent else "routine",
-                "due_in_hours": 8 if urgent else 24,
+                "priority": urgency,
+                "assignee_role": infer_assignee_role(sentence.text),
+                "due_in_hours": round_due_in_hours(sentence.text, urgency),
+                "category": round_tasks.category(sentence.text),
                 "source_segment_ids": [sentence.segment_id],
                 "confidence": 0.6,
             }
@@ -83,6 +96,11 @@ def f3_round(context: dict[str, Any]) -> dict[str, Any]:
         not_documented.append(NO_INSTRUCTIONS)
     return {
         "note_claims": [claim(sentence, transcript_id) for sentence in note],
+        "report": {
+            "findings": [claim(sentence, transcript_id) for sentence in analysis.exam],
+            "assessment": [claim(sentence, transcript_id) for sentence in analysis.assessment],
+            "plan": [claim(sentence, transcript_id) for sentence in analysis.plan],
+        },
         "nursing_entries": [claim(sentence, transcript_id) for sentence in chart],
         "proposed_tasks": tasks,
         "not_documented": not_documented,
@@ -90,3 +108,76 @@ def f3_round(context: dict[str, Any]) -> dict[str, Any]:
 
 
 GENERATORS = {"F3": f3_round}
+
+
+def explicit_urgency(text: str) -> str:
+    """Return a priority only for an explicit, non-negated urgency word."""
+    positive_text = _NEGATED_URGENCY.sub("", text)
+    words = [match.group(1).lower() for match in _EXPLICIT_URGENCY.finditer(positive_text)]
+    if "critical" in words or "critically" in words:
+        return "critical"
+    if "urgent" in words or "urgently" in words or "stat" in words:
+        return "urgent"
+    return "routine"
+
+
+def infer_assignee_role(text: str) -> str:
+    """Senior doctor when named; then a nurse or junior doctor named with the instruction;
+    otherwise bedside/nursing work goes to nurses and clinical follow-up to junior doctors."""
+    if _SENIOR_ACTION.search(text):
+        return "senior_doctor"
+    if _NURSE_ACTION.search(text):
+        return "nurse"
+    return round_tasks.assignee_role(text)
+
+
+def round_due_in_hours(text: str, urgency: str) -> int:
+    """A time said on the round, capped at 1 h for critical and 4 h for urgent work."""
+    if urgency == "critical":
+        return 1
+    hours = round_tasks.due_in_hours(text, urgency == "urgent")
+    return min(hours, 4) if urgency == "urgent" else hours
+
+
+def normalize_round_tasks(content: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+    """Enforce source-based urgency and role mapping on model or cached F3 proposals."""
+    if not isinstance(content, dict):
+        return content
+    segments = {str(item.get("segment_id", "")): item for item in _segments(context)}
+    report = dict(content.get("report") or {})
+    report.setdefault("findings", [])
+    report.setdefault("assessment", [])
+    report.setdefault("plan", [])
+    if not all(report.get(key) for key in ("findings", "assessment", "plan")):
+        analysis = analyse(_segments(context))
+        transcript_id = _transcript_event(context)
+        for key, sentences in (
+            ("findings", analysis.exam),
+            ("assessment", analysis.assessment),
+            ("plan", analysis.plan),
+        ):
+            if not report[key]:
+                report[key] = [claim(sentence, transcript_id) for sentence in sentences]
+    tasks = []
+    for raw in content.get("proposed_tasks", []) or []:
+        if not isinstance(raw, dict):
+            continue
+        task = dict(raw)
+        cited_segments = [segments[item] for item in task.get("source_segment_ids", []) if item in segments]
+        source_text = " ".join(str(segment.get("text", "")) for segment in cited_segments)
+        clinician_text = " ".join(
+            str(segment.get("text", ""))
+            for segment in cited_segments
+            if str(segment.get("speaker", "")).strip().lower() not in {"nurse", "nursing", "patient", "ravi"}
+        )
+        task_text = " ".join((str(task.get("title", "")), str(task.get("detail", "")), source_text))
+        task["priority"] = explicit_urgency(clinician_text)
+        task["assignee_role"] = infer_assignee_role(task_text)
+        if not task.get("category") or task.get("category") == "general":
+            task["category"] = round_tasks.category(task_text)
+        if task["priority"] == "critical":
+            task["due_in_hours"] = 1
+        elif task["priority"] == "urgent":
+            task["due_in_hours"] = min(int(task.get("due_in_hours", 4) or 4), 4)
+        tasks.append(task)
+    return {**content, "report": report, "proposed_tasks": tasks}

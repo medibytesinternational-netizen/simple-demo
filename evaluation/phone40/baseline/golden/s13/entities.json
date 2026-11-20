@@ -1,0 +1,344 @@
+{
+  "job_id": "s13-none",
+  "drugs": [
+    {
+      "name": "paracetamol",
+      "dose": 650.0,
+      "unit": "mg",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.88,
+      "color": "YELLOW",
+      "source_sentence": "Paracetamole 650 mg, platelet monitoring, fluids if needed.",
+      "negated": false,
+      "note": "fuzzy paracetamole->paracetamol (0.96) | validator paracetamole->paracetamol",
+      "raw_token": "paracetamole",
+      "candidates": [
+        {
+          "name": "paracetamol",
+          "score": 0.957,
+          "matched_alias": "paracetamol",
+          "source": "mini",
+          "reference": {
+            "kind": "substance",
+            "name": "acetaminophen",
+            "substances": [
+              "acetaminophen"
+            ],
+            "units": [
+              "g",
+              "mcg",
+              "mg",
+              "ml"
+            ],
+            "mass_mg": [
+              0.3,
+              1000.0
+            ],
+            "forms": [
+              "capsule",
+              "injection",
+              "solution",
+              "suppository",
+              "suspension",
+              "syrup"
+            ],
+            "strengths": [
+              {
+                "form": "solution",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "g",
+                "value": 1.0
+              },
+              {
+                "form": "suspension",
+                "unit": "mcg",
+                "value": 300.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 1.0
+              },
+              {
+                "form": "tablet",
+                "unit": "mg",
+                "value": 2.0
+              },
+              {
+                "form": "solution",
+                "unit": "mg",
+                "value": 2.5
+              }
+            ]
+          }
+        }
+      ],
+      "matcher_pick": "paracetamol",
+      "start_char": 350,
+      "end_char": 361,
+      "span_status": "exact",
+      "validation": {
+        "status": "corrected",
+        "original_sentence": "Paracetamole 650 mg, platelet monitoring, fluids if needed.",
+        "final_output_sentence": "paracetamol 650 mg, platelet monitoring, fluids if needed.",
+        "applied_corrections": [
+          {
+            "replaced_token": "paracetamole",
+            "substituted_with": "paracetamol"
+          }
+        ],
+        "semantic_confidence_score": 1.0,
+        "reason": "650 mg dose matches paracetamol standard dosing",
+        "overrules_matcher": false,
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "29-year-old male with five days high fever, body ache, eye pain, two vomits and now mild abdominal pain.",
+      "negated": false,
+      "start_char": 34,
+      "end_char": 39,
+      "span_status": "exact"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "29-year-old male with five days high fever, body ache, eye pain, two vomits and now mild abdominal pain.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "reeport bleeding, black stools, severe pain or drowsiness.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Temperature 102 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air.",
+      "start_char": 198,
+      "end_char": 232,
+      "span_status": "exact"
+    },
+    {
+      "text": "Blood pressure 100/70",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air.",
+      "start_char": 234,
+      "end_char": 255,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 100",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air.",
+      "start_char": 262,
+      "end_char": 271,
+      "span_status": "exact"
+    },
+    {
+      "text": "98% on room air",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air.",
+      "start_char": 301,
+      "end_char": 316,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {},
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 3.142,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "paracetamol",
+        "dose": 650.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in g/mcg/mg/ml; listed strengths: 1 g solution, 1 g tablet, 300 mcg suspension, 1 mg solution; 650 mg is plausible for this drug]",
+        "confidence": 0.88,
+        "source_sentence": "Paracetamole 650 mg, platelet monitoring, fluids if needed."
+      },
+      {
+        "kind": "vital",
+        "text": "Temperature 102 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 100/70",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 100",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air."
+      },
+      {
+        "kind": "vital",
+        "text": "98% on room air",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 102 degrees Fahrenheit, Blood pressure 100/70 mmHg, pulse 100 beats per minute, saturation 98% on room air."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "29-year-old male with five days high fever, body ache, eye pain, two vomits and now mild abdominal pain."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "29-year-old male with five days high fever, body ache, eye pain, two vomits and now mild abdominal pain."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "reeport bleeding, black stools, severe pain or drowsiness."
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "5",
+          "29",
+          "70",
+          "98",
+          "100",
+          "102",
+          "650"
+        ],
+        "count": 9
+      },
+      "total": 8,
+      "drug_verified": 1,
+      "vital_verified": 4,
+      "symptom_verified": 3
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

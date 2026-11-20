@@ -1,0 +1,374 @@
+{
+  "job_id": "s24-none",
+  "drugs": [
+    {
+      "name": "insulin",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "name": "potassium",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "ICU fluids, insulin infusion, potassium correction, harly monitoring.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm (national drug list, not this pipeline's own)",
+      "start_char": 441,
+      "end_char": 450,
+      "span_status": "exact"
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever.",
+      "negated": false,
+      "start_char": 133,
+      "end_char": 138,
+      "span_status": "exact"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever.",
+      "negated": false,
+      "start_char": 63,
+      "end_char": 67,
+      "span_status": "exact"
+    },
+    {
+      "text": "diarrhea",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies diarrhea.",
+      "negated": false,
+      "start_char": 147,
+      "end_char": 155,
+      "span_status": "exact"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "General, never stof insulin in illness, emergency for vomiting or drowsiness, shift to ICU now.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Glucose 480",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath.",
+      "start_char": 240,
+      "end_char": 251,
+      "span_status": "exact"
+    },
+    {
+      "text": "blood pressure 100/60",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath.",
+      "start_char": 259,
+      "end_char": 280,
+      "span_status": "exact"
+    },
+    {
+      "text": "pulse 112",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath.",
+      "start_char": 287,
+      "end_char": 296,
+      "span_status": "exact"
+    },
+    {
+      "text": "respiratory rate 28",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath.",
+      "start_char": 315,
+      "end_char": 334,
+      "span_status": "exact"
+    },
+    {
+      "text": "98% ",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath.",
+      "start_char": 347,
+      "end_char": 350,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {
+    "text": "type one diabetes, now suspected ketoacidosis",
+    "icd10": "",
+    "confidence": 0.85,
+    "color": "YELLOW",
+    "source_sentence": "diagnosis type one diabetes, now suspected ketoacidosis",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "followup": {},
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "insulin",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever."
+      },
+      {
+        "kind": "drug",
+        "name": "potassium",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: potassium; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "ICU fluids, insulin infusion, potassium correction, harly monitoring."
+      },
+      {
+        "kind": "vital",
+        "text": "Glucose 480",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath."
+      },
+      {
+        "kind": "vital",
+        "text": "blood pressure 100/60",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath."
+      },
+      {
+        "kind": "vital",
+        "text": "pulse 112",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath."
+      },
+      {
+        "kind": "vital",
+        "text": "respiratory rate 28",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath."
+      },
+      {
+        "kind": "vital",
+        "text": "98% ",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever."
+      },
+      {
+        "kind": "symptom",
+        "text": "diarrhea",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies diarrhea."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "General, never stof insulin in illness, emergency for vomiting or drowsiness, shift to ICU now."
+      },
+      {
+        "kind": "diagnosis",
+        "text": "type one diabetes, now suspected ketoacidosis",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.85,
+        "source_sentence": "diagnosis type one diabetes, now suspected ketoacidosis"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "19",
+          "28",
+          "60",
+          "98",
+          "100",
+          "112",
+          "480"
+        ],
+        "count": 9
+      },
+      "total": 13,
+      "drug_needs_review": 2,
+      "vital_verified": 5,
+      "symptom_verified": 5,
+      "diagnosis_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

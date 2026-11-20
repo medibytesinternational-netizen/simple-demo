@@ -1,0 +1,21 @@
+# MediBytes - one pipeline: MedASR -> small-int8 second pass -> fuzzy matcher -> gpt-4.1.
+# Pinned to the versions the Phone40 C1 measurement (212/229 facts) was reproduced with.
+
+# Stage 1: audio
+numpy==2.2.6
+soundfile==0.13.1
+imageio-ffmpeg==0.6.0          # decodes mp3/m4a/mp4/aac input (bundled ffmpeg)
+
+# Stages 2-3: speech recognition
+torch==2.14.0                  # CPU build is enough; CUDA is used for MedASR when present
+transformers==5.19.0           # google/medasr
+huggingface_hub==1.32.0
+faster-whisper==1.2.1          # small, int8, CPU second pass
+av==18.1.0                     # not pinned upstream; PyAV 19 breaks faster-whisper 1.2.1 (metadata_errors TypeError)
+
+# Stage 7: discharge-note schema check
+jsonschema==4.26.0
+
+# fastapi / uvicorn / python-multipart come from backend/requirements.txt
+
+# gpt-4.1 is called over HTTPS with the standard library; no SDK dependency.

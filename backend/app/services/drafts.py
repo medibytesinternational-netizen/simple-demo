@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from datetime import timedelta
+import re
+from datetime import datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .identity import acting_name
+from .identity import TASK_ASSIGNEES, acting_name, current_patient_id
 from ..db import utcnow
 from ..models import (
     Draft,
@@ -135,6 +136,49 @@ def _clear_generated_authorship(value: Any) -> Any:
     return value
 
 
+def _next_created_at(db: Session, patient_id: str, feature: str) -> datetime:
+    """Now, but never before the patient's latest draft of this feature.
+
+    The demo clock restarts from a fixed time with the server, so "now" can be earlier than a draft
+    written before a restart. Lists show the newest draft first; this keeps that order true.
+    """
+    latest = db.scalar(
+        select(Draft.created_at)
+        .where(Draft.patient_id == patient_id, Draft.feature == feature)
+        .order_by(Draft.created_at.desc())
+    )
+    now = utcnow()
+    return latest + timedelta(microseconds=1) if latest and latest >= now else now
+
+
+def _admission_content(db: Session, patient: Patient, encounter: Encounter, content: dict[str, Any]) -> dict[str, Any]:
+    """Admission format: record headings, the recording first, the signed OPD report for the gaps,
+    and every known allergy listed for the doctor to verify before signing."""
+    from .admission import ADMIT_FORMAT, admission_header, latest_opd_report, merge_with_opd
+
+    merged = merge_with_opd({**content, "format": ADMIT_FORMAT}, latest_opd_report(db, patient.id))
+    merged["header"] = admission_header(patient, encounter, acting_name())
+    if not merged.get("allergies_to_verify"):
+        record = db.scalars(
+            select(TimelineEvent).where(TimelineEvent.patient_id == patient.id, TimelineEvent.type == "allergy_record")
+        ).first()
+        items: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        for raw in list(patient.allergies or []) + [str(c.get("text", "")) for c in merged.get("allergies") or [] if isinstance(c, dict)]:
+            text = re.sub(r"^(food|drug|other)\s*:\s*", "", str(raw), flags=re.I).strip()
+            if not text or re.match(r"(?i)no known", text):
+                continue
+            parts = re.split(r"\s+[—-]\s+", text, maxsplit=1)
+            substance, reaction = parts[0].strip(), (parts[1].strip() if len(parts) > 1 else "")
+            if substance.lower() in seen:
+                continue
+            seen.add(substance.lower())
+            items.append({"substance": substance, "reaction": reaction,
+                          "source_event_id": record.id if record else "", "verified": False})
+        merged["allergies_to_verify"] = items
+    return merged
+
+
 def create_draft(
     db: Session,
     *,
@@ -148,6 +192,18 @@ def create_draft(
     content = _clear_generated_authorship(content)
     if feature in LOCKED_FEATURES:
         require_open_encounter(encounter)
+    if feature == "F1":
+        # The OPD format's record headings come from registration and the visit, never from the model.
+        from .opd import OPD_FORMAT, opd_header
+
+        content = {**content, "format": OPD_FORMAT, "header": opd_header(patient, encounter, acting_name())}
+    if feature == "F2":
+        content = _admission_content(db, patient, encounter, content)
+    if feature == "F4" and content.get("format") == "progress_v2":
+        from .progress import default_role, header
+
+        role = content.get("role") if content.get("role") in ("doctor", "nurse") else default_role()
+        content = {**content, "role": role, "header": header(patient, encounter)}
     draft = Draft(
         id=new_id("drf"),
         feature=feature,
@@ -161,7 +217,7 @@ def create_draft(
         llm_call_id=llm_call.id if llm_call else None,
         evidence_event_ids=_collect_evidence(content),
         created_from_event_ids=created_from_event_ids or [],
-        created_at=utcnow(),
+        created_at=_next_created_at(db, patient.id, feature),
         updated_at=utcnow(),
     )
     db.add(draft)
@@ -215,6 +271,59 @@ def update_draft(
         after={"status": draft.status, "content": content},
     )
     return draft
+
+
+def revise_draft(db: Session, draft: Draft) -> Draft:
+    """Start a correction of a signed note: a new draft with the signed content, ready to edit.
+
+    The signed note stays on the timeline until the revision is signed; signing it supersedes the
+    old entry (and, for F1, stores a newly formatted document). The old document is kept.
+    """
+    if draft.status != "approved":
+        raise ValueError("Only a signed note can be revised; edit the draft instead")
+    patient = db.get(Patient, draft.patient_id)
+    encounter = db.get(Encounter, draft.encounter_id) if draft.encounter_id else None
+    if not patient or not encounter:
+        raise ValueError("Patient or encounter missing")
+    open_revision = db.scalars(
+        select(Draft).where(
+            Draft.idempotency_key == f"revision_of:{draft.id}",
+            Draft.status.in_(["draft_ready", "human_edited"]),
+        )
+    ).first()
+    if open_revision:
+        # Bring it back to the front of the list (it may have been made before a clock restart).
+        open_revision.created_at = _next_created_at(db, draft.patient_id, draft.feature)
+        return open_revision
+    require_open_encounter(encounter)
+    revision = Draft(
+        id=new_id("drf"),
+        feature=draft.feature,
+        patient_id=draft.patient_id,
+        encounter_id=draft.encounter_id,
+        status="draft_ready",
+        content=dict(draft.content or {}),
+        schema_version=draft.schema_version,
+        prompt_version=draft.prompt_version,
+        model=draft.model,
+        llm_call_id=draft.llm_call_id,
+        evidence_event_ids=list(draft.evidence_event_ids or []),
+        created_from_event_ids=list(draft.created_from_event_ids or []),
+        idempotency_key=f"revision_of:{draft.id}",
+        created_at=_next_created_at(db, draft.patient_id, draft.feature),
+        updated_at=utcnow(),
+    )
+    db.add(revision)
+    db.flush()
+    add_audit(
+        db,
+        "draft_revision_started",
+        "draft",
+        revision.id,
+        draft.patient_id,
+        after={"revision_of": draft.id, "event_id": draft.committed_event_id},
+    )
+    return revision
 
 
 def reject_draft(db: Session, draft: Draft, reason: str, actor: str | None = None) -> Draft:
@@ -316,7 +425,15 @@ def approve_draft(
 
     event_type = FEATURE_EVENT_TYPES.get(draft.feature, "note")
     title = FEATURE_TITLES.get(draft.feature, "Clinical note")
-    body_text = "\n".join(_flatten_text(payload))
+    daily_log = draft.feature == "F4" and payload.get("format") == "progress_v2"
+    if daily_log:
+        # A daily progress-notes row: doctor's or nurse's table, and every day's entry stays.
+        from .progress import EVENT_TYPE, TITLE
+
+        role = payload.get("role") if payload.get("role") in EVENT_TYPE else "doctor"
+        event_type, title = EVENT_TYPE[role], TITLE[role]
+    body_source = payload.get("report") if draft.feature == "F3" and payload.get("report") else payload
+    body_text = "\n".join(_flatten_text(body_source))
     event_payload = dict(payload)
     event_payload["draft_id"] = draft.id
 
@@ -324,7 +441,7 @@ def approve_draft(
         build(ctx, event_payload)
 
     supersedes = None
-    if event_type in SUPERSEDING_TYPES:
+    if event_type in SUPERSEDING_TYPES and not daily_log:
         previous = db.scalars(
             select(TimelineEvent)
             .where(
@@ -407,17 +524,24 @@ def accept_tasks(
     draft: Draft,
     indices: list[int],
     actor: str | None = None,
+    edits: dict[int, dict[str, Any]] | None = None,
 ) -> list[Task]:
+    """Create the chosen round tasks, each given to the junior doctor or the nurse (ward round)."""
+    from .round_tasks import fill
     if draft.feature != "F3":
         raise ValueError("Only round drafts produce proposed tasks")
+    if draft.patient_id != current_patient_id():
+        raise ValueError("Draft not found")
+    if draft.status != "approved":
+        raise ValueError("Approve the ward-round report before assigning its tasks")
     proposed = (draft.content or {}).get("proposed_tasks", [])
     actor = acting_name()
     created: list[Task] = []
     now = utcnow()
-    for index in indices:
+    for index in dict.fromkeys(indices):
         if index < 0 or index >= len(proposed):
             continue
-        item = proposed[index]
+        item = fill({**proposed[index], **{k: v for k, v in (edits or {}).get(index, {}).items() if k != "index"}})
         existing = db.scalar(
             select(Task).where(
                 Task.accepted_from_draft_id == draft.id,
@@ -426,6 +550,10 @@ def accept_tasks(
         )
         if existing:
             continue
+        role = item.get("assignee_role")
+        if role not in TASK_ASSIGNEES:
+            role = "junior_doctor"
+        assignee = TASK_ASSIGNEES[role]
         due_hours = int(item.get("due_in_hours", 24) or 24)
         task = Task(
             id=new_id("tsk"),
@@ -436,10 +564,12 @@ def accept_tasks(
             status="accepted",
             priority=item.get("priority", "routine"),
             due_at=now + timedelta(hours=due_hours),
-            owner=actor,
-            assigned_to=actor,
+            owner=assignee.name,
+            assigned_to=assignee.name,
+            category=item.get("category") or "general",
             assigned_at=now,
             assigned_by=actor,
+            assignee_role=role,
             source_event_id=draft.committed_event_id,
             accepted_from_draft_id=draft.id,
             created_by=actor,
@@ -454,7 +584,14 @@ def accept_tasks(
             task.id,
             draft.patient_id,
             actor_name=actor,
-            after={"title": task.title, "priority": task.priority, "due_at": task.due_at.isoformat()},
+            after={
+                "title": task.title,
+                "priority": task.priority,
+                "assigned_to": task.assigned_to,
+                "assignee_role": task.assignee_role,
+                "category": task.category,
+                "due_at": task.due_at.isoformat(),
+            },
             meta={"draft_id": draft.id, "proposed_index": index},
         )
     db.flush()

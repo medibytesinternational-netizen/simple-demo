@@ -1,0 +1,1036 @@
+{
+ "gated": {
+  "sections": {
+   "present_illness": {
+    "items": [
+     {
+      "text": "fever",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F10",
+      "context": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite."
+     },
+     {
+      "text": "cough",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F11",
+      "context": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite."
+     },
+     {
+      "text": "vomiting",
+      "source_sentence": "This is vomiting and wheezing.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F12",
+      "context": "This is vomiting and wheezing."
+     },
+     {
+      "text": "fever",
+      "source_sentence": "Return for worsening rethlessness or high fever.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F13",
+      "context": "Return for worsening rethlessness or high fever."
+     },
+     {
+      "text": "fever",
+      "source_sentence": "Return for worsening rethlessness or high fever.",
+      "seg_id": null,
+      "confidence": 0.88,
+      "context": "Return for worsening rethlessness or high fever."
+     }
+    ]
+   },
+   "examination_findings": {
+    "items": [
+     {
+      "text": "Temperature 101 degrees Fahrenheit",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F4",
+      "context": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+     },
+     {
+      "text": "blood pressure 130/85",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F5",
+      "context": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+     },
+     {
+      "text": "pulse 92",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F6",
+      "context": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+     },
+     {
+      "text": "respiratory rate 22",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F7",
+      "context": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+     },
+     {
+      "text": "94% on room air",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F8",
+      "context": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air."
+     }
+    ]
+   },
+   "previous_diagnosis": {
+    "items": [
+     {
+      "text": "Past history of hypertension and type two diabetes.",
+      "source_sentence": "Past history of hypertension and type two diabetes.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "context": "Past history of hypertension and type two diabetes."
+     },
+     {
+      "text": "Community-acquired pneumonia.",
+      "source_sentence": "Community-acquired pneumonia.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "context": "Community-acquired pneumonia."
+     }
+    ]
+   },
+   "plan_of_management": {
+    "items": [
+     {
+      "text": "amoxicillin no dose",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F2",
+      "context": "Amoxicilin with clavulanic acid as advised."
+     },
+     {
+      "text": "clavulanic acid no dose",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F3",
+      "context": "Amoxicilin with clavulanic acid as advised."
+     },
+     {
+      "text": "Follow up in three days",
+      "source_sentence": "Follow up in three days",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F14",
+      "context": "Follow up in three days."
+     },
+     {
+      "text": "paracetamol 650 mg",
+      "source_sentence": "Piracetamol 650 mg twice daily.",
+      "seg_id": null,
+      "confidence": 0.7,
+      "context": "Piracetamol 650 mg twice daily."
+     }
+    ]
+   },
+   "diet_instructions": {
+    "items": [
+     {
+      "text": "Liet home diet, warm fluid, do rice, adequate water.",
+      "source_sentence": "Liet home diet, warm fluid, do rice, adequate water.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "context": "Liet home diet, warm fluid, do rice, adequate water."
+     }
+    ]
+   },
+   "general_instructions": {
+    "items": [
+     {
+      "text": "Complete antibiotics.",
+      "source_sentence": "General, complete antibiotics.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "context": "General, complete antibiotics."
+     },
+     {
+      "text": "Daily temperature check.",
+      "source_sentence": "Daily temperature check.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "context": "Daily temperature check."
+     }
+    ]
+   }
+  },
+  "provenance": {
+   "dropped_unproven": 0,
+   "verified_summary": {
+    "numerals": {
+     "digits": [
+      "2",
+      "3",
+      "22",
+      "52",
+      "85",
+      "92",
+      "94",
+      "101",
+      "130",
+      "650"
+     ],
+     "count": 10
+    },
+    "total": 14,
+    "drug_verified": 1,
+    "drug_needs_review": 2,
+    "vital_verified": 5,
+    "vital_needs_review": 1,
+    "symptom_verified": 4,
+    "followup_verified": 1
+   }
+  }
+ },
+ "locked": {
+  "sections": {
+   "present_illness": {
+    "items": [
+     {
+      "text": "fever",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F10",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     },
+     {
+      "text": "cough",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F11",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     },
+     {
+      "text": "vomiting",
+      "source_sentence": "This is vomiting and wheezing.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F12",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "examination_findings": {
+    "items": [
+     {
+      "text": "Temperature 101 degrees Fahrenheit",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F4",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "blood pressure 130/85",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F5",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "pulse 92",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F6",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "respiratory rate 22",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F7",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "94% on room air",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F8",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "previous_diagnosis": {
+    "items": [
+     {
+      "text": "Past history of hypertension and type two diabetes.",
+      "source_sentence": "Past history of hypertension and type two diabetes.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     },
+     {
+      "text": "Community-acquired pneumonia.",
+      "source_sentence": "Community-acquired pneumonia.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   },
+   "plan_of_management": {
+    "items": [
+     {
+      "text": "amoxicillin no dose",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F2",
+      "verified_kind": "drug",
+      "verified_status": "needs_review"
+     },
+     {
+      "text": "clavulanic acid no dose",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F3",
+      "verified_kind": "drug",
+      "verified_status": "needs_review"
+     },
+     {
+      "text": "Follow up in three days",
+      "source_sentence": "Follow up in three days",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F14",
+      "verified_kind": "followup",
+      "verified_status": "verified"
+     },
+     {
+      "text": "paracetamol 650 mg",
+      "source_sentence": "Piracetamol 650 mg twice daily.",
+      "seg_id": null,
+      "confidence": 0.7,
+      "verified_kind": "drug",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "diet_instructions": {
+    "items": [
+     {
+      "text": "Liet home diet, warm fluid, do rice, adequate water.",
+      "source_sentence": "Liet home diet, warm fluid, do rice, adequate water.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   },
+   "general_instructions": {
+    "items": [
+     {
+      "text": "Complete antibiotics.",
+      "source_sentence": "General, complete antibiotics.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     },
+     {
+      "text": "Daily temperature check.",
+      "source_sentence": "Daily temperature check.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   }
+  },
+  "provenance": {
+   "dropped_unproven": 0,
+   "verified_summary": {
+    "numerals": {
+     "digits": [
+      "2",
+      "3",
+      "22",
+      "52",
+      "85",
+      "92",
+      "94",
+      "101",
+      "130",
+      "650"
+     ],
+     "count": 10
+    },
+    "total": 14,
+    "drug_verified": 1,
+    "drug_needs_review": 2,
+    "vital_verified": 5,
+    "vital_needs_review": 1,
+    "symptom_verified": 4,
+    "followup_verified": 1
+   },
+   "canonicalized": 0,
+   "llm_extractive": 5
+  }
+ },
+ "merged": {
+  "sections": {
+   "present_illness": {
+    "items": [
+     {
+      "text": "fever",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F10",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     },
+     {
+      "text": "cough",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F11",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     },
+     {
+      "text": "vomiting",
+      "source_sentence": "This is vomiting and wheezing.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F12",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "examination_findings": {
+    "items": [
+     {
+      "text": "Temperature 101 degrees Fahrenheit",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F4",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "blood pressure 130/85",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F5",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "pulse 92",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F6",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "respiratory rate 22",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F7",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "94% on room air",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F8",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "previous_diagnosis": {
+    "items": [
+     {
+      "text": "Past history of hypertension and type two diabetes.",
+      "source_sentence": "Past history of hypertension and type two diabetes.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     },
+     {
+      "text": "Community-acquired pneumonia.",
+      "source_sentence": "Community-acquired pneumonia.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   },
+   "plan_of_management": {
+    "items": [
+     {
+      "text": "amoxicillin no dose",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F2",
+      "verified_kind": "drug",
+      "verified_status": "needs_review"
+     },
+     {
+      "text": "clavulanic acid no dose",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F3",
+      "verified_kind": "drug",
+      "verified_status": "needs_review"
+     },
+     {
+      "text": "Follow up in three days",
+      "source_sentence": "Follow up in three days",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F14",
+      "verified_kind": "followup",
+      "verified_status": "verified"
+     },
+     {
+      "text": "paracetamol 650 mg",
+      "source_sentence": "Piracetamol 650 mg twice daily.",
+      "seg_id": null,
+      "confidence": 0.7,
+      "verified_kind": "drug",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "diet_instructions": {
+    "items": [
+     {
+      "text": "Liet home diet, warm fluid, do rice, adequate water.",
+      "source_sentence": "Liet home diet, warm fluid, do rice, adequate water.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   },
+   "general_instructions": {
+    "items": [
+     {
+      "text": "Complete antibiotics.",
+      "source_sentence": "General, complete antibiotics.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     },
+     {
+      "text": "Daily temperature check.",
+      "source_sentence": "Daily temperature check.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   }
+  },
+  "provenance": {
+   "dropped_unproven": 0,
+   "verified_summary": {
+    "numerals": {
+     "digits": [
+      "2",
+      "3",
+      "22",
+      "52",
+      "85",
+      "92",
+      "94",
+      "101",
+      "130",
+      "650"
+     ],
+     "count": 10
+    },
+    "total": 14,
+    "drug_verified": 1,
+    "drug_needs_review": 2,
+    "vital_verified": 5,
+    "vital_needs_review": 1,
+    "symptom_verified": 4,
+    "followup_verified": 1
+   },
+   "canonicalized": 0,
+   "llm_extractive": 5,
+   "prefilled": 0
+  }
+ },
+ "covered": {
+  "sections": {
+   "present_illness": {
+    "items": [
+     {
+      "text": "fever",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F10",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     },
+     {
+      "text": "cough",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F11",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     },
+     {
+      "text": "vomiting",
+      "source_sentence": "This is vomiting and wheezing.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F12",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "examination_findings": {
+    "items": [
+     {
+      "text": "Temperature 101 degrees Fahrenheit",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F4",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "blood pressure 130/85",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F5",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "pulse 92",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F6",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "respiratory rate 22",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F7",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "94% on room air",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F8",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "previous_diagnosis": {
+    "items": [
+     {
+      "text": "Past history of hypertension and type two diabetes.",
+      "source_sentence": "Past history of hypertension and type two diabetes.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     },
+     {
+      "text": "Community-acquired pneumonia.",
+      "source_sentence": "Community-acquired pneumonia.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   },
+   "plan_of_management": {
+    "items": [
+     {
+      "text": "amoxicillin no dose",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F2",
+      "verified_kind": "drug",
+      "verified_status": "needs_review"
+     },
+     {
+      "text": "clavulanic acid no dose",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F3",
+      "verified_kind": "drug",
+      "verified_status": "needs_review"
+     },
+     {
+      "text": "Follow up in three days",
+      "source_sentence": "Follow up in three days",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F14",
+      "verified_kind": "followup",
+      "verified_status": "verified"
+     },
+     {
+      "text": "paracetamol 650 mg",
+      "source_sentence": "Piracetamol 650 mg twice daily.",
+      "seg_id": null,
+      "confidence": 0.7,
+      "verified_kind": "drug",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "diet_instructions": {
+    "items": [
+     {
+      "text": "Liet home diet, warm fluid, do rice, adequate water.",
+      "source_sentence": "Liet home diet, warm fluid, do rice, adequate water.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   },
+   "general_instructions": {
+    "items": [
+     {
+      "text": "Complete antibiotics.",
+      "source_sentence": "General, complete antibiotics.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     },
+     {
+      "text": "Daily temperature check.",
+      "source_sentence": "Daily temperature check.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   }
+  },
+  "provenance": {
+   "dropped_unproven": 0,
+   "verified_summary": {
+    "numerals": {
+     "digits": [
+      "2",
+      "3",
+      "22",
+      "52",
+      "85",
+      "92",
+      "94",
+      "101",
+      "130",
+      "650"
+     ],
+     "count": 10
+    },
+    "total": 14,
+    "drug_verified": 1,
+    "drug_needs_review": 2,
+    "vital_verified": 5,
+    "vital_needs_review": 1,
+    "symptom_verified": 4,
+    "followup_verified": 1
+   },
+   "canonicalized": 0,
+   "llm_extractive": 5,
+   "prefilled": 0,
+   "coverage": {
+    "source": "cues",
+    "dictated": {
+     "present_illness": 0,
+     "examination_findings": 2,
+     "previous_diagnosis": 1,
+     "plan_of_management": 1,
+     "diet_instructions": 2,
+     "general_instructions": 1
+    },
+    "missing": [],
+    "unused": {
+     "diet_instructions": [
+      "Glucose monitoring diet."
+     ]
+    }
+   }
+  }
+ },
+ "stamped": {
+  "sections": {
+   "present_illness": {
+    "items": [
+     {
+      "text": "fever",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F10",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     },
+     {
+      "text": "cough",
+      "source_sentence": "52-year-old male with three days of fever, productive cough, chest discomfort, reathlessness, fatigue, and reduced appetite.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F11",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     },
+     {
+      "text": "vomiting",
+      "source_sentence": "This is vomiting and wheezing.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F12",
+      "verified_kind": "symptom",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "examination_findings": {
+    "items": [
+     {
+      "text": "Temperature 101 degrees Fahrenheit",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F4",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "blood pressure 130/85",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F5",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "pulse 92",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F6",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "respiratory rate 22",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F7",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     },
+     {
+      "text": "94% on room air",
+      "source_sentence": "Temperature 101 degrees Fahrenheit, blood pressure 130/85 mmHg, pulse 92 beats per minute, respiratory rate 22, saturation 94% on room air.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F8",
+      "verified_kind": "vital",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "previous_diagnosis": {
+    "items": [
+     {
+      "text": "Past history of hypertension and type two diabetes.",
+      "source_sentence": "Past history of hypertension and type two diabetes.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     },
+     {
+      "text": "Community-acquired pneumonia.",
+      "source_sentence": "Community-acquired pneumonia.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   },
+   "plan_of_management": {
+    "items": [
+     {
+      "text": "amoxicillin no dose",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F2",
+      "verified_kind": "drug",
+      "verified_status": "needs_review"
+     },
+     {
+      "text": "clavulanic acid no dose",
+      "source_sentence": "Amoxicilin with clavulanic acid as advised.",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F3",
+      "verified_kind": "drug",
+      "verified_status": "needs_review"
+     },
+     {
+      "text": "Follow up in three days",
+      "source_sentence": "Follow up in three days",
+      "seg_id": 0,
+      "confidence": 0.88,
+      "fact_id": "F14",
+      "verified_kind": "followup",
+      "verified_status": "verified"
+     },
+     {
+      "text": "paracetamol 650 mg",
+      "source_sentence": "Piracetamol 650 mg twice daily.",
+      "seg_id": null,
+      "confidence": 0.7,
+      "verified_kind": "drug",
+      "verified_status": "verified"
+     }
+    ]
+   },
+   "diet_instructions": {
+    "items": [
+     {
+      "text": "Liet home diet, warm fluid, do rice, adequate water.",
+      "source_sentence": "Liet home diet, warm fluid, do rice, adequate water.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   },
+   "general_instructions": {
+    "items": [
+     {
+      "text": "Complete antibiotics.",
+      "source_sentence": "General, complete antibiotics.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     },
+     {
+      "text": "Daily temperature check.",
+      "source_sentence": "Daily temperature check.",
+      "seg_id": null,
+      "confidence": 0.8,
+      "note": "llm-extractive"
+     }
+    ]
+   }
+  },
+  "provenance": {
+   "dropped_unproven": 0,
+   "verified_summary": {
+    "numerals": {
+     "digits": [
+      "2",
+      "3",
+      "22",
+      "52",
+      "85",
+      "92",
+      "94",
+      "101",
+      "130",
+      "650"
+     ],
+     "count": 10
+    },
+    "total": 14,
+    "drug_verified": 1,
+    "drug_needs_review": 2,
+    "vital_verified": 5,
+    "vital_needs_review": 1,
+    "symptom_verified": 4,
+    "followup_verified": 1
+   },
+   "canonicalized": 0,
+   "llm_extractive": 5,
+   "prefilled": 0,
+   "coverage": {
+    "source": "cues",
+    "dictated": {
+     "present_illness": 0,
+     "examination_findings": 2,
+     "previous_diagnosis": 1,
+     "plan_of_management": 1,
+     "diet_instructions": 2,
+     "general_instructions": 1
+    },
+    "missing": [],
+    "unused": {
+     "diet_instructions": [
+      "Glucose monitoring diet."
+     ]
+    }
+   },
+   "schema": "valid"
+  }
+ }
+}

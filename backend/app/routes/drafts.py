@@ -6,8 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
-from ..services.identity import require
-from ..services.identity import acting_name
+from ..services.identity import require, require_any, require_draft_action
+from ..services.identity import acting_name, current_patient_id
 from ..db import get_db, utcnow
 from ..models import (
     Draft,
@@ -17,6 +17,7 @@ from ..services.drafts import (
     approve_draft,
     draft_to_dict,
     reject_draft,
+    revise_draft,
     update_draft,
 )
 from ..services.rules import evaluate_rules
@@ -47,7 +48,8 @@ def drafts(
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
-    stmt = select(Draft).order_by(Draft.created_at.desc()).limit(limit)
+    # Drafts belong to the open patient; another patient's draft never shows here.
+    stmt = select(Draft).where(Draft.patient_id == current_patient_id()).order_by(Draft.created_at.desc()).limit(limit)
     if feature:
         stmt = stmt.where(Draft.feature == feature)
     if encounter_id:
@@ -64,11 +66,12 @@ def draft_detail(draft_id: str, db: Session = Depends(get_db)):
     return draft_to_dict(draft)
 
 
-@router.patch("/drafts/{draft_id}", dependencies=[Depends(require("edit_draft"))])
+@router.patch("/drafts/{draft_id}", dependencies=[Depends(require_any("edit_draft", "ward_round"))])
 def draft_patch(draft_id: str, body: DraftPatchRequest, db: Session = Depends(get_db)):
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
+    require_draft_action("edit_draft", draft.feature)
     update_draft(db, draft, body.content, body.editor)
     db.commit()
     return draft_to_dict(draft)
@@ -119,11 +122,12 @@ def draft_verify_allergy(draft_id: str, body: VerifyAllergyRequest, db: Session 
     return draft_to_dict(draft)
 
 
-@router.post("/drafts/{draft_id}/approve", dependencies=[Depends(require("approve_draft"))])
+@router.post("/drafts/{draft_id}/approve", dependencies=[Depends(require_any("approve_draft", "ward_round"))])
 def draft_approve(draft_id: str, body: ApproveRequest, db: Session = Depends(get_db)):
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
+    require_draft_action("approve_draft", draft.feature)
     event = approve_draft(db, draft, body.content, body.approved_by, override=body.override)
     patient, encounter, state = _state(db, draft.encounter_id)
     created_alerts = evaluate_rules(db, patient, encounter, state)
@@ -135,11 +139,23 @@ def draft_approve(draft_id: str, body: ApproveRequest, db: Session = Depends(get
     }
 
 
-@router.post("/drafts/{draft_id}/reject", dependencies=[Depends(require("reject_draft"))])
+@router.post("/drafts/{draft_id}/revise", dependencies=[Depends(require("edit_draft"))])
+def draft_revise(draft_id: str, db: Session = Depends(get_db)):
+    """Edit a signed note: returns a new draft with its content. Signing that draft updates the timeline."""
+    draft = db.get(Draft, draft_id)
+    if not draft or draft.patient_id != current_patient_id():
+        raise HTTPException(404, "Draft not found")
+    revision = revise_draft(db, draft)
+    db.commit()
+    return draft_to_dict(revision)
+
+
+@router.post("/drafts/{draft_id}/reject", dependencies=[Depends(require_any("reject_draft", "ward_round"))])
 def draft_reject(draft_id: str, body: RejectRequest, db: Session = Depends(get_db)):
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
+    require_draft_action("reject_draft", draft.feature)
     reject_draft(db, draft, body.reason, body.actor)
     db.commit()
     return draft_to_dict(draft)
@@ -150,6 +166,8 @@ def draft_accept_tasks(draft_id: str, body: AcceptTasksRequest, db: Session = De
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
-    tasks = accept_tasks(db, draft, body.indices, body.actor)
+    edits = [edit.model_dump(exclude_none=True) for edit in body.tasks]
+    indices = [edit["index"] for edit in edits] if edits else body.indices
+    tasks = accept_tasks(db, draft, indices, body.actor, edits={edit["index"]: edit for edit in edits})
     db.commit()
     return {"tasks": [_task_dict(task) for task in tasks]}

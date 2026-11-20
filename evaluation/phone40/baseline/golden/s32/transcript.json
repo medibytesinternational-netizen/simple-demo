@@ -1,0 +1,480 @@
+{
+  "job_id": "s32-none",
+  "text": "44-year-old male with 60 severe colicky right flank pain to groin, vomiting and burning urination. Denies fever. No known drug allergy. Kidney stone two years ago. Now likely ureteric stone, colic. Blood pressure 130/84 mmHg. Pulse 94. Temperature 98.8 degrees Fahrenheit. Ienerrenal angle. No guarding. Urine test and ultrasound. Paracetame anaglasia and antippesmodic if needed high fluid. Urology review.Diet, 3 L water, low-salt, limits pinut and cola. Gentle, same urine for stone. Return for fever, persistent vomiting. No urine or severe pain. F followollowup in two days with scan.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "44-year-old male with 60 severe colicky right flank pain to groin, vomiting and burning urination. Denies fever. No known drug allergy. Kidney stone two years ago. Now likely ureteric stone, colic. Blood pressure 130/84 mmHg. Pulse 94. Temperature 98.8 degrees Fahrenheit. Ienerrenal angle. No guarding. Urine test and ultrasound. Paracetame anaglasia and antippesmodic if needed high fluid. Urology review.Diet, 3 L water, low-salt, limits pinut and cola. Gentle, same urine for stone. Return for fever, persistent vomiting. No urine or severe pain. F followollowup in two days with scan.",
+      "start": 0.0,
+      "end": 61.29,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "44-year-old",
+          "s": 0.0,
+          "e": 0.69
+        },
+        {
+          "w": "male",
+          "s": 0.69,
+          "e": 1.38
+        },
+        {
+          "w": "with",
+          "s": 1.38,
+          "e": 2.07
+        },
+        {
+          "w": "60",
+          "s": 2.07,
+          "e": 2.75
+        },
+        {
+          "w": "severe",
+          "s": 2.75,
+          "e": 3.44
+        },
+        {
+          "w": "colicky",
+          "s": 3.44,
+          "e": 4.13
+        },
+        {
+          "w": "right",
+          "s": 4.13,
+          "e": 4.82
+        },
+        {
+          "w": "flank",
+          "s": 4.82,
+          "e": 5.51
+        },
+        {
+          "w": "pain",
+          "s": 5.51,
+          "e": 6.2
+        },
+        {
+          "w": "to",
+          "s": 6.2,
+          "e": 6.89
+        },
+        {
+          "w": "groin,",
+          "s": 6.89,
+          "e": 7.58
+        },
+        {
+          "w": "vomiting",
+          "s": 7.58,
+          "e": 8.26
+        },
+        {
+          "w": "and",
+          "s": 8.26,
+          "e": 8.95
+        },
+        {
+          "w": "burning",
+          "s": 8.95,
+          "e": 9.64
+        },
+        {
+          "w": "urination.",
+          "s": 9.64,
+          "e": 10.33
+        },
+        {
+          "w": "Denies",
+          "s": 10.33,
+          "e": 11.02
+        },
+        {
+          "w": "fever.",
+          "s": 11.02,
+          "e": 11.71
+        },
+        {
+          "w": "No",
+          "s": 11.71,
+          "e": 12.4
+        },
+        {
+          "w": "known",
+          "s": 12.4,
+          "e": 13.08
+        },
+        {
+          "w": "drug",
+          "s": 13.08,
+          "e": 13.77
+        },
+        {
+          "w": "allergy.",
+          "s": 13.77,
+          "e": 14.46
+        },
+        {
+          "w": "Kidney",
+          "s": 14.46,
+          "e": 15.15
+        },
+        {
+          "w": "stone",
+          "s": 15.15,
+          "e": 15.84
+        },
+        {
+          "w": "two",
+          "s": 15.84,
+          "e": 16.53
+        },
+        {
+          "w": "years",
+          "s": 16.53,
+          "e": 17.22
+        },
+        {
+          "w": "ago.",
+          "s": 17.22,
+          "e": 17.91
+        },
+        {
+          "w": "Now",
+          "s": 17.91,
+          "e": 18.59
+        },
+        {
+          "w": "likely",
+          "s": 18.59,
+          "e": 19.28
+        },
+        {
+          "w": "ureteric",
+          "s": 19.28,
+          "e": 19.97
+        },
+        {
+          "w": "stone,",
+          "s": 19.97,
+          "e": 20.66
+        },
+        {
+          "w": "colic.",
+          "s": 20.66,
+          "e": 21.35
+        },
+        {
+          "w": "Blood",
+          "s": 21.35,
+          "e": 22.04
+        },
+        {
+          "w": "pressure",
+          "s": 22.04,
+          "e": 22.73
+        },
+        {
+          "w": "130/84",
+          "s": 22.73,
+          "e": 23.41
+        },
+        {
+          "w": "mmHg.",
+          "s": 23.41,
+          "e": 24.1
+        },
+        {
+          "w": "Pulse",
+          "s": 24.1,
+          "e": 24.79
+        },
+        {
+          "w": "94.",
+          "s": 24.79,
+          "e": 25.48
+        },
+        {
+          "w": "Temperature",
+          "s": 25.48,
+          "e": 26.17
+        },
+        {
+          "w": "98.8",
+          "s": 26.17,
+          "e": 26.86
+        },
+        {
+          "w": "degrees",
+          "s": 26.86,
+          "e": 27.55
+        },
+        {
+          "w": "Fahrenheit.",
+          "s": 27.55,
+          "e": 28.24
+        },
+        {
+          "w": "Ienerrenal",
+          "s": 28.24,
+          "e": 28.92
+        },
+        {
+          "w": "angle.",
+          "s": 28.92,
+          "e": 29.61
+        },
+        {
+          "w": "No",
+          "s": 29.61,
+          "e": 30.3
+        },
+        {
+          "w": "guarding.",
+          "s": 30.3,
+          "e": 30.99
+        },
+        {
+          "w": "Urine",
+          "s": 30.99,
+          "e": 31.68
+        },
+        {
+          "w": "test",
+          "s": 31.68,
+          "e": 32.37
+        },
+        {
+          "w": "and",
+          "s": 32.37,
+          "e": 33.06
+        },
+        {
+          "w": "ultrasound.",
+          "s": 33.06,
+          "e": 33.74
+        },
+        {
+          "w": "Paracetame",
+          "s": 33.74,
+          "e": 34.43
+        },
+        {
+          "w": "anaglasia",
+          "s": 34.43,
+          "e": 35.12
+        },
+        {
+          "w": "and",
+          "s": 35.12,
+          "e": 35.81
+        },
+        {
+          "w": "antippesmodic",
+          "s": 35.81,
+          "e": 36.5
+        },
+        {
+          "w": "if",
+          "s": 36.5,
+          "e": 37.19
+        },
+        {
+          "w": "needed",
+          "s": 37.19,
+          "e": 37.88
+        },
+        {
+          "w": "high",
+          "s": 37.88,
+          "e": 38.56
+        },
+        {
+          "w": "fluid.",
+          "s": 38.56,
+          "e": 39.25
+        },
+        {
+          "w": "Urology",
+          "s": 39.25,
+          "e": 39.94
+        },
+        {
+          "w": "review.Diet,",
+          "s": 39.94,
+          "e": 40.63
+        },
+        {
+          "w": "3",
+          "s": 40.63,
+          "e": 41.32
+        },
+        {
+          "w": "L",
+          "s": 41.32,
+          "e": 42.01
+        },
+        {
+          "w": "water,",
+          "s": 42.01,
+          "e": 42.7
+        },
+        {
+          "w": "low-salt,",
+          "s": 42.7,
+          "e": 43.39
+        },
+        {
+          "w": "limits",
+          "s": 43.39,
+          "e": 44.07
+        },
+        {
+          "w": "pinut",
+          "s": 44.07,
+          "e": 44.76
+        },
+        {
+          "w": "and",
+          "s": 44.76,
+          "e": 45.45
+        },
+        {
+          "w": "cola.",
+          "s": 45.45,
+          "e": 46.14
+        },
+        {
+          "w": "Gentle,",
+          "s": 46.14,
+          "e": 46.83
+        },
+        {
+          "w": "same",
+          "s": 46.83,
+          "e": 47.52
+        },
+        {
+          "w": "urine",
+          "s": 47.52,
+          "e": 48.21
+        },
+        {
+          "w": "for",
+          "s": 48.21,
+          "e": 48.89
+        },
+        {
+          "w": "stone.",
+          "s": 48.89,
+          "e": 49.58
+        },
+        {
+          "w": "Return",
+          "s": 49.58,
+          "e": 50.27
+        },
+        {
+          "w": "for",
+          "s": 50.27,
+          "e": 50.96
+        },
+        {
+          "w": "fever,",
+          "s": 50.96,
+          "e": 51.65
+        },
+        {
+          "w": "persistent",
+          "s": 51.65,
+          "e": 52.34
+        },
+        {
+          "w": "vomiting.",
+          "s": 52.34,
+          "e": 53.03
+        },
+        {
+          "w": "No",
+          "s": 53.03,
+          "e": 53.72
+        },
+        {
+          "w": "urine",
+          "s": 53.72,
+          "e": 54.4
+        },
+        {
+          "w": "or",
+          "s": 54.4,
+          "e": 55.09
+        },
+        {
+          "w": "severe",
+          "s": 55.09,
+          "e": 55.78
+        },
+        {
+          "w": "pain.",
+          "s": 55.78,
+          "e": 56.47
+        },
+        {
+          "w": "F",
+          "s": 56.47,
+          "e": 57.16
+        },
+        {
+          "w": "followollowup",
+          "s": 57.16,
+          "e": 57.85
+        },
+        {
+          "w": "in",
+          "s": 57.85,
+          "e": 58.54
+        },
+        {
+          "w": "two",
+          "s": 58.54,
+          "e": 59.22
+        },
+        {
+          "w": "days",
+          "s": 59.22,
+          "e": 59.91
+        },
+        {
+          "w": "with",
+          "s": 59.91,
+          "e": 60.6
+        },
+        {
+          "w": "scan.",
+          "s": 60.6,
+          "e": 61.29
+        }
+      ]
+    }
+  ],
+  "normalized_en": "44-year-old male with 60 severe colicky right flank pain to groin, vomiting and burning urination. Denies fever. No known drug allergy. Kidney stone 2 years ago. Now likely ureteric stone, colic. Blood pressure 130/84 mmHg. Pulse 94. Temperature 98.8 degrees Fahrenheit. Ienerrenal angle. No guarding. Urine test and ultrasound. Paracetame anaglasia and antippesmodic if needed high fluid. Urology review.Diet, 3 L water, low-salt, limits pinut and cola. Gentle, same urine for stone. Return for fever, persistent vomiting. No urine or severe pain. F followollowup in 2 days with scan.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s32-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

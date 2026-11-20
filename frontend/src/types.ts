@@ -72,6 +72,11 @@ export type Lab = {
 
 export type AppTask = {
   id: string;
+  /** Present on the ward-wide list (scope=mine). */
+  patient_id?: string;
+  patient_name?: string;
+  ward?: string;
+  bed?: string;
   title: string;
   detail: string;
   status: string;
@@ -196,6 +201,7 @@ export type InvestigationRequest = {
   approved_by?: string;
   created_at: string;
   exported_at?: string | null;
+  source_event_id?: string | null;
 };
 
 export type TimelineEvent = {

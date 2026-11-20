@@ -1,0 +1,505 @@
+{
+  "job_id": "s30-none",
+  "text": "58-year-old female with one year bilateral knee pain, burs on stairs and morning, stiffness under 30 minutes, grinding sensation. Denies injury and fever. No known drug allergy. Obesity and hypertension. Bilateral knee osteoarthritis. Weight 78 kilos. Blood pressure for- 142/88 mmHg. Pulse 84. Crep- crepitus with mild right effusion. Stannding knee x-ray, vitamin D. Plan parasitamal as needed. Quadriceps physiotherapy, weight loss, topical angesia. Low low-calorie, low-salt, calcium pro protein, 2 L water, gentle. Daily walk and exercise. no squatting or cross-leged sitting. Review for locking or night pain. Follow up in one month.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "58-year-old female with one year bilateral knee pain, burs on stairs and morning, stiffness under 30 minutes, grinding sensation. Denies injury and fever. No known drug allergy. Obesity and hypertension. Bilateral knee osteoarthritis. Weight 78 kilos. Blood pressure for- 142/88 mmHg. Pulse 84. Crep- crepitus with mild right effusion. Stannding knee x-ray, vitamin D. Plan parasitamal as needed. Quadriceps physiotherapy, weight loss, topical angesia. Low low-calorie, low-salt, calcium pro protein, 2 L water, gentle. Daily walk and exercise. no squatting or cross-leged sitting. Review for locking or night pain. Follow up in one month.",
+      "start": 0.0,
+      "end": 69.23,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "58-year-old",
+          "s": 0.0,
+          "e": 0.74
+        },
+        {
+          "w": "female",
+          "s": 0.74,
+          "e": 1.47
+        },
+        {
+          "w": "with",
+          "s": 1.47,
+          "e": 2.21
+        },
+        {
+          "w": "one",
+          "s": 2.21,
+          "e": 2.95
+        },
+        {
+          "w": "year",
+          "s": 2.95,
+          "e": 3.68
+        },
+        {
+          "w": "bilateral",
+          "s": 3.68,
+          "e": 4.42
+        },
+        {
+          "w": "knee",
+          "s": 4.42,
+          "e": 5.16
+        },
+        {
+          "w": "pain,",
+          "s": 5.16,
+          "e": 5.89
+        },
+        {
+          "w": "burs",
+          "s": 5.89,
+          "e": 6.63
+        },
+        {
+          "w": "on",
+          "s": 6.63,
+          "e": 7.36
+        },
+        {
+          "w": "stairs",
+          "s": 7.36,
+          "e": 8.1
+        },
+        {
+          "w": "and",
+          "s": 8.1,
+          "e": 8.84
+        },
+        {
+          "w": "morning,",
+          "s": 8.84,
+          "e": 9.57
+        },
+        {
+          "w": "stiffness",
+          "s": 9.57,
+          "e": 10.31
+        },
+        {
+          "w": "under",
+          "s": 10.31,
+          "e": 11.05
+        },
+        {
+          "w": "30",
+          "s": 11.05,
+          "e": 11.78
+        },
+        {
+          "w": "minutes,",
+          "s": 11.78,
+          "e": 12.52
+        },
+        {
+          "w": "grinding",
+          "s": 12.52,
+          "e": 13.26
+        },
+        {
+          "w": "sensation.",
+          "s": 13.26,
+          "e": 13.99
+        },
+        {
+          "w": "Denies",
+          "s": 13.99,
+          "e": 14.73
+        },
+        {
+          "w": "injury",
+          "s": 14.73,
+          "e": 15.47
+        },
+        {
+          "w": "and",
+          "s": 15.47,
+          "e": 16.2
+        },
+        {
+          "w": "fever.",
+          "s": 16.2,
+          "e": 16.94
+        },
+        {
+          "w": "No",
+          "s": 16.94,
+          "e": 17.67
+        },
+        {
+          "w": "known",
+          "s": 17.67,
+          "e": 18.41
+        },
+        {
+          "w": "drug",
+          "s": 18.41,
+          "e": 19.15
+        },
+        {
+          "w": "allergy.",
+          "s": 19.15,
+          "e": 19.88
+        },
+        {
+          "w": "Obesity",
+          "s": 19.88,
+          "e": 20.62
+        },
+        {
+          "w": "and",
+          "s": 20.62,
+          "e": 21.36
+        },
+        {
+          "w": "hypertension.",
+          "s": 21.36,
+          "e": 22.09
+        },
+        {
+          "w": "Bilateral",
+          "s": 22.09,
+          "e": 22.83
+        },
+        {
+          "w": "knee",
+          "s": 22.83,
+          "e": 23.57
+        },
+        {
+          "w": "osteoarthritis.",
+          "s": 23.57,
+          "e": 24.3
+        },
+        {
+          "w": "Weight",
+          "s": 24.3,
+          "e": 25.04
+        },
+        {
+          "w": "78",
+          "s": 25.04,
+          "e": 25.78
+        },
+        {
+          "w": "kilos.",
+          "s": 25.78,
+          "e": 26.51
+        },
+        {
+          "w": "Blood",
+          "s": 26.51,
+          "e": 27.25
+        },
+        {
+          "w": "pressure",
+          "s": 27.25,
+          "e": 27.99
+        },
+        {
+          "w": "for-",
+          "s": 27.99,
+          "e": 28.72
+        },
+        {
+          "w": "142/88",
+          "s": 28.72,
+          "e": 29.46
+        },
+        {
+          "w": "mmHg.",
+          "s": 29.46,
+          "e": 30.19
+        },
+        {
+          "w": "Pulse",
+          "s": 30.19,
+          "e": 30.93
+        },
+        {
+          "w": "84.",
+          "s": 30.93,
+          "e": 31.67
+        },
+        {
+          "w": "Crep-",
+          "s": 31.67,
+          "e": 32.4
+        },
+        {
+          "w": "crepitus",
+          "s": 32.4,
+          "e": 33.14
+        },
+        {
+          "w": "with",
+          "s": 33.14,
+          "e": 33.88
+        },
+        {
+          "w": "mild",
+          "s": 33.88,
+          "e": 34.61
+        },
+        {
+          "w": "right",
+          "s": 34.61,
+          "e": 35.35
+        },
+        {
+          "w": "effusion.",
+          "s": 35.35,
+          "e": 36.09
+        },
+        {
+          "w": "Stannding",
+          "s": 36.09,
+          "e": 36.82
+        },
+        {
+          "w": "knee",
+          "s": 36.82,
+          "e": 37.56
+        },
+        {
+          "w": "x-ray,",
+          "s": 37.56,
+          "e": 38.3
+        },
+        {
+          "w": "vitamin",
+          "s": 38.3,
+          "e": 39.03
+        },
+        {
+          "w": "D.",
+          "s": 39.03,
+          "e": 39.77
+        },
+        {
+          "w": "Plan",
+          "s": 39.77,
+          "e": 40.5
+        },
+        {
+          "w": "parasitamal",
+          "s": 40.5,
+          "e": 41.24
+        },
+        {
+          "w": "as",
+          "s": 41.24,
+          "e": 41.98
+        },
+        {
+          "w": "needed.",
+          "s": 41.98,
+          "e": 42.71
+        },
+        {
+          "w": "Quadriceps",
+          "s": 42.71,
+          "e": 43.45
+        },
+        {
+          "w": "physiotherapy,",
+          "s": 43.45,
+          "e": 44.19
+        },
+        {
+          "w": "weight",
+          "s": 44.19,
+          "e": 44.92
+        },
+        {
+          "w": "loss,",
+          "s": 44.92,
+          "e": 45.66
+        },
+        {
+          "w": "topical",
+          "s": 45.66,
+          "e": 46.4
+        },
+        {
+          "w": "angesia.",
+          "s": 46.4,
+          "e": 47.13
+        },
+        {
+          "w": "Low",
+          "s": 47.13,
+          "e": 47.87
+        },
+        {
+          "w": "low-calorie,",
+          "s": 47.87,
+          "e": 48.61
+        },
+        {
+          "w": "low-salt,",
+          "s": 48.61,
+          "e": 49.34
+        },
+        {
+          "w": "calcium",
+          "s": 49.34,
+          "e": 50.08
+        },
+        {
+          "w": "pro",
+          "s": 50.08,
+          "e": 50.82
+        },
+        {
+          "w": "protein,",
+          "s": 50.82,
+          "e": 51.55
+        },
+        {
+          "w": "2",
+          "s": 51.55,
+          "e": 52.29
+        },
+        {
+          "w": "L",
+          "s": 52.29,
+          "e": 53.02
+        },
+        {
+          "w": "water,",
+          "s": 53.02,
+          "e": 53.76
+        },
+        {
+          "w": "gentle.",
+          "s": 53.76,
+          "e": 54.5
+        },
+        {
+          "w": "Daily",
+          "s": 54.5,
+          "e": 55.23
+        },
+        {
+          "w": "walk",
+          "s": 55.23,
+          "e": 55.97
+        },
+        {
+          "w": "and",
+          "s": 55.97,
+          "e": 56.71
+        },
+        {
+          "w": "exercise.",
+          "s": 56.71,
+          "e": 57.44
+        },
+        {
+          "w": "no",
+          "s": 57.44,
+          "e": 58.18
+        },
+        {
+          "w": "squatting",
+          "s": 58.18,
+          "e": 58.92
+        },
+        {
+          "w": "or",
+          "s": 58.92,
+          "e": 59.65
+        },
+        {
+          "w": "cross-leged",
+          "s": 59.65,
+          "e": 60.39
+        },
+        {
+          "w": "sitting.",
+          "s": 60.39,
+          "e": 61.13
+        },
+        {
+          "w": "Review",
+          "s": 61.13,
+          "e": 61.86
+        },
+        {
+          "w": "for",
+          "s": 61.86,
+          "e": 62.6
+        },
+        {
+          "w": "locking",
+          "s": 62.6,
+          "e": 63.34
+        },
+        {
+          "w": "or",
+          "s": 63.34,
+          "e": 64.07
+        },
+        {
+          "w": "night",
+          "s": 64.07,
+          "e": 64.81
+        },
+        {
+          "w": "pain.",
+          "s": 64.81,
+          "e": 65.54
+        },
+        {
+          "w": "Follow",
+          "s": 65.54,
+          "e": 66.28
+        },
+        {
+          "w": "up",
+          "s": 66.28,
+          "e": 67.02
+        },
+        {
+          "w": "in",
+          "s": 67.02,
+          "e": 67.75
+        },
+        {
+          "w": "one",
+          "s": 67.75,
+          "e": 68.49
+        },
+        {
+          "w": "month.",
+          "s": 68.49,
+          "e": 69.23
+        }
+      ]
+    }
+  ],
+  "normalized_en": "58-year-old female with 1 year bilateral knee pain, burs on stairs and morning, stiffness under 30 minutes, grinding sensation. Denies injury and fever. No known drug allergy. Obesity and hypertension. Bilateral knee osteoarthritis. Weight 78 kilos. Blood pressure for- 142/88 mmHg. Pulse 84. Crep- crepitus with mild right effusion. Stannding knee x-ray, vitamin D. Plan parasitamal as needed. Quadriceps physiotherapy, weight loss, topical angesia. Low low-calorie, low-salt, calcium pro protein, 2 L water, gentle. Daily walk and exercise. no squatting or cross-leged sitting. Review for locking or night pain. Follow up in 1 month.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s30-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

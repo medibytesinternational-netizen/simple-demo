@@ -126,17 +126,25 @@ def test_a_record_without_home_medicines_has_no_medicine_warning(fresh):
 
 # ---------- dashboard ----------
 
+def _register_other(client) -> dict:
+    body = {"name": "Joseph Fernandes", "age": 72, "sex": "Male", "no_known_allergies": True}
+    response = client.post("/api/patients", json=body)
+    assert response.status_code == 200, response.text
+    return response.json()["patient"]
+
+
 def test_deciding_a_difference_lowers_the_dashboard_row_and_summary_by_one(client):
     before = client.get("/api/hospital/dashboard").json()
     ravi_before = _row(before, "pat_ravi")["medicine_discrepancies"]
     assert ravi_before >= 3
+    other = _register_other(client)
+    before = client.get("/api/hospital/dashboard").json()
     assert _resolve(client, _recon_ids(client)[0]).status_code == 200
-    for headers in ({}, {"X-Patient-Id": "pat_joseph"}):  # the dashboard is hospital-wide: any open patient
+    for headers in ({}, {"X-Patient-Id": other["id"]}):  # the dashboard is hospital-wide: any open patient
         after = client.get("/api/hospital/dashboard", headers=headers).json()
         assert _row(after, "pat_ravi")["medicine_discrepancies"] == ravi_before - 1
         assert after["summary"]["medicine_discrepancies"] == before["summary"]["medicine_discrepancies"] - 1
-        for patient_id in ("pat_anita", "pat_joseph", "pat_meera", "pat_arun"):
-            assert _row(after, patient_id)["medicine_discrepancies"] == _row(before, patient_id)["medicine_discrepancies"]
+        assert _row(after, other["id"])["medicine_discrepancies"] == _row(before, other["id"])["medicine_discrepancies"]
 
 
 # ---------- print page ----------
@@ -174,8 +182,7 @@ def test_print_page_shows_the_real_patient_and_escapes_text(client):
 
 
 def _discharge_draft_for(patient_id: str) -> str:
-    """A discharge draft for a cohort patient, made through services as the generate route does
-    (clinical routes refuse cohort patients)."""
+    """A discharge draft for another patient, made through services as the generate route does."""
     from app.services.context import build_context
     from app.services.drafts import create_draft
     from app.services.llm import generate_draft
@@ -197,8 +204,8 @@ def _discharge_draft_for(patient_id: str) -> str:
 
 
 def test_print_page_is_not_hard_coded_to_ravi(client):
-    draft_id = _discharge_draft_for("pat_joseph")
-    joseph = next(r for r in client.get("/api/hospital/dashboard").json()["patients"] if r["patient_id"] == "pat_joseph")
+    joseph = _register_other(client)
+    draft_id = _discharge_draft_for(joseph["id"])
     for header in ({}, {"X-Patient-Id": "pat_ravi"}):
         page = _print(client, draft_id, **header).text
         assert joseph["name"] in page and joseph["mrn"] in page

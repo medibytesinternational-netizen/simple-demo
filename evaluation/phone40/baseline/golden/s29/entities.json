@@ -1,0 +1,603 @@
+{
+  "job_id": "s29-none",
+  "drugs": [
+    {
+      "name": "pancreatin",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Acute pancreatis.",
+      "negated": false,
+      "raw_token": "pancreatis",
+      "candidates": [
+        {
+          "name": "pancreatin",
+          "kind": "substance",
+          "substances": [
+            "pancreatin"
+          ],
+          "units": [
+            "mg"
+          ],
+          "strengths": [
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 20.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 170.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 300.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 500.0
+            }
+          ],
+          "forms": [
+            "tablet"
+          ],
+          "mass_mg": [
+            20.0,
+            500.0
+          ],
+          "score": 0.9,
+          "matched_name": "pancreatin"
+        }
+      ],
+      "matcher_pick": "pancreatin",
+      "note": "fuzzy pancreatis->pancreatin (0.90), no dose dictated - physician must confirm | ambiguous: sentence describes a diagnosis not a drug",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "validation": {
+        "status": "ambiguous",
+        "original_sentence": "Acute pancreatis.",
+        "final_output_sentence": "Acute pancreatis.",
+        "applied_corrections": [],
+        "semantic_confidence_score": 0.0,
+        "reason": "sentence describes a diagnosis not a drug",
+        "engine": "llm:gpt-4.1"
+      }
+    },
+    {
+      "name": "amylase",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Amylase, lipase, ultrasound.",
+      "negated": false,
+      "note": "no dose dictated - physician must confirm (national drug list, not this pipeline's own)",
+      "start_char": 328,
+      "end_char": 335,
+      "span_status": "exact"
+    },
+    {
+      "name": "pantoprazole",
+      "dose": 40.0,
+      "unit": "mg",
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.96,
+      "color": "GREEN",
+      "source_sentence": "Nil by mouth, IV fluids, pantoprazole 40 mg IV, paracetamale anagnesia, analgesia, no alcohol diet.",
+      "negated": false,
+      "start_char": 382,
+      "end_char": 394,
+      "span_status": "exact"
+    },
+    {
+      "name": "acetaminophen",
+      "dose": null,
+      "unit": null,
+      "frequency": "",
+      "duration": "",
+      "confidence": 0.7,
+      "color": "RED",
+      "source_sentence": "Nil by mouth, IV fluids, pantoprazole 40 mg IV, paracetamale anagnesia, analgesia, no alcohol diet.",
+      "negated": false,
+      "raw_token": "paracetamale",
+      "candidates": [
+        {
+          "name": "acetaminophen",
+          "kind": "substance",
+          "substances": [
+            "acetaminophen"
+          ],
+          "units": [
+            "g",
+            "mcg",
+            "mg",
+            "ml"
+          ],
+          "strengths": [
+            {
+              "form": "solution",
+              "unit": "g",
+              "value": 1.0
+            },
+            {
+              "form": "tablet",
+              "unit": "g",
+              "value": 1.0
+            },
+            {
+              "form": "suspension",
+              "unit": "mcg",
+              "value": 300.0
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 1.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 2.0
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 2.5
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 2.5
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 3.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 4.0
+            },
+            {
+              "form": "solution",
+              "unit": "mg",
+              "value": 5.0
+            },
+            {
+              "form": "tablet",
+              "unit": "mg",
+              "value": 5.0
+            },
+            {
+              "form": "capsule",
+              "unit": "mg",
+              "value": 5.0
+            }
+          ],
+          "forms": [
+            "capsule",
+            "injection",
+            "solution",
+            "suppository",
+            "suspension",
+            "syrup"
+          ],
+          "mass_mg": [
+            0.3,
+            1000.0
+          ],
+          "score": 0.87,
+          "matched_name": "paracetamol"
+        }
+      ],
+      "matcher_pick": "paracetamol",
+      "note": "fuzzy paracetamale->paracetamol (0.87), no dose dictated - physician must confirm | validator paracetamale->acetaminophen (overrules matcher)",
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "not_found",
+      "validation": {
+        "status": "corrected",
+        "original_sentence": "Nil by mouth, IV fluids, pantoprazole 40 mg IV, paracetamale anagnesia, analgesia, no alcohol diet.",
+        "final_output_sentence": "Nil by mouth, IV fluids, pantoprazole 40 mg IV, acetaminophen anagnesia, analgesia, no alcohol diet.",
+        "applied_corrections": [
+          {
+            "replaced_token": "paracetamale",
+            "substituted_with": "acetaminophen"
+          }
+        ],
+        "semantic_confidence_score": 0.95,
+        "reason": "analgesia matches acetaminophen indication",
+        "overrules_matcher": true,
+        "engine": "llm:gpt-4.1"
+      }
+    }
+  ],
+  "symptoms": [
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "42-year-old male with one day severe abdominal pain radiating to back after alcohol plus three vomits.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    },
+    {
+      "text": "fever",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Denies fever and chest pain.",
+      "negated": false,
+      "start_char": 104,
+      "end_char": 109,
+      "span_status": "exact"
+    },
+    {
+      "text": "chest pain",
+      "confidence": 0.91,
+      "color": "GREEN",
+      "source_sentence": "Denies fever and chest pain.",
+      "negated": true,
+      "note": "DENIED - excluded",
+      "start_char": 114,
+      "end_char": 124,
+      "span_status": "exact"
+    },
+    {
+      "text": "vomiting",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Return for worse pain, vomiting, or breathlessness.",
+      "negated": false,
+      "start_char": 561,
+      "end_char": 569,
+      "span_status": "exact"
+    },
+    {
+      "text": "breathlessness",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Return for worse pain, vomiting, or breathlessness.",
+      "negated": false,
+      "start_char": 574,
+      "end_char": 588,
+      "span_status": "exact"
+    },
+    {
+      "text": "pain",
+      "confidence": 0.9,
+      "color": "YELLOW",
+      "source_sentence": "Return for worse pain, vomiting, or breathlessness.",
+      "negated": false,
+      "start_char": -1,
+      "end_char": -1,
+      "span_status": "ambiguous"
+    }
+  ],
+  "vitals": [
+    {
+      "text": "Temperature 100 degrees Fahrenheit",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Temperature 100 degrees Fahrenheit.",
+      "start_char": 200,
+      "end_char": 234,
+      "span_status": "exact"
+    },
+    {
+      "text": "Pulse 106",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Pulse 106 beats per minute.",
+      "start_char": 236,
+      "end_char": 245,
+      "span_status": "exact"
+    },
+    {
+      "text": "Blood pressure 120/80",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Blood pressure 120/80 mmHg.",
+      "start_char": 264,
+      "end_char": 285,
+      "span_status": "exact"
+    },
+    {
+      "text": "97%",
+      "confidence": 0.87,
+      "color": "YELLOW",
+      "source_sentence": "Saturation 97%.",
+      "start_char": 303,
+      "end_char": 306,
+      "span_status": "exact"
+    }
+  ],
+  "allergies": [],
+  "negations": [],
+  "diagnosis": {},
+  "followup": {
+    "text": "Follow upp in two days",
+    "confidence": 0.88,
+    "color": "YELLOW",
+    "source_sentence": "Follow upp in two days",
+    "start_char": -1,
+    "end_char": -1,
+    "span_status": "not_found"
+  },
+  "term_validator": "llm:gpt-4.1",
+  "term_validator_seconds": 6.019,
+  "context_repair": {
+    "engine": "llm:gpt-4.1",
+    "considered": 0,
+    "calls": 0,
+    "llm_seconds": 0.0,
+    "repaired": [],
+    "declined": [],
+    "errors": [],
+    "prompt_version": "p0",
+    "shortlist_settings": {
+      "floor": 0.78,
+      "band": 0.1,
+      "limit": 4
+    },
+    "attempts": [],
+    "status": "ran"
+  },
+  "verify": {
+    "facts": [
+      {
+        "kind": "drug",
+        "name": "pancreatin",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: pancreatin; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Acute pancreatis."
+      },
+      {
+        "kind": "drug",
+        "name": "amylase",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: amylase; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Amylase, lipase, ultrasound."
+      },
+      {
+        "kind": "drug",
+        "name": "pantoprazole",
+        "dose": 40.0,
+        "unit": "mg",
+        "negated": false,
+        "status": "verified",
+        "checks": [
+          "name:verified",
+          "dose:verified",
+          "numeral:verified",
+          "proof:verified"
+        ],
+        "notes": "mini-list exact (name or observed alias); dose/unit plausible [dispensed in mg; listed strengths: 20 mg tablet, 40 mg capsule, 40 mg granules, 40 mg tablet; 40 mg is plausible for this drug]",
+        "confidence": 0.96,
+        "source_sentence": "Nil by mouth, IV fluids, pantoprazole 40 mg IV, paracetamale anagnesia, analgesia, no alcohol diet."
+      },
+      {
+        "kind": "drug",
+        "name": "acetaminophen",
+        "dose": null,
+        "unit": null,
+        "negated": false,
+        "status": "needs_review",
+        "checks": [
+          "name:verified",
+          "dose:needs_review",
+          "proof:verified"
+        ],
+        "notes": "reference substance: acetaminophen; no dose dictated",
+        "confidence": 0.7,
+        "source_sentence": "Nil by mouth, IV fluids, pantoprazole 40 mg IV, paracetamale anagnesia, analgesia, no alcohol diet."
+      },
+      {
+        "kind": "vital",
+        "text": "Temperature 100 degrees Fahrenheit",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Temperature 100 degrees Fahrenheit."
+      },
+      {
+        "kind": "vital",
+        "text": "Pulse 106",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Pulse 106 beats per minute."
+      },
+      {
+        "kind": "vital",
+        "text": "Blood pressure 120/80",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Blood pressure 120/80 mmHg."
+      },
+      {
+        "kind": "vital",
+        "text": "97%",
+        "status": "verified",
+        "checks": [
+          "plausibility:verified",
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.87,
+        "source_sentence": "Saturation 97%."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "42-year-old male with one day severe abdominal pain radiating to back after alcohol plus three vomits."
+      },
+      {
+        "kind": "symptom",
+        "text": "fever",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Denies fever and chest pain."
+      },
+      {
+        "kind": "symptom",
+        "text": "chest pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.91,
+        "source_sentence": "Denies fever and chest pain."
+      },
+      {
+        "kind": "symptom",
+        "text": "vomiting",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Return for worse pain, vomiting, or breathlessness."
+      },
+      {
+        "kind": "symptom",
+        "text": "breathlessness",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Return for worse pain, vomiting, or breathlessness."
+      },
+      {
+        "kind": "symptom",
+        "text": "pain",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.9,
+        "source_sentence": "Return for worse pain, vomiting, or breathlessness."
+      },
+      {
+        "kind": "followup",
+        "text": "Follow upp in two days",
+        "status": "verified",
+        "checks": [
+          "proof:verified"
+        ],
+        "notes": "",
+        "confidence": 0.88,
+        "source_sentence": "Follow upp in two days"
+      }
+    ],
+    "summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "3",
+          "24",
+          "40",
+          "42",
+          "80",
+          "97",
+          "100",
+          "106",
+          "120"
+        ],
+        "count": 11
+      },
+      "total": 15,
+      "drug_needs_review": 3,
+      "drug_verified": 1,
+      "vital_verified": 4,
+      "symptom_verified": 6,
+      "followup_verified": 1
+    },
+    "brand_mentions": []
+  },
+  "discharge": {
+    "sections": {
+      "present_illness": {
+        "items": []
+      },
+      "examination_findings": {
+        "items": []
+      },
+      "previous_diagnosis": {
+        "items": []
+      },
+      "plan_of_management": {
+        "items": []
+      },
+      "diet_instructions": {
+        "items": []
+      },
+      "general_instructions": {
+        "items": []
+      }
+    },
+    "provenance": {
+      "llm_engine": "discharge-skipped (regex-only run; pass --llm)",
+      "schema": "valid"
+    }
+  }
+}

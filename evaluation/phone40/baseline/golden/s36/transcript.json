@@ -1,0 +1,470 @@
+{
+  "job_id": "s36-none",
+  "text": "66 -year-old male with two days palpitations, tiredness, and mild reathlessness. Irregular home pulse. Denies chest pain and fainting. No known drug allergy. Hypertension and diabetes. Now atrial fibrilla- fibrillation, fast rate. Pulse 120 beats per minute, irre- irregular. Blood pressure 130/80 mmHg. Saturation 96%. No crackles. ECG, echo, thyroid, electrolytes. Rate control as advised. Anticoagulation. Cardiology review today. Diet, low salt, no alcoholic, limited coffee regulation regular times. General, no exertion until review. Report chest pain, fainting, severe breathlessness or one-sided weakness, Cardiology in two days.",
+  "language": "en-IN",
+  "segments": [
+    {
+      "id": 0,
+      "text": "66 -year-old male with two days palpitations, tiredness, and mild reathlessness. Irregular home pulse. Denies chest pain and fainting. No known drug allergy. Hypertension and diabetes. Now atrial fibrilla- fibrillation, fast rate. Pulse 120 beats per minute, irre- irregular. Blood pressure 130/80 mmHg. Saturation 96%. No crackles. ECG, echo, thyroid, electrolytes. Rate control as advised. Anticoagulation. Cardiology review today. Diet, low salt, no alcoholic, limited coffee regulation regular times. General, no exertion until review. Report chest pain, fainting, severe breathlessness or one-sided weakness, Cardiology in two days.",
+      "start": 0.0,
+      "end": 59.52,
+      "lang": "en-IN",
+      "confidence": 0.9,
+      "words": [
+        {
+          "w": "66",
+          "s": 0.0,
+          "e": 0.68
+        },
+        {
+          "w": "-year-old",
+          "s": 0.68,
+          "e": 1.37
+        },
+        {
+          "w": "male",
+          "s": 1.37,
+          "e": 2.05
+        },
+        {
+          "w": "with",
+          "s": 2.05,
+          "e": 2.74
+        },
+        {
+          "w": "two",
+          "s": 2.74,
+          "e": 3.42
+        },
+        {
+          "w": "days",
+          "s": 3.42,
+          "e": 4.1
+        },
+        {
+          "w": "palpitations,",
+          "s": 4.1,
+          "e": 4.79
+        },
+        {
+          "w": "tiredness,",
+          "s": 4.79,
+          "e": 5.47
+        },
+        {
+          "w": "and",
+          "s": 5.47,
+          "e": 6.16
+        },
+        {
+          "w": "mild",
+          "s": 6.16,
+          "e": 6.84
+        },
+        {
+          "w": "reathlessness.",
+          "s": 6.84,
+          "e": 7.53
+        },
+        {
+          "w": "Irregular",
+          "s": 7.53,
+          "e": 8.21
+        },
+        {
+          "w": "home",
+          "s": 8.21,
+          "e": 8.89
+        },
+        {
+          "w": "pulse.",
+          "s": 8.89,
+          "e": 9.58
+        },
+        {
+          "w": "Denies",
+          "s": 9.58,
+          "e": 10.26
+        },
+        {
+          "w": "chest",
+          "s": 10.26,
+          "e": 10.95
+        },
+        {
+          "w": "pain",
+          "s": 10.95,
+          "e": 11.63
+        },
+        {
+          "w": "and",
+          "s": 11.63,
+          "e": 12.31
+        },
+        {
+          "w": "fainting.",
+          "s": 12.31,
+          "e": 13.0
+        },
+        {
+          "w": "No",
+          "s": 13.0,
+          "e": 13.68
+        },
+        {
+          "w": "known",
+          "s": 13.68,
+          "e": 14.37
+        },
+        {
+          "w": "drug",
+          "s": 14.37,
+          "e": 15.05
+        },
+        {
+          "w": "allergy.",
+          "s": 15.05,
+          "e": 15.74
+        },
+        {
+          "w": "Hypertension",
+          "s": 15.74,
+          "e": 16.42
+        },
+        {
+          "w": "and",
+          "s": 16.42,
+          "e": 17.1
+        },
+        {
+          "w": "diabetes.",
+          "s": 17.1,
+          "e": 17.79
+        },
+        {
+          "w": "Now",
+          "s": 17.79,
+          "e": 18.47
+        },
+        {
+          "w": "atrial",
+          "s": 18.47,
+          "e": 19.16
+        },
+        {
+          "w": "fibrilla-",
+          "s": 19.16,
+          "e": 19.84
+        },
+        {
+          "w": "fibrillation,",
+          "s": 19.84,
+          "e": 20.52
+        },
+        {
+          "w": "fast",
+          "s": 20.52,
+          "e": 21.21
+        },
+        {
+          "w": "rate.",
+          "s": 21.21,
+          "e": 21.89
+        },
+        {
+          "w": "Pulse",
+          "s": 21.89,
+          "e": 22.58
+        },
+        {
+          "w": "120",
+          "s": 22.58,
+          "e": 23.26
+        },
+        {
+          "w": "beats",
+          "s": 23.26,
+          "e": 23.94
+        },
+        {
+          "w": "per",
+          "s": 23.94,
+          "e": 24.63
+        },
+        {
+          "w": "minute,",
+          "s": 24.63,
+          "e": 25.31
+        },
+        {
+          "w": "irre-",
+          "s": 25.31,
+          "e": 26.0
+        },
+        {
+          "w": "irregular.",
+          "s": 26.0,
+          "e": 26.68
+        },
+        {
+          "w": "Blood",
+          "s": 26.68,
+          "e": 27.37
+        },
+        {
+          "w": "pressure",
+          "s": 27.37,
+          "e": 28.05
+        },
+        {
+          "w": "130/80",
+          "s": 28.05,
+          "e": 28.73
+        },
+        {
+          "w": "mmHg.",
+          "s": 28.73,
+          "e": 29.42
+        },
+        {
+          "w": "Saturation",
+          "s": 29.42,
+          "e": 30.1
+        },
+        {
+          "w": "96%.",
+          "s": 30.1,
+          "e": 30.79
+        },
+        {
+          "w": "No",
+          "s": 30.79,
+          "e": 31.47
+        },
+        {
+          "w": "crackles.",
+          "s": 31.47,
+          "e": 32.15
+        },
+        {
+          "w": "ECG,",
+          "s": 32.15,
+          "e": 32.84
+        },
+        {
+          "w": "echo,",
+          "s": 32.84,
+          "e": 33.52
+        },
+        {
+          "w": "thyroid,",
+          "s": 33.52,
+          "e": 34.21
+        },
+        {
+          "w": "electrolytes.",
+          "s": 34.21,
+          "e": 34.89
+        },
+        {
+          "w": "Rate",
+          "s": 34.89,
+          "e": 35.58
+        },
+        {
+          "w": "control",
+          "s": 35.58,
+          "e": 36.26
+        },
+        {
+          "w": "as",
+          "s": 36.26,
+          "e": 36.94
+        },
+        {
+          "w": "advised.",
+          "s": 36.94,
+          "e": 37.63
+        },
+        {
+          "w": "Anticoagulation.",
+          "s": 37.63,
+          "e": 38.31
+        },
+        {
+          "w": "Cardiology",
+          "s": 38.31,
+          "e": 39.0
+        },
+        {
+          "w": "review",
+          "s": 39.0,
+          "e": 39.68
+        },
+        {
+          "w": "today.",
+          "s": 39.68,
+          "e": 40.36
+        },
+        {
+          "w": "Diet,",
+          "s": 40.36,
+          "e": 41.05
+        },
+        {
+          "w": "low",
+          "s": 41.05,
+          "e": 41.73
+        },
+        {
+          "w": "salt,",
+          "s": 41.73,
+          "e": 42.42
+        },
+        {
+          "w": "no",
+          "s": 42.42,
+          "e": 43.1
+        },
+        {
+          "w": "alcoholic,",
+          "s": 43.1,
+          "e": 43.78
+        },
+        {
+          "w": "limited",
+          "s": 43.78,
+          "e": 44.47
+        },
+        {
+          "w": "coffee",
+          "s": 44.47,
+          "e": 45.15
+        },
+        {
+          "w": "regulation",
+          "s": 45.15,
+          "e": 45.84
+        },
+        {
+          "w": "regular",
+          "s": 45.84,
+          "e": 46.52
+        },
+        {
+          "w": "times.",
+          "s": 46.52,
+          "e": 47.21
+        },
+        {
+          "w": "General,",
+          "s": 47.21,
+          "e": 47.89
+        },
+        {
+          "w": "no",
+          "s": 47.89,
+          "e": 48.57
+        },
+        {
+          "w": "exertion",
+          "s": 48.57,
+          "e": 49.26
+        },
+        {
+          "w": "until",
+          "s": 49.26,
+          "e": 49.94
+        },
+        {
+          "w": "review.",
+          "s": 49.94,
+          "e": 50.63
+        },
+        {
+          "w": "Report",
+          "s": 50.63,
+          "e": 51.31
+        },
+        {
+          "w": "chest",
+          "s": 51.31,
+          "e": 51.99
+        },
+        {
+          "w": "pain,",
+          "s": 51.99,
+          "e": 52.68
+        },
+        {
+          "w": "fainting,",
+          "s": 52.68,
+          "e": 53.36
+        },
+        {
+          "w": "severe",
+          "s": 53.36,
+          "e": 54.05
+        },
+        {
+          "w": "breathlessness",
+          "s": 54.05,
+          "e": 54.73
+        },
+        {
+          "w": "or",
+          "s": 54.73,
+          "e": 55.42
+        },
+        {
+          "w": "one-sided",
+          "s": 55.42,
+          "e": 56.1
+        },
+        {
+          "w": "weakness,",
+          "s": 56.1,
+          "e": 56.78
+        },
+        {
+          "w": "Cardiology",
+          "s": 56.78,
+          "e": 57.47
+        },
+        {
+          "w": "in",
+          "s": 57.47,
+          "e": 58.15
+        },
+        {
+          "w": "two",
+          "s": 58.15,
+          "e": 58.84
+        },
+        {
+          "w": "days.",
+          "s": 58.84,
+          "e": 59.52
+        }
+      ]
+    }
+  ],
+  "normalized_en": "66 -year-old male with 2 days palpitations, tiredness, and mild reathlessness. Irregular home pulse. Denies chest pain and fainting. No known drug allergy. Hypertension and diabetes. Now atrial fibrilla- fibrillation, fast rate. Pulse 120 beats per minute, irre- irregular. Blood pressure 130/80 mmHg. Saturation 96%. No crackles. ECG, echo, thyroid, electrolytes. Rate control as advised. Anticoagulation. Cardiology review today. Diet, low salt, no alcoholic, limited coffee regulation regular times. General, no exertion until review. Report chest pain, fainting, severe breathlessness or 1-sided weakness, Cardiology in 2 days.",
+  "normalizations": [],
+  "stt_engine": "medasr:google/medasr@cpu",
+  "stt_provenance": {
+    "job_id": "s36-none",
+    "provider": "transformers",
+    "requested_model": "medasr",
+    "actual_model": "google/medasr",
+    "device": "cpu",
+    "compute_type": "torch.float32",
+    "word_timestamps": false,
+    "temperature": 0.0,
+    "beam_size": null,
+    "runtime_version": "5.19.0",
+    "model_hash": null,
+    "model_snapshot": "google/medasr",
+    "is_mock": false
+  }
+}

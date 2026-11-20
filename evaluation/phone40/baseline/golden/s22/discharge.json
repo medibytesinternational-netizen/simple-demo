@@ -1,0 +1,175 @@
+{
+  "sections": {
+    "present_illness": {
+      "items": [
+        {
+          "text": "fever",
+          "source_sentence": "40-year-old male smoker with three weeks evening fever, productive cough, night sweats, o kilo loss, and appetite loss.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F6",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "cough",
+          "source_sentence": "40-year-old male smoker with three weeks evening fever, productive cough, night sweats, o kilo loss, and appetite loss.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F7",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "breathlessness",
+          "source_sentence": "Denies rest breathlessness.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F8",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "cough",
+          "source_sentence": "Cough adequate.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F9",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "examination_findings": {
+      "items": [
+        {
+          "text": "Temperature 100 degrees Fahrenheit",
+          "source_sentence": "Temperature 100 degrees Fahrenheit, pulse 92 beats per minute, blood pressure 120/78 mmHg, saturation 96%.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F2",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pulse 92",
+          "source_sentence": "Temperature 100 degrees Fahrenheit, pulse 92 beats per minute, blood pressure 120/78 mmHg, saturation 96%.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F3",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "blood pressure 120/78",
+          "source_sentence": "Temperature 100 degrees Fahrenheit, pulse 92 beats per minute, blood pressure 120/78 mmHg, saturation 96%.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F4",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "96%",
+          "source_sentence": "Temperature 100 degrees Fahrenheit, pulse 92 beats per minute, blood pressure 120/78 mmHg, saturation 96%.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F5",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "previous_diagnosis": {
+      "items": [
+        {
+          "text": "Pulmonary tuberculosis.",
+          "source_sentence": "Pulmonary tuberculosis.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        }
+      ]
+    },
+    "plan_of_management": {
+      "items": [
+        {
+          "text": "pyridoxine no dose",
+          "source_sentence": "trreatment after consirmation, pyridoxin, liver monitoring, diet.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F1",
+          "verified_kind": "drug",
+          "verified_status": "needs_review",
+          "note": "canonicalized"
+        },
+        {
+          "text": "pyridoxine no dose",
+          "source_sentence": "trreatment after consirmation, pyridoxin, liver monitoring, diet.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "verified_kind": "drug",
+          "verified_status": "needs_review",
+          "note": "canonicalized"
+        }
+      ]
+    },
+    "diet_instructions": {
+      "items": [
+        {
+          "text": "High protein ex doll milk, grn need fruits.",
+          "source_sentence": "High protein ex doll milk, grn need fruits.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        }
+      ]
+    },
+    "general_instructions": {
+      "items": [
+        {
+          "text": "General, mask.",
+          "source_sentence": "General, mask.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        },
+        {
+          "text": "Report a low eyes or rash.",
+          "source_sentence": "Report a low eyes or rash.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "llm_engine": "discharge:gpt-4.1",
+    "dropped_unproven": 6,
+    "verified_summary": {
+      "numerals": {
+        "digits": [
+          "3",
+          "6",
+          "40",
+          "58",
+          "78",
+          "92",
+          "96",
+          "100",
+          "120"
+        ],
+        "count": 9
+      },
+      "total": 9,
+      "drug_needs_review": 1,
+      "vital_verified": 4,
+      "symptom_verified": 4
+    },
+    "canonicalized": 2,
+    "llm_extractive": 4,
+    "prefilled": 0,
+    "schema": "valid"
+  }
+}

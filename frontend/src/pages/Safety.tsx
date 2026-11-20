@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { ALERT_TARGET } from "../components/nextStep";
 import { get, post } from "../api";
 import type { Draft, Reconciliation } from "../types";
 import { DismissFields, dismissReady } from "../features/f05/DismissFields";
@@ -173,6 +174,11 @@ export function SafetyPage() {
                         <button className="btn btn-danger btn-sm" onClick={() => { setDismissing(alert); setReason(""); setCategory(""); }}>
                           Dismiss with reason
                         </button>
+                        {ALERT_TARGET[alert.rule_id] ? (
+                          <Link className="btn btn-ghost btn-sm" to={ALERT_TARGET[alert.rule_id].to}>
+                            {ALERT_TARGET[alert.rule_id].label} →
+                          </Link>
+                        ) : null}
                       </div>
                     </article>
                   );

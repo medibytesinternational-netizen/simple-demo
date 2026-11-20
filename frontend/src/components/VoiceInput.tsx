@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { transcribeAudio } from "../api";
+import { transcribeAudio, transcribeRoundDictation } from "../api";
+import type { Draft } from "../types";
 
 // The only place in the app that captures voice. Record and Upload always come together: a screen that
 // needs voice uses this component, so it cannot get one without the other.
 
-const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
-const AUDIO_EXTENSIONS = ["mp3", "wav", "m4a", "webm", "ogg", "oga", "mp4", "mpeg", "mpga", "flac"];
+const MAX_AUDIO_BYTES = 64 * 1024 * 1024;
+const AUDIO_EXTENSIONS = ["mp3", "wav", "m4a", "webm", "ogg", "oga", "mp4", "mpeg", "mpga", "flac", "aac"];
 export const CONSENT_MESSAGE = "Record patient consent before capturing audio.";
 
 export type VoiceSource = "record" | "upload";
@@ -15,8 +16,14 @@ type Props = {
   consentGranted: boolean;
   /** Another step (for example drafting) is running; both buttons wait. */
   disabled?: boolean;
-  /** Called with the transcript when transcription succeeds. */
-  onTranscript: (text: string, source: VoiceSource) => void;
+  /** Called with the draft the MediBytes pipeline produced from the recording. */
+  onDraft?: (draft: Draft, source: VoiceSource) => void;
+  /** Called when ward-round audio is transcribed to editable text rather than directly to a draft. */
+  onTranscript?: (transcript: string, source: VoiceSource) => void;
+  /** Which note the recording writes: F1 OPD report (default) or F2 admission note. */
+  feature?: string;
+  /** Send the audio somewhere else instead of the consultation note (the new patient intake). */
+  capture?: (audio: Blob, filename: string | undefined, source: VoiceSource) => Promise<void>;
   /** True while recording or while the transcription request runs. */
   onBusyChange?: (busy: boolean) => void;
   /** True only while the transcription request runs ("Transcribing..."). */
@@ -30,7 +37,7 @@ function looksLikeAudio(file: File): boolean {
   return (file.type || "").toLowerCase().startsWith("audio/");
 }
 
-export function VoiceInput({ consentGranted, disabled, onTranscript, onBusyChange, onTranscribingChange }: Props) {
+export function VoiceInput({ consentGranted, disabled, onDraft, onTranscript, capture, feature = "F1", onBusyChange, onTranscribingChange }: Props) {
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState("");
@@ -40,8 +47,8 @@ export function VoiceInput({ consentGranted, disabled, onTranscript, onBusyChang
   const fileRef = useRef<HTMLInputElement | null>(null);
   const mountedRef = useRef(true);
   // Callbacks are read through a ref so a transcript that arrives later reaches the current handler.
-  const callbacks = useRef({ onTranscript, onBusyChange, onTranscribingChange });
-  callbacks.current = { onTranscript, onBusyChange, onTranscribingChange };
+  const callbacks = useRef({ onDraft, onTranscript, capture, onBusyChange, onTranscribingChange });
+  callbacks.current = { onDraft, onTranscript, capture, onBusyChange, onTranscribingChange };
 
   useEffect(() => {
     mountedRef.current = true;
@@ -68,10 +75,22 @@ export function VoiceInput({ consentGranted, disabled, onTranscript, onBusyChang
   const transcribe = async (body: Blob, filename: string | undefined, source: VoiceSource) => {
     setTranscribing(true);
     try {
-      const result = await transcribeAudio(body, filename);
+      if (callbacks.current.capture) {
+        await callbacks.current.capture(body, filename, source);
+        if (mountedRef.current) setError("");
+        return;
+      }
+      if (feature === "F3") {
+        const result = await transcribeRoundDictation(body, filename || "ward-round.webm");
+        if (!mountedRef.current) return;
+        setError("");
+        callbacks.current.onTranscript?.(result.text, source);
+        return;
+      }
+      const result = await transcribeAudio(body, filename, feature);
       if (!mountedRef.current) return;
       setError("");
-      callbacks.current.onTranscript(result.text, source);
+      callbacks.current.onDraft?.(result.draft, source);
     } catch (err: any) {
       if (mountedRef.current) setError(String(err?.message || err));
     } finally {
@@ -132,7 +151,7 @@ export function VoiceInput({ consentGranted, disabled, onTranscript, onBusyChang
       return;
     }
     if (file.size > MAX_AUDIO_BYTES) {
-      setError("Audio too large (max 25 MB).");
+      setError("Audio too large (max 64 MB).");
       return;
     }
     void transcribe(file, file.name, "upload");
@@ -154,7 +173,7 @@ export function VoiceInput({ consentGranted, disabled, onTranscript, onBusyChang
         <input
           ref={fileRef}
           type="file"
-          accept="audio/*,.mp3,.wav,.m4a,.webm,.ogg"
+          accept="audio/*,.mp3,.wav,.m4a,.webm,.ogg,.aac,.flac,.mp4"
           style={{ display: "none" }}
           onChange={(event) => {
             onFile(event.target.files?.[0]);

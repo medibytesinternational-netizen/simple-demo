@@ -1,0 +1,133 @@
+{
+  "facts": [
+    {
+      "kind": "drug",
+      "name": "pyridoxine",
+      "dose": null,
+      "unit": null,
+      "negated": false,
+      "status": "needs_review",
+      "checks": [
+        "name:verified",
+        "dose:needs_review",
+        "proof:verified"
+      ],
+      "notes": "reference substance: pyridoxine; no dose dictated",
+      "confidence": 0.7,
+      "source_sentence": "trreatment after consirmation, pyridoxin, liver monitoring, diet."
+    },
+    {
+      "kind": "vital",
+      "text": "Temperature 100 degrees Fahrenheit",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 100 degrees Fahrenheit, pulse 92 beats per minute, blood pressure 120/78 mmHg, saturation 96%."
+    },
+    {
+      "kind": "vital",
+      "text": "pulse 92",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 100 degrees Fahrenheit, pulse 92 beats per minute, blood pressure 120/78 mmHg, saturation 96%."
+    },
+    {
+      "kind": "vital",
+      "text": "blood pressure 120/78",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 100 degrees Fahrenheit, pulse 92 beats per minute, blood pressure 120/78 mmHg, saturation 96%."
+    },
+    {
+      "kind": "vital",
+      "text": "96%",
+      "status": "verified",
+      "checks": [
+        "plausibility:verified",
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.87,
+      "source_sentence": "Temperature 100 degrees Fahrenheit, pulse 92 beats per minute, blood pressure 120/78 mmHg, saturation 96%."
+    },
+    {
+      "kind": "symptom",
+      "text": "fever",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "40-year-old male smoker with three weeks evening fever, productive cough, night sweats, o kilo loss, and appetite loss."
+    },
+    {
+      "kind": "symptom",
+      "text": "cough",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "40-year-old male smoker with three weeks evening fever, productive cough, night sweats, o kilo loss, and appetite loss."
+    },
+    {
+      "kind": "symptom",
+      "text": "breathlessness",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.91,
+      "source_sentence": "Denies rest breathlessness."
+    },
+    {
+      "kind": "symptom",
+      "text": "cough",
+      "status": "verified",
+      "checks": [
+        "proof:verified"
+      ],
+      "notes": "",
+      "confidence": 0.9,
+      "source_sentence": "Cough adequate."
+    }
+  ],
+  "summary": {
+    "numerals": {
+      "digits": [
+        "3",
+        "6",
+        "40",
+        "58",
+        "78",
+        "92",
+        "96",
+        "100",
+        "120"
+      ],
+      "count": 9
+    },
+    "total": 9,
+    "drug_needs_review": 1,
+    "vital_verified": 4,
+    "symptom_verified": 4
+  },
+  "brand_mentions": []
+}

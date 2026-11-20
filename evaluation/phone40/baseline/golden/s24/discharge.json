@@ -1,0 +1,201 @@
+{
+  "sections": {
+    "present_illness": {
+      "items": [
+        {
+          "text": "fever",
+          "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F8",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "vomiting",
+          "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F9",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pain",
+          "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F10",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "diarrhea",
+          "source_sentence": "Denies diarrhea.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F11",
+          "verified_kind": "symptom",
+          "verified_status": "verified",
+          "note": "canonicalized"
+        },
+        {
+          "text": "vomiting",
+          "source_sentence": "General, never stof insulin in illness, emergency for vomiting or drowsiness, shift to ICU now.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F12",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "vomiting",
+          "source_sentence": "General, never stof insulin in illness, emergency for vomiting or drowsiness, shift to ICU now.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "verified_kind": "symptom",
+          "verified_status": "verified",
+          "note": "canonicalized"
+        },
+        {
+          "text": "vomiting",
+          "source_sentence": "General, never stof insulin in illness, emergency for vomiting or drowsiness, shift to ICU now.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "verified_kind": "symptom",
+          "verified_status": "verified",
+          "note": "canonicalized"
+        },
+        {
+          "text": "vomiting",
+          "source_sentence": "General, never stof insulin in illness, emergency for vomiting or drowsiness, shift to ICU now.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "verified_kind": "symptom",
+          "verified_status": "verified",
+          "note": "canonicalized"
+        }
+      ]
+    },
+    "examination_findings": {
+      "items": [
+        {
+          "text": "Glucose 480",
+          "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F3",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "blood pressure 100/60",
+          "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F4",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pulse 112",
+          "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F5",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "respiratory rate 28",
+          "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F6",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "98% ",
+          "source_sentence": "Glucose 480 mg/dL, blood pressure 100/60 mmHg, pulse 112 beats per minute, respiratory rate 28, saturation 98% through the breath.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F7",
+          "verified_kind": "vital",
+          "verified_status": "verified",
+          "note": "canonicalized"
+        }
+      ]
+    },
+    "previous_diagnosis": {
+      "items": [
+        {
+          "text": "type one diabetes, now suspected ketoacidosis",
+          "source_sentence": "diagnosis type one diabetes, now suspected ketoacidosis",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F13",
+          "verified_kind": "diagnosis",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "plan_of_management": {
+      "items": [
+        {
+          "text": "insulin no dose",
+          "source_sentence": "19-year-old type one diabetic with two days of vomiting, abdominal pain, rapid deep breathing, and drowsiness after missing insulin with fever.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F1",
+          "verified_kind": "drug",
+          "verified_status": "needs_review"
+        },
+        {
+          "text": "potassium no dose",
+          "source_sentence": "ICU fluids, insulin infusion, potassium correction, harly monitoring.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F2",
+          "verified_kind": "drug",
+          "verified_status": "needs_review"
+        }
+      ]
+    },
+    "diet_instructions": {
+      "items": []
+    },
+    "general_instructions": {
+      "items": []
+    }
+  },
+  "provenance": {
+    "llm_engine": "discharge:gpt-4.1",
+    "dropped_unproven": 1,
+    "verified_summary": {
+      "numerals": {
+        "digits": [
+          "1",
+          "2",
+          "19",
+          "28",
+          "60",
+          "98",
+          "100",
+          "112",
+          "480"
+        ],
+        "count": 9
+      },
+      "total": 13,
+      "drug_needs_review": 2,
+      "vital_verified": 5,
+      "symptom_verified": 5,
+      "diagnosis_verified": 1
+    },
+    "canonicalized": 5,
+    "llm_extractive": 0,
+    "prefilled": 0,
+    "schema": "valid"
+  }
+}

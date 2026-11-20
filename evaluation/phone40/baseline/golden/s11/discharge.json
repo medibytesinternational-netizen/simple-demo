@@ -1,0 +1,221 @@
+{
+  "sections": {
+    "present_illness": {
+      "items": [
+        {
+          "text": "fever",
+          "source_sentence": "68-year-old smoker with COPD, three days of worse breathlessness, yellow sputum and low fever.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F9",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "breathlessness",
+          "source_sentence": "68-year-old smoker with COPD, three days of worse breathlessness, yellow sputum and low fever.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F10",
+          "verified_kind": "symptom",
+          "verified_status": "verified"
+        },
+        {
+          "text": "chest pain",
+          "source_sentence": "Denies chest pain.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F11",
+          "verified_kind": "symptom",
+          "verified_status": "verified",
+          "note": "canonicalized"
+        }
+      ]
+    },
+    "examination_findings": {
+      "items": [
+        {
+          "text": "91% on room air",
+          "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F3",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "respiratory rate 24",
+          "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F4",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "pulse 98",
+          "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F5",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "blood pressure 138/84",
+          "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F6",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        },
+        {
+          "text": "temperature 100 degrees Fahrenheit",
+          "source_sentence": "Saturation 91% on room air, respiratory rate 24, pulse 98 beats per minute, blood pressure 138/84 mmHg, temperature 100 degrees Fahrenheit.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F7",
+          "verified_kind": "vital",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "previous_diagnosis": {
+      "items": [
+        {
+          "text": "COPD",
+          "source_sentence": "COPD and hypertension.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        },
+        {
+          "text": "hypertension",
+          "source_sentence": "COPD and hypertension.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        }
+      ]
+    },
+    "plan_of_management": {
+      "items": [
+        {
+          "text": "salbutamol no dose",
+          "source_sentence": "Controlled oxygen, nebulized salbutamol, tiotropium, azithromycin 500 mg daily three days.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F2",
+          "verified_kind": "drug",
+          "verified_status": "needs_review"
+        },
+        {
+          "text": "azithromycin 500 mg",
+          "source_sentence": "Controlled oxygen, nebulized salbutamol, tiotropium, azithromycin 500 mg daily three days.",
+          "seg_id": null,
+          "confidence": 0.88,
+          "verified_kind": "drug",
+          "verified_status": "verified"
+        }
+      ]
+    },
+    "diet_instructions": {
+      "items": [
+        {
+          "text": "Diet, small frequent high-protein meals.",
+          "source_sentence": "Diet, small frequent high-protein meals.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        },
+        {
+          "text": "Warm water",
+          "source_sentence": "Warm water, avoid smoke.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        }
+      ]
+    },
+    "general_instructions": {
+      "items": [
+        {
+          "text": "DENIED allergy: penicillin",
+          "source_sentence": "No penicillin allergy.",
+          "seg_id": 0,
+          "confidence": 0.88,
+          "fact_id": "F8",
+          "verified_kind": "allergy",
+          "verified_status": "verified",
+          "note": "canonicalized"
+        },
+        {
+          "text": "avoid smoke",
+          "source_sentence": "Warm water, avoid smoke.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        },
+        {
+          "text": "Smoking cessation.",
+          "source_sentence": "Smoking cessation.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        },
+        {
+          "text": "purse delip breathing.",
+          "source_sentence": "purse delip breathing.Daily walks.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        },
+        {
+          "text": "Daily walks.",
+          "source_sentence": "purse delip breathing.Daily walks.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        },
+        {
+          "text": "Emergency for blue lips or drowsiness.",
+          "source_sentence": "Emergency for blue lips or drowsiness.",
+          "seg_id": 0,
+          "confidence": 0.8,
+          "note": "llm-extractive"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "llm_engine": "discharge:gpt-4.1",
+    "dropped_unproven": 5,
+    "verified_summary": {
+      "numerals": {
+        "digits": [
+          "3",
+          "24",
+          "68",
+          "84",
+          "91",
+          "98",
+          "100",
+          "138",
+          "500"
+        ],
+        "count": 9
+      },
+      "total": 11,
+      "drug_verified": 1,
+      "drug_needs_review": 1,
+      "vital_verified": 5,
+      "allergy_verified": 1,
+      "symptom_verified": 3
+    },
+    "canonicalized": 2,
+    "llm_extractive": 9,
+    "prefilled": 1,
+    "schema": "valid"
+  }
+}
