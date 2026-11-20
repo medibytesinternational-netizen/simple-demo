@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { get, post } from "../api";
-import type { Draft, Lab, Meta } from "../types";
+import type { Draft, Meta } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { VoiceInput } from "../components/VoiceInput";
-import { useCan, usePatientId } from "../session";
-import { uploadReport } from "../features/f08/upload";
+import { usePatientId } from "../session";
+import { LabResults } from "../features/labs/LabResults";
 import IcuReadingForm from "../features/f07/IcuReadingForm";
 import ReferralRequestForm from "../features/f11/ReferralRequestForm";
 import { canAcknowledge, referralStatusLabel } from "../features/f11/rules";
@@ -42,7 +42,6 @@ const PROGRESS_TRANSCRIPT = `Nurse: Overnight the patient slept poorly. Temperat
 Doctor: No new breathlessness. I will review him on the ward round and complete the examination then.`;
 
 const AUTO_DRAFT_DELAY_S = 3;
-const MAX_REPORT_BYTES = 12 * 1024 * 1024;
 
 type Tab = {
   key: string;
@@ -100,15 +99,12 @@ export function NotesPage() {
   // A transcript waiting out the short cancel window before it is drafted.
   const [pendingDraft, setPendingDraft] = useState<{ text: string; feature: string; left: number } | null>(null);
   const voiceFeatureRef = useRef("");
-  const [labResult, setLabResult] = useState<any>(null);
-  const canUpload = useCan("upload_document");
 
   useEffect(() => {
     setTranscript(tab.transcript);
     setError("");
     setConsultResult(null);
     setPendingDraft(null);
-    setLabResult(null);
   }, [tab.key]);
 
   const hasDraft = tab.kind !== "labs";
@@ -116,11 +112,6 @@ export function NotesPage() {
     queryKey: ["drafts", tab.feature],
     queryFn: () => get<{ drafts: Draft[] }>(`/drafts?feature=${tab.feature}&limit=1`),
     enabled: hasDraft,
-  });
-  const labs = useQuery<{ labs: Lab[]; unreviewed: Lab[]; reviewed_count: number }>({
-    queryKey: ["investigations"],
-    queryFn: () => get("/investigations"),
-    enabled: tab.kind === "labs",
   });
   const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
   // New readings go to the active encounter, so the sheet is read for that encounter too.
@@ -206,39 +197,6 @@ export function NotesPage() {
     return () => window.clearTimeout(timer);
   }, [pendingDraft, tab.feature]);
 
-  const uploadLab = useMutation({
-    mutationFn: (file: File) => uploadReport(file, "lab_report"),
-    onSuccess: (result: any) => {
-      setError("");
-      setLabResult(result);
-      queryClient.invalidateQueries();
-    },
-    onError: (err: any) => setError(String(err?.message || err)),
-  });
-
-  const chooseLabReport = (file: File | undefined) => {
-    if (!file) return;
-    setError("");
-    setLabResult(null);
-    const name = file.name.toLowerCase();
-    const readable = file.type.startsWith("image/") || file.type === "application/pdf" || /\.(pdf|png|jpe?g|gif|webp|bmp|tiff?)$/.test(name);
-    if (!readable) {
-      setError("Choose a PDF or an image of the report.");
-      return;
-    }
-    if (file.size > MAX_REPORT_BYTES) {
-      setError("File too large (max 12 MB).");
-      return;
-    }
-    uploadLab.mutate(file);
-  };
-
-  const reviewLab = useMutation({
-    mutationFn: (eventId: string) => post(`/labs/${eventId}/review`),
-    onSuccess: () => queryClient.invalidateQueries(),
-    onError: (err: any) => setError(String(err?.message || err)),
-  });
-
   const acknowledgeReferral = useMutation({
     mutationFn: (referralId: string) => post(`/referrals/${referralId}/acknowledge`, {}),
     onSuccess: () => queryClient.invalidateQueries(),
@@ -264,7 +222,7 @@ export function NotesPage() {
   const intro = useMemo(() => {
     if (tab.kind === "icu") return "Readings from bedside devices, with units and times. Anything not recorded is shown as “not documented”, never guessed.";
     if (tab.kind === "referral") return "Drafts the specialist question and history. A clinician approves the referral before its status changes.";
-    if (tab.kind === "labs") return "Laboratory results with reference ranges. Mark abnormal results as reviewed.";
+    if (tab.kind === "labs") return "Abnormal and unreviewed results first. Review each abnormal result; normal results can be reviewed together.";
     return tab.description;
   }, [tab]);
 
@@ -287,7 +245,7 @@ export function NotesPage() {
       <PageHeader
         title={tab.title}
         description={intro}
-        meta={<span className="tag tag-ai">MediBytes Analysis \→ clinician review \→ sign</span>} />
+        meta={tab.kind === "labs" ? undefined : <span className="tag tag-ai">MediBytes Analysis \→ clinician review \→ sign</span>} />
       {hasWorkflow && (
         <div className="notes-flow">
           <Stepper steps={flowSteps} label="Note progress" />
@@ -303,11 +261,12 @@ export function NotesPage() {
         ))}
       </div>
 
+      {tab.kind === "labs" ? <LabResults /> : (
       <div className="split-main">
         <div className="card">
           <div className="card-head">
             <div>
-              <div className="card-title">{tab.kind === "transcript" ? "1 · Input" : tab.kind === "labs" ? "Results" : tab.kind === "icu" ? "Device readings" : "Referral"}</div>
+              <div className="card-title">{tab.kind === "transcript" ? "1 · Input" : tab.kind === "icu" ? "Device readings" : "Referral"}</div>
               <div className="card-sub">{tab.kind === "transcript" ? "Paste or record what was said, then generate a draft." : "Information from the patient record."}</div>
             </div>
           </div>
@@ -446,96 +405,6 @@ export function NotesPage() {
                 </div>
               </>
             ) : null}
-
-            {tab.kind === "labs" ? (
-              <>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="card-sub">Latest results · {labs.data?.reviewed_count ?? 0} reviewed</div>
-                  <label
-                    className="btn btn-primary btn-sm"
-                    title={canUpload ? undefined : "Your role cannot upload documents"}
-                    style={canUpload ? undefined : { opacity: 0.5, pointerEvents: "none" }}
-                  >
-                    Upload lab report
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      style={{ display: "none" }}
-                      disabled={!canUpload || uploadLab.isPending}
-                      onChange={(event) => {
-                        chooseLabReport(event.target.files?.[0]);
-                        event.target.value = "";
-                      }}
-                    />
-                  </label>
-                </div>
-                {uploadLab.isPending ? <div className="banner mb-2" role="status"><span className="spinner" /> Reading report...</div> : null}
-                {labResult ? (
-                  <div className={`banner ${labResult.ocr_status === "confirmed" || labResult.auto_committed ? "success" : "warning"} mb-2`} role="status">
-                    {labResult.ocr_status === "confirmed" || labResult.auto_committed ? (
-                      <div>
-                        Saved {Array.isArray(labResult.labs) ? labResult.labs.length : labResult.extracted?.fields?.length ?? 0} result(s) from {labResult.filename} to the record as unreviewed. They are in the table below; a doctor still reviews each one.
-                      </div>
-                    ) : labResult.ocr_status === "needs_manual_entry" ? (
-                      <div>
-                        No text could be read from {labResult.filename}. Type the values from the original in Documents. <Link to="/documents?tab=inbound">Review in Documents</Link>
-                      </div>
-                    ) : labResult.ocr_status === "needs_confirmation" ? (
-                      <div>
-                        Some values in {labResult.filename} are low confidence. Confirm them in Documents before they are saved. <Link to="/documents?tab=inbound">Review in Documents</Link>
-                      </div>
-                    ) : (
-                      <div>
-                        <div>Read {labResult.extracted?.fields?.length ?? 0} value(s) from {labResult.filename}. Nothing is saved yet. <Link to="/documents?tab=inbound">Review in Documents</Link></div>
-                        {labResult.auto_commit_error ? <div className="small mt-1">Automatic save did not complete: {String(labResult.auto_commit_error)}</div> : null}
-                      </div>
-                    )}
-                    {!(labResult.ocr_status === "confirmed" || labResult.auto_committed) && labResult.extracted?.fields?.length ? (
-                      <table className="table mt-2">
-                        <thead><tr><th>Test</th><th>Value</th><th>Reference</th><th>Confidence</th></tr></thead>
-                        <tbody>
-                          {labResult.extracted.fields.map((field: any, index: number) => (
-                            <tr key={`${field.name}-${index}`}>
-                              <td>{field.name}</td>
-                              <td className="mono">{field.value} {field.unit}</td>
-                              <td className="mono small muted">{field.reference_range || "—"}</td>
-                              <td>{Math.round((field.confidence ?? 0) * 100)}%</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : null}
-                  </div>
-                ) : null}
-                <table className="table">
-                  <thead><tr><th>Test</th><th>Value</th><th>Reference</th><th>Status</th><th /></tr></thead>
-                  <tbody>
-                    {labs.data?.labs.map((lab) => (
-                      <tr key={lab.event_id}>
-                        <td>{lab.name}</td>
-                        <td className="mono">{lab.value} {lab.unit}</td>
-                        <td className="mono small muted">{lab.reference_range}</td>
-                        <td>
-                          <span className={`badge ${lab.review_status === "unreviewed" ? "badge-warning" : "badge-success"}`}>
-                            {lab.review_status === "unreviewed" ? "unreviewed" : "reviewed"}
-                          </span>
-                        </td>
-                        <td className="right">
-                          {lab.review_status === "unreviewed" ? (
-                            <button className="btn btn-sm" onClick={() => reviewLab.mutate(lab.event_id)} disabled={reviewLab.isPending}>
-                              Mark reviewed
-                            </button>
-                          ) : null}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="small muted mt-2">
-                  Marking a result reviewed resolves the unreviewed-result alert and is audited.
-                </div>
-              </>
-            ) : null}
           </div>
         </div>
 
@@ -544,8 +413,8 @@ export function NotesPage() {
             <DraftReview draft={latest} />
           ) : (
             <div className="card empty">
-              <div className="empty-title">{hasDraft ? "No draft for this module yet." : "Support view"}</div>
-              <div>{hasDraft ? "Generate one from the input panel. The draft will appear here with evidence attached." : "Review results in the table and mark abnormal ones as reviewed."}</div>
+              <div className="empty-title">No draft for this module yet.</div>
+              <div>Generate one from the input panel. The draft will appear here with evidence attached.</div>
             </div>
           )}
           {latest?.status === "approved" && hasDraft ? (
@@ -555,6 +424,7 @@ export function NotesPage() {
           ) : null}
         </div>
       </div>
+      )}
     </>
   );
 }

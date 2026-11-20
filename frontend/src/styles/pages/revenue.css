@@ -8,5 +8,87 @@
 
 /* contradictions: tone lives in the tile and pill, sources listed under each row */
 .pg-revenue .contradictions { display: flex; flex-direction: column; gap: 12px; }
-.pg-revenue .contradiction-sources { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--border-soft); }
+.pg-revenue .contradiction-sources { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .pg-revenue .contradiction-source { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* ---- MoSCoW redesign: headline, blockers, grid, gaps strip, leakage tables ---------------- */
+/* One headline strip per tab: status and key figures on the left, the single primary action on the right. */
+.pg-revenue .rev-headline {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap;
+  padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+.pg-revenue .rev-headline-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; flex: 1 1 420px; }
+.pg-revenue .rev-status { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; }
+.pg-revenue .rev-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pg-revenue .rev-action-note { margin: 0; max-width: 60ch; }
+
+.pg-revenue .rev-figures { display: flex; flex-wrap: wrap; gap: 12px 32px; margin: 0; }
+.pg-revenue .rev-figures > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pg-revenue .rev-figures dt { font-size: var(--fs-xs); font-weight: 600; color: var(--muted); }
+.pg-revenue .rev-figures dd { margin: 0; font-size: var(--fs-xl); font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.pg-revenue .rev-figures .tone-warning dd { color: var(--warning); }
+.pg-revenue .rev-figures .tone-critical dd { color: var(--critical); }
+.pg-revenue .rev-figure-note { font-size: var(--fs-xs); color: var(--muted); }
+
+.pg-revenue .tone-text-warning { color: var(--warning); }
+.pg-revenue .tone-text-critical { color: var(--critical); }
+.pg-revenue .rev-amount { font-weight: 650; font-variant-numeric: tabular-nums; }
+
+/* blockers: a flat list inside one panel, red accent on the left edge only */
+.pg-revenue .rev-blockers { border-left: 3px solid var(--critical); }
+.pg-revenue .rev-blockers .lrow { padding-left: 16px; padding-right: 16px; }
+
+.pg-revenue .rev-grid { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr); gap: 20px; align-items: start; }
+
+/* billing gaps: one quiet line that links to the leakage tab */
+.pg-revenue .rev-gaps {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; padding: 10px 16px;
+  border: 1px dashed var(--border-strong); border-radius: var(--radius); font-size: var(--fs-sm); color: var(--text-2);
+}
+.pg-revenue .rev-gaps-title { font-weight: 700; color: var(--text); }
+.pg-revenue .rev-gaps-link { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-weight: 650; }
+
+.pg-revenue .rev-more { display: flex; flex-direction: column; gap: 8px; }
+.pg-revenue .rev-more .draft-review, .pg-revenue .rev-more .panel { box-shadow: none; }
+
+/* leakage: the per-row explanation stays one click away */
+.pg-revenue .rev-why { margin-top: 2px; font-size: var(--fs-xs); color: var(--muted); }
+.pg-revenue .rev-why > summary { cursor: pointer; width: max-content; color: var(--accent); }
+.pg-revenue .rev-why > p { margin: 4px 0 0; max-width: 60ch; line-height: 1.5; color: var(--text-2); }
+
+/* Sources toggles line up with the row text, not the icon tile */
+.pg-revenue .rev-blockers .lrow-expand { grid-column: 2 / -1; }
+
+/* Amounts and their notes never break across lines */
+.pg-revenue .table .nowrap, .pg-revenue .nowrap { white-space: nowrap; }
+.pg-revenue .rev-figure-note a { font-weight: 600; }
+
+/* Narrow-screen helpers: columns that step aside, details that move under the item */
+.pg-revenue .show-sm { display: none; }
+.pg-revenue .rev-cell-badge { margin-top: 4px; }
+
+@media (max-width: 900px) {
+  .pg-revenue .rev-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .pg-revenue .rev-headline { padding: 14px 16px; }
+  .pg-revenue .rev-figures { gap: 10px 20px; }
+  .pg-revenue .rev-figures dd { font-size: var(--fs-lg); }
+  .pg-revenue .rev-gaps-link { margin-left: 0; }
+
+  .pg-revenue .col-hide-sm, .pg-revenue .hide-sm { display: none; }
+  .pg-revenue .show-sm { display: block; }
+  .pg-revenue .table th, .pg-revenue .table td { padding: 9px 10px; }
+  .pg-revenue .table .rev-cause { font-size: var(--fs-xs); min-width: 92px; }
+
+  /* department filter wraps instead of hiding options off-screen */
+  .pg-revenue .rev-dept-filter .segmented { display: flex; flex-wrap: wrap; overflow: visible; }
+  .pg-revenue .rev-dept-filter .segmented button { min-height: 40px; }
+
+  /* comfortable touch targets for the page actions */
+  .pg-revenue .rev-actions .btn, .pg-revenue .rev-blockers .btn { min-height: 44px; padding-left: 14px; padding-right: 14px; }
+  .pg-revenue .rev-actions .btn-primary { flex: 1 1 auto; justify-content: center; }
+  .pg-revenue .rev-blockers .lrow { grid-template-columns: auto minmax(0, 1fr); }
+  .pg-revenue .rev-blockers .lrow-side { grid-column: 2 / -1; justify-content: flex-start; }
+  .pg-revenue .rev-blockers .lrow-side:empty { display: none; }
+}
