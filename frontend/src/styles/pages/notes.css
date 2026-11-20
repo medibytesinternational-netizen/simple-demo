@@ -9,3 +9,70 @@
 @media (max-width: 600px) {
   .pg-notes .icu-form { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---- Lab results: abnormal and unreviewed first, grouped by panel ------------------------- */
+.lab-results { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.lab-results .lab-panel { box-shadow: none; }
+.lab-table th, .lab-table td { padding-top: 9px; padding-bottom: 9px; }
+.lab-table .lab-section-head th {
+  padding: 10px 16px 6px; background: var(--surface-2); border-bottom: 1px solid var(--border);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+}
+.lab-table .lab-section-head th > .btn { float: right; margin-top: -4px; text-transform: none; letter-spacing: 0; }
+.lab-table .lab-section-head.tone-critical th { color: var(--critical); background: var(--critical-soft); border-bottom-color: var(--critical-line); }
+.lab-table .lab-section-title { display: inline-flex; align-items: center; gap: 8px; }
+.lab-table .lab-section-count { font-variant-numeric: tabular-nums; font-weight: 700; opacity: .8; }
+.lab-table .lab-panel-head th { padding: 8px 16px 2px; border-bottom: 0; font-size: var(--fs-xs); font-weight: 650; color: var(--text-2); text-transform: none; letter-spacing: 0; background: transparent; }
+.lab-table .lab-sev { width: 1%; white-space: nowrap; }
+.lab-table .lab-name { font-weight: 600; }
+.lab-table .lab-value { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lab-table .lab-unit { color: var(--muted); font-size: var(--fs-xs); }
+.lab-table .sev-warning .lab-value .mono { color: var(--warning); font-weight: 700; }
+.lab-table .sev-critical .lab-value .mono { color: var(--critical); font-weight: 700; }
+.lab-table .lab-range, .lab-table .lab-time { font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
+.lab-table .lab-trend { font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
+.lab-table .lab-none { color: var(--muted-2); }
+.lab-table .lab-action { text-align: right; white-space: nowrap; width: 1%; }
+.lab-table .lab-reviewed { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-xs); color: var(--muted); }
+.lab-results .toolbar .segmented { flex: none; }
+.lab-results .toolbar > label.btn { cursor: pointer; }
+.lab-results > p { margin: 0; }
+
+/* labels only needed when the table becomes cards */
+.lab-table .lab-mlabel { display: none; }
+
+/* ---- Lab results on narrow screens: each result is a card; nothing scrolls sideways ---- */
+@media (max-width: 600px) {
+  .lab-results .table-wrap { overflow: visible; }
+  .lab-table, .lab-table tbody, .lab-table tr, .lab-table th, .lab-table td { display: block; }
+  .lab-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .lab-table .lab-section-head th { padding: 10px 14px 8px; }
+  .lab-table .lab-section-head th > .btn { float: none; display: flex; width: 100%; justify-content: center; margin: 8px 0 0; min-height: 44px; }
+  .lab-table .lab-panel-head th { padding: 10px 14px 0; }
+
+  /* card: [flag] name / value  Ref range / collected  trend  reviewed / Mark reviewed */
+  .lab-table .lab-row {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px;
+    padding: 10px 14px 12px; border-bottom: 1px solid var(--border-soft);
+  }
+  .lab-table .lab-row td { padding: 0; border: 0; width: auto; text-align: left; white-space: normal; background: transparent; }
+  /* table zebra striping (legacy.css) reads as patches once rows become cards */
+  .lab-table tbody tr.lab-row:nth-child(n) td { background: transparent; }
+  .lab-table .lab-sev { order: 1; align-self: center; }
+  /* the name fills the rest of line 1 so the value always starts line 2 */
+  .lab-table .lab-name { order: 2; flex: 1 1 calc(100% - 110px); min-width: 0; font-size: var(--fs-md); }
+  .lab-table .lab-value { order: 3; font-size: var(--fs-md); }
+  .lab-table .lab-range { order: 4; flex: 1 1 auto; }
+  .lab-table .lab-time { order: 5; }
+  .lab-table .lab-trend { order: 6; }
+  .lab-table .lab-trend.is-empty { display: none; }
+  .lab-table .lab-action { order: 7; margin-left: auto; }
+  .lab-table .lab-action:has(.btn) { flex: 1 1 100%; margin-left: 0; margin-top: 4px; }
+  .lab-table .lab-mlabel { display: inline; color: var(--muted); }
+  .lab-table .lab-action .btn { width: 100%; min-height: 44px; justify-content: center; font-size: var(--fs-sm); }
+  .lab-table .lab-action .lab-reviewed { padding-top: 2px; }
+
+  .lab-results .toolbar > label.btn { min-height: 44px; padding-left: 14px; padding-right: 14px; }
+  .lab-results .toolbar .segmented { flex: 1 1 100%; }
+  .lab-results .toolbar .segmented button { min-height: 40px; flex: 1; justify-content: center; }
+}

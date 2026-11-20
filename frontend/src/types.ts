@@ -306,16 +306,33 @@ export type ClaimPrep = {
   reviews: { id: string; status: string; prepared_at?: string | null; reviewed_by?: string | null }[];
 };
 
+/** One documentation-to-billing gap. Fields after `evidence_event_ids` are sent by
+ * /revenue/leakage (services/leakage.py) and optional so older payloads still parse. */
+export type LeakageFinding = {
+  id: string;
+  procedure: string;
+  billing_status: "unbilled" | "underbilled" | "unsupported";
+  explanation: string;
+  evidence_event_ids: string[];
+  kind?: "unbilled" | "quantity_mismatch" | "underbilled" | "unsupported";
+  code?: string;
+  service_kind?: string | null;
+  unit_price?: number | null;
+  documented_quantity?: number | null;
+  billed_quantity?: number | null;
+  billed_amount?: number | null;
+  expected_amount?: number | null;
+  variance?: number | null;
+  documented_as?: string | null;
+};
+
 export type Leakage = {
-  findings: {
-    id: string;
-    procedure: string;
-    billing_status: "unbilled" | "underbilled" | "unsupported";
-    explanation: string;
-    evidence_event_ids: string[];
-  }[];
+  findings: LeakageFinding[];
   count: number;
   summary: string;
+  /** Sum of unbilled and underbilled variance (INR). */
+  leakage_amount?: number;
+  unmapped_services?: { label: string; kind: string; evidence_event_ids: string[] }[];
 };
 
 export type DashboardData = {
