@@ -15,7 +15,7 @@ There is no separate "Revenue Package" page; the Revenue leakage tab is that wor
 | Meaning | Tone |
 |---|---|
 | Critical lab value, claim blocker, "Flagged" claim, billed without documentation | `critical` (red) |
-| High / low lab value, "On hold" claim, unbilled or underbilled amount | `warning` (amber) |
+| High / low lab value, "Pending" (on hold) claim, unbilled or billed-below-tariff amount | `warning` (amber) |
 | Normal value, document present, "Ready for review" | `success` (green) |
 | Not flagged / unknown | `neutral` |
 
@@ -32,12 +32,12 @@ One accent (primary) button per view. Secondary actions sit in a "More" menu, a 
 | SHOULD | Filters: All / Abnormal / Unreviewed; search by test name | client side |
 | SHOULD | Grouped by panel (Renal, Diabetic, Infection & inflammation, ...) | fixed name map in `features/labs/panels.ts` |
 | SHOULD | Mark all normal results reviewed | repeated calls to the existing per-result endpoint |
-| COULD | Trend arrow and previous value | `GET /patients/{id}/timeline?types=lab_result` |
+| COULD | Trend arrow and previous value; the Trend column appears only when an earlier result exists | `GET /patients/{id}/timeline?types=lab_result` |
 | WON'T | Predictive diagnosis, decision support | — |
 
 ```
 Lab results                                               (page header + Notes tabs)
-[All 6 | Abnormal 6 | Unreviewed 1]  [Search test…]      5 of 6 reviewed   [Upload report]
+[All 6 | Abnormal 6 | Unreviewed 1]  [Search test…]   5 of 6 reviewed   [Upload lab report]
 ┌───────────────────────────────────────────────────────────────────────────────────────┐
 │ NEEDS REVIEW (1)                                                                      │
 │ Renal                                                                                 │
@@ -45,7 +45,7 @@ Lab results                                               (page header + Notes t
 │ ABNORMAL · REVIEWED (5)                                                               │
 │ Renal      [Low] eGFR 22 …                                              ✓ Reviewed    │
 │ Diabetic   [High] HbA1c 8.4 % …                                         ✓ Reviewed    │
-│ NORMAL & NOT FLAGGED (0)                              [Mark all normal reviewed (n)]  │
+│ NORMAL & NOT FLAGGED (n)                                   [Mark n normal reviewed]   │
 └───────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -53,13 +53,13 @@ Lab results                                               (page header + Notes t
 
 | | Feature | Data source |
 |---|---|---|
-| MUST | Claim status: Ready for review / On hold / Flagged (needs clarification) | `status`, `tpa_review.status` |
-| MUST | Bill total, expected total, gap | `total_amount`, `expected_total_amount`, `underbilled_amount` |
+| MUST | Claim status: Ready for review / Pending (on hold) / Flagged (needs clarification) | `status`, `tpa_review.status` |
+| MUST | Bill total, expected total, billed below tariff; unbilled items are listed separately in Revenue leakage | `total_amount`, `expected_total_amount`, `underbilled_amount` |
 | MUST | Blockers on top: missing documents, contradictions, billed lines without documentation | claim-prep lists |
 | MUST | One primary action: Prepare review pack | `POST /revenue/claim-prep/prepare` |
-| SHOULD | Required-documents checklist with links to where each gap is resolved | `required_documents` |
-| SHOULD | Bill lines with codes; validation shown on the line (undocumented, below expected) | `billed_items`, `underbilled_items` |
-| SHOULD | Compact "Billing gaps" summary linking to Revenue leakage | counts and amounts |
+| SHOULD | Required-documents checklist (Present / Missing); each missing-document blocker has a "Go to Documents" or "Go to Discharge" link | `required_documents` |
+| SHOULD | Bill lines with codes; validation shown on the line ("No documentation", "−INR n vs tariff") | `billed_items`, `underbilled_items` |
+| SHOULD | Compact "Billing gaps" summary linking to Revenue leakage; undocumented lines are referred to Blockers, not repeated | counts and amounts |
 | — | Review history, documented procedures, gap explanation draft: collapsed sections | existing |
 | Not possible | Approved / Rejected states, approved amount, code editing, risk score, payer history | not in the API |
 | WON'T | Payer submission, AI claim prediction | — |
@@ -68,15 +68,18 @@ Lab results                                               (page header + Notes t
 Claim review                                  (page header + Claim review / Revenue leakage tabs)
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
 │ [● Flagged] TPA: needs clarification          [Prepare review pack]  [More ▾]        │
-│ Bill total INR 48,200   Expected INR 52,400   Gap INR 4,200                          │
+│ Bill total INR 48,200   Expected total INR 52,400   Billed below tariff INR 4,200    │
+│                         Unbilled items are listed separately in Revenue leakage      │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 ┌ Blockers before review (3) ──────────────────────────────────────────────────────────┐
-│ ✕ Pre-authorization approval — missing                       Resolve in Documents →  │
-│ ✕ Contradiction: …                                           ▸ sources               │
-│ ✕ Billed without documentation: …                            INR 2,400               │
+│ ✕ Pre-authorization approval  [Missing document]                 [Go to Documents]   │
+│ ✕ Contradiction: …                                                                   │
+│     ▸ Sources (2)                                                                    │
+│ ✕ Physiotherapy session  [Billed without documentation]           INR 2,400          │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 Required documents (checklist)      │  Bill lines (code · item · amount · documentation)
-Billing gaps: 2 unbilled · 1 underbilled · 1 undocumented        View in Revenue leakage →
+Billing gaps: 1 documented but unbilled · 2 billed below tariff (INR …) ·
+              Undocumented bill lines are listed under Blockers.   View in Revenue leakage ›
 ▸ Review history   ▸ Documented procedures   ▸ Gap explanation (draft)
 ```
 
@@ -100,12 +103,15 @@ Revenue leakage
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
 │ INR 11,900 not billed · 4 items · 1 billed without documentation                     │
 │                                              [Prepare review pack]  [More ▾]         │
-│ Records these gaps in the claim review queue. It does not change the bill.           │
+│ Preparing a review pack records these gaps for human review. It does not add items   │
+│ to the bill or change the claim.                                                     │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 [All · 11,900 | Pharmacy · 4,200 | Ward / ICU · 3,500 | Lab & imaging · 2,200 | …]
 ┌ Missing from the bill ───────────────────────────────────────────────────────────────┐
 │ Item (code)            Department    Cause                        Gap         Source │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 ┌ Billed without documentation (not in the total) ─────────────────────────────────────┐
+│ Item (code)  "Same code is also in Missing from the bill" when it appears in both    │
+└──────────────────────────────────────────────────────────────────────────────────────┘
 ▸ Services with no tariff code   ▸ How this is computed   ▸ Findings explanation (draft)
 ```
