@@ -160,7 +160,7 @@ def test_approving_writes_nursing_chart_entries_as_quoted_instructions(client):
     assert chart["payload"]["round_event_id"] == response.json()["event"]["id"]
 
 
-def test_accepting_tasks_creates_exactly_the_chosen_ones_for_the_acting_user(client):
+def test_accepting_tasks_creates_exactly_the_chosen_ones_for_their_roles(client):
     draft = generate_note(client, "F3", ROUND)
     proposed = draft["content"]["proposed_tasks"]
     assert len(proposed) == 3
@@ -172,7 +172,9 @@ def test_accepting_tasks_creates_exactly_the_chosen_ones_for_the_acting_user(cli
     created = response.json()["tasks"]
     assert [t["title"] for t in created] == [proposed[1]["title"], proposed[2]["title"]]
     assert {t["status"] for t in created} == {"accepted"}
-    assert {t["owner"] for t in created} == {DOCTOR_NAME}
+    # Each task goes to the person holding its role; the doctor who accepted is the assigner.
+    names = {"junior_doctor": "Dr. Kiran Patel", "nurse": "Nurse Anita Rao"}
+    assert [t["owner"] for t in created] == [names[proposed[i]["assignee_role"]] for i in (1, 2)]
     assert [t["priority"] for t in created] == ["urgent", "urgent"]
     board = client.get("/api/tasks").json()["tasks"]
     assert len(board) == before + 2

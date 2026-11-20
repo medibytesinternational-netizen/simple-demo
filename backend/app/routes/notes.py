@@ -15,7 +15,7 @@ from ..models import (
     TimelineEvent,
 )
 from ..services import credits, pipeline
-from ..services.identity import current_patient_id, require
+from ..services.identity import current_patient_id, require, require_any, require_feature_draft
 from ..services.context import build_context, create_transcript_event
 from ..services.drafts import (
     create_draft,
@@ -72,7 +72,7 @@ def _has_audio_consent(db: Session, patient_id: str, encounter_id: str) -> bool:
 # --------------------------------------------------------------------------
 # Notes (F1, F2, F3, F4)
 # --------------------------------------------------------------------------
-@router.post("/notes/transcribe", dependencies=[Depends(require("clinical_draft"))])
+@router.post("/notes/transcribe", dependencies=[Depends(require_any("clinical_draft", "ward_round"))])
 async def transcribe_consultation(file: UploadFile = File(...), feature: str = Form("F1"), db: Session = Depends(get_db)):
     """Transcribe a consented consultation recording.
 
@@ -81,6 +81,7 @@ async def transcribe_consultation(file: UploadFile = File(...), feature: str = F
     """
     if feature not in pipeline.TEMPLATE_FOR:
         raise HTTPException(422, f"Voice is not available for {feature}")
+    require_feature_draft(feature)
     patient, encounter, _ = _state(db)
     # Every refusal below happens before credits.charge, so a refused upload spends nothing.
     consents = db.scalars(
@@ -130,7 +131,7 @@ async def transcribe_consultation(file: UploadFile = File(...), feature: str = F
     return {"audio_id": audio_id, "status": receipt.get("status", "running")}
 
 
-@router.post("/notes/dictation/transcribe", dependencies=[Depends(require("clinical_draft"))])
+@router.post("/notes/dictation/transcribe", dependencies=[Depends(require_any("clinical_draft", "ward_round"))])
 async def transcribe_round_dictation(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Transcribe ward-round dictation with Hugging Face Whisper; audio itself is not retained."""
     patient, encounter, _ = _state(db)
@@ -186,7 +187,7 @@ async def transcribe_round_dictation(file: UploadFile = File(...), db: Session =
     return {"text": text, "model": settings.hf_asr_model}
 
 
-@router.get("/notes/transcribe/{audio_id}", dependencies=[Depends(require("clinical_draft"))])
+@router.get("/notes/transcribe/{audio_id}", dependencies=[Depends(require_any("clinical_draft", "ward_round"))])
 def pipeline_status(audio_id: str, db: Session = Depends(get_db)):
     """Poll the pipeline; on success the six-section note becomes an F1 draft (once per audio_id)."""
     patient, encounter, _ = _state(db)
@@ -216,9 +217,14 @@ def pipeline_status(audio_id: str, db: Session = Depends(get_db)):
     require_open_encounter(encounter)
     note = result.get("note") or {}
     text = str(result.get("transcript") or "").strip()
+    feature = result.get("feature") or "F1"
+    require_feature_draft(feature)
+    if feature == "F3":
+        if not text:
+            return {"status": "failed", "error": "No speech was detected in the recording"}
+        return _round_from_recording(db, patient, encounter, audio_id, text)
     if not text or not pipeline.has_items(note):
         return {"status": "failed", "error": "No speech was detected in the recording"}
-    feature = result.get("feature") or "F1"
     title = "Admission dictation (MediBytes pipeline)" if feature == "F2" else "Consultation (MediBytes pipeline)"
     event = create_transcript_event(db, patient, encounter, feature, text, title)
     event.payload = {**(event.payload or {}), "audio_id": audio_id, "pipeline_note": note}
@@ -236,8 +242,29 @@ def pipeline_status(audio_id: str, db: Session = Depends(get_db)):
     return {"status": "succeeded", "draft": draft_to_dict(draft)}
 
 
-@router.post("/notes/generate", dependencies=[Depends(require("clinical_draft"))])
+def _round_from_recording(db: Session, patient, encounter, audio_id: str, text: str) -> dict:
+    """A ward round recording: the transcript goes through the F3 round drafter (note, nursing
+    entries and role-tagged tasks). It is never auto-approved; the senior doctor reviews and assigns."""
+    event = create_transcript_event(db, patient, encounter, "F3", text, "Ward round (recording)")
+    event.payload = {**(event.payload or {}), "audio_id": audio_id}
+    _, _, state = _state(db)
+    context = build_context(db, patient, encounter, state, "F3", transcript_event=event)
+    try:
+        content, llm_call = generate_draft(db, "F3", context)
+    except DraftGenerationError as exc:
+        db.rollback()
+        return {"status": "failed", "error": str(exc)}
+    draft = create_draft(
+        db, feature="F3", patient=patient, encounter=encounter, content=content,
+        llm_call=llm_call, created_from_event_ids=[event.id],
+    )
+    db.commit()
+    return {"status": "succeeded", "draft": draft_to_dict(draft)}
+
+
+@router.post("/notes/generate", dependencies=[Depends(require_any("clinical_draft", "ward_round"))])
 def generate_note(body: NoteGenerateRequest, db: Session = Depends(get_db)):
+    require_feature_draft(body.feature)
     patient, encounter, state = _state(db)
     transcript_event = create_transcript_event(
         db,

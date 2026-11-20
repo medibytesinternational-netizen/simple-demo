@@ -12,6 +12,8 @@ Rules:
 - Proposed tasks are proposals for the clinician to accept or reject; do not claim they were created.
 - Draft `nursing_entries` as proposed nursing-chart entries. When an instruction changes what a nurse must carry out or chart (for example a medication hold, observation, sample collection or wound review), produce one nursing entry for it as well as the task. They are not written to the nursing chart until the round note is approved.
 - Do not drop an explicit nursing action spoken by the nurse. Record it as a nursing entry, not as a clinician task.
+- Give every proposed task an `assignee_role`: `junior_doctor` for orders, prescriptions, investigations to request, referrals, procedures and reviewing results; `nurse` for vitals, monitoring, giving medicines, charting, positioning, wound care and collecting samples. A role or name said with the instruction wins.
+- Give every proposed task a `category` (general, lab, ct, mri, xray, ultrasound, ecg) and `due_in_hours`: use a time that was said ("in 4 hours", "by 6 pm", "tonight", "stat"); otherwise 8 for urgent and 24 for routine.
 - Flag ambiguous or unsafe instructions with lower confidence rather than silently normalizing them.
 
 Return JSON matching RoundDraft.

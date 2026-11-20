@@ -159,7 +159,11 @@ export function DraftReview({ draft }: { draft: Draft }) {
   });
 
   const accept = useMutation({
-    mutationFn: () => post<any>(`/drafts/${draft.id}/accept-tasks`, { indices: selectedTasks, actor: meta.data?.user.name }),
+    mutationFn: () =>
+      post<any>(`/drafts/${draft.id}/accept-tasks`, {
+        tasks: selectedTasks.map((index) => ({ index, ...taskEdits[index] })),
+        actor: meta.data?.user.name,
+      }),
     onSuccess: () => {
       setError("");
       invalidate();
@@ -202,6 +206,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
   });
 
   const isApproved = draft.status === "approved";
+  const canAssign = !!meta.data?.allowed_actions?.includes("accept_tasks");
   const opdNote = draft.feature === "F1" && isOpdV2(draft.content);
   // Admission notes in the hospital format use the same heading editor (before signing; signing admits).
   const admitNote = draft.feature === "F2" && isAdmitV2(draft.content);
@@ -495,7 +500,15 @@ export function DraftReview({ draft }: { draft: Draft }) {
                             {priority === "routine" ? "Routine" : priority[0].toUpperCase() + priority.slice(1)}
                           </button>
                         ))}
-                        <MetaChip icon="clock">due in {task.due_in_hours}h</MetaChip>
+                        <label className="small muted">
+                          due in{" "}
+                          <input className="input input-sm" type="number" min={1} max={168} style={{ width: 64 }}
+                            aria-label={`Task ${index + 1} due in hours`}
+                            value={task.due_in_hours ?? 24}
+                            disabled={taskLocked}
+                            onChange={(event) => updateTask(index, { due_in_hours: Math.max(1, Math.min(168, Number(event.target.value) || 1)) })} /> h
+                        </label>
+                        {task.category && task.category !== "general" ? <MetaChip>{String(task.category).toUpperCase()}</MetaChip> : null}
                         <MetaChip>{Math.round((task.confidence ?? 1) * 100)}% confidence</MetaChip>
                         {alreadyAssigned ? <Pill tone="success">Assigned</Pill> : null}
                       </span>
@@ -510,7 +523,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
             <div className="button-row mt-3">
               <button
                 className="btn btn-primary btn-sm"
-                disabled={!isApproved || isRejected || accept.isPending || !selectedTasks.some((index) => !assignedRoundTitles.has(String(taskEdits[index]?.title || "")))}
+                disabled={!canAssign || !isApproved || isRejected || accept.isPending || !selectedTasks.some((index) => !assignedRoundTitles.has(String(taskEdits[index]?.title || "")))}
                 onClick={() => accept.mutate()}
                 aria-busy={accept.isPending || undefined}
               >
@@ -520,8 +533,9 @@ export function DraftReview({ draft }: { draft: Draft }) {
               </button>
               {!isApproved ? <span className="small muted">Approve the report first. No task reaches a queue before task approval.</span> : null}
               {isApproved && !selectedTasks.some((index) => !assignedRoundTitles.has(String(taskEdits[index]?.title || ""))) ? <span className="small muted">Select one or more unassigned tasks to approve.</span> : null}
+              {!canAssign ? <span className="small muted">Only the senior doctor or admin assigns round tasks.</span> : null}
             </div>
-            {accept.isSuccess ? <div className="success-box mt-2" role="status">Tasks accepted. They are now real work items.</div> : null}
+            {accept.isSuccess ? <div className="success-box mt-2" role="status">Tasks assigned. The junior doctor and the nurse now see their own tasks on their task lists.</div> : null}
           </section>
         ) : null}
       </div>

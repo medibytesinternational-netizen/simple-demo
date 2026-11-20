@@ -37,9 +37,10 @@ def test_accepted_round_tasks_can_be_worked_to_completion_by_the_doctor_for_the_
     assert response.status_code == 200, response.text
     created = response.json()["tasks"]
     assert len(created) == 2
+    # Round tasks go to the junior doctor or the nurse; the doctor who accepted them is the assigner.
     for task in created:
-        assert task["owner"] == DOCTOR_NAME
-        assert task["assigned_to"] == DOCTOR_NAME
+        assert task["assigned_to"] in {"Dr. Kiran Patel", "Nurse Anita Rao"}
+        assert task["owner"] == task["assigned_to"]
     ids = {t["id"] for t in created}
     assert ids <= _open_task_ids(client)
 

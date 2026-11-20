@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from .. import round_tasks
 from ..extract import Sentence, analyse, claim
 from .common import _segments, _transcript_event
 
@@ -81,7 +82,8 @@ def f3_round(context: dict[str, Any]) -> dict[str, Any]:
                 "detail": f'Said on the round: "{sentence.text}"',
                 "priority": urgency,
                 "assignee_role": infer_assignee_role(sentence.text),
-                "due_in_hours": 1 if urgency == "critical" else 4 if urgency == "urgent" else 24,
+                "due_in_hours": round_due_in_hours(sentence.text, urgency),
+                "category": round_tasks.category(sentence.text),
                 "source_segment_ids": [sentence.segment_id],
                 "confidence": 0.6,
             }
@@ -120,12 +122,21 @@ def explicit_urgency(text: str) -> str:
 
 
 def infer_assignee_role(text: str) -> str:
-    """Map bedside/nursing work to nurses; otherwise route clinical follow-up to junior doctors."""
+    """Senior doctor when named; then a nurse or junior doctor named with the instruction;
+    otherwise bedside/nursing work goes to nurses and clinical follow-up to junior doctors."""
     if _SENIOR_ACTION.search(text):
         return "senior_doctor"
     if _NURSE_ACTION.search(text):
         return "nurse"
-    return "junior_doctor"
+    return round_tasks.assignee_role(text)
+
+
+def round_due_in_hours(text: str, urgency: str) -> int:
+    """A time said on the round, capped at 1 h for critical and 4 h for urgent work."""
+    if urgency == "critical":
+        return 1
+    hours = round_tasks.due_in_hours(text, urgency == "urgent")
+    return min(hours, 4) if urgency == "urgent" else hours
 
 
 def normalize_round_tasks(content: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
@@ -162,6 +173,8 @@ def normalize_round_tasks(content: dict[str, Any], context: dict[str, Any]) -> d
         task_text = " ".join((str(task.get("title", "")), str(task.get("detail", "")), source_text))
         task["priority"] = explicit_urgency(clinician_text)
         task["assignee_role"] = infer_assignee_role(task_text)
+        if not task.get("category") or task.get("category") == "general":
+            task["category"] = round_tasks.category(task_text)
         if task["priority"] == "critical":
             task["due_in_hours"] = 1
         elif task["priority"] == "urgent":

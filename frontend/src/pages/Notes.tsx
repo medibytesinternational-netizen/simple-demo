@@ -7,6 +7,7 @@ import { get, post } from "../api";
 import type { Draft, Lab, Meta } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { VoiceInput } from "../components/VoiceInput";
+import { RoundPatientPicker } from "../features/f03/RoundPatientPicker";
 import { useCan, usePatientId } from "../session";
 import { uploadReport } from "../features/f08/upload";
 import IcuReadingForm from "../features/f07/IcuReadingForm";
@@ -60,7 +61,7 @@ type Tab = {
 const TABS: Tab[] = [
   { key: "consult", label: "OPD consultation", feature: "F1", kind: "transcript", title: "OPD consultation", description: "Record or upload the consultation audio (with the patient's consent), or paste a transcript. The note drafts itself; you review, edit and sign it.", transcript: CONSULT_TRANSCRIPT },
   { key: "admission", label: "Admission assessment", feature: "F2", kind: "transcript", title: "Admission assessment", description: "MediBytes Analysis prepares the admission note from the interview. Verify the allergy record before approving; proposed orders stay as reports.", transcript: ADMISSION_TRANSCRIPT },
-  { key: "round", label: "Ward round", feature: "F3", kind: "transcript", title: "Ward round", description: "Dictate the round for the selected patient. Review and edit the report and role-based tasks, then approve the report and selected tasks before anything enters a staff queue.", transcript: ROUND_TRANSCRIPT },
+  { key: "round", label: "Ward round", feature: "F3", kind: "transcript", title: "Ward round", description: "Record or dictate the round for each patient. Review and edit the report and the tasks (who does each, priority and due time), then approve the report and selected tasks before anything enters a staff queue.", transcript: ROUND_TRANSCRIPT },
   { key: "progress", label: "Progress notes", feature: "F4", kind: "transcript", title: "Progress notes", description: "MediBytes Analysis identifies what changed since the last note. Examination and plan must be written by the clinician before signing.", transcript: PROGRESS_TRANSCRIPT },
   { key: "icu", label: "ICU flow sheet", feature: "F7", kind: "icu", title: "ICU flow sheet", description: "Assembles device readings and structured observations into a flow sheet. It cannot add, estimate or silently round a value.", transcript: "" },
   { key: "referral", label: "Referral", feature: "F11", kind: "referral", title: "Referrals", description: "Prepares the right specialty, a specific clinical question and the documented history. A human approves before the referral status changes to sent.", transcript: "" },
@@ -328,6 +329,11 @@ export function NotesPage() {
 
             {tab.kind === "transcript" ? (
               <>
+                {tab.feature === "F3" ? (
+                  <>
+                    <RoundPatientPicker />
+                  </>
+                ) : null}
                 <label className="field-label">Conversation or dictation</label>
                 <textarea
                   className="textarea"

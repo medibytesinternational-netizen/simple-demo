@@ -166,12 +166,12 @@ export function EventBody({ event }: { event: TimelineEventF16 }) {
   else if (event.body_text) body = <span className="tl-preview">{event.body_text}</span>;
 
   // Signed OPD reports and admission notes are stored as documents to view and print.
-  const storedNote = ["consult_note", "admission_note", "progress_report", "referral", "discharge_report"].includes(event.type) && event.document_id;
+  const storedNote = ["consult_note", "admission_note", "progress_report", "referral", "discharge_report", "investigation_request_form"].includes(event.type) && event.document_id;
   if (!body && !storedNote) return null;
   return (
     <>
       {body}
-      {storedNote ? <StoredDocument documentId={event.document_id!} label={event.type === "admission_note" ? "admission note" : event.type === "progress_report" ? "progress notes report" : event.type === "referral" ? "referral form" : event.type === "discharge_report" ? "discharge summary" : "OPD note document"} /> : null}
+      {storedNote ? <StoredDocument documentId={event.document_id!} label={event.type === "admission_note" ? "admission note" : event.type === "progress_report" ? "progress notes report" : event.type === "referral" ? "referral form" : event.type === "discharge_report" ? "discharge summary" : event.type === "investigation_request_form" ? "investigation request form" : "OPD note document"} /> : null}
     </>
   );
 }

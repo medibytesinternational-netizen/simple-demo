@@ -50,8 +50,21 @@ class RejectRequest(BaseModel):
     actor: str | None = None
 
 
+class RoundTaskEdit(BaseModel):
+    """One proposed round task as the senior doctor left it on review."""
+    index: int
+    title: str | None = None
+    detail: str | None = None
+    assignee_role: Literal["senior_doctor", "junior_doctor", "nurse"] | None = None
+    priority: Literal["routine", "urgent", "critical"] | None = None
+    due_in_hours: int | None = Field(default=None, ge=1, le=168)
+    category: Literal["general", "lab", "ct", "mri", "xray", "ultrasound", "ecg"] | None = None
+
+
 class AcceptTasksRequest(BaseModel):
-    indices: list[int]
+    indices: list[int] = Field(default_factory=list)
+    # Ward round: the reviewed tasks, with role and timing. When given, these are what is assigned.
+    tasks: list[RoundTaskEdit] = Field(default_factory=list)
     actor: str | None = None
 
 

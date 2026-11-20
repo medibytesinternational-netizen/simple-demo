@@ -369,6 +369,10 @@ def generate_draft(
         from .cached.f03_round import nurse_acknowledgement_entries
 
         content["nursing_entries"] = nurse_acknowledgement_entries(context)
+    if feature == "F3":
+        from .round_tasks import fill
+
+        content["proposed_tasks"] = [fill(dict(task)) for task in (content.get("proposed_tasks") or [])]
 
     # Final validation on whatever we are about to show.
     try:

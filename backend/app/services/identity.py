@@ -56,7 +56,7 @@ PERMISSIONS: dict[str, set[str]] = {
     "approve_draft": {"doctor"},
     "reject_draft": {"doctor"},
     "verify_allergy": {"doctor"},
-    "accept_tasks": {"doctor"},
+    "accept_tasks": {"doctor", "senior_doctor"},
     "clinical_draft": {"doctor"},
     "discharge_draft": {"doctor"},
     "review_lab": {"doctor"},
@@ -82,6 +82,10 @@ PERMISSIONS: dict[str, set[str]] = {
     "refer": {"doctor", "senior_doctor"},
     # Generate the discharge summary report from the record (everyone may view it).
     "discharge_report": {"doctor", "senior_doctor", "junior_doctor"},
+    # Generate the hospital investigation & radiology request form for one request.
+    "investigation_report": {"doctor", "senior_doctor", "junior_doctor"},
+    # Run the ward round: dictate or upload a round per patient and assign its tasks.
+    "ward_round": {"doctor", "senior_doctor"},
 }
 
 _user_id: ContextVar[str] = ContextVar("acting_user_id", default=DEFAULT_USER_ID)
@@ -141,6 +145,37 @@ def require_browsable_patient(request: Request) -> None:
 
 def can(action: str, user: User | None = None) -> bool:
     return (user or acting_user()).role in PERMISSIONS[action]
+
+
+def require_any(*actions: str):
+    """Route dependency: 403 unless the actor holds at least one of ``actions``."""
+    for action in actions:
+        if action not in PERMISSIONS:
+            raise KeyError(f"Unknown action {action}")
+
+    def check() -> User:
+        user = acting_user()
+        if not any(user.role in PERMISSIONS[action] for action in actions):
+            raise HTTPException(403, f"{user.name} ({user.role}) may not {actions[0].replace('_', ' ')}")
+        return user
+
+    return check
+
+
+def require_feature_draft(feature: str | None) -> None:
+    """A ward round (F3) is drafted by the admin or a senior doctor; every other note by the admin."""
+    action = "ward_round" if feature == "F3" else "clinical_draft"
+    if not can(action):
+        user = acting_user()
+        raise HTTPException(403, f"{user.name} ({user.role}) may not {action.replace('_', ' ')}")
+
+
+def require_draft_action(action: str, feature: str | None) -> None:
+    """Edit, approve or reject a draft. The senior doctor who runs a ward round (F3) finishes it too."""
+    if can(action) or (feature == "F3" and can("ward_round")):
+        return
+    user = acting_user()
+    raise HTTPException(403, f"{user.name} ({user.role}) may not {action.replace('_', ' ')}")
 
 
 def require(action: str):

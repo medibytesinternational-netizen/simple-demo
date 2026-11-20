@@ -524,7 +524,10 @@ def accept_tasks(
     draft: Draft,
     indices: list[int],
     actor: str | None = None,
+    edits: dict[int, dict[str, Any]] | None = None,
 ) -> list[Task]:
+    """Create the chosen round tasks, each given to the junior doctor or the nurse (ward round)."""
+    from .round_tasks import fill
     if draft.feature != "F3":
         raise ValueError("Only round drafts produce proposed tasks")
     if draft.patient_id != current_patient_id():
@@ -538,7 +541,7 @@ def accept_tasks(
     for index in dict.fromkeys(indices):
         if index < 0 or index >= len(proposed):
             continue
-        item = proposed[index]
+        item = fill({**proposed[index], **{k: v for k, v in (edits or {}).get(index, {}).items() if k != "index"}})
         existing = db.scalar(
             select(Task).where(
                 Task.accepted_from_draft_id == draft.id,
@@ -563,6 +566,7 @@ def accept_tasks(
             due_at=now + timedelta(hours=due_hours),
             owner=assignee.name,
             assigned_to=assignee.name,
+            category=item.get("category") or "general",
             assigned_at=now,
             assigned_by=actor,
             assignee_role=role,
@@ -585,6 +589,7 @@ def accept_tasks(
                 "priority": task.priority,
                 "assigned_to": task.assigned_to,
                 "assignee_role": task.assignee_role,
+                "category": task.category,
                 "due_at": task.due_at.isoformat(),
             },
             meta={"draft_id": draft.id, "proposed_index": index},

@@ -72,6 +72,11 @@ export type Lab = {
 
 export type AppTask = {
   id: string;
+  /** Present on the ward-wide list (scope=mine). */
+  patient_id?: string;
+  patient_name?: string;
+  ward?: string;
+  bed?: string;
   title: string;
   detail: string;
   status: string;

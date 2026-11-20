@@ -25,7 +25,8 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 # Feature -> medibytes note template. Only features listed here take voice.
-TEMPLATE_FOR = {"F1": "opd", "F2": "admission", "F4": "progress", "F11": "referral"}
+# F3 (ward round) uses the pipeline for transcription only; its tasks come from the F3 round drafter.
+TEMPLATE_FOR = {"F1": "opd", "F2": "admission", "F3": "progress", "F4": "progress", "F11": "referral"}
 
 _lock = threading.Lock()
 _service: Any = None

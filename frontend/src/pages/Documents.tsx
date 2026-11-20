@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { get, post } from "../api";
+import { get, post, storedFileUrl } from "../api";
 import type { DocumentRequest, DocumentSummary, Draft, InvestigationRequest } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { useCan } from "../session";
@@ -59,6 +59,7 @@ export function DocumentsPage() {
   const [docType, setDocType] = useState<DocType>("lab_report");
   const canUpload = useCan("upload_document");
   const canConfirm = useCan("confirm_document");
+  const canReport = useCan("investigation_report");
 
   const documents = useQuery<{ documents: DocumentSummary[] }>({
     queryKey: ["documents"],
@@ -146,6 +147,24 @@ export function DocumentsPage() {
     },
     onError: (err: any) => setError(String(err?.message || err)),
   });
+  const [reportFor, setReportFor] = useState<string | null>(null);
+  const investigationReport = useMutation({
+    mutationFn: (id: string) => {
+      setReportFor(id);
+      // Open the tab inside the click so pop-up blockers allow it; point it at the form once stored.
+      const tab = window.open("", "_blank");
+      return post<{ document_id: string }>(`/investigation-requests/${id}/report`)
+        .then(async (done) => {
+          const url = await storedFileUrl(done.document_id);
+          if (tab) tab.location.href = url; else window.open(url, "_blank");
+          return done;
+        })
+        .catch((error) => { tab?.close(); throw error; });
+    },
+    onSettled: () => setReportFor(null),
+    onSuccess: () => setSuccess("Request form generated in the hospital format and stored on the timeline."),
+  });
+
   const exportInvestigation = useMutation({
     mutationFn: (id: string) => post(`/investigation-requests/${id}/export`),
     onSuccess: () => {
@@ -482,12 +501,25 @@ export function DocumentsPage() {
                   key: "action",
                   header: "Action",
                   align: "right",
-                  cell: (request) =>
-                    request.status !== "exported" ? (
-                      <button className="btn btn-sm" onClick={() => exportInvestigation.mutate(request.id)} disabled={exportInvestigation.isPending}>
-                        {request.status === "requested" ? "Send request" : "Mark exported"}
-                      </button>
-                    ) : <span className="small muted">Export complete</span>,
+                  cell: (request) => (
+                    <span className="pill-row" style={{ justifyContent: "flex-end" }}>
+                      {canReport ? (
+                        <button
+                          className="btn btn-sm"
+                          onClick={() => investigationReport.mutate(request.id)}
+                          disabled={investigationReport.isPending}
+                          aria-busy={reportFor === request.id || undefined}
+                        >
+                          {reportFor === request.id ? <><span className="spinner" /> Generating…</> : "Generate report"}
+                        </button>
+                      ) : null}
+                      {request.status !== "exported" ? (
+                        <button className="btn btn-sm" onClick={() => exportInvestigation.mutate(request.id)} disabled={exportInvestigation.isPending}>
+                          {request.status === "requested" ? "Send request" : "Mark exported"}
+                        </button>
+                      ) : <span className="small muted">Export complete</span>}
+                    </span>
+                  ),
                 },
               ]}
             />

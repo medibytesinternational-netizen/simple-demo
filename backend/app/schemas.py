@@ -145,8 +145,10 @@ class ProposedTask(BaseModel):
     title: str = Field(min_length=3, max_length=180)
     detail: str = ""
     priority: Literal["routine", "urgent", "critical"] = "routine"
+    # Ward round: who carries the task out. The senior doctor can change it before assigning.
     assignee_role: Literal["senior_doctor", "junior_doctor", "nurse"] = "junior_doctor"
     due_in_hours: int = Field(default=24, ge=1, le=168)
+    category: Literal["general", "lab", "ct", "mri", "xray", "ultrasound", "ecg"] = "general"
     source_segment_ids: list[str] = Field(default_factory=list)
     confidence: float = 0.9
 
