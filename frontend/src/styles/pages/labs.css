@@ -1,0 +1,115 @@
+/* Lab results (/notes?tab=labs): attention cards, range bars, result list. Layout kit in insight.css. */
+
+/* primary review action on attention cards */
+.pg-labs .lab-review-primary { min-height: 40px; padding-inline: 16px; }
+
+/* ---------- reference-range bar (rules in labStatus.rangeBarModel) ---------- */
+.range-bar { position: relative; width: 100%; max-width: 280px; padding-bottom: 16px; }
+.range-bar.is-compact { max-width: 160px; padding-bottom: 0; margin-top: 4px; }
+.range-track { position: relative; height: 8px; border-radius: 999px; background: var(--surface-3); border: 1px solid var(--border-soft); }
+.range-bar.is-compact .range-track { height: 6px; }
+.range-band { position: absolute; left: 25%; width: 50%; top: -1px; bottom: -1px; border-radius: 999px; background: var(--success-soft); border: 1px solid var(--success-line); }
+.range-marker {
+  position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%, -50%);
+  background: var(--surface); border: 3px solid var(--muted); box-shadow: 0 1px 3px rgb(15 23 42 / .25);
+}
+.range-bar.is-compact .range-marker { width: 11px; height: 11px; border-width: 2.5px; }
+.range-bar.sev-high .range-marker, .range-bar.sev-low .range-marker, .range-bar.sev-abnormal .range-marker { border-color: var(--warning-solid); }
+.range-bar.sev-critical .range-marker { border-color: var(--critical); }
+.range-bar.sev-normal .range-marker { border-color: var(--success); }
+.range-beyond { position: absolute; top: 50%; transform: translateY(-50%); font-size: 10px; line-height: 1; color: var(--warning); }
+.range-beyond.is-above { right: -14px; }
+.range-beyond.is-below { left: -14px; }
+.range-bar.sev-critical .range-beyond { color: var(--critical); }
+.range-limits { position: absolute; left: 0; right: 0; bottom: 0; height: 14px; font-size: 11px; color: var(--muted); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.range-limits > span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+
+/* reference text, previous result */
+.lab-ref-text { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--text-2); }
+.lab-ref-label { font-family: var(--font-sans); font-weight: 650; color: var(--muted); }
+.lab-ref-text.is-missing { font-family: var(--font-sans); color: var(--muted); font-style: italic; }
+.lab-previous { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; font-size: var(--fs-xs); color: var(--muted); }
+.lab-previous .mono { font-size: var(--fs-xs); color: var(--text-2); }
+.lab-change { font-weight: 650; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.lab-previous.is-compact { white-space: nowrap; gap: 0 4px; }
+.lab-action-cell:empty { min-width: 0; }
+
+/* ---------- all results ---------- */
+.labs-list .toolbar { border-top: 1px solid var(--border); }
+.labs-list .toolbar-search { max-width: 300px; }
+.labs-list-body > .rows, .labs-list-body > .banner { margin: 16px; }
+.labs-above-note {
+  display: flex; align-items: center; gap: 8px; margin: 12px 16px 0; padding: 9px 12px; border-radius: var(--radius-sm);
+  background: var(--warning-soft); border: 1px solid var(--warning-line); color: var(--warning); font-size: var(--fs-sm); font-weight: 600; text-decoration: none;
+}
+.labs-above-note:hover { color: var(--warning); text-decoration: underline; }
+
+.lab-group { border-top: 1px solid var(--border); }
+.lab-group:first-child, .labs-above-note + .lab-group { border-top: 0; margin-top: 4px; }
+.lab-group > .insight-head, details.lab-group > summary .insight-head { padding: 14px 18px 8px; }
+.lab-group.is-normal-pending > .insight-head { background: var(--accent-soft); border-bottom: 1px solid var(--accent-line); padding-bottom: 12px; }
+details.lab-group > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 2px; padding-left: 12px; }
+details.lab-group > summary::-webkit-details-marker { display: none; }
+details.lab-group > summary > svg { flex: none; color: var(--muted); transition: transform var(--dur-1) var(--ease-out); }
+details.lab-group[open] > summary > svg { transform: rotate(90deg); }
+details.lab-group > summary .insight-head { flex: 1; padding-left: 4px; }
+details.lab-group > summary:focus-visible { outline: none; box-shadow: var(--focus); border-radius: var(--radius-sm); }
+
+.lab-list { list-style: none; margin: 0; padding: 0 8px 8px; }
+.lab-row {
+  display: grid; align-items: center; gap: 6px 14px; padding: 11px 10px; border-radius: var(--radius);
+  /* fixed flag / review / action widths keep every group's columns aligned; the action column
+     fits the "Mark reviewed" button so it never overlaps the review state */
+  grid-template-columns: minmax(130px, 1.3fr) minmax(90px, .9fr) minmax(130px, 1.2fr) 92px 116px 136px;
+  transition: background var(--dur-1) var(--ease-out);
+}
+.lab-row + .lab-row { border-top: 1px solid var(--border-soft); }
+.lab-row:hover { background: var(--surface-2); }
+.lab-cell { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lab-name { font-weight: 650; color: var(--text); overflow-wrap: anywhere; }
+.lab-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-size: var(--fs-xs); color: var(--muted); }
+.lab-history-link { min-height: 24px; padding: 0 6px; font-size: var(--fs-xs); }
+.lab-value-cell { flex-direction: column; }
+.lab-reading { font-family: var(--font-mono); font-size: var(--fs-md); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
+.lab-unit { font-size: var(--fs-xs); color: var(--muted); }
+.lab-value-cell > .lab-reading + .lab-unit { margin-top: -2px; }
+.lab-row.sev-high .lab-reading, .lab-row.sev-low .lab-reading, .lab-row.sev-abnormal .lab-reading { color: var(--warning); }
+.lab-row.sev-critical .lab-reading { color: var(--critical); }
+.lab-action-cell { align-items: flex-end; }
+/* reviewed normal results take the least attention */
+.lab-group.is-reviewed-other .lab-reading { font-weight: 600; color: var(--text-2); }
+.lab-group.is-reviewed-other .lab-name { font-weight: 600; color: var(--text-2); }
+
+.lab-history { display: flex; flex-direction: column; gap: 14px; }
+.lab-history-table td, .lab-history-table th { padding: 8px 10px; }
+
+/* ---------- bulk review dialog ---------- */
+.labs-bulk-lead { margin: 0 0 10px; font-size: var(--fs-sm); color: var(--text-2); line-height: 1.5; }
+.labs-bulk-list { margin: 0 0 10px; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); }
+.labs-bulk-list .mono { font-size: var(--fs-xs); }
+.labs-bulk-outcome { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------- tablet: drop to two lines per row ---------- */
+@media (max-width: 1180px) {
+  .lab-row { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.2fr) 116px; }
+  .lab-flag-cell, .lab-state-cell { flex-direction: row; }
+  .lab-state-cell { grid-column: 4; grid-row: 2; justify-self: end; }
+  .lab-action-cell { grid-column: 1 / -1; align-items: flex-start; }
+  .lab-action-cell:empty { display: none; }
+}
+
+/* ---------- phone: each result is a card ---------- */
+@media (max-width: 767px) {
+  .labs-list .toolbar-search { max-width: none; flex-basis: 100%; }
+  .labs-list .toolbar-count { margin-left: 0; }
+  .lab-list { padding: 0 0 8px; }
+  .lab-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; padding: 14px 16px; border-radius: 0; }
+  .lab-name-cell { grid-column: 1 / -1; }
+  .lab-value-cell { grid-column: 1; }
+  .lab-flag-cell { grid-column: 2; grid-row: 2; align-items: flex-end; }
+  .lab-ref-cell { grid-column: 1 / -1; }
+  .lab-state-cell { grid-column: 1 / -1; grid-row: auto; justify-self: start; }
+  .lab-action-cell { grid-column: 1 / -1; }
+  .lab-action-cell .btn { width: 100%; justify-content: center; min-height: 40px; }
+  .range-bar.is-compact { max-width: none; }
+}

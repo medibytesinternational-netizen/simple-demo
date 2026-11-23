@@ -389,8 +389,10 @@ def test_typed_transcripts_still_draft_and_voice_hands_over_a_pipeline_draft():
 # ---------- T6: upload a lab report from the Labs tab ----------
 
 def test_the_labs_tab_reuses_upload_report_and_the_documents_permission():
-    notes = _source("pages/Notes.tsx")
-    assert 'import { uploadReport } from "../features/f08/upload";' in notes
+    # The Labs tab (/notes?tab=labs) is rendered by features/labs/LabResults.tsx.
+    assert "<LabResults />" in _source("pages/Notes.tsx")
+    notes = _source("features/labs/LabResults.tsx")
+    assert 'import { uploadReport } from "../f08/upload";' in notes
     assert 'uploadReport(file, "lab_report")' in notes
     assert "/documents/upload" not in notes and "uploadDocument" not in notes, "no second upload path"
     assert 'useCan("upload_document")' in notes

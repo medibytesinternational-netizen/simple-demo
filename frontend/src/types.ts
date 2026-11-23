@@ -319,9 +319,25 @@ export type Leakage = {
     billing_status: "unbilled" | "underbilled" | "unsupported";
     explanation: string;
     evidence_event_ids: string[];
+    // Returned by GET /revenue/leakage (tariff-code comparison). Optional: the DEMO fixture predates them.
+    kind?: "unbilled" | "quantity_mismatch" | "underbilled" | "unsupported";
+    code?: string;
+    service_kind?: string | null;
+    unit_price?: number | null;
+    documented_quantity?: number | null;
+    billed_quantity?: number | null;
+    expected_amount?: number | null;
+    billed_amount?: number | null;
+    variance?: number | null;
+    documented_as?: string | null;
+    evidence_refs?: { kind: string; id: string }[];
   }[];
   count: number;
   summary: string;
+  /** Sum of the unbilled and underbilled gaps, computed by the backend. */
+  leakage_amount?: number;
+  /** Documented services with no tariff code mapping (not checked). */
+  unmapped_services?: { label: string; kind: string; evidence_event_ids: string[] }[];
 };
 
 export type DashboardData = {

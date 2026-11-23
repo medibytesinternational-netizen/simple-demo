@@ -1,0 +1,129 @@
+/* Shared page kit for the redesigned review pages (Lab results, Claim review, Revenue leakage):
+   header → KPI row (dk-kpi) → attention zone → workspace + rail. Existing tokens only. */
+.insight-page { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+/* KPI cards that act as filters (the dk-kpi look comes from dashkit.css) */
+button.insight-kpi { text-align: left; font: inherit; cursor: pointer; width: 100%; }
+button.insight-kpi:hover { transform: translateY(-2px); box-shadow: 0 14px 28px -18px rgb(21 62 117 / .55); }
+button.insight-kpi:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.insight-kpi.is-on:not(.is-feature) { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.insight-kpi.is-feature.is-on { box-shadow: 0 0 0 3px var(--accent-line), 0 16px 30px -18px rgb(13 30 60 / .9); }
+.insight-kpi .dk-kpi-label { padding-right: 0; }
+.insight-kpi .dk-kpi-note { color: var(--muted); }
+.insight-kpi.is-feature .dk-kpi-note { color: #bfdbfe; }
+
+/* The HIS workstation skin (legacy.css, loaded last with !important) flattens dk-kpi cards to an
+   18px value on white. On these pages the KPI row is the overview, so it keeps the skin's square
+   navy look but restores the hierarchy: a large value, a status edge, and a solid navy hero card.
+   Scoped to .insight-page so no other page changes. */
+.insight-page .dk-kpis { gap: 10px !important; }
+.insight-page .dk-kpi.insight-kpi {
+  min-height: 104px !important; padding: 12px 14px 12px 16px !important; gap: 2px;
+  border: 1px solid var(--his-line, var(--border)) !important; border-left: 4px solid var(--his-line, var(--border-strong)) !important;
+  background: #fff !important; color: var(--text) !important; box-shadow: none !important;
+}
+.insight-page .insight-kpi .dk-kpi-label { font-size: 11.5px !important; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; color: var(--text-2) !important; }
+.insight-page .insight-kpi .dk-kpi-value { margin-top: auto; font-size: 32px !important; font-weight: 750; line-height: 1.1; letter-spacing: -.02em; color: var(--his-navy, var(--text)) !important; }
+.insight-page .insight-kpi .dk-kpi-note { margin-top: 2px; font-size: 12px !important; color: var(--muted) !important; }
+.insight-page .insight-kpi.tone-warning { border-left-color: var(--warning-solid) !important; }
+.insight-page .insight-kpi.tone-warning .dk-kpi-value { color: var(--warning) !important; }
+.insight-page .insight-kpi.tone-critical { border-left-color: var(--critical) !important; background: var(--critical-soft) !important; }
+.insight-page .insight-kpi.tone-critical .dk-kpi-value { color: var(--critical) !important; }
+.insight-page .insight-kpi.is-feature {
+  background: var(--his-navy, #0b3d91) !important; border-color: var(--his-navy, #0b3d91) !important;
+  border-left-color: var(--his-navy-deep, #062a66) !important; color: #fff !important;
+}
+.insight-page .insight-kpi.is-feature .dk-kpi-label { color: #dbe8f8 !important; }
+.insight-page .insight-kpi.is-feature .dk-kpi-value { color: #fff !important; }
+.insight-page .insight-kpi.is-feature .dk-kpi-note { color: #c7d9f5 !important; }
+.insight-page button.insight-kpi:hover { transform: none; box-shadow: 0 0 0 2px var(--his-blue, var(--accent)) !important; }
+.insight-page .insight-kpi.is-on:not(.is-feature) { border-color: var(--his-blue, var(--accent)) !important; box-shadow: inset 0 -3px 0 var(--his-blue, var(--accent)) !important; }
+.insight-page .insight-kpi.is-feature.is-on { box-shadow: inset 0 -4px 0 #8fb6ff !important; }
+
+/* Drawers and dialogs opened from these pages render inside .content, where the skin's
+   `.content h2 { color: navy }` beats its own `.drawer-head * { color: #fff }`: navy title on the
+   navy header bar. Keep the skin's intent (white on navy) for titles inside these pages. */
+.insight-page .drawer-head .drawer-title, .insight-page .modal-head .modal-title { color: #fff !important; }
+
+/* billed vs expected (CompareBar): expected on top in grey, billed below; amber when short */
+.compare-bar { display: flex; flex-direction: column; gap: 3px; width: 120px; max-width: 100%; }
+.compare-track { display: block; height: 6px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.compare-fill { display: block; height: 100%; border-radius: 999px; }
+.compare-fill.is-expected { background: var(--border-strong); }
+.compare-fill.is-billed { background: var(--his-blue, var(--accent)); }
+.compare-fill.is-billed.is-short { background: var(--warning-solid); }
+
+/* zone headings */
+.insight-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+.insight-head-text { min-width: 0; }
+.insight-title { margin: 0; display: flex; align-items: center; gap: 10px; font-size: var(--fs-lg); font-weight: 700; letter-spacing: -.01em; color: var(--text); text-transform: none; }
+h3.insight-title { font-size: var(--fs-md); }
+.insight-count {
+  display: inline-grid; place-items: center; min-width: 24px; height: 22px; padding: 0 7px; border-radius: 999px;
+  background: var(--surface-3); border: 1px solid var(--border); font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); font-variant-numeric: tabular-nums;
+}
+.insight-sub { margin: 3px 0 0; font-size: var(--fs-sm); color: var(--muted); }
+.insight-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* attention zone */
+.insight-zone { display: flex; flex-direction: column; gap: 12px; }
+.attn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 14px; }
+.attn-card {
+  position: relative; display: flex; flex-direction: column; gap: 12px; min-width: 0;
+  padding: 16px 18px 16px 22px; border-radius: var(--radius-lg);
+  background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+.attn-card::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; border-radius: 0 4px 4px 0; background: var(--border-strong); }
+.attn-card.tone-warning { border-color: var(--warning-line); }
+.attn-card.tone-warning::before { background: var(--warning-solid); }
+.attn-card.tone-critical { border-color: var(--critical-line); background: linear-gradient(180deg, var(--critical-soft), var(--surface) 70%); }
+.attn-card.tone-critical::before { background: var(--critical); }
+.attn-card.tone-estimate { border: 1.5px dashed var(--warning-solid); box-shadow: none; }
+.attn-card.tone-estimate::before { display: none; }
+.attn-card.is-skeleton { min-height: 180px; }
+.attn-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.attn-title { margin: 0; font-size: var(--fs-lg); font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
+.attn-figure { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.attn-value { font-size: 36px; font-weight: 750; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; color: var(--text); }
+.attn-card.tone-warning .attn-value { color: var(--warning); }
+.attn-card.tone-critical .attn-value { color: var(--critical); }
+.attn-unit { font-size: var(--fs-md); font-weight: 600; color: var(--muted); }
+.attn-body { display: flex; flex-direction: column; gap: 8px; font-size: var(--fs-sm); color: var(--text-2); }
+.attn-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--fs-xs); color: var(--muted); }
+.attn-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: auto; padding-top: 4px; }
+
+.insight-strip {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--surface); font-size: var(--fs-sm); color: var(--text-2);
+}
+.insight-strip.tone-success { border-color: var(--success-line); background: var(--success-soft); color: var(--success); }
+.insight-strip.tone-success strong { color: var(--success); }
+.insight-note { margin: 0; display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--muted); }
+
+/* workspace + rail */
+.insight-layout { display: grid; grid-template-columns: minmax(0, 8fr) minmax(260px, 4fr); gap: 18px; align-items: start; }
+.insight-panel {
+  min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.insight-panel > .insight-head { padding: 16px 18px 12px; }
+.insight-rail { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 12px; min-width: 0; }
+.rail-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: var(--shadow-sm); }
+.rail-title { margin: 0 0 8px; font-size: var(--fs-sm); font-weight: 700; color: var(--text); text-transform: none; }
+.rail-text { margin: 6px 0 0; font-size: var(--fs-xs); line-height: 1.55; color: var(--text-2); }
+
+@media (max-width: 1180px) {
+  .insight-layout { grid-template-columns: minmax(0, 1fr); }
+  .insight-rail { position: static; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+}
+@media (max-width: 767px) {
+  .insight-page { gap: 14px; }
+  .attn-grid { grid-template-columns: minmax(0, 1fr); }
+  .attn-value { font-size: 30px; }
+  .insight-page .insight-kpi .dk-kpi-value { font-size: 26px !important; }
+  .insight-page .dk-kpi.insight-kpi { min-height: 92px !important; }
+  .attn-actions .btn-primary { flex: 1 1 100%; justify-content: center; min-height: 44px; }
+  .insight-rail { grid-template-columns: minmax(0, 1fr); }
+  .page-header-actions .btn { flex: 1 1 auto; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) { button.insight-kpi:hover { transform: none; } }

@@ -1,0 +1,147 @@
+/* Revenue leakage (/revenue?tab=leakage): revenue-at-risk hero, root causes, service bars,
+   prioritised findings, detail drawer. Shared kit in insight.css. Existing tokens only. */
+
+/* the long "Review only" notice in the header may wrap on narrow screens */
+.pg-leakage .page-meta .pill { white-space: normal; text-align: left; }
+
+/* ---------- top: hero + root causes ---------- */
+.leak-top { display: grid; grid-template-columns: minmax(300px, 5fr) minmax(0, 7fr); gap: 14px; align-items: stretch; }
+.leak-hero {
+  display: flex; flex-direction: column; gap: 4px; min-height: 100%; padding: 18px 20px;
+  background: var(--his-navy, #0b3d91); color: #fff; border-left: 6px solid var(--his-navy-deep, #062a66);
+}
+.leak-hero-label { font-size: 11.5px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; color: #dbe8f8; }
+.leak-hero-value { font-size: 40px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.leak-hero-note { font-size: 12px; color: #c7d9f5; }
+.leak-split { margin: 12px 0 4px; display: grid; gap: 6px; padding-top: 10px; border-top: 1px solid rgb(255 255 255 / .25); }
+.leak-split > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 6px 10px; background: rgb(255 255 255 / .08); }
+.leak-split > div.is-estimate { border: 1.5px dashed var(--warning-solid); background: transparent; }
+.leak-split dt { font-size: var(--fs-sm); color: #dbe8f8; }
+.leak-split dd { margin: 0; display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-lg); font-weight: 750; font-variant-numeric: tabular-nums; }
+.leak-hero-foot { margin-top: auto; padding-top: 8px; font-size: 12px; color: #c7d9f5; }
+.leak-estimate-tag {
+  display: inline-flex; align-items: center; padding: 1px 7px; border: 1.5px dashed var(--warning-solid);
+  font-size: 10.5px; font-weight: 750; letter-spacing: .02em; text-transform: uppercase; color: var(--warning); background: var(--warning-soft);
+}
+.leak-hero .leak-estimate-tag { color: #fde68a; background: transparent; }
+.leak-estimate-tag.is-strong { font-size: 11px; padding: 2px 8px; }
+
+.leak-causes { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.leak-cause-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.leak-cause-grid .dk-kpi.insight-kpi { min-height: 96px !important; }
+.leak-cause-amount { display: block; margin-top: 2px; font-size: 14px; font-weight: 700; letter-spacing: 0; }
+.pg-leakage .leak-cause-amount.is-unavailable { font-size: 12px; font-weight: 600; color: var(--muted); }
+.leak-gap-value.is-unavailable { color: var(--muted-2) !important; }
+.leak-gap-missing { font-size: 11px; color: var(--muted); }
+
+/* ---------- findings panel ---------- */
+.leak-findings > .insight-head { padding: 16px 18px 12px; }
+.leak-services { padding: 4px 18px 14px; }
+.leak-services-title { display: block; margin-bottom: 6px; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: var(--text-2); }
+.leak-services ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.leak-service {
+  width: 100%; display: grid; grid-template-columns: minmax(130px, 200px) minmax(0, 1fr) max-content; align-items: center; gap: 12px;
+  padding: 6px 8px; border: 1px solid transparent; background: transparent; font: inherit; text-align: left; cursor: pointer; color: var(--text);
+}
+.leak-service:hover { background: var(--surface-2); }
+.leak-service.is-on { border-color: var(--his-blue, var(--accent)); background: var(--accent-soft); }
+.leak-service:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.leak-service-name { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: 600; }
+.leak-service-track { height: 10px; background: var(--surface-3); overflow: hidden; }
+.leak-service-fill { display: block; height: 100%; background: var(--warning-solid); }
+.leak-service-fill.is-estimate { background: repeating-linear-gradient(135deg, var(--warning-solid) 0 6px, var(--warning-soft) 6px 11px); }
+.leak-service-amount { font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 700; font-variant-numeric: tabular-nums; }
+.leak-services-none { margin: 0; padding: 4px 18px 12px; font-size: var(--fs-xs); color: var(--muted); }
+.leak-findings .toolbar { border-top: 1px solid var(--border); }
+.leak-findings .toolbar-search { max-width: 320px; }
+.leak-list-body > .rows { margin: 16px; }
+
+.leak-list { list-style: none; margin: 0; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.leak-item {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 12px 18px;
+  background: var(--surface); border: 1px solid var(--border); border-left: 5px solid var(--warning-solid);
+}
+.leak-item.tone-critical { border-left-color: var(--critical); }
+.leak-item.tone-estimate { border: 1.5px dashed var(--warning-solid); border-left-width: 5px; background: linear-gradient(180deg, var(--warning-soft), var(--surface) 60%); }
+.leak-item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.leak-item-title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+.leak-item-title h3 { flex-basis: 100%; margin: 0; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: var(--fs-lg); font-weight: 700; color: var(--text); }
+.leak-code { font-size: var(--fs-xs); font-weight: 600; color: var(--muted); }
+.leak-cause { font-size: 11px; font-weight: 750; letter-spacing: .3px; text-transform: uppercase; color: var(--warning); }
+.leak-cause.tone-critical { color: var(--critical); }
+.leak-item-gap { flex: none; display: flex; flex-direction: column; align-items: flex-end; text-align: right; }
+.leak-gap-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: var(--muted); }
+.leak-gap-value { font-size: 22px; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; color: var(--warning); }
+.leak-item.tone-critical .leak-gap-value { color: var(--critical); }
+.leak-item-calc { display: flex; align-items: center; justify-content: space-between; gap: 10px 20px; flex-wrap: wrap; }
+.leak-item-calc .compare-bar { width: 180px; }
+.leak-calc { margin: 0; font-size: var(--fs-sm); color: var(--text-2); }
+.leak-calc-grid { display: grid; grid-template-columns: repeat(3, max-content); gap: 4px 22px; align-items: baseline; }
+.leak-calc-row { display: flex; flex-direction: column; }
+.leak-calc-row > span { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .3px; color: var(--muted); }
+.leak-calc-row > strong { font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.leak-calc-row.is-gap > strong { color: var(--warning); }
+.leak-calc-wrap { flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.leak-basis { margin: 0; font-size: var(--fs-xs); color: var(--warning); font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
+.leak-calc-grid.is-block { grid-template-columns: minmax(0, 1fr); gap: 0; border: 1px solid var(--border); }
+.leak-calc-grid.is-block .leak-calc-row { flex-direction: row; justify-content: space-between; align-items: baseline; padding: 9px 12px; }
+.leak-calc-grid.is-block .leak-calc-row + .leak-calc-row { border-top: 1px solid var(--border-soft); }
+.leak-calc-grid.is-block .leak-calc-row.is-gap { border-top: 2px solid var(--text-2); background: var(--surface-2); }
+.leak-calc-wrap.is-block { gap: 0; }
+.leak-calc-wrap.is-block .leak-basis { padding: 8px 12px; border: 1px dashed var(--warning-solid); border-top: 0; background: var(--warning-soft); }
+.leak-item-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.leak-item-foot .btn { margin-left: auto; }
+.leak-explanation { margin: 0; font-size: var(--fs-sm); color: var(--text-2); }
+
+details.leak-unmapped { border-top: 1px solid var(--border); }
+details.leak-unmapped > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 12px 18px; font-weight: 650; color: var(--text-2); }
+details.leak-unmapped > summary::-webkit-details-marker { display: none; }
+details.leak-unmapped > summary svg { color: var(--muted); transition: transform var(--dur-1) var(--ease-out); }
+details.leak-unmapped[open] > summary svg { transform: rotate(90deg); }
+details.leak-unmapped ul { list-style: none; margin: 0; padding: 0 18px 12px; display: flex; flex-direction: column; gap: 6px; }
+details.leak-unmapped li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+details.leak-unmapped > p { padding: 0 18px 12px; margin: 0; }
+
+.leak-explain-card { border-top: 3px solid var(--his-blue, var(--accent)); }
+.leak-primary { width: 100%; justify-content: center; min-height: 42px; font-size: var(--fs-md); }
+.leak-explain-card .banner { margin-top: 10px; }
+.leak-review-only { background: var(--surface-2); }
+
+.leak-drawer { display: flex; flex-direction: column; gap: 14px; }
+.leak-drawer-block h3 { margin: 0 0 4px; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: var(--text-2); }
+.leak-drawer-block p { margin: 0 0 4px; font-size: var(--fs-sm); line-height: 1.55; color: var(--text); }
+.leak-drawer .leak-estimate-tag { align-self: flex-start; }
+
+/* ---------- tablet / phone ---------- */
+@media (max-width: 1180px) {
+  .leak-top { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .leak-hero-value { font-size: 30px; }
+  .leak-split > div { flex-wrap: wrap; }
+  .leak-cause-grid .dk-kpi.insight-kpi { min-height: 88px !important; }
+  .leak-service { grid-template-columns: minmax(0, 1fr) max-content; }
+  .leak-service-track { grid-column: 1 / -1; grid-row: 2; }
+  .leak-findings .toolbar-search { max-width: none; flex-basis: 100%; }
+  .leak-findings .toolbar-count { margin-left: 0; }
+  .leak-list { padding: 8px; }
+  .leak-item-head { flex-direction: column; }
+  .leak-item-gap { align-items: flex-start; text-align: left; }
+  .leak-calc-wrap { flex-basis: 100%; }
+  .leak-calc-grid { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .leak-calc-row > strong { overflow-wrap: anywhere; }
+  .leak-item-calc .compare-bar { width: 100%; }
+  .leak-item-foot .btn { margin-left: 0; width: 100%; justify-content: center; }
+}
+
+/* ---------- print (billing audit copy): this page only ---------- */
+@media print {
+  body:has(.pg-leakage) .hx-top, body:has(.pg-leakage) .hx-side, .pg-leakage .no-print { display: none !important; }
+  body:has(.pg-leakage) .hx-body { display: block !important; }
+  .pg-leakage .insight-layout { display: block; }
+  .pg-leakage .leak-top { grid-template-columns: 1fr 1fr; }
+  .pg-leakage .leak-hero { background: #fff !important; color: #000 !important; border: 2px solid #000; }
+  .pg-leakage .leak-hero * { color: #000 !important; }
+  .pg-leakage .leak-item, .pg-leakage .insight-kpi { break-inside: avoid; }
+  .pg-leakage .leak-print-stamp { font-size: 11px; color: #000; }
+}
