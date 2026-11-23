@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 from tests.helpers import inject_event, inject_lab
 
@@ -498,3 +499,29 @@ def test_generated_draft_follows_the_record_and_keeps_its_evidence(fresh):
     assert line["evidence_event_ids"] == [home, current]
     assert draft["summary"].startswith("1 medication difference found")
     assert "1 still need" in draft["summary"]
+
+
+def test_explanation_is_derived_from_reconciliation_even_when_live_llm_is_configured(fresh, monkeypatch):
+    home = med("home", "Metformin", dose="500 mg")
+    current = med("inpatient", "Metformin", dose="850 mg", minute=5)
+    monkeypatch.setattr("app.services.llm.settings", SimpleNamespace(effective_llm_mode="live", openai_model="gpt-4o"))
+
+    def must_not_call_model(*_args, **_kwargs):
+        raise AssertionError("Medication reconciliation explanations must use record-derived facts")
+
+    monkeypatch.setattr("app.services.llm._live_call", must_not_call_model)
+    response = fresh.post("/api/medications/reconciliation/generate")
+    assert response.status_code == 200, response.text
+    explanation = response.json()["draft"]["content"]
+    assert response.json()["llm"]["mode"] == "cached"
+    assert explanation["discrepancies"][0]["evidence_event_ids"] == [home, current]
+    assert "850 mg" not in explanation["summary"]
+    assert "Metformin" in explanation["discrepancies"][0]["home_med"]
+
+
+def test_empty_reconciliation_explanation_does_not_invent_medicines(fresh):
+    response = fresh.post("/api/medications/reconciliation/generate")
+    assert response.status_code == 200, response.text
+    explanation = response.json()["draft"]["content"]
+    assert explanation["discrepancies"] == []
+    assert "no home medicines or active orders are recorded" in explanation["summary"]

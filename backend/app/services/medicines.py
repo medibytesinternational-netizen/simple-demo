@@ -11,7 +11,7 @@ payload keys below must not change.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 
 from .. import clock
 from ..models import Encounter, Patient, TimelineEvent
+from ..dates import parse_hospital_datetime
 from ..models_ext.f06_decisions import ReconciliationDecision
 from .identity import acting_name
 from .reconciliation import reconciliation
@@ -261,12 +262,9 @@ def _norm(value: str) -> str:
 def _parse_time(value: str | None) -> datetime:
     if not value:
         return clock.now()
-    try:
-        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
-    except ValueError as exc:
-        raise ValueError("given_at must be an ISO date and time, for example 2026-10-20T09:30:00") from exc
-    if parsed.tzinfo:
-        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
+    parsed = parse_hospital_datetime(value)
+    if parsed is None:
+        raise ValueError("given_at must be an ISO date and time, for example 2026-10-20T09:30:00")
     return parsed
 
 

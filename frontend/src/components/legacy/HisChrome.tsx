@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { COUNT_TONE, NAV_GROUPS, isPatientRoute, type CountKey } from "../modules";
+import { formatHospitalDateTime } from "../../dates";
 
 // ASCII-only file (see Shell.tsx).
 const SEP = String.fromCharCode(183);
@@ -41,7 +42,7 @@ export function StatusBar({ loginId, user, hospital, screen, onControls, userId,
       <button type="button" className="his-status-btn" onClick={onControls}>Workspace</button>
       <span className="his-screen-tag">[{screen.toUpperCase()}]</span>
       <span className="his-clock" title="Application time">
-        {now.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", second: "2-digit" })}
+        {formatHospitalDateTime(now, "en-IN", { hour: "numeric", minute: "2-digit", second: "2-digit" })}
       </span>
       <span className="his-version his-hide-sm">[2.1.0.1279]</span>
     </header>

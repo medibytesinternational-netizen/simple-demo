@@ -110,8 +110,35 @@ export async function uploadDocument(file: File) {
   return api<any>("/documents/upload", { method: "POST", body: form });
 }
 
-export async function transcribeAudio(blob: Blob, filename = "consultation.webm") {
+export type TranscriptionJob = {
+  audio_id: string;
+  encounter_id: string;
+  filename: string;
+  job_status: "queued" | "running" | "succeeded" | "failed";
+  job_error?: string | null;
+  delivery: {
+    state: "pending" | "delivered" | "failed" | "job_failed";
+    attempts: number;
+    last_error?: string | null;
+  };
+  transcript?: string | null;
+  transcript_event_id?: string | null;
+  can_redeliver?: boolean;
+  can_retry_upload?: boolean;
+  status_check_error?: string | null;
+}
+
+export async function transcribeAudio(blob: Blob, filename: string, encounterId: string, audioId: string) {
   const form = new FormData();
   form.append("file", blob, filename);
-  return api<{ text: string; model: string }>("/notes/transcribe", { method: "POST", body: form });
+  return api<TranscriptionJob>(
+    `/notes/transcribe?encounter_id=${encodeURIComponent(encounterId)}&audio_id=${encodeURIComponent(audioId)}`,
+    { method: "POST", body: form },
+  );
+}
+
+export function getTranscription(audioId: string, encounterId: string) {
+  return get<TranscriptionJob>(
+    `/notes/transcriptions/${encodeURIComponent(audioId)}?encounter_id=${encodeURIComponent(encounterId)}`,
+  );
 }

@@ -7,6 +7,7 @@ import { Modal } from "./Modal";
 import { Icon } from "./icons";
 import { Banner, Field, MetaChip, Pill } from "./ui";
 import type { Tone } from "./ui";
+import { formatHospitalDateTime } from "../dates";
 
 const FEATURE_LABELS: Record<string, string> = {
   F1: "Consultation note",
@@ -711,7 +712,7 @@ function DraftContent({
                         <td><Pill tone="neutral">{entry.category}</Pill></td>
                         <td>{entry.label}<div className="small muted">{entry.device}</div></td>
                         <td className="mono">{entry.value} {entry.unit}</td>
-                        <td className="small muted">{entry.recorded_at?.replace("T", " ").slice(0, 16)}</td>
+                        <td className="small muted">{formatHospitalDateTime(entry.recorded_at, "en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
                         <td><EvidenceChip eventIds={entry.source_event_id ? [entry.source_event_id] : []} /></td>
                       </tr>
                     ))}

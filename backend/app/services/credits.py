@@ -49,6 +49,8 @@ def charge(
     feature: str | None = None,
     mode: str | None = None,
     llm_call_id: str | None = None,
+    patient_id: str | None = None,
+    actor: str | None = None,
 ) -> CreditEntry:
     """Spend the credits for one operation. Call it before the operation does its work."""
     units = SCHEDULE[operation]
@@ -67,8 +69,8 @@ def charge(
         feature=feature,
         mode=mode,
         llm_call_id=llm_call_id,
-        patient_id=current_patient_id(),
-        actor=acting_name(),
+        patient_id=patient_id or current_patient_id(),
+        actor=actor or acting_name(),
         created_at=utcnow(),
     )
     db.add(entry)

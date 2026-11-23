@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { get, post } from "../api";
+import { formatHospitalDate, formatHospitalDateTime } from "../dates";
 import type { DocumentRequest, DocumentSummary, Draft, InvestigationRequest } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { useCan } from "../session";
@@ -249,7 +250,7 @@ export function DocumentsPage() {
                       tone={item.ocr_status === "needs_confirmation" ? "warning" : item.ocr_status === "confirmed" ? "success" : undefined}
                       selected={item.id === selectedId}
                       title={item.filename}
-                      meta={<>{docTypeLabel(item.doc_type)} · {new Date(item.uploaded_at).toLocaleString()}</>}
+                      meta={<>{docTypeLabel(item.doc_type)} · {formatHospitalDateTime(item.uploaded_at)}</>}
                       chips={
                         <>
                           <Pill tone={statusTone(item.ocr_status)} dot>{item.ocr_status.replaceAll("_", " ")}</Pill>
@@ -544,7 +545,7 @@ export function DocumentsPage() {
                   header: "Due",
                   sort: (request) => request.due_at || null,
                   cell: (request) => (
-                    <span className="mono small">{request.due_at ? new Date(request.due_at).toLocaleDateString() : "not set"}</span>
+                    <span className="mono small">{request.due_at ? formatHospitalDate(request.due_at) : "not set"}</span>
                   ),
                 },
                 {

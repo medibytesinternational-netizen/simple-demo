@@ -1,6 +1,7 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { get } from "../api";
+import { parseHospitalDateTime } from "../dates";
 import type { Alert, AppTask, DocumentSummary, Draft, InvestigationRequest, Meta } from "../types";
 import { DEMO_MODE } from "../demo/config";
 import { AlertQualityTable } from "../features/f14/AlertQualityTable";
@@ -34,7 +35,10 @@ const place = (r?: Row) => (r ? [r.ward, r.bed].filter(Boolean).join(" · ") : "
 
 function overdueBy(due: string | null | undefined, now?: string) {
   if (!due || !now) return "";
-  const minutes = Math.round((Date.parse(now) - Date.parse(due)) / 60000);
+  const nowTime = parseHospitalDateTime(now)?.getTime();
+  const dueTime = parseHospitalDateTime(due)?.getTime();
+  if (nowTime === undefined || dueTime === undefined) return "";
+  const minutes = Math.round((nowTime - dueTime) / 60000);
   if (minutes <= 0) return "";
   return minutes < 60 ? `${minutes} min overdue` : `${Math.round(minutes / 60)} h overdue`;
 }

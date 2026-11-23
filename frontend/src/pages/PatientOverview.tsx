@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { get } from "../api";
+import { formatHospitalDateTime, hospitalDayNumber } from "../dates";
 import type { AppState, Lab, Meta } from "../types";
 import { warningCount, type Readiness } from "../features/f09/types";
 import { usePatientId } from "../session";
@@ -20,7 +21,7 @@ const VITALS: { key: string; label: string; unit: string }[] = [
 
 function when(value?: string | null) {
   if (!value) return "Time not recorded";
-  return new Date(value).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return formatHospitalDateTime(value, "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 function vitalValue(payload: Record<string, unknown>, key: string) {
@@ -42,9 +43,9 @@ export function PatientOverviewPage() {
   const progress = useQuery<ProgressResponse>({ queryKey: ["progress", patientId, null], queryFn: () => get(`/patients/${patientId}/progress`), enabled: !!patientId });
   const s = state.data;
   const egfr = s?.latest_labs.find((lab) => lab.name.toLowerCase() === "egfr");
-  const stayDay = meta.data?.encounter.admitted_at && meta.data.demo_now
-    ? Math.floor((Date.parse(meta.data.demo_now.slice(0, 10)) - Date.parse(meta.data.encounter.admitted_at.slice(0, 10))) / 86_400_000) + 1
-    : null;
+  const demoDay = hospitalDayNumber(meta.data?.demo_now);
+  const admittedDay = hospitalDayNumber(meta.data?.encounter.admitted_at);
+  const stayDay = demoDay !== null && admittedDay !== null ? demoDay - admittedDay + 1 : null;
 
   const openAlerts = (s?.alerts ?? [])
     .filter((a) => a.status === "open")

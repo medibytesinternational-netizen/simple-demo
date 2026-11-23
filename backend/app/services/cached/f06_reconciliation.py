@@ -19,6 +19,8 @@ def f6_recon(context: dict[str, Any]) -> dict[str, Any]:
             f"{len(discrepancies)} medication {noun} found between the home list and the current orders; "
             f"{open_count} still need a clinician decision."
         )
+    elif not extra.get("home_medications") and not extra.get("current_medications"):
+        summary = "No medication comparison is available because no home medicines or active orders are recorded."
     else:
         summary = "No differences found between the home list and the current orders."
     return {

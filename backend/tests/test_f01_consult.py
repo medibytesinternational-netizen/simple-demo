@@ -279,7 +279,7 @@ def test_approval_still_needs_consent(client):  # guard
     assert response.status_code == 400 and "consent" in response.json()["detail"].lower()
 
 
-# ---------- audio needs consent, a key, and costs 2 credits only when it really runs ----------
+# ---------- consented audio is submitted asynchronously to MediBytes ----------
 
 def _audio():
     return {"file": ("visit.webm", b"not really audio", "audio/webm")}
@@ -296,42 +296,38 @@ def test_audio_with_consent_but_no_key_is_refused_and_costs_nothing(fresh):
     _consent(fresh)
     before = _balance(fresh)
     response = fresh.post("/api/notes/transcribe", files=_audio())
-    assert response.status_code == 400 and "OPENAI_API_KEY" in response.json()["detail"]
+    assert response.status_code == 503 and "MEDIBYTES_API_KEY" in response.json()["detail"]
     assert _balance(fresh) == before
-
-
-class _FakeOpenAI:
-    text = "Patient has a cough."
-    calls = 0
-
-    def __init__(self, api_key=None):
-        outer = type(self)
-
-        class Transcriptions:
-            def create(self, **kwargs):
-                outer.calls += 1
-                if isinstance(outer.text, Exception):
-                    raise outer.text
-                return SimpleNamespace(text=outer.text)
-
-        self.audio = SimpleNamespace(transcriptions=Transcriptions())
 
 
 @pytest.fixture()
 def keyed(monkeypatch):
-    monkeypatch.setattr("app.routes.notes.settings", SimpleNamespace(openai_api_key="sk-test"))
-    monkeypatch.setattr("openai.OpenAI", _FakeOpenAI)
-    _FakeOpenAI.text = "Patient has a cough."
-    _FakeOpenAI.calls = 0
-    return _FakeOpenAI
+    from app.integrations import medibytes_transcription
+
+    calls = SimpleNamespace(count=0, failure=None)
+    monkeypatch.setattr(
+        "app.routes.notes.settings",
+        SimpleNamespace(medibytes_api_key="server-only-test-key", medibytes_company_id=1),
+    )
+
+    async def upload(audio_id, company_id, filename, content_type, audio):
+        calls.count += 1
+        if calls.failure:
+            raise medibytes_transcription.MediBytesRequestError(502, "Could not reach MediBytes")
+        return {"audio_id": audio_id, "company_id": company_id, "job_id": f"job-{audio_id}", "status": "queued"}
+
+    monkeypatch.setattr("app.routes.notes.medibytes_transcription.upload_audio", upload)
+    return calls
 
 
-def test_a_transcription_that_runs_costs_a_voice_note_of_two_credits(fresh, keyed):
+def test_a_transcription_accepted_by_medibytes_costs_a_voice_note_of_two_credits(fresh, keyed):
     _consent(fresh)
     before = _balance(fresh)
     response = fresh.post("/api/notes/transcribe", files=_audio())
     assert response.status_code == 200, response.text
-    assert response.json()["text"] == "Patient has a cough."
+    assert response.json()["job_status"] == "queued"
+    assert response.json()["audio_id"]
+    assert keyed.count == 1
     assert before - _balance(fresh) == 2
     ledger = fresh.get("/api/credits").json()["ledger"]
     assert ledger[0]["operation"] == "voice_note" and ledger[0]["units"] == 2 and ledger[0]["feature"] == "F1"
@@ -339,18 +335,10 @@ def test_a_transcription_that_runs_costs_a_voice_note_of_two_credits(fresh, keye
 
 def test_a_failed_transcription_costs_nothing(fresh, keyed):
     _consent(fresh)
-    keyed.text = RuntimeError("provider down")
+    keyed.failure = True
     before = _balance(fresh)
     response = fresh.post("/api/notes/transcribe", files=_audio())
     assert response.status_code == 502
-    assert _balance(fresh) == before
-
-
-def test_a_recording_with_no_speech_costs_nothing(fresh, keyed):
-    _consent(fresh)
-    keyed.text = "   "
-    before = _balance(fresh)
-    assert fresh.post("/api/notes/transcribe", files=_audio()).status_code == 422
     assert _balance(fresh) == before
 
 
@@ -364,5 +352,5 @@ def test_transcription_stops_with_402_when_credits_are_used_up(fresh, keyed):
         db.close()
     response = fresh.post("/api/notes/transcribe", files=_audio())
     assert response.status_code == 402
-    assert keyed.calls == 0, "the model must not be called when the pack cannot pay for it"
+    assert keyed.count == 0, "MediBytes must not be called when the pack cannot pay for it"
     assert _balance(fresh) == 1
