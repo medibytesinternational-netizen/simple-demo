@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, post } from "../../api";
+import { formatHospitalDateTime } from "../../dates";
 import { useCan } from "../../session";
 import { Banner, DataTable, EmptyState, Panel, Pill } from "../../components/ui";
 import { noteOk } from "./rules";
@@ -190,7 +191,7 @@ export default function MedicineOrders() {
             columns={[
               { key: "status", header: "Outcome", sort: (dose) => dose.status, cell: (dose) => <Pill tone={dose.status === "given" ? "success" : "warning"}>{dose.status}</Pill> },
               { key: "drug", header: "Medicine", sort: (dose) => dose.drug, cell: (dose) => <span className="cell-strong">{dose.drug} {dose.dose}</span> },
-              { key: "given", header: "Recorded at", sort: (dose) => dose.given_at, cell: (dose) => <span className="small muted">{new Date(dose.given_at).toLocaleString()}</span> },
+              { key: "given", header: "Recorded at", sort: (dose) => dose.given_at, cell: (dose) => <span className="small muted">{formatHospitalDateTime(dose.given_at)}</span> },
               { key: "by", header: "By", cell: (dose) => <span className="small muted">{dose.recorded_by}</span> },
               { key: "note", header: "Note", cell: (dose) => <span className="small">{dose.note}</span> },
             ]}

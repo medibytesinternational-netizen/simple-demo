@@ -66,6 +66,9 @@ def _ensure_sqlite_columns() -> None:
         "bill_line_items": {
             "expected_amount": "FLOAT",
         },
+        "transcription_jobs": {
+            "delivery_next_attempt_at": "DATETIME",
+        },
         "alerts": {
             "dismissal_category": "VARCHAR",
             "resolution": "TEXT",

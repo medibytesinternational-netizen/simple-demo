@@ -15,11 +15,13 @@ MODULES: list[dict[str, Any]] = [
         "name": "Ambient OPD documentation",
         "workspace": "Notes → Consultation",
         "capability": "Consent-gated consultation capture and evidence-linked note draft",
-        "llm": "gpt-4o + whisper-1",
+        "llm": "MediBytes MedASR + gpt-4o note drafting",
         "human_gate": "Patient consent; clinician approval",
         "endpoints": [
             "/api/patients/{patient_id}/consents",
             "/api/notes/transcribe",
+            "/api/notes/transcriptions",
+            "/api/transcriptions/callback",
             "/api/notes/generate",
             "/api/drafts/{draft_id}/approve",
         ],
@@ -81,7 +83,7 @@ MODULES: list[dict[str, Any]] = [
         "name": "Medication reconciliation",
         "workspace": "Safety → Medication reconciliation",
         "capability": "Home list versus current plan on dose, route, frequency and indication",
-        "llm": "gpt-4o explanation",
+        "llm": "deterministic explanation from reconciliation results",
         "human_gate": "Clinician reviews each discrepancy",
         "endpoints": [
             "/api/medications/reconciliation",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ..db import get_db
+from ..dates import parse_hospital_datetime
 from ..models import Encounter
 from ..services.cached.f07_icu import (
     ALL_CATEGORIES,
@@ -83,12 +84,9 @@ def _is_number(text: str) -> bool:
 
 
 def _parse_time(text: str) -> datetime:
-    try:
-        parsed = datetime.fromisoformat(text.strip().replace("Z", "+00:00"))
-    except ValueError:
+    parsed = parse_hospital_datetime(text)
+    if parsed is None:
         raise HTTPException(422, "recorded_at must be an ISO date and time, for example 2026-10-19T06:00:00")
-    if parsed.tzinfo is not None:
-        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
     return parsed
 
 

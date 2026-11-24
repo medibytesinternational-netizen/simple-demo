@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { get } from "../api";
+import { formatHospitalDateTime, hospitalDateKey } from "../dates";
 import { useEvidence } from "../components/Evidence";
 import { usePatientId } from "../session";
 import { buildTimelineQuery, hasFilters } from "../features/f16/filters";
@@ -22,8 +23,7 @@ function eventTone(type: string) {
 }
 
 function fmt(value: string) {
-  const date = new Date(value);
-  return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return formatHospitalDateTime(value, "en-GB", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 export function TimelinePage() {
@@ -252,18 +252,17 @@ function rowTone(tone: string): "ai" | "warning" | "critical" | undefined {
 }
 
 function timeOf(value: string) {
-  return new Date(value).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  return formatHospitalDateTime(value, "en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
 /** Presentational grouping of the already-filtered list; order is kept. */
 function groupByDay(events: TimelineEventF16[]) {
   const days: { key: string; label: string; events: TimelineEventF16[] }[] = [];
   for (const event of events) {
-    const date = new Date(event.occurred_at);
-    const key = date.toDateString();
+    const key = hospitalDateKey(event.occurred_at);
     const last = days[days.length - 1];
     if (last && last.key === key) last.events.push(event);
-    else days.push({ key, label: date.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" }), events: [event] });
+    else days.push({ key, label: formatHospitalDateTime(event.occurred_at, "en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }), events: [event] });
   }
   return days;
 }

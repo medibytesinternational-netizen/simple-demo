@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
-from ..services.identity import require
+from ..services.identity import current_patient_id, require
 from ..services.identity import acting_name
 from ..db import get_db, utcnow
 from ..models import (
@@ -48,6 +48,7 @@ def drafts(
     db: Session = Depends(get_db),
 ):
     stmt = select(Draft).order_by(Draft.created_at.desc()).limit(limit)
+    stmt = stmt.where(Draft.patient_id == current_patient_id())
     if feature:
         stmt = stmt.where(Draft.feature == feature)
     if encounter_id:

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../../api";
+import { formatHospitalDateTime } from "../../dates";
 import { Icon } from "../../components/icons";
 import { Modal } from "../../components/Modal";
 import { bannerTone } from "./types";
@@ -22,7 +23,7 @@ export default function IntegrationBanner() {
   const tone = bannerTone(status.data);
   const short = status.data.configured ? "Hospital link" : "No hospital link";
   const when = status.data.last_sync_at
-    ? new Date(status.data.last_sync_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    ? formatHospitalDateTime(status.data.last_sync_at, "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
     : "Never synced";
 
   return (

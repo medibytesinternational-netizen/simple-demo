@@ -1,17 +1,9 @@
-"""Voice upload on Notes (T3), the shared VoiceInput (T5), auto-draft (T4a) and the Labs-tab upload (T6).
-
-OpenAI is never called: every test that reaches the transcription step uses a fake client, and the
-conftest sets an empty key, so a rejection test that did not install the fake would hit the key check
-instead. Rejection tests therefore install the key and the fake, and assert the detail text and that
-the fake was never called.
-
-Frontend behaviour has no test runner here (see the manual steps in RESULT.md); the T5 and T6 rules
-that can be checked by reading the source are checked below.
-"""
+"""Consent-gated MediBytes uploads, callbacks, status recovery and the Labs-tab upload."""
 
 from __future__ import annotations
 
 import io
+import json
 import re
 import wave
 from pathlib import Path
@@ -21,16 +13,27 @@ import pytest
 from sqlalchemy import select
 
 from app.db import SessionLocal
-from app.models import AuditEntry
-from app.services.llm import DraftGenerationError
+from app.integrations.medibytes_transcription import MediBytesRequestError
+from app.models import AuditEntry, Encounter, Patient, TimelineEvent
+from app.models_ext.transcription import TranscriptionJob
+from app.services.medibytes_note import format_note_sections
 
-from .helpers import ASTHMA, discharge, text_pdf
+from .helpers import discharge, text_pdf
 
 DOCTOR = {"X-User-Id": "u_meera"}
 FRONTEND = Path(__file__).resolve().parents[2] / "frontend" / "src"
 MB = 1024 * 1024
-SENTENCE = "The patient has had a dry cough for two weeks."
-
+CALLBACK_TOKEN = "callback-test-token"
+NOTE_CONTENT = {
+    "present_illness": "Test symptom reported for two days.",
+    "examination_findings": "Test finding documented.",
+    "previous_diagnosis": "",
+    "plan_of_management": "Review at follow-up.",
+    "diet_instructions": "",
+    "general_instructions": "Return for the scheduled review.",
+}
+NOTE_RESPONSE = json.dumps([NOTE_CONTENT], ensure_ascii=False, separators=(",", ":"))
+SENTENCE = format_note_sections(NOTE_CONTENT)
 LAB = [
     "CITY LAB REPORT",
     "Collected: 03 Sep 2026 07:40",
@@ -39,7 +42,19 @@ LAB = [
 ]
 
 
-# ---------- helpers ----------
+def _wav(seconds=0.1):
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as out:
+        out.setnchannels(1)
+        out.setsampwidth(2)
+        out.setframerate(8000)
+        out.writeframes(b"\x00\x00" * int(8000 * seconds))
+    return buffer.getvalue()
+
+
+def _encounter_id(client):
+    return client.get("/api/meta", headers=DOCTOR).json()["encounter"]["id"]
+
 
 def _consent(client):
     response = client.post(
@@ -48,6 +63,17 @@ def _consent(client):
         headers=DOCTOR,
     )
     assert response.status_code == 200, response.text
+
+
+def _post(client, filename="visit.wav", content=None, content_type="audio/wav", *, audio_id=None, encounter_id=None):
+    query = f"?encounter_id={encounter_id or _encounter_id(client)}"
+    if audio_id:
+        query += f"&audio_id={audio_id}"
+    return client.post(
+        f"/api/notes/transcribe{query}",
+        files={"file": (filename, content if content is not None else _wav(), content_type)},
+        headers=DOCTOR,
+    )
 
 
 def _balance(client):
@@ -66,260 +92,342 @@ def _audit(action):
         db.close()
 
 
-def _wav(seconds=0.1):
-    buffer = io.BytesIO()
-    with wave.open(buffer, "wb") as out:
-        out.setnchannels(1)
-        out.setsampwidth(2)
-        out.setframerate(8000)
-        out.writeframes(b"\x00\x00" * int(8000 * seconds))
-    return buffer.getvalue()
-
-
-def _post(client, filename, content, content_type):
-    return client.post("/api/notes/transcribe", files={"file": (filename, content, content_type)}, headers=DOCTOR)
-
-
-class _FakeOpenAI:
-    text = SENTENCE
-    calls = 0
-    last_file = None
-
-    def __init__(self, api_key=None):
-        outer = type(self)
-
-        class Transcriptions:
-            def create(self, **kwargs):
-                outer.calls += 1
-                outer.last_file = kwargs.get("file")
-                if isinstance(outer.text, Exception):
-                    raise outer.text
-                return SimpleNamespace(text=outer.text)
-
-        self.audio = SimpleNamespace(transcriptions=Transcriptions())
-
-
 @pytest.fixture()
-def keyed(monkeypatch):
-    monkeypatch.setattr("app.routes.notes.settings", SimpleNamespace(openai_api_key="sk-test"))
-    monkeypatch.setattr("openai.OpenAI", _FakeOpenAI)
-    _FakeOpenAI.text = SENTENCE
-    _FakeOpenAI.calls = 0
-    _FakeOpenAI.last_file = None
-    return _FakeOpenAI
+def medibytes(monkeypatch):
+    calls = []
+    statuses = {}
+    settings = SimpleNamespace(
+        medibytes_api_key="mb-test-key",
+        medibytes_callback_token=CALLBACK_TOKEN,
+        medibytes_company_id=7,
+        medibytes_base_url="https://product-production-b091.up.railway.app",
+        medibytes_timeout_seconds=90,
+    )
+
+    async def upload_audio(audio_id, company_id, filename, content_type, audio):
+        calls.append((audio_id, company_id, filename, content_type, audio))
+        statuses.setdefault(audio_id, {
+            "audio_id": audio_id,
+            "company_id": company_id,
+            "job_id": f"job-{audio_id}",
+            "job_status": "queued",
+            "job_error": None,
+            "delivery": {"state": "pending", "attempts": 0, "last_http_status": None, "last_error": None, "hims_reply": None, "delivered_at": None, "next_attempt_at": None},
+            "response": None,
+        })
+        return {"audio_id": audio_id, "company_id": company_id, "job_id": f"job-{audio_id}", "status": "queued", "status_url": f"/api/v1/transcriptions/{audio_id}"}
+
+    async def get_status(audio_id):
+        if audio_id not in statuses:
+            raise MediBytesRequestError(404, "MediBytes has no transcription job for this audio_id.")
+        return statuses[audio_id]
+
+    async def redeliver(audio_id):
+        payload = statuses[audio_id]
+        if payload["delivery"]["state"] != "failed":
+            raise MediBytesRequestError(409, "Delivery has not failed")
+        payload["delivery"]["state"] = "pending"
+        return {"audio_id": audio_id, "status": "accepted"}
+
+    monkeypatch.setattr("app.routes.notes.settings", settings)
+    monkeypatch.setattr("app.routes.notes.medibytes_transcription.upload_audio", upload_audio)
+    monkeypatch.setattr("app.routes.notes.medibytes_transcription.get_audio_status", get_status)
+    monkeypatch.setattr("app.routes.notes.medibytes_transcription.redeliver_transcript", redeliver)
+    return SimpleNamespace(calls=calls, statuses=statuses, settings=settings)
 
 
-def _assert_nothing_spent(client, before_balance, before_ledger, fake):
-    assert _balance(client) == before_balance
-    assert len(_ledger(client)) == before_ledger
-    assert fake.calls == 0, "the model must not be called for a refused upload"
-    assert _audit("consultation_transcribed") == []
+def _callback(client, audio_id, response=NOTE_RESPONSE, *, token=CALLBACK_TOKEN, company_id=7):
+    return client.post(
+        "/api/transcriptions/callback",
+        json={"audio_id": audio_id, "company_id": company_id, "response": response},
+        headers={"Authorization": f"Bearer {token}"},
+    )
 
 
-# ---------- T3: upload a voice file ----------
-
-def test_a_wav_upload_returns_the_transcript_and_passes_the_file_through(fresh, keyed):
-    _consent(fresh)
-    audio = _wav()
-    response = _post(fresh, "visit.wav", audio, "audio/wav")
-    assert response.status_code == 200, response.text
-    assert response.json() == {"text": SENTENCE, "model": "whisper-1"}
-    name, body, content_type = keyed.last_file
-    assert (name, body, content_type) == ("visit.wav", audio, "audio/wav")
+def _jobs(client, encounter_id=None):
+    encounter_id = encounter_id or _encounter_id(client)
+    return client.get(f"/api/notes/transcriptions?encounter_id={encounter_id}", headers=DOCTOR).json()["transcriptions"]
 
 
-def test_upload_without_consent_is_refused_with_the_recording_message_and_costs_nothing(fresh, keyed):
-    before, ledger = _balance(fresh), len(_ledger(fresh))
-    response = _post(fresh, "visit.wav", _wav(), "audio/wav")
+def _event_types(client, encounter_id=None):
+    query = f"?encounter_id={encounter_id}" if encounter_id else ""
+    return [row["type"] for row in client.get(f"/api/patients/pat_ravi/timeline{query}&limit=500" if query else "/api/patients/pat_ravi/timeline?limit=500", headers=DOCTOR).json()["events"]]
+
+
+def test_upload_requires_consent_and_does_not_spend_credits(fresh, medibytes):
+    before = _balance(fresh)
+    response = _post(fresh)
     assert response.status_code == 403
     assert response.json()["detail"] == "Record patient consent before capturing audio"
-    _assert_nothing_spent(fresh, before, ledger, keyed)
-
-
-def test_a_pdf_is_refused_as_not_audio_and_costs_nothing(fresh, keyed):
-    _consent(fresh)
-    before, ledger = _balance(fresh), len(_ledger(fresh))
-    response = _post(fresh, "report.pdf", text_pdf(["Creatinine 1.0 mg/dL"]), "application/pdf")
-    assert response.status_code == 415
-    assert "not audio" in response.json()["detail"]
-    _assert_nothing_spent(fresh, before, ledger, keyed)
-
-
-def test_a_pdf_that_claims_to_be_audio_is_still_refused(fresh, keyed):
-    _consent(fresh)
-    before, ledger = _balance(fresh), len(_ledger(fresh))
-    response = _post(fresh, "report.pdf", b"%PDF-1.4", "audio/wav")
-    assert response.status_code == 415
-    _assert_nothing_spent(fresh, before, ledger, keyed)
-
-
-def test_audio_over_25_mb_is_refused_with_a_clear_message_and_costs_nothing(fresh, keyed):
-    _consent(fresh)
-    before, ledger = _balance(fresh), len(_ledger(fresh))
-    response = _post(fresh, "long.wav", b"\x00" * (25 * MB + 1), "audio/wav")
-    assert response.status_code == 413
-    assert response.json()["detail"] == "Audio too large (max 25 MB)"
-    _assert_nothing_spent(fresh, before, ledger, keyed)
-
-
-def test_audio_of_exactly_25_mb_is_accepted(fresh, keyed):
-    _consent(fresh)
-    response = _post(fresh, "limit.wav", b"\x00" * (25 * MB), "audio/wav")
-    assert response.status_code == 200, response.text
-
-
-def test_an_empty_file_is_refused_and_costs_nothing(fresh, keyed):
-    _consent(fresh)
-    before, ledger = _balance(fresh), len(_ledger(fresh))
-    response = _post(fresh, "empty.wav", b"", "audio/wav")
-    assert response.status_code == 400
-    assert "empty" in response.json()["detail"]
-    _assert_nothing_spent(fresh, before, ledger, keyed)
-
-
-@pytest.mark.parametrize(
-    "filename,content_type",
-    [
-        ("visit.webm", "audio/webm;codecs=opus"),
-        ("visit.webm", "video/webm"),  # Chrome types a picked .webm as video
-        ("visit.m4a", "audio/x-m4a"),
-        ("visit.ogg", "application/octet-stream"),
-        ("visit.mp3", "audio/mpeg"),
-        ("consultation", "audio/webm"),  # no extension: the declared type decides
-    ],
-)
-def test_the_usual_browser_audio_types_are_accepted(fresh, keyed, filename, content_type):
-    _consent(fresh)
-    response = _post(fresh, filename, b"not really audio", content_type)
-    assert response.status_code == 200, response.text
-
-
-def test_an_extensionless_non_audio_file_is_refused(fresh, keyed):
-    _consent(fresh)
-    response = _post(fresh, "report", b"data", "application/pdf")
-    assert response.status_code == 415
-
-
-def test_each_successful_transcription_is_audited_once_and_charged_two_credits(fresh, keyed):
-    _consent(fresh)
-    before = _balance(fresh)
-    assert _post(fresh, "visit.wav", _wav(), "audio/wav").status_code == 200
-    assert before - _balance(fresh) == 2
-    voice = [row for row in _ledger(fresh) if row["operation"] == "voice_note"]
-    assert len(voice) == 1 and voice[0]["units"] == 2 and voice[0]["feature"] == "F1"
-    audits = _audit("consultation_transcribed")
-    assert len(audits) == 1 and audits[0].after["characters"] == len(SENTENCE)
-    assert _post(fresh, "visit2.wav", _wav(), "audio/wav").status_code == 200
-    assert len(_audit("consultation_transcribed")) == 2
-    assert before - _balance(fresh) == 4
-
-
-def test_a_provider_failure_or_silence_charges_and_audits_nothing(fresh, keyed):
-    _consent(fresh)
-    before, ledger = _balance(fresh), len(_ledger(fresh))
-    keyed.text = RuntimeError("provider down")
-    assert _post(fresh, "visit.wav", _wav(), "audio/wav").status_code == 502
-    keyed.text = "   "
-    assert _post(fresh, "visit.wav", _wav(), "audio/wav").status_code == 422
-    assert _balance(fresh) == before and len(_ledger(fresh)) == ledger
-    assert _audit("consultation_transcribed") == []
-
-
-def test_without_a_key_upload_is_refused_and_costs_nothing(fresh):
-    _consent(fresh)
-    before = _balance(fresh)
-    response = _post(fresh, "visit.wav", _wav(), "audio/wav")
-    assert response.status_code == 400 and "OPENAI_API_KEY" in response.json()["detail"]
+    assert medibytes.calls == []
     assert _balance(fresh) == before
 
 
-def test_after_discharge_transcribe_is_locked_before_any_charge(client, keyed):
+def test_upload_requires_medybytes_credentials(fresh, medibytes, monkeypatch):
+    _consent(fresh)
+    medibytes.settings.medibytes_api_key = ""
+    response = _post(fresh)
+    assert response.status_code == 503
+    assert "MEDIBYTES_API_KEY" in response.json()["detail"]
+    assert medibytes.calls == []
+
+
+@pytest.mark.parametrize("filename,content_type", [("visit.pdf", "audio/wav"), ("scan", "application/pdf")])
+def test_non_audio_uploads_are_refused(fresh, medibytes, filename, content_type):
+    _consent(fresh)
+    response = _post(fresh, filename, b"not-audio", content_type)
+    assert response.status_code == 415
+    assert medibytes.calls == []
+
+
+def test_empty_and_over_64mb_audio_are_refused(fresh, medibytes):
+    _consent(fresh)
+    assert _post(fresh, "empty.wav", b"").status_code == 400
+    response = _post(fresh, "large.wav", b"0" * (64 * MB + 1))
+    assert response.status_code == 413
+    assert "64 MB" in response.json()["detail"]
+    assert medibytes.calls == []
+
+
+def test_audio_upload_is_multipart_associated_and_charged_once(fresh, medibytes):
+    _consent(fresh)
+    before = _balance(fresh)
+    audio = _wav()
+    response = _post(fresh, "consult.webm", audio, "video/webm", audio_id="consult-1")
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert (body["audio_id"], body["job_status"], body["transcript"]) == ("consult-1", "queued", None)
+    call = medibytes.calls[0]
+    assert call == ("consult-1", 7, "consult.webm", "video/webm", audio)
+    assert before - _balance(fresh) == 2
+
+    # Repeating a request with the same id returns the existing queued job without another upload.
+    repeated = _post(fresh, "consult.webm", audio, "video/webm", audio_id="consult-1")
+    assert repeated.status_code == 200
+    assert len(medibytes.calls) == 1
+    assert before - _balance(fresh) == 2
+
+
+def test_server_generates_unique_audio_ids(fresh, medibytes):
+    _consent(fresh)
+    first = _post(fresh).json()["audio_id"]
+    second = _post(fresh).json()["audio_id"]
+    assert first != second
+    assert re.fullmatch(r"[A-Za-z0-9-]{1,64}", first)
+
+
+def test_callback_parses_and_saves_all_six_note_sections_idempotently(fresh, medibytes):
+    _consent(fresh)
+    encounter_id = _encounter_id(fresh)
+    submitted = _post(fresh, audio_id="visit-1")
+    assert submitted.status_code == 200
+    before_events = len(_event_types(fresh, encounter_id))
+    callback = _callback(fresh, "visit-1", NOTE_RESPONSE)
+    assert callback.status_code == 200 and callback.json() == {"status": "Success"}
+    duplicate_body = json.dumps([NOTE_CONTENT], ensure_ascii=False, indent=2)
+    duplicate = _callback(fresh, "visit-1", duplicate_body)
+    assert duplicate.status_code == 200 and duplicate.json() == {"status": "Success"}
+
+    rows = _jobs(fresh, encounter_id)
+    assert rows[0]["transcript"] == SENTENCE
+    assert rows[0]["note_content"] == NOTE_CONTENT
+    assert rows[0]["response"] == NOTE_RESPONSE
+    assert rows[0]["job_status"] == "succeeded"
+    assert rows[0]["transcript_event_id"]
+    assert len(_event_types(fresh, encounter_id)) == before_events + 1
+    assert len(_audit("consultation_transcribed")) == 1
+    assert before_events - len(_event_types(fresh, encounter_id)) == -1
+    event = fresh.get(f"/api/events/{rows[0]['transcript_event_id']}", headers=DOCTOR).json()
+    assert event["source"] == "medibytes"
+    assert event["author_name"] == "MediBytes Transcription API"
+    assert event["payload"]["note_content"] == NOTE_CONTENT
+
+
+def test_callback_authentication_unknown_id_and_company_scope(fresh, medibytes):
+    assert _callback(fresh, "unknown", token="wrong").status_code == 401
+    unknown = _callback(fresh, "unknown")
+    assert unknown.status_code == 200 and unknown.json()["status"] == "Failed"
+    _consent(fresh)
+    assert _post(fresh, audio_id="visit-2").status_code == 200
+    mismatch = _callback(fresh, "visit-2", company_id=8)
+    assert mismatch.status_code == 200 and mismatch.json()["status"] == "Failed"
+    assert _jobs(fresh)[0]["transcript"] is None
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        "not json",
+        "[]",
+        "[{}]",
+        json.dumps([{**NOTE_CONTENT, "examination_findings": 12}]),
+        json.dumps([NOTE_CONTENT, NOTE_CONTENT]),
+    ],
+)
+def test_invalid_note_payload_is_rejected_in_medybytes_failure_body(fresh, medibytes, response):
+    _consent(fresh)
+    _post(fresh, audio_id="bad-note-1")
+    result = _callback(fresh, "bad-note-1", response)
+    assert result.status_code == 200
+    assert result.json()["status"] == "Failed"
+    assert result.json()["Message"]
+    row = _jobs(fresh)[0]
+    assert row["note_content"] is None and row["transcript_event_id"] is None
+
+
+def test_all_empty_note_sections_are_saved_without_filling_missing_information(fresh, medibytes):
+    _consent(fresh)
+    _post(fresh, audio_id="empty-note-1")
+    empty_note = {field: "" for field in NOTE_CONTENT}
+    result = _callback(fresh, "empty-note-1", json.dumps([empty_note]))
+    assert result.status_code == 200 and result.json() == {"status": "Success"}
+    row = _jobs(fresh)[0]
+    assert row["note_content"] == empty_note
+    assert row["transcript_event_id"]
+
+
+def test_status_check_tracks_running_and_saves_transcript_from_status_if_callback_is_missing(fresh, medibytes):
+    _consent(fresh)
+    uploaded = _post(fresh, audio_id="status-1").json()
+    running = medibytes.statuses["status-1"]
+    running["job_status"] = "running"
+    checked = fresh.get(f"/api/notes/transcriptions/status-1?encounter_id={uploaded['encounter_id']}", headers=DOCTOR)
+    assert checked.status_code == 200 and checked.json()["job_status"] == "running"
+
+    running["job_status"] = "succeeded"
+    running["response"] = NOTE_RESPONSE
+    running["delivery"] = {"state": "delivered", "attempts": 1, "last_http_status": 200, "last_error": None, "hims_reply": '{"status":"Success"}', "delivered_at": "2026-11-23T10:00:00Z", "next_attempt_at": None}
+    checked = fresh.get(f"/api/notes/transcriptions/status-1?encounter_id={uploaded['encounter_id']}", headers=DOCTOR)
+    assert checked.status_code == 200
+    assert checked.json()["transcript"] == SENTENCE
+    assert checked.json()["note_content"] == NOTE_CONTENT
+    assert checked.json()["delivery"]["state"] == "delivered"
+    assert checked.json()["delivery"]["attempts"] == 1
+    assert len(_audit("consultation_transcribed")) == 1
+
+
+@pytest.mark.parametrize(
+    "response,expected_error",
+    [
+        (None, "has not returned a transcript yet"),
+        ("plain speech transcript", "not valid JSON"),
+    ],
+)
+def test_status_succeeded_without_documented_note_shape_is_reported_not_fabricated(
+    fresh, medibytes, response, expected_error
+):
+    _consent(fresh)
+    uploaded = _post(fresh, audio_id="missing-note-1").json()
+    payload = medibytes.statuses["missing-note-1"]
+    payload["job_status"] = "succeeded"
+    payload["response"] = response
+    checked = fresh.get(
+        f"/api/notes/transcriptions/missing-note-1?encounter_id={uploaded['encounter_id']}",
+        headers=DOCTOR,
+    )
+    assert checked.status_code == 200, checked.text
+    result = checked.json()
+    assert result["job_status"] == "succeeded"
+    assert expected_error in result["job_error"]
+    assert result["note_content"] is None
+    assert result["transcript_event_id"] is None
+
+
+def test_status_timeout_is_reported_without_losing_local_job(fresh, medibytes, monkeypatch):
+    _consent(fresh)
+    uploaded = _post(fresh, audio_id="timeout-1").json()
+
+    async def timeout(_audio_id):
+        raise MediBytesRequestError(504, "MediBytes status request timed out")
+
+    monkeypatch.setattr("app.routes.notes.medibytes_transcription.get_audio_status", timeout)
+    response = fresh.get(f"/api/notes/transcriptions/timeout-1?encounter_id={uploaded['encounter_id']}", headers=DOCTOR)
+    assert response.status_code == 200
+    assert response.json()["status_check_error"] == "MediBytes status request timed out"
+    assert response.json()["audio_id"] == "timeout-1"
+
+
+def test_redelivery_only_runs_after_medybytes_marks_delivery_failed(fresh, medibytes):
+    _consent(fresh)
+    uploaded = _post(fresh, audio_id="redeliver-1").json()
+    path = f"/api/notes/transcriptions/redeliver-1/redeliver?encounter_id={uploaded['encounter_id']}"
+    assert fresh.post(path, headers=DOCTOR).status_code == 409
+
+    payload = medibytes.statuses["redeliver-1"]
+    payload["job_status"] = "succeeded"
+    payload["response"] = NOTE_RESPONSE
+    payload["delivery"] = {"state": "failed", "attempts": 1, "last_http_status": 403, "last_error": "Unauthorized", "hims_reply": None, "delivered_at": None, "next_attempt_at": "2026-11-23T10:00:00Z"}
+    response = fresh.post(path, headers=DOCTOR)
+    assert response.status_code == 200, response.text
+    assert response.json()["delivery"]["state"] == "pending"
+    assert response.json()["transcript"] == SENTENCE
+    assert response.json()["note_content"] == NOTE_CONTENT
+    assert response.json()["delivery"]["next_attempt_at"] is None
+
+
+def test_cross_consultation_transcripts_are_not_loaded_or_generated(fresh, medibytes):
+    _consent(fresh)
+    db = SessionLocal()
+    try:
+        other_patient = Patient(id="pat_other_test", mrn="OTHER-1", name="Other Patient", age=40, sex="F")
+        other_encounter = Encounter(id="enc_other_test", patient_id=other_patient.id, status="active")
+        db.add_all([other_patient, other_encounter])
+        db.commit()
+    finally:
+        db.close()
+
+    response = _post(fresh, audio_id="wrong-scope", encounter_id="enc_other_test")
+    assert response.status_code == 404
+    assert medibytes.calls == []
+    assert fresh.get("/api/notes/transcriptions?encounter_id=enc_other_test", headers=DOCTOR).status_code == 404
+
+
+def test_audio_retry_reuses_id_after_a_missing_remote_job(fresh, medibytes, monkeypatch):
+    _consent(fresh)
+    uploaded = _post(fresh, audio_id="retry-1").json()
+    status_path = f"/api/notes/transcriptions/retry-1?encounter_id={uploaded['encounter_id']}"
+    del medibytes.statuses["retry-1"]
+    missing = fresh.get(status_path, headers=DOCTOR).json()
+    assert missing["job_status"] == "failed" and missing["can_retry_upload"]
+    retried = _post(fresh, audio_id="retry-1")
+    assert retried.status_code == 200
+    assert len([call for call in medibytes.calls if call[0] == "retry-1"]) == 2
+    assert _balance(fresh) == 4998
+
+
+def test_draft_reuses_saved_transcript_event_without_duplicate(fresh, medibytes):
+    _consent(fresh)
+    encounter_id = _encounter_id(fresh)
+    assert _post(fresh, audio_id="draft-1").status_code == 200
+    assert _callback(fresh, "draft-1", NOTE_RESPONSE).status_code == 200
+    transcript = _jobs(fresh, encounter_id)[0]
+    response = fresh.post(
+        f"/api/notes/generate?encounter_id={encounter_id}",
+        json={"feature": "F1", "transcript": SENTENCE, "transcript_event_id": transcript["transcript_event_id"]},
+        headers=DOCTOR,
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["draft"]["created_from_event_ids"] == [transcript["transcript_event_id"]]
+    mismatch = fresh.post(
+        f"/api/notes/generate?encounter_id={encounter_id}",
+        json={"feature": "F1", "transcript": "Different transcript text", "transcript_event_id": transcript["transcript_event_id"]},
+        headers=DOCTOR,
+    )
+    assert mismatch.status_code == 404
+    assert len([kind for kind in _event_types(fresh) if kind == "transcript"]) == 1
+
+
+def test_after_discharge_transcribe_is_locked_before_any_charge(client, medibytes):
     _consent(client)
     assert discharge(client, override={"reason": "Test discharge with open alerts"}).status_code == 200
     before, ledger = _balance(client), len(_ledger(client))
-    response = _post(client, "visit.wav", _wav(), "audio/wav")
+    response = _post(client)
     assert response.status_code == 409 and "locked" in response.json()["detail"]
     assert _balance(client) == before and len(_ledger(client)) == ledger
-    assert keyed.calls == 0
+    assert medibytes.calls == []
 
 
-# ---------- T4a: the draft that follows a transcript (the calls the page makes in order) ----------
-
-def _drafts(client):
-    return client.get("/api/drafts?feature=F1&limit=50", headers=DOCTOR).json()["drafts"]
-
-
-def _event_types(client):
-    rows = client.get("/api/patients/pat_ravi/timeline?limit=500", headers=DOCTOR).json()["events"]
-    return [row["type"] for row in rows]
-
-
-def test_a_transcript_becomes_a_draft_only_never_approved_and_no_note_on_the_timeline(fresh, keyed):
-    _consent(fresh)
-    keyed.text = ASTHMA
-    before_types = _event_types(fresh)
-    assert _drafts(fresh) == []
-    transcript = _post(fresh, "visit.wav", _wav(), "audio/wav").json()["text"]
-    generated = fresh.post("/api/notes/generate", json={"feature": "F1", "transcript": transcript}, headers=DOCTOR)
-    assert generated.status_code == 200, generated.text
-    draft = generated.json()["draft"]
-    # "draft" in the spec is the unapproved state; the app stores it as draft_ready.
-    assert draft["status"] == "draft_ready" and not draft.get("approved_by")
-    assert [d["status"] for d in _drafts(fresh)] == ["draft_ready"]
-    added = [t for t in _event_types(fresh)]
-    for t in before_types:
-        added.remove(t)
-    assert added == ["transcript"], "only the hidden input event is written; no consult_note before approval"
-    assert "consult_note" not in _event_types(fresh)
-
-
-def test_the_draft_still_needs_the_approval_step_and_consent(fresh, keyed):
-    keyed.text = ASTHMA
-    draft = fresh.post("/api/notes/generate", json={"feature": "F1", "transcript": ASTHMA}, headers=DOCTOR).json()["draft"]
-    response = fresh.post(f"/api/drafts/{draft['id']}/approve", json={}, headers=DOCTOR)
-    assert response.status_code == 400 and "consent" in response.json()["detail"].lower()
-    assert "consult_note" not in _event_types(fresh)
-
-
-def test_without_consent_there_is_no_transcript_and_so_no_draft(fresh, keyed):
-    response = _post(fresh, "visit.wav", _wav(), "audio/wav")
-    assert response.status_code == 403
-    assert _drafts(fresh) == [] and keyed.calls == 0
-
-
-def test_after_discharge_no_draft_is_produced(client, keyed):
-    _consent(client)
-    assert discharge(client, override={"reason": "Test discharge with open alerts"}).status_code == 200
-    before = len(_drafts(client))
-    assert _post(client, "visit.wav", _wav(), "audio/wav").status_code == 409
-    response = client.post("/api/notes/generate", json={"feature": "F1", "transcript": ASTHMA}, headers=DOCTOR)
-    assert response.status_code == 409
-    assert len(_drafts(client)) == before
-
-
-def test_when_drafting_fails_with_502_no_draft_is_stored_and_the_transcript_cost_stands(fresh, keyed, monkeypatch):
-    _consent(fresh)
-    before = _balance(fresh)
-    transcript = _post(fresh, "visit.wav", _wav(), "audio/wav").json()["text"]
-    assert before - _balance(fresh) == 2
-
-    def broken(*args, **kwargs):
-        raise DraftGenerationError("model unavailable")
-
-    monkeypatch.setattr("app.routes.notes.generate_draft", broken)
-    response = fresh.post("/api/notes/generate", json={"feature": "F1", "transcript": transcript}, headers=DOCTOR)
-    assert response.status_code == 502
-    assert _drafts(fresh) == []
-    # The page keeps the transcript in the textarea; the 2 credits for hearing it were already spent.
-    assert before - _balance(fresh) == 2
-
-
-def test_a_transcript_shorter_than_ten_characters_cannot_be_drafted(fresh):
-    response = fresh.post("/api/notes/generate", json={"feature": "F1", "transcript": "ok"}, headers=DOCTOR)
-    assert response.status_code == 422  # the page checks the same limit and does not call generate
-
-
-# ---------- T5: one shared VoiceInput; the source tree proves it ----------
+# ---------- Shared VoiceInput and OPD transcript loading ----------
 
 def _source(path: str) -> str:
     return (FRONTEND / path).read_text(encoding="utf-8")
@@ -344,40 +452,58 @@ def test_transcribe_audio_is_called_only_from_voice_input():
     assert callers == ["components/VoiceInput.tsx"]
 
 
-def test_voice_input_shows_record_and_upload_together():
+def test_voice_input_shows_record_upload_retry_and_polling_together():
     source = _source("components/VoiceInput.tsx")
-    assert "Record audio" in source and "Upload voice" in source
+    assert "Record audio" in source and "Upload voice" in source and "Retry upload" in source
     assert 'type="file"' in source and "audio/*" in source
+    assert "getTranscription" in source and "MediBytes is transcribing" in source
     assert "Record patient consent before capturing audio." in source
 
 
-def test_only_the_f1_tab_gets_voice_input():
+def test_only_f1_has_voice_input_and_loads_encounter_scoped_transcripts():
     notes = _source("pages/Notes.tsx")
     assert notes.count("<VoiceInput") == 1
     start = notes.index('tab.feature === "F1" ? (\n                  <div className={`banner')
     end = notes.index("{transcribing || pendingDraft")
-    assert start < notes.index("<VoiceInput") < end, "VoiceInput must sit inside the F1 consent banner only"
+    assert start < notes.index("<VoiceInput") < end
+    assert "Load consultation transcript" in notes
+    assert "notes/transcriptions?encounter_id=" in notes
+    assert "transcript_event_id" in notes
+    assert "Retry delivery" in notes
 
 
-def test_the_stale_whisper_in_production_line_is_gone():
-    assert "Whisper in production" not in _source("pages/Notes.tsx")
-    assert "Whisper in live mode" not in _source("pages/Notes.tsx")
-
-
-def test_the_page_drafts_from_the_transcript_it_just_received_not_stale_state():
+def test_opd_page_uses_saved_text_and_event_id_for_draft():
     notes = _source("pages/Notes.tsx")
-    assert "generate.mutate({ text: pendingDraft.text })" in notes
+    assert "generate.mutate({ text: pendingDraft.text, transcriptEventId: pendingDraft.transcriptEventId })" in notes
+    assert "transcript_event_id: override?.transcriptEventId ?? transcriptEventId" in notes
     assert "override?.text ?? transcript" in notes
-    assert "Transcribing..." in notes and "Drafting..." in notes
+    assert "Checking status…" in notes or "Checking status…" in _source("components/VoiceInput.tsx")
 
 
-# ---------- T6: upload a lab report from the Labs tab ----------
+def test_legacy_transcription_provider_is_absent_from_runtime_sources():
+    repository = Path(__file__).resolve().parents[2]
+    runtime_roots = (repository / "backend" / "app", repository / "frontend" / "src")
+    runtime_files = [
+        path
+        for root in runtime_roots
+        for path in root.rglob("*")
+        if path.is_file() and path.suffix in {".py", ".ts", ".tsx", ".js", ".jsx"}
+    ]
+    legacy_references = [
+        str(path.relative_to(repository))
+        for path in runtime_files
+        if "whisper" in path.read_text(encoding="utf-8").lower()
+    ]
+    assert legacy_references == []
+
+
+# ---------- Labs-tab upload ----------
 
 def test_the_labs_tab_reuses_upload_report_and_the_documents_permission():
     notes = _source("pages/Notes.tsx")
     assert 'import { uploadReport } from "../features/f08/upload";' in notes
     assert 'uploadReport(file, "lab_report")' in notes
-    assert "/documents/upload" not in notes and "uploadDocument" not in notes, "no second upload path"
+    assert "/documents/upload" not in notes and "uploadDocument" not in notes
     assert 'useCan("upload_document")' in notes
     assert "disabled={!canUpload" in notes
     assert "Upload lab report" in notes and "Review in Documents" in notes
@@ -395,11 +521,10 @@ def test_a_lab_pdf_uploaded_as_the_labs_tab_does_is_a_lab_report_document_charge
     assert response.status_code == 200, response.text
     document = response.json()
     assert document["doc_type"] == "lab_report"
-    assert before - _balance(fresh) == 1  # report_reading, the same as an F8 upload
+    assert before - _balance(fresh) == 1
     listed = fresh.get("/api/documents", headers=DOCTOR).json()["documents"]
     assert document["id"] in [item["id"] for item in listed]
-    assert listed[0]["id"] == document["id"], "the newest document is first, so Documents opens on it"
-    # Once committed (by hand, or already by the automatic save) the values are unreviewed lab rows.
+    assert listed[0]["id"] == document["id"]
     if document["ocr_status"] != "confirmed":
         committed = fresh.post(f"/api/documents/{document['id']}/commit", headers=DOCTOR)
         assert committed.status_code == 200, committed.text

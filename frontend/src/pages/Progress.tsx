@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { get } from "../api";
+import { formatHospitalDateTime, formatHospitalTime } from "../dates";
 import { useEvidence } from "../components/Evidence";
 import { usePatientId } from "../session";
 import { Skeleton } from "../components/ui";
@@ -56,8 +57,8 @@ function Bar({ label, done, total, note }: { label: string; done: number; total:
   );
 }
 
-const time = (v?: string | null) => (v ? new Date(v).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "-");
-const longDay = (v: string) => new Date(`${v}T00:00:00`).toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+const time = (v?: string | null) => (v ? formatHospitalTime(v, "en-GB") : "-");
+const longDay = (v: string) => formatHospitalDateTime(v, "en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
 
 export function ProgressPage() {
   const patientId = usePatientId();

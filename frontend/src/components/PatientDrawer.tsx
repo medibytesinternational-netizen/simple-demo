@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../api";
+import { formatHospitalDateTime } from "../dates";
 import type { DocumentSummary } from "../types";
 
 type DocumentRecord = DocumentSummary & { image_url?: string | null };
@@ -23,7 +24,7 @@ function fmtSize(bytes: number) {
 }
 
 function fmtDate(value?: string | null) {
-  return value ? new Date(value).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Not recorded";
+  return value ? formatHospitalDateTime(value, "en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Not recorded";
 }
 
 export function PatientDrawer({ row, onClose, onEdit }: { row: DirectoryRow; onClose: () => void; onEdit?: () => void }) {

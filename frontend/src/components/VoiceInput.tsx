@@ -1,25 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { transcribeAudio } from "../api";
+import { ApiError, getTranscription, transcribeAudio, type MediBytesNote, type TranscriptionJob } from "../api";
 
-// The only place in the app that captures voice. Record and Upload always come together: a screen that
-// needs voice uses this component, so it cannot get one without the other.
-
-const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
-const AUDIO_EXTENSIONS = ["mp3", "wav", "m4a", "webm", "ogg", "oga", "mp4", "mpeg", "mpga", "flac"];
+const MAX_AUDIO_BYTES = 64 * 1024 * 1024;
+const AUDIO_EXTENSIONS = ["mp3", "wav", "m4a", "mp4", "aac", "flac", "ogg", "webm"];
 export const CONSENT_MESSAGE = "Record patient consent before capturing audio.";
+const POLL_INTERVAL_MS = 5000;
+const MAX_POLL_ATTEMPTS = 180;
 
 export type VoiceSource = "record" | "upload";
 
+type RetryUpload = { blob: Blob; filename: string; source: VoiceSource; audioId: string };
 type Props = {
-  /** Audio capture is blocked, for both Record and Upload, until this is true. */
   consentGranted: boolean;
-  /** Another step (for example drafting) is running; both buttons wait. */
+  encounterId: string;
   disabled?: boolean;
-  /** Called with the transcript when transcription succeeds. */
-  onTranscript: (text: string, source: VoiceSource) => void;
-  /** True while recording or while the transcription request runs. */
+  onTranscript: (text: string, source: VoiceSource, transcriptEventId: string, audioId: string, noteContent: MediBytesNote) => void;
   onBusyChange?: (busy: boolean) => void;
-  /** True only while the transcription request runs ("Transcribing..."). */
   onTranscribingChange?: (transcribing: boolean) => void;
 };
 
@@ -30,23 +26,34 @@ function looksLikeAudio(file: File): boolean {
   return (file.type || "").toLowerCase().startsWith("audio/");
 }
 
-export function VoiceInput({ consentGranted, disabled, onTranscript, onBusyChange, onTranscribingChange }: Props) {
+function newAudioId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  const bytes = new Uint8Array(16);
+  globalThis.crypto.getRandomValues(bytes);
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+export function VoiceInput({ consentGranted, encounterId, disabled, onTranscript, onBusyChange, onTranscribingChange }: Props) {
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState("");
+  const [job, setJob] = useState<TranscriptionJob | null>(null);
+  const [retryUpload, setRetryUpload] = useState<RetryUpload | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const mountedRef = useRef(true);
-  // Callbacks are read through a ref so a transcript that arrives later reaches the current handler.
   const callbacks = useRef({ onTranscript, onBusyChange, onTranscribingChange });
   callbacks.current = { onTranscript, onBusyChange, onTranscribingChange };
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
-      // Leaving the screen drops the recording and any transcript still on its way.
       mountedRef.current = false;
       const recorder = recorderRef.current;
       if (recorder && recorder.state !== "inactive") {
@@ -58,22 +65,51 @@ export function VoiceInput({ consentGranted, disabled, onTranscript, onBusyChang
   }, []);
 
   const busy = recording || transcribing;
-  useEffect(() => {
-    callbacks.current.onBusyChange?.(busy);
-  }, [busy]);
-  useEffect(() => {
-    callbacks.current.onTranscribingChange?.(transcribing);
-  }, [transcribing]);
+  useEffect(() => callbacks.current.onBusyChange?.(busy), [busy]);
+  useEffect(() => callbacks.current.onTranscribingChange?.(transcribing), [transcribing]);
 
-  const transcribe = async (body: Blob, filename: string | undefined, source: VoiceSource) => {
+  const transcribe = async (blob: Blob, filename: string, source: VoiceSource, audioId = newAudioId()) => {
+    if (!encounterId) {
+      setError("Open a consultation before submitting audio.");
+      return;
+    }
+    const pending: RetryUpload = { blob, filename, source, audioId };
+    setRetryUpload(null);
+    setError("");
+    setJob(null);
     setTranscribing(true);
     try {
-      const result = await transcribeAudio(body, filename);
-      if (!mountedRef.current) return;
-      setError("");
-      callbacks.current.onTranscript(result.text, source);
+      let current = await transcribeAudio(blob, filename, encounterId, audioId);
+      for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt += 1) {
+        if (!mountedRef.current) return;
+        setJob(current);
+        if (current.job_status === "failed") {
+          setError(current.job_error || "MediBytes could not transcribe this recording.");
+          if (current.can_retry_upload) setRetryUpload(pending);
+          return;
+        }
+        if (current.job_status === "succeeded" && current.transcript) {
+          setError("");
+          setRetryUpload(null);
+          if (!current.note_content) {
+            setError(current.job_error || "MediBytes completed this recording without the required six-section note.");
+            return;
+          }
+          callbacks.current.onTranscript(current.transcript, source, current.transcript_event_id || "", audioId, current.note_content);
+          return;
+        }
+        await wait(POLL_INTERVAL_MS);
+        if (!mountedRef.current) return;
+        current = await getTranscription(audioId, encounterId);
+      }
+      setError(current.job_status === "succeeded"
+        ? (current.job_error || "MediBytes completed this recording but has not returned its transcript yet. Check saved transcripts later.")
+        : "MediBytes is still processing this recording. It remains attached to this consultation; check saved transcripts later.");
+      setRetryUpload(pending);
     } catch (err: any) {
-      if (mountedRef.current) setError(String(err?.message || err));
+      if (!mountedRef.current) return;
+      setError(String(err?.message || err));
+      if (!(err instanceof ApiError) || err.status === 0 || err.status >= 500) setRetryUpload(pending);
     } finally {
       if (mountedRef.current) setTranscribing(false);
     }
@@ -99,7 +135,7 @@ export function VoiceInput({ consentGranted, disabled, onTranscript, onBusyChang
       recorder.onstop = () => {
         stream.getTracks().forEach((track) => track.stop());
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
-        void transcribe(blob, undefined, "record");
+        void transcribe(blob, "consultation.webm", "record");
       };
       recorder.start();
       recorderRef.current = recorder;
@@ -128,33 +164,47 @@ export function VoiceInput({ consentGranted, disabled, onTranscript, onBusyChang
     if (!file) return;
     setError("");
     if (!looksLikeAudio(file)) {
-      setError("Choose an audio file (mp3, wav, m4a, webm or ogg).");
+      setError("Choose wav, mp3, m4a, mp4, aac, flac, ogg or webm audio.");
       return;
     }
     if (file.size > MAX_AUDIO_BYTES) {
-      setError("Audio too large (max 25 MB).");
+      setError("Audio too large (max 64 MB).");
       return;
     }
     void transcribe(file, file.name, "upload");
   };
 
+  const retry = () => {
+    if (!retryUpload) return;
+    void transcribe(retryUpload.blob, retryUpload.filename, retryUpload.source, retryUpload.audioId);
+  };
+
+  const currentStatus = job?.job_status === "running"
+    ? "MediBytes is transcribing…"
+    : job?.job_status === "queued"
+      ? "Queued with MediBytes…"
+      : job?.job_status === "succeeded"
+        ? "Transcription completed; waiting for transcript delivery…"
+        : "Submitting to MediBytes…";
+
   return (
     <div className="flex-col gap-1">
       <div className="button-row">
         {recording ? (
-          <button type="button" className="btn btn-danger btn-sm" onClick={stopRecording}>Stop & transcribe</button>
+          <button type="button" className="btn btn-danger btn-sm" onClick={stopRecording}>Stop &amp; transcribe</button>
         ) : (
           <button type="button" className="btn btn-sm" onClick={startRecording} disabled={transcribing || disabled}>
-            {transcribing ? <><span className="spinner" /> Transcribing...</> : "Record audio"}
+            {transcribing ? <><span className="spinner" /> Checking status…</> : "Record audio"}
           </button>
         )}
         <button type="button" className="btn btn-sm" onClick={chooseFile} disabled={busy || disabled}>
           Upload voice
         </button>
+        {retryUpload ? <button type="button" className="btn btn-sm" onClick={retry} disabled={transcribing || disabled}>Retry upload</button> : null}
         <input
           ref={fileRef}
           type="file"
-          accept="audio/*,.mp3,.wav,.m4a,.webm,.ogg"
+          accept="audio/*,.mp3,.wav,.m4a,.mp4,.aac,.flac,.ogg,.webm"
           style={{ display: "none" }}
           onChange={(event) => {
             onFile(event.target.files?.[0]);
@@ -162,6 +212,7 @@ export function VoiceInput({ consentGranted, disabled, onTranscript, onBusyChang
           }}
         />
       </div>
+      {transcribing ? <div className="small muted" role="status">{currentStatus}</div> : null}
       {error ? <div className="small" role="alert" style={{ color: "var(--danger, #b42318)" }}>{error}</div> : null}
     </div>
   );

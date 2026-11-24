@@ -1,4 +1,5 @@
 import type { Provenance } from "./types";
+import { formatHospitalDateTime } from "../../dates";
 import { Pill } from "../../components/ui";
 
 type Facts = Provenance & { occurred_at: string; source: string; author_name: string };
@@ -11,7 +12,7 @@ export function ProvenanceFacts({ event }: { event: Facts }) {
         {event.ai_drafted ? "AI-drafted" : "Human-recorded"}
       </Pill>
       <span>{event.authorship}</span>
-      <time dateTime={event.occurred_at}>{new Date(event.occurred_at).toLocaleString()}</time>
+      <time dateTime={event.occurred_at}>{formatHospitalDateTime(event.occurred_at)}</time>
       <span title={event.source}>from {event.source_label}</span>
     </div>
   );

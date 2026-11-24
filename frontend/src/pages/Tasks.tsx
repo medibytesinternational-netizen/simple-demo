@@ -1,6 +1,7 @@
 import { Fragment, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, patch, post } from "../api";
+import { formatHospitalDateTime } from "../dates";
 import type { AppTask, Meta } from "../types";
 import { useEvidence } from "../components/Evidence";
 import { ReasonForm } from "../features/f15/ReasonForm";
@@ -35,7 +36,7 @@ type View = "open" | "done" | "all";
 const isUrgent = (t: AppTask) => t.priority === "urgent" || t.priority === "critical";
 const isOpen = (t: AppTask) => !["completed", "cancelled"].includes(t.status);
 const due = (v?: string | null) =>
-  v ? new Date(v).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "-";
+  v ? formatHospitalDateTime(v, "en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "-";
 
 export function TasksPage() {
   const queryClient = useQueryClient();

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
-import { get, post } from "../api";
+import { get, getTranscription, post, type MediBytesNote, type TranscriptionJob } from "../api";
 import type { Draft, Lab, Meta } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { VoiceInput } from "../components/VoiceInput";
@@ -14,6 +14,7 @@ import { ConsultNoteStatus, type ConsultGenerateResult } from "../features/f01/C
 import { PageHeader } from "../components/PageHeader";
 import { Stepper } from "../components/ui";
 import type { StepState } from "../components/ui";
+import { formatHospitalDateTime } from "../dates";
 
 const CONSULT_TRANSCRIPT = `Doctor: Mr Menon, what brings you in today?
 Ravi: My right leg has been swollen and red since Tuesday. It is warm and painful when I walk.
@@ -43,6 +44,14 @@ Doctor: No new breathlessness. I will review him on the ward round and complete 
 
 const AUTO_DRAFT_DELAY_S = 3;
 const MAX_REPORT_BYTES = 12 * 1024 * 1024;
+const MEDIBYTES_NOTE_SECTIONS: Array<[keyof MediBytesNote, string]> = [
+  ["present_illness", "Present illness"],
+  ["examination_findings", "Examination findings"],
+  ["previous_diagnosis", "Previous diagnosis"],
+  ["plan_of_management", "Plan of management"],
+  ["diet_instructions", "Diet instructions"],
+  ["general_instructions", "General instructions"],
+];
 
 type Tab = {
   key: string;
@@ -55,7 +64,7 @@ type Tab = {
 };
 
 const TABS: Tab[] = [
-  { key: "consult", label: "OPD consultation", feature: "F1", kind: "transcript", title: "OPD consultation", description: "Record or upload the consultation audio (with the patient's consent), or paste a transcript. The note drafts itself; you review, edit and sign it.", transcript: CONSULT_TRANSCRIPT },
+  { key: "consult", label: "OPD consultation", feature: "F1", kind: "transcript", title: "OPD consultation", description: "Record or upload consented consultation audio to receive MediBytes' six-section note for review. You can also paste a transcript to create a separate application draft.", transcript: CONSULT_TRANSCRIPT },
   { key: "admission", label: "Admission assessment", feature: "F2", kind: "transcript", title: "Admission assessment", description: "MediBytes Analysis prepares the admission note from the interview. Verify the allergy record before approving; proposed orders stay as reports.", transcript: ADMISSION_TRANSCRIPT },
   { key: "round", label: "Ward round", feature: "F3", kind: "transcript", title: "Ward round", description: "Dictate the round. The note, nursing-chart entries and proposed tasks are drafted; you choose which tasks to create.", transcript: ROUND_TRANSCRIPT },
   { key: "progress", label: "Progress note", feature: "F4", kind: "transcript", title: "Progress notes", description: "MediBytes Analysis identifies what changed since the last note. Examination and plan must be written by the clinician before signing.", transcript: PROGRESS_TRANSCRIPT },
@@ -94,37 +103,63 @@ export function NotesPage() {
   const tab = TABS.find((item) => item.key === tabKey) || TABS[0];
   const queryClient = useQueryClient();
   const [transcript, setTranscript] = useState<string>(tab.transcript);
+  const [transcriptEventId, setTranscriptEventId] = useState<string | null>(null);
+  const [loadedNote, setLoadedNote] = useState<MediBytesNote | null>(null);
   const [error, setError] = useState("");
   const [consultResult, setConsultResult] = useState<ConsultGenerateResult | null>(null);
   const [transcribing, setTranscribing] = useState(false);
   // A transcript waiting out the short cancel window before it is drafted.
-  const [pendingDraft, setPendingDraft] = useState<{ text: string; feature: string; left: number } | null>(null);
+  const [pendingDraft, setPendingDraft] = useState<{ text: string; feature: string; left: number; transcriptEventId: string | null } | null>(null);
   const voiceFeatureRef = useRef("");
   const [labResult, setLabResult] = useState<any>(null);
   const canUpload = useCan("upload_document");
+  const patientId = usePatientId();
+  const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
+  const activeEncounterId = meta.data?.encounter.id ?? "";
 
   useEffect(() => {
     setTranscript(tab.transcript);
+    setTranscriptEventId(null);
+    setLoadedNote(null);
     setError("");
     setConsultResult(null);
     setPendingDraft(null);
     setLabResult(null);
-  }, [tab.key]);
+  }, [tab.key, patientId, activeEncounterId]);
 
   const hasDraft = tab.kind !== "labs";
   const draftQuery = useQuery<{ drafts: Draft[] }>({
-    queryKey: ["drafts", tab.feature],
-    queryFn: () => get<{ drafts: Draft[] }>(`/drafts?feature=${tab.feature}&limit=1`),
-    enabled: hasDraft,
+    queryKey: ["drafts", patientId, activeEncounterId, tab.feature],
+    queryFn: () => get<{ drafts: Draft[] }>(`/drafts?feature=${tab.feature}&limit=1&encounter_id=${encodeURIComponent(activeEncounterId)}`),
+    enabled: hasDraft && !!patientId && !!activeEncounterId,
+  });
+  const transcriptions = useQuery<{ transcriptions: TranscriptionJob[] }>({
+    queryKey: ["transcriptions", patientId, activeEncounterId],
+    queryFn: async () => {
+      const listed = await get<{ transcriptions: TranscriptionJob[] }>(`/notes/transcriptions?encounter_id=${encodeURIComponent(activeEncounterId)}`);
+      const active = listed.transcriptions.filter((job) => job.job_status === "queued" || job.job_status === "running" || job.delivery.state === "pending");
+      if (!active.length) return listed;
+      const refreshed = await Promise.all(active.map(async (job) => {
+        try {
+          return await getTranscription(job.audio_id, activeEncounterId);
+        } catch (err: any) {
+          return { ...job, status_check_error: String(err?.message || "Could not check MediBytes status") };
+        }
+      }));
+      const byId = new Map(refreshed.map((job) => [job.audio_id, job]));
+      return { transcriptions: listed.transcriptions.map((job) => byId.get(job.audio_id) || job) };
+    },
+    enabled: tab.feature === "F1" && !!patientId && !!activeEncounterId,
+    refetchInterval: (query) => query.state.data?.transcriptions.some((job) =>
+      job.job_status === "queued" || job.job_status === "running" || job.delivery.state === "pending"
+    ) ? 10000 : false,
   });
   const labs = useQuery<{ labs: Lab[]; unreviewed: Lab[]; reviewed_count: number }>({
     queryKey: ["investigations"],
     queryFn: () => get("/investigations"),
     enabled: tab.kind === "labs",
   });
-  const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
   // New readings go to the active encounter, so the sheet is read for that encounter too.
-  const activeEncounterId = meta.data?.encounter.id ?? "";
   const icu = useQuery<{ entries: ICUEntry[]; shift_window: { start?: string; end?: string }; not_documented?: string[] }>({
     queryKey: ["icu-flow-sheet", activeEncounterId],
     queryFn: () => get(`/icu/flow-sheet?encounter_id=${encodeURIComponent(activeEncounterId)}`),
@@ -135,7 +170,6 @@ export function NotesPage() {
     queryFn: () => get("/referrals"),
     enabled: tab.kind === "referral",
   });
-  const patientId = usePatientId();
   const consents = useQuery<{ consents: Array<{ id: string; granted: boolean; consent_type: string; occurred_at: string }> }>({
     queryKey: ["consents", "notes", patientId],
     queryFn: () => get(`/patients/${patientId}/consents`),
@@ -154,27 +188,34 @@ export function NotesPage() {
     onError: (err: any) => setError(String(err?.message || err)),
   });
 
+  const redeliver = useMutation({
+    mutationFn: (audioId: string) => post<TranscriptionJob>(
+      `/notes/transcriptions/${encodeURIComponent(audioId)}/redeliver?encounter_id=${encodeURIComponent(activeEncounterId)}`,
+    ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["transcriptions", patientId, activeEncounterId] }),
+    onError: (err: any) => setError(String(err?.message || err)),
+  });
+
   // A transcript from VoiceInput (recording or upload) lands in the textarea first, so nothing is lost
   // if drafting fails, then drafts after a short window in which the clinician can cancel.
-  const onVoiceTranscript = (text: string) => {
+  const onVoiceTranscript = (text: string, _source: "record" | "upload", eventId: string, _audioId: string, noteContent: MediBytesNote) => {
     // The feature was pinned when transcription began; a transcript for another tab is dropped.
     if (voiceFeatureRef.current !== tab.feature) return;
     setTranscript(text);
+    setTranscriptEventId(eventId || null);
+    setLoadedNote(noteContent);
     setError("");
-    if (text.trim().length < 10) {
-      setError("Transcript is too short to draft. Edit it and press Generate draft.");
-      return;
-    }
-    setPendingDraft({ text, feature: tab.feature, left: AUTO_DRAFT_DELAY_S });
+    setPendingDraft(null);
   };
 
-  const generate = useMutation<any, Error, { text?: string } | undefined>({
+  const generate = useMutation<any, Error, { text?: string; transcriptEventId?: string | null } | undefined>({
     mutationFn: async (override) => {
       if (tab.kind === "transcript") {
-        return post<any>("/notes/generate", {
+        return post<any>(`/notes/generate?encounter_id=${encodeURIComponent(activeEncounterId)}`, {
           feature: tab.feature,
           transcript: override?.text ?? transcript,
           title: `${tab.title} transcript`,
+          transcript_event_id: override?.transcriptEventId ?? transcriptEventId,
         });
       }
       if (tab.kind === "icu") {
@@ -198,7 +239,7 @@ export function NotesPage() {
       return;
     }
     if (pendingDraft.left <= 0) {
-      generate.mutate({ text: pendingDraft.text });
+      generate.mutate({ text: pendingDraft.text, transcriptEventId: pendingDraft.transcriptEventId });
       setPendingDraft(null);
       return;
     }
@@ -257,8 +298,24 @@ export function NotesPage() {
     const next = TABS.find((item) => item.key === key) || TABS[0];
     setParams({ tab: key });
     setTranscript(next.transcript);
+    setTranscriptEventId(null);
+    setLoadedNote(null);
     setError("");
     setPendingDraft(null);
+  };
+
+  const loadTranscript = (job?: TranscriptionJob) => {
+    const saved = job || transcriptions.data?.transcriptions.find((item) => item.transcript && item.transcript_event_id);
+    if (!saved?.transcript || !saved.transcript_event_id || !saved.note_content) {
+      setError("No saved transcript is available for this patient and consultation yet.");
+      return;
+    }
+    setTranscript(saved.transcript);
+    setTranscriptEventId(saved.transcript_event_id);
+    setLoadedNote(saved.note_content);
+    setConsultResult(null);
+    setPendingDraft(null);
+    setError("");
   };
 
   const intro = useMemo(() => {
@@ -322,6 +379,8 @@ export function NotesPage() {
                   value={transcript}
                   onChange={(event) => {
                     setTranscript(event.target.value);
+                    setTranscriptEventId(null);
+                    setLoadedNote(null);
                     setPendingDraft(null);
                   }}
                 />
@@ -330,7 +389,7 @@ export function NotesPage() {
                     <div className="flex items-center justify-between gap-2">
                       <span>
                         {consentGranted
-                          ? "Consent is recorded. Record audio or upload an audio file; transcription needs the OpenAI key (live mode)."
+                          ? "Consent is recorded. Audio is sent securely to MediBytes for transcription."
                           : "Consent for consultation capture has not been recorded. Audio capture is blocked until it is."}
                       </span>
                       <div className="button-row">
@@ -341,9 +400,13 @@ export function NotesPage() {
                         ) : null}
                         <VoiceInput
                           consentGranted={consentGranted}
+                          encounterId={activeEncounterId}
                           disabled={generate.isPending || pendingDraft !== null}
                           onTranscribingChange={(active) => {
-                            if (active) voiceFeatureRef.current = tab.feature;
+                            if (active) {
+                              voiceFeatureRef.current = tab.feature;
+                              void queryClient.invalidateQueries({ queryKey: ["transcriptions", patientId, activeEncounterId] });
+                            }
                             setTranscribing(active);
                           }}
                           onTranscript={onVoiceTranscript}
@@ -367,12 +430,63 @@ export function NotesPage() {
                   </div>
                 ) : null}
                 <div className="button-row mt-2">
-                  <button className="btn btn-primary" onClick={() => generate.mutate()} disabled={generate.isPending || transcript.trim().length < 10}>
+                  <button className="btn btn-primary" onClick={() => generate.mutate()} disabled={generate.isPending || transcript.trim().length < 10 || !!loadedNote}>
                     {generate.isPending ? <><span className="spinner" /> Generating draft…</> : "Generate draft"}
                   </button>
-                  <button className="btn" onClick={() => setTranscript(tab.transcript)}>Load consultation transcript</button>
+                  <button className="btn" onClick={() => tab.feature === "F1" ? loadTranscript() : setTranscript(tab.transcript)} disabled={tab.feature === "F1" && transcriptions.isLoading}>
+                    {tab.feature === "F1" ? "Load consultation transcript" : "Load sample transcript"}
+                  </button>
+                  {tab.feature === "F1" ? <button className="btn" onClick={() => { setTranscript(CONSULT_TRANSCRIPT); setTranscriptEventId(null); setLoadedNote(null); setPendingDraft(null); }}>Load demo transcript</button> : null}
                   {tab.feature === "F1" ? <span className="small muted">Paste text, record, or upload an audio file.</span> : <span className="small muted">Paste or type the text; this tab has no voice input.</span>}
                 </div>
+                {loadedNote ? (
+                  <div className="banner mt-2" aria-label="MediBytes six-section note">
+                    <div className="strong mb-1">MediBytes six-section note · review before use</div>
+                    <div className="stack">
+                      {MEDIBYTES_NOTE_SECTIONS.map(([field, label]) => (
+                        <section key={field}>
+                          <div className="strong">{label}</div>
+                          <div className="small" style={{ whiteSpace: "pre-wrap" }}>
+                            {loadedNote[field] || <span className="muted">No content returned for this section.</span>}
+                          </div>
+                        </section>
+                      ))}
+                    </div>
+                    <div className="small muted mt-1">The note is saved with this consultation. Edit the text above to create a separate application draft.</div>
+                  </div>
+                ) : null}
+                {tab.feature === "F1" ? (
+                  <div className="banner mt-2">
+                    <div className="strong mb-1">Saved MediBytes notes for this consultation</div>
+                    {transcriptions.isLoading ? <div className="small muted">Loading saved transcripts…</div> : null}
+                    {transcriptions.isError ? <div className="small" role="alert">Could not load saved transcripts for this consultation.</div> : null}
+                    {!transcriptions.isLoading && !transcriptions.isError && !transcriptions.data?.transcriptions.length ? (
+                      <div className="small muted">No MediBytes notes have been saved for this consultation.</div>
+                    ) : null}
+                    <div className="stack">
+                      {transcriptions.data?.transcriptions.map((job) => (
+                        <div className="flex items-center justify-between gap-2" key={job.audio_id}>
+                          <span className="small">
+                            {job.filename} · {job.job_status}
+                            {job.delivery.state === "failed" ? " · delivery failed" : ""}
+                            {job.job_error ? ` · ${job.job_error}` : ""}
+                            {job.status_check_error ? ` · status check: ${job.status_check_error}` : ""}
+                          </span>
+                          <div className="button-row">
+                            {job.transcript && job.transcript_event_id ? (
+                              <button className="btn btn-sm" onClick={() => loadTranscript(job)}>Load</button>
+                            ) : null}
+                            {job.can_redeliver ? (
+                              <button className="btn btn-sm" onClick={() => redeliver.mutate(job.audio_id)} disabled={redeliver.isPending}>
+                                {redeliver.isPending ? "Retrying…" : "Retry delivery"}
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 {tab.feature === "F1" ? <ConsultNoteStatus result={consultResult} /> : null}
                 {tab.feature === "F1" || tab.feature === "F2" ? (
                   <div className="banner mt-3">
@@ -399,7 +513,7 @@ export function NotesPage() {
                         <td><span className="badge badge-neutral">{entry.category}</span></td>
                         <td>{entry.label}<div className="small muted">{entry.device}</div></td>
                         <td className="mono">{entry.value} {entry.unit}</td>
-                        <td className="small muted">{entry.recorded_at?.replace("T", " ").slice(0, 16)}</td>
+                        <td className="small muted">{formatHospitalDateTime(entry.recorded_at, "en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
                         <td className="mono small">{entry.source_event_id}</td>
                       </tr>
                     ))}
