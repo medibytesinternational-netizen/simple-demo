@@ -51,7 +51,7 @@ class Settings:
         "MEDIBYTES_BASE_URL", "https://product-production-b091.up.railway.app"
     )
     medibytes_company_id: int = _positive_int(os.getenv("MEDIBYTES_COMPANY_ID"), 1)
-    medibytes_timeout_seconds: float = _positive_float(os.getenv("MEDIBYTES_TIMEOUT_SECONDS"), 90.0)
+    medibytes_timeout_seconds: float = _positive_float(os.getenv("MEDIBYTES_TIMEOUT_SECONDS"), 120.0)
     demo_user: str = "Dr. Meera Shah"
     demo_role: str = "Attending physician"
 

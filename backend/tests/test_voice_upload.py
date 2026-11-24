@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import json
 import re
 import wave
 from pathlib import Path
@@ -15,6 +16,7 @@ from app.db import SessionLocal
 from app.integrations.medibytes_transcription import MediBytesRequestError
 from app.models import AuditEntry, Encounter, Patient, TimelineEvent
 from app.models_ext.transcription import TranscriptionJob
+from app.services.medibytes_note import format_note_sections
 
 from .helpers import discharge, text_pdf
 
@@ -22,7 +24,16 @@ DOCTOR = {"X-User-Id": "u_meera"}
 FRONTEND = Path(__file__).resolve().parents[2] / "frontend" / "src"
 MB = 1024 * 1024
 CALLBACK_TOKEN = "callback-test-token"
-SENTENCE = "Patient reports a dry cough for two weeks."
+NOTE_CONTENT = {
+    "present_illness": "Test symptom reported for two days.",
+    "examination_findings": "Test finding documented.",
+    "previous_diagnosis": "",
+    "plan_of_management": "Review at follow-up.",
+    "diet_instructions": "",
+    "general_instructions": "Return for the scheduled review.",
+}
+NOTE_RESPONSE = json.dumps([NOTE_CONTENT], ensure_ascii=False, separators=(",", ":"))
+SENTENCE = format_note_sections(NOTE_CONTENT)
 LAB = [
     "CITY LAB REPORT",
     "Collected: 03 Sep 2026 07:40",
@@ -101,7 +112,7 @@ def medibytes(monkeypatch):
             "job_id": f"job-{audio_id}",
             "job_status": "queued",
             "job_error": None,
-            "delivery": {"state": "pending", "attempts": 0, "last_http_status": None, "last_error": None, "hims_reply": None, "delivered_at": None},
+            "delivery": {"state": "pending", "attempts": 0, "last_http_status": None, "last_error": None, "hims_reply": None, "delivered_at": None, "next_attempt_at": None},
             "response": None,
         })
         return {"audio_id": audio_id, "company_id": company_id, "job_id": f"job-{audio_id}", "status": "queued", "status_url": f"/api/v1/transcriptions/{audio_id}"}
@@ -125,7 +136,7 @@ def medibytes(monkeypatch):
     return SimpleNamespace(calls=calls, statuses=statuses, settings=settings)
 
 
-def _callback(client, audio_id, response=SENTENCE, *, token=CALLBACK_TOKEN, company_id=7):
+def _callback(client, audio_id, response=NOTE_RESPONSE, *, token=CALLBACK_TOKEN, company_id=7):
     return client.post(
         "/api/transcriptions/callback",
         json={"audio_id": audio_id, "company_id": company_id, "response": response},
@@ -205,35 +216,74 @@ def test_server_generates_unique_audio_ids(fresh, medibytes):
     assert re.fullmatch(r"[A-Za-z0-9-]{1,64}", first)
 
 
-def test_callback_saves_exact_transcript_against_original_consultation_once(fresh, medibytes):
+def test_callback_parses_and_saves_all_six_note_sections_idempotently(fresh, medibytes):
     _consent(fresh)
     encounter_id = _encounter_id(fresh)
     submitted = _post(fresh, audio_id="visit-1")
     assert submitted.status_code == 200
     before_events = len(_event_types(fresh, encounter_id))
-    text = "  Patient reports cough. Temperature recorded as heard.  "
-
-    callback = _callback(fresh, "visit-1", text)
-    assert callback.status_code == 200 and callback.json() == {"status": "Received", "duplicate": False}
-    duplicate = _callback(fresh, "visit-1", text)
-    assert duplicate.status_code == 200 and duplicate.json()["duplicate"] is True
+    callback = _callback(fresh, "visit-1", NOTE_RESPONSE)
+    assert callback.status_code == 200 and callback.json() == {"status": "Success"}
+    duplicate_body = json.dumps([NOTE_CONTENT], ensure_ascii=False, indent=2)
+    duplicate = _callback(fresh, "visit-1", duplicate_body)
+    assert duplicate.status_code == 200 and duplicate.json() == {"status": "Success"}
 
     rows = _jobs(fresh, encounter_id)
-    assert rows[0]["transcript"] == text
+    assert rows[0]["transcript"] == SENTENCE
+    assert rows[0]["note_content"] == NOTE_CONTENT
+    assert rows[0]["response"] == NOTE_RESPONSE
     assert rows[0]["job_status"] == "succeeded"
     assert rows[0]["transcript_event_id"]
     assert len(_event_types(fresh, encounter_id)) == before_events + 1
     assert len(_audit("consultation_transcribed")) == 1
     assert before_events - len(_event_types(fresh, encounter_id)) == -1
+    event = fresh.get(f"/api/events/{rows[0]['transcript_event_id']}", headers=DOCTOR).json()
+    assert event["source"] == "medibytes"
+    assert event["author_name"] == "MediBytes Transcription API"
+    assert event["payload"]["note_content"] == NOTE_CONTENT
 
 
 def test_callback_authentication_unknown_id_and_company_scope(fresh, medibytes):
     assert _callback(fresh, "unknown", token="wrong").status_code == 401
-    assert _callback(fresh, "unknown").status_code == 404
+    unknown = _callback(fresh, "unknown")
+    assert unknown.status_code == 200 and unknown.json()["status"] == "Failed"
     _consent(fresh)
     assert _post(fresh, audio_id="visit-2").status_code == 200
-    assert _callback(fresh, "visit-2", company_id=8).status_code == 409
+    mismatch = _callback(fresh, "visit-2", company_id=8)
+    assert mismatch.status_code == 200 and mismatch.json()["status"] == "Failed"
     assert _jobs(fresh)[0]["transcript"] is None
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        "not json",
+        "[]",
+        "[{}]",
+        json.dumps([{**NOTE_CONTENT, "examination_findings": 12}]),
+        json.dumps([NOTE_CONTENT, NOTE_CONTENT]),
+    ],
+)
+def test_invalid_note_payload_is_rejected_in_medybytes_failure_body(fresh, medibytes, response):
+    _consent(fresh)
+    _post(fresh, audio_id="bad-note-1")
+    result = _callback(fresh, "bad-note-1", response)
+    assert result.status_code == 200
+    assert result.json()["status"] == "Failed"
+    assert result.json()["Message"]
+    row = _jobs(fresh)[0]
+    assert row["note_content"] is None and row["transcript_event_id"] is None
+
+
+def test_all_empty_note_sections_are_saved_without_filling_missing_information(fresh, medibytes):
+    _consent(fresh)
+    _post(fresh, audio_id="empty-note-1")
+    empty_note = {field: "" for field in NOTE_CONTENT}
+    result = _callback(fresh, "empty-note-1", json.dumps([empty_note]))
+    assert result.status_code == 200 and result.json() == {"status": "Success"}
+    row = _jobs(fresh)[0]
+    assert row["note_content"] == empty_note
+    assert row["transcript_event_id"]
 
 
 def test_status_check_tracks_running_and_saves_transcript_from_status_if_callback_is_missing(fresh, medibytes):
@@ -245,14 +295,42 @@ def test_status_check_tracks_running_and_saves_transcript_from_status_if_callbac
     assert checked.status_code == 200 and checked.json()["job_status"] == "running"
 
     running["job_status"] = "succeeded"
-    running["response"] = SENTENCE
-    running["delivery"] = {"state": "delivered", "attempts": 1, "last_http_status": 200, "last_error": None, "hims_reply": "saved", "delivered_at": "2026-11-23T10:00:00Z"}
+    running["response"] = NOTE_RESPONSE
+    running["delivery"] = {"state": "delivered", "attempts": 1, "last_http_status": 200, "last_error": None, "hims_reply": '{"status":"Success"}', "delivered_at": "2026-11-23T10:00:00Z", "next_attempt_at": None}
     checked = fresh.get(f"/api/notes/transcriptions/status-1?encounter_id={uploaded['encounter_id']}", headers=DOCTOR)
     assert checked.status_code == 200
     assert checked.json()["transcript"] == SENTENCE
+    assert checked.json()["note_content"] == NOTE_CONTENT
     assert checked.json()["delivery"]["state"] == "delivered"
     assert checked.json()["delivery"]["attempts"] == 1
     assert len(_audit("consultation_transcribed")) == 1
+
+
+@pytest.mark.parametrize(
+    "response,expected_error",
+    [
+        (None, "has not returned a transcript yet"),
+        ("plain speech transcript", "not valid JSON"),
+    ],
+)
+def test_status_succeeded_without_documented_note_shape_is_reported_not_fabricated(
+    fresh, medibytes, response, expected_error
+):
+    _consent(fresh)
+    uploaded = _post(fresh, audio_id="missing-note-1").json()
+    payload = medibytes.statuses["missing-note-1"]
+    payload["job_status"] = "succeeded"
+    payload["response"] = response
+    checked = fresh.get(
+        f"/api/notes/transcriptions/missing-note-1?encounter_id={uploaded['encounter_id']}",
+        headers=DOCTOR,
+    )
+    assert checked.status_code == 200, checked.text
+    result = checked.json()
+    assert result["job_status"] == "succeeded"
+    assert expected_error in result["job_error"]
+    assert result["note_content"] is None
+    assert result["transcript_event_id"] is None
 
 
 def test_status_timeout_is_reported_without_losing_local_job(fresh, medibytes, monkeypatch):
@@ -277,12 +355,14 @@ def test_redelivery_only_runs_after_medybytes_marks_delivery_failed(fresh, medib
 
     payload = medibytes.statuses["redeliver-1"]
     payload["job_status"] = "succeeded"
-    payload["response"] = SENTENCE
-    payload["delivery"] = {"state": "failed", "attempts": 1, "last_http_status": 403, "last_error": "Unauthorized", "hims_reply": None, "delivered_at": None}
+    payload["response"] = NOTE_RESPONSE
+    payload["delivery"] = {"state": "failed", "attempts": 1, "last_http_status": 403, "last_error": "Unauthorized", "hims_reply": None, "delivered_at": None, "next_attempt_at": "2026-11-23T10:00:00Z"}
     response = fresh.post(path, headers=DOCTOR)
     assert response.status_code == 200, response.text
     assert response.json()["delivery"]["state"] == "pending"
     assert response.json()["transcript"] == SENTENCE
+    assert response.json()["note_content"] == NOTE_CONTENT
+    assert response.json()["delivery"]["next_attempt_at"] is None
 
 
 def test_cross_consultation_transcripts_are_not_loaded_or_generated(fresh, medibytes):
@@ -319,7 +399,7 @@ def test_draft_reuses_saved_transcript_event_without_duplicate(fresh, medibytes)
     _consent(fresh)
     encounter_id = _encounter_id(fresh)
     assert _post(fresh, audio_id="draft-1").status_code == 200
-    assert _callback(fresh, "draft-1", SENTENCE).status_code == 200
+    assert _callback(fresh, "draft-1", NOTE_RESPONSE).status_code == 200
     transcript = _jobs(fresh, encounter_id)[0]
     response = fresh.post(
         f"/api/notes/generate?encounter_id={encounter_id}",

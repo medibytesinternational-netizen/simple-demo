@@ -14,6 +14,12 @@ from ..models import Encounter, Patient, TimelineEvent
 from ..models_ext.transcription import TranscriptionJob
 from . import credits
 from .context import create_transcript_event
+from .medibytes_note import (
+    MediBytesNoteError,
+    format_note_sections,
+    note_segments,
+    parse_note_response,
+)
 from .timeline import add_audit
 
 JOB_STATES = {"queued", "running", "succeeded", "failed"}
@@ -60,19 +66,20 @@ def charge_once(db: Session, job: TranscriptionJob) -> None:
 
 
 def save_transcript(
-    db: Session, job: TranscriptionJob, transcript: str, *, source: str = "callback"
+    db: Session, job: TranscriptionJob, response: str, *, source: str = "callback"
 ) -> tuple[TimelineEvent, bool]:
-    """Persist the exact recognized text once, against its original patient and encounter."""
-    if not transcript.strip():
-        raise HTTPException(422, "MediBytes returned an empty transcript")
+    """Validate and persist MediBytes' six-section note once for the original consultation."""
+    note = parse_note_response(response)
     if job.transcript_event_id:
         event = db.get(TimelineEvent, job.transcript_event_id)
-        if event and event.body_text == transcript:
+        event_note = (event.payload or {}).get("note_content") if event else None
+        if event and event_note == note:
             job.job_status = "succeeded"
             job.job_error = None
             if source == "callback":
                 job.delivery_state = "delivered"
                 job.delivery_delivered_at = job.delivery_delivered_at or clock.now()
+                job.delivery_next_attempt_at = None
                 job.callback_received_at = job.callback_received_at or clock.now()
             charge_once(db, job)
             return event, True
@@ -85,14 +92,25 @@ def save_transcript(
     encounter = get_encounter(db, job.encounter_id)
     if encounter.patient_id != patient.id:
         raise HTTPException(409, "Transcription association no longer matches its consultation")
+    display_text = format_note_sections(note)
     event = create_transcript_event(
         db,
         patient,
         encounter,
         "F1",
-        transcript,
-        f"OPD consultation transcript · {job.audio_id[:8]}",
+        display_text,
+        f"MediBytes consultation note · {job.audio_id[:8]}",
     )
+    event.payload = {
+        "feature": "F1",
+        "segments": note_segments(note),
+        "note_content": note,
+        "raw_response": response,
+    }
+    event.source = "medibytes"
+    event.author_type = "model"
+    event.author_name = "MediBytes Transcription API"
+    event.approved_by = None
     event.occurred_at = job.created_at
     job.transcript_event_id = event.id
     job.job_status = "succeeded"
@@ -100,6 +118,7 @@ def save_transcript(
     if source == "callback":
         job.delivery_state = "delivered"
         job.delivery_delivered_at = job.delivery_delivered_at or clock.now()
+        job.delivery_next_attempt_at = None
         job.callback_received_at = clock.now()
     charge_once(db, job)
     add_audit(
@@ -110,8 +129,8 @@ def save_transcript(
         patient.id,
         actor_type="model",
         actor_name="MediBytes MedASR",
-        after={"characters": len(transcript), "encounter_id": encounter.id, "audio_id": job.audio_id},
-        meta={"mode": "medibytes", "transcript_event_id": event.id, "source": source},
+        after={"characters": len(response), "encounter_id": encounter.id, "audio_id": job.audio_id},
+        meta={"mode": "medibytes", "transcript_event_id": event.id, "source": source, "sections": len(note)},
     )
     return event, False
 
@@ -140,10 +159,14 @@ def apply_api_status(db: Session, job: TranscriptionJob, payload: dict[str, Any]
         delivered_at = parse_hospital_datetime(delivery.get("delivered_at"))
         if delivered_at:
             job.delivery_delivered_at = delivered_at
+        job.delivery_next_attempt_at = parse_hospital_datetime(delivery.get("next_attempt_at"))
 
     response = payload.get("response")
     if isinstance(response, str) and response.strip() and not job.transcript_event_id:
-        save_transcript(db, job, response, source="status")
+        try:
+            save_transcript(db, job, response, source="status")
+        except MediBytesNoteError as exc:
+            job.job_error = str(exc)
     elif job.job_status == "succeeded" and not job.transcript_event_id:
         job.job_error = "MediBytes marked the job succeeded but has not returned a transcript yet."
     elif job.job_status in {"queued", "running", "succeeded"}:
@@ -153,6 +176,7 @@ def apply_api_status(db: Session, job: TranscriptionJob, payload: dict[str, Any]
 
 def job_to_dict(db: Session, job: TranscriptionJob, *, status_check_error: str | None = None) -> dict[str, Any]:
     event = db.get(TimelineEvent, job.transcript_event_id) if job.transcript_event_id else None
+    event_payload = (event.payload or {}) if event else {}
     return {
         "audio_id": job.audio_id,
         "encounter_id": job.encounter_id,
@@ -167,8 +191,11 @@ def job_to_dict(db: Session, job: TranscriptionJob, *, status_check_error: str |
             "last_error": job.delivery_last_error,
             "hims_reply": job.delivery_hims_reply,
             "delivered_at": job.delivery_delivered_at.isoformat() if job.delivery_delivered_at else None,
+            "next_attempt_at": job.delivery_next_attempt_at.isoformat() if job.delivery_next_attempt_at else None,
         },
         "transcript": event.body_text if event else None,
+        "note_content": event_payload.get("note_content"),
+        "response": event_payload.get("raw_response"),
         "transcript_event_id": event.id if event else None,
         "can_redeliver": job.job_status == "succeeded" and job.delivery_state == "failed",
         "credit_charged": job.credit_charged,

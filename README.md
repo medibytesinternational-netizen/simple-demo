@@ -58,9 +58,11 @@ UPLOADS_DIR=/data/uploads
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o
 LLM_MODE=auto
+MEDIBYTES_BASE_URL=https://product-production-b091.up.railway.app
 MEDIBYTES_API_KEY=...
 MEDIBYTES_CALLBACK_TOKEN=...
 MEDIBYTES_COMPANY_ID=1
+MEDIBYTES_TIMEOUT_SECONDS=120
 ```
 
 Keep it at one replica (SQLite). Leave `VITE_DEMO_MODE` unset; it is only for the Netlify preview.
@@ -78,11 +80,26 @@ LLM_MODE=auto
 MEDIBYTES_API_KEY=...
 MEDIBYTES_BASE_URL=https://product-production-b091.up.railway.app
 MEDIBYTES_COMPANY_ID=1
-MEDIBYTES_TIMEOUT_SECONDS=90
+MEDIBYTES_TIMEOUT_SECONDS=120
 MEDIBYTES_CALLBACK_TOKEN=...
 ```
 
 `LLM_MODE=auto` uses live GPT-4o when a key is present, otherwise cached drafts. Set `LLM_MODE=cached` to force deterministic drafts even with a key. Audio transcription requires `MEDIBYTES_API_KEY`; its key stays on the backend. MediBytes must be configured out of band with the callback URL above and the separate callback token. The UI polls job status, loads transcripts from the selected encounter, and offers redelivery after MediBytes reports a delivery failure. MediBytes audio is limited to 64 MB and the documented WAV, MP3, M4A, MP4, AAC, FLAC, OGG and WebM formats.
+
+The HIMS callback validates `response` as a JSON array containing one object with the six string sections: `present_illness`, `examination_findings`, `previous_diagnosis`, `plan_of_management`, `diet_instructions`, and `general_instructions`. Empty strings are preserved as empty sections. It saves the raw response and structured sections on the consultation. The callback replies with `{"status":"Success"}` after a save, or `{"status":"Failed","Message":"..."}` for a rejected note so MediBytes records a failed delivery that can be redelivered.
+
+A raw transcript string or any other response outside that documented shape is rejected. HIMS does not infer or fill the six sections; the MediBytes service must emit the contract response before notes can be saved.
+
+### Separate MediBytes service deployment
+
+These variables belong on the MediBytes service, not in the HIMS `.env`:
+
+- `OPENAI_API_KEY` and `HF_TOKEN` — credentials used by the MediBytes transcription pipeline.
+- `MEDIBYTES_API_KEYS` — allowlist containing the key configured as HIMS `MEDIBYTES_API_KEY`.
+- `MEDIBYTES_HIMS_URL` — public HIMS callback URL, `https://<your-public-host>/api/transcriptions/callback`.
+- `MEDIBYTES_HIMS_TOKEN` — Bearer token matching HIMS `MEDIBYTES_CALLBACK_TOKEN`.
+
+HIMS cannot receive callbacks from a local-only URL. The MediBytes service deployment must be configured separately with the public callback URL and matching token; this repository does not provision that service.
 
 Clinical timestamps use the hospital timezone (`Asia/Kolkata`). API timestamps without an offset are treated as hospital wall-clock times; timestamps with an offset are normalized to that timezone before storage and display. Date-only values stay dates and are not shifted through UTC.
 
@@ -90,7 +107,7 @@ F6 medication explanations are deterministic and are built from the recorded rec
 
 The header shows **Live GPT-4o** or **Cached demo**. Model, prompt version, latency and token counts are recorded in `llm_calls`; the UI shows them on every draft and in the audit log.
 
-Do not commit `backend/.env` or the API key.
+Do not commit `backend/.env` or credentials. The HIMS `OPENAI_API_KEY`, if configured, is independent of the credentials used by the MediBytes transcription service.
 
 ## The 16 modules
 

@@ -5,6 +5,7 @@ import re
 import uuid
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -36,6 +37,7 @@ from ..services.transcription import (
     list_jobs,
     save_transcript,
 )
+from ..services.medibytes_note import MediBytesNoteError
 from .common import (
     NoteGenerateRequest,
     _patient_encounter,
@@ -163,7 +165,7 @@ async def transcribe_consultation(
 
 class MediBytesCallback(BaseModel):
     audio_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9-]+$")
-    company_id: int | None = None
+    company_id: int
     response: str
 
 
@@ -173,7 +175,7 @@ def receive_transcript(
     authorization: str | None = Header(default=None),
     db: Session = Depends(get_db),
 ):
-    """Receive the raw transcript from MediBytes using a separately configured HIMS token."""
+    """Receive and validate MediBytes' six-section note with a separately configured HIMS token."""
     if not settings.medibytes_callback_token:
         raise HTTPException(503, "MediBytes callback authentication is not configured")
     scheme, _, token = (authorization or "").partition(" ")
@@ -181,12 +183,22 @@ def receive_transcript(
         raise HTTPException(401, "Unauthorized")
     job = db.get(TranscriptionJob, body.audio_id)
     if not job:
-        raise HTTPException(404, "Transcription record not found")
-    if body.company_id is not None and body.company_id != job.company_id:
-        raise HTTPException(409, "company_id does not match the transcription record")
-    _, duplicate = save_transcript(db, job, body.response)
+        return JSONResponse(status_code=200, content={"status": "Failed", "Message": "Transcription record not found"})
+    if body.company_id != job.company_id:
+        return JSONResponse(
+            status_code=200,
+            content={"status": "Failed", "Message": "company_id does not match the transcription record"},
+        )
+    try:
+        save_transcript(db, job, body.response)
+    except MediBytesNoteError as exc:
+        db.rollback()
+        return JSONResponse(status_code=200, content={"status": "Failed", "Message": str(exc)})
+    except HTTPException as exc:
+        db.rollback()
+        return JSONResponse(status_code=200, content={"status": "Failed", "Message": str(exc.detail)})
     db.commit()
-    return {"status": "Received", "duplicate": duplicate}
+    return {"status": "Success"}
 
 
 @router.get("/notes/transcriptions", dependencies=[Depends(require("clinical_draft"))])
@@ -242,6 +254,7 @@ async def redeliver_consultation_transcript(
     job.delivery_state = "pending"
     job.delivery_last_error = None
     job.delivery_hims_reply = None
+    job.delivery_next_attempt_at = None
     db.commit()
     return job_to_dict(db, job)
 

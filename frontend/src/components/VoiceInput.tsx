@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ApiError, getTranscription, transcribeAudio, type TranscriptionJob } from "../api";
+import { ApiError, getTranscription, transcribeAudio, type MediBytesNote, type TranscriptionJob } from "../api";
 
 const MAX_AUDIO_BYTES = 64 * 1024 * 1024;
 const AUDIO_EXTENSIONS = ["mp3", "wav", "m4a", "mp4", "aac", "flac", "ogg", "webm"];
@@ -14,7 +14,7 @@ type Props = {
   consentGranted: boolean;
   encounterId: string;
   disabled?: boolean;
-  onTranscript: (text: string, source: VoiceSource, transcriptEventId: string, audioId: string) => void;
+  onTranscript: (text: string, source: VoiceSource, transcriptEventId: string, audioId: string, noteContent: MediBytesNote) => void;
   onBusyChange?: (busy: boolean) => void;
   onTranscribingChange?: (transcribing: boolean) => void;
 };
@@ -91,7 +91,11 @@ export function VoiceInput({ consentGranted, encounterId, disabled, onTranscript
         if (current.job_status === "succeeded" && current.transcript) {
           setError("");
           setRetryUpload(null);
-          callbacks.current.onTranscript(current.transcript, source, current.transcript_event_id || "", audioId);
+          if (!current.note_content) {
+            setError(current.job_error || "MediBytes completed this recording without the required six-section note.");
+            return;
+          }
+          callbacks.current.onTranscript(current.transcript, source, current.transcript_event_id || "", audioId, current.note_content);
           return;
         }
         await wait(POLL_INTERVAL_MS);

@@ -110,6 +110,15 @@ export async function uploadDocument(file: File) {
   return api<any>("/documents/upload", { method: "POST", body: form });
 }
 
+export type MediBytesNote = {
+  present_illness: string;
+  examination_findings: string;
+  previous_diagnosis: string;
+  plan_of_management: string;
+  diet_instructions: string;
+  general_instructions: string;
+};
+
 export type TranscriptionJob = {
   audio_id: string;
   encounter_id: string;
@@ -120,8 +129,11 @@ export type TranscriptionJob = {
     state: "pending" | "delivered" | "failed" | "job_failed";
     attempts: number;
     last_error?: string | null;
+    next_attempt_at?: string | null;
   };
   transcript?: string | null;
+  note_content?: MediBytesNote | null;
+  response?: string | null;
   transcript_event_id?: string | null;
   can_redeliver?: boolean;
   can_retry_upload?: boolean;

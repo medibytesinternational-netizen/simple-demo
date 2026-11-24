@@ -28,6 +28,7 @@ class TranscriptionJob(Base):
     delivery_last_error = Column(Text)
     delivery_hims_reply = Column(Text)
     delivery_delivered_at = Column(DateTime)
+    delivery_next_attempt_at = Column(DateTime)
     transcript_event_id = Column(String, unique=True)
     credit_charged = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=utcnow)

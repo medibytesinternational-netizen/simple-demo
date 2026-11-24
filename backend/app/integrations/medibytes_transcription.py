@@ -19,12 +19,12 @@ def _headers() -> dict[str, str]:
     return {"Authorization": f"Bearer {settings.medibytes_api_key}"}
 
 
-async def _request(method: str, path: str, *, files=None, data=None) -> tuple[int, dict]:
+async def _request(method: str, path: str, *, files=None, data=None, timeout_seconds: float | None = None) -> tuple[int, dict]:
     headers = _headers()
     try:
         async with httpx.AsyncClient(
             base_url=settings.medibytes_base_url.rstrip("/"),
-            timeout=settings.medibytes_timeout_seconds,
+            timeout=timeout_seconds or settings.medibytes_timeout_seconds,
         ) as client:
             response = await client.request(method, path, headers=headers, files=files, data=data)
     except httpx.TimeoutException as exc:
@@ -69,14 +69,22 @@ async def upload_audio(audio_id: str, company_id: int, filename: str, content_ty
 
 
 async def get_audio_status(audio_id: str) -> dict:
-    _, body = await _request("GET", f"/api/v1/transcriptions/{audio_id}")
+    _, body = await _request(
+        "GET",
+        f"/api/v1/transcriptions/{audio_id}",
+        timeout_seconds=min(30.0, settings.medibytes_timeout_seconds),
+    )
     if body.get("audio_id") != audio_id:
         raise MediBytesRequestError(502, "MediBytes returned status for a different audio_id.")
     return body
 
 
 async def redeliver_transcript(audio_id: str) -> dict:
-    status, body = await _request("POST", f"/api/v1/transcriptions/{audio_id}/redeliver")
+    status, body = await _request(
+        "POST",
+        f"/api/v1/transcriptions/{audio_id}/redeliver",
+        timeout_seconds=min(30.0, settings.medibytes_timeout_seconds),
+    )
     if status != 202 or body.get("audio_id") != audio_id:
         raise MediBytesRequestError(502, "MediBytes returned an invalid redelivery acknowledgement.")
     return body
