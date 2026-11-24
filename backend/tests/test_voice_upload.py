@@ -480,6 +480,23 @@ def test_opd_page_uses_saved_text_and_event_id_for_draft():
     assert "Checking status…" in notes or "Checking status…" in _source("components/VoiceInput.tsx")
 
 
+def test_legacy_transcription_provider_is_absent_from_runtime_sources():
+    repository = Path(__file__).resolve().parents[2]
+    runtime_roots = (repository / "backend" / "app", repository / "frontend" / "src")
+    runtime_files = [
+        path
+        for root in runtime_roots
+        for path in root.rglob("*")
+        if path.is_file() and path.suffix in {".py", ".ts", ".tsx", ".js", ".jsx"}
+    ]
+    legacy_references = [
+        str(path.relative_to(repository))
+        for path in runtime_files
+        if "whisper" in path.read_text(encoding="utf-8").lower()
+    ]
+    assert legacy_references == []
+
+
 # ---------- Labs-tab upload ----------
 
 def test_the_labs_tab_reuses_upload_report_and_the_documents_permission():
