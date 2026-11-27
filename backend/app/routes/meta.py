@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -13,6 +13,7 @@ from .platform import allowed_actions, user_dict
 from .. import clock
 from ..config import settings
 from ..db import get_db
+from ..dates import parse_hospital_datetime
 from ..modules import module_registry
 from ..models import (
     TimelineEvent,
@@ -48,8 +49,8 @@ def meta(db: Session = Depends(get_db)):
         "demo_now": clock.now().replace(microsecond=0).isoformat(),
         "server_now": clock.real_utcnow().replace(microsecond=0).isoformat(),
         "llm_mode": settings.effective_llm_mode,
-        "model": settings.openai_model,
-        "live_available": bool(settings.openai_api_key),
+        "model": settings.active_model,
+        "live_available": settings.live_llm,
         "demo_user": acting_name(),
         "demo_role": acting_user().role,
         "user": user_dict(acting_user()),
@@ -180,6 +181,8 @@ SOURCE_LABELS = {
     "device": "Bedside device reading",
     "seed": "Demo seed data",
     "human": "Typed by a person",
+    "F8": "Uploaded document",
+    "registration": "Registration desk",
 }
 
 
@@ -259,12 +262,9 @@ def supersedes_chain(db: Session, event: TimelineEvent) -> list[dict]:
 def _parse_when(value: str | None, name: str) -> datetime | None:
     if not value:
         return None
-    try:
-        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
-    except ValueError:
+    parsed = parse_hospital_datetime(value)
+    if parsed is None:
         raise ValueError(f"{name} must be a date or an ISO date and time, for example 2026-05-01 or 2026-05-01T08:30") from None
-    if parsed.tzinfo is not None:
-        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
     return parsed
 
 

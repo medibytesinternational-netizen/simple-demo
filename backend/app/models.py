@@ -194,6 +194,7 @@ class InvestigationRequest(Base):
     approved_by = Column(String)
     created_at = Column(DateTime, default=utcnow)
     exported_at = Column(DateTime)
+    source_event_id = Column(String)
 
 
 class Referral(Base):

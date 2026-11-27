@@ -75,7 +75,7 @@ class AdministrationRequest(BaseModel):
 
 @router.get("/medications")
 def medications(encounter_id: str | None = None, db: Session = Depends(get_db)):
-    _, _, state = _state(db, encounter_id)
+    patient, encounter, state = _state(db, encounter_id)
     return {
         "home_medications": state["home_meds"],
         "current_medications": state["active_meds"],
@@ -89,10 +89,12 @@ def medication_reconciliation(encounter_id: str | None = None, db: Session = Dep
 
 
 @router.post("/medications/reconciliation/generate", dependencies=[Depends(require("reconcile"))])
-def generate_reconciliation(db: Session = Depends(get_db)):
-    patient, encounter, state = _state(db)
+def generate_reconciliation(encounter_id: str | None = None, db: Session = Depends(get_db)):
+    patient, encounter, state = _state(db, encounter_id)
     credits.charge(db, "medicine_reconciliation", feature="F6")
     recon = medicines.reconciliation_with_decisions(db, patient, encounter, state)
+    if not isinstance(recon, dict) or not isinstance(recon.get("discrepancies"), list):
+        raise HTTPException(502, "Medication reconciliation results could not be loaded")
     context = build_context(db, patient, encounter, state, "F6", extra={"reconciliation": recon})
     content, llm_call = generate_draft(db, "F6", context)
     draft = create_draft(db, feature="F6", patient=patient, encounter=encounter, content=content, llm_call=llm_call)

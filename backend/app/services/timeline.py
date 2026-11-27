@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from .identity import acting_name, current_patient_id
 from .. import clock
 from ..db import utcnow
+from ..dates import parse_hospital_datetime
 from ..models import (
     Alert,
     AuditEntry,
@@ -38,8 +39,7 @@ def get_encounter(db: Session, encounter_id: str | None = None) -> Encounter:
         if not encounter:
             raise ValueError("Encounter not found")
         return encounter
-    # The app is patient-centric: the default encounter belongs to the demo
-    # patient, not whichever cohort patient happened to be admitted last.
+    # The app is patient-centric: the default encounter belongs to the open patient.
     patient = get_patient(db)
     encounter = db.scalars(
         select(Encounter)
@@ -52,10 +52,9 @@ def get_encounter(db: Session, encounter_id: str | None = None) -> Encounter:
             .where(Encounter.patient_id == patient.id)
             .order_by(Encounter.discharged_at.desc(), Encounter.admitted_at.desc())
         ).first()
+    # Never fall back to another patient's visit: a record without one is an error.
     if not encounter:
-        encounter = db.scalars(select(Encounter).order_by(Encounter.admitted_at.desc())).first()
-    if not encounter:
-        raise ValueError("No encounter found")
+        raise ValueError(f"No encounter found for {patient.name}")
     return encounter
 
 
@@ -215,10 +214,7 @@ def _latest_labs(events: list[TimelineEvent]) -> list[dict[str, Any]]:
         if not name:
             continue
         collected_raw = payload.get("collected_at") or event.occurred_at.isoformat()
-        try:
-            collected = datetime.fromisoformat(str(collected_raw).replace("Z", ""))
-        except ValueError:
-            collected = event.occurred_at
+        collected = parse_hospital_datetime(collected_raw) or event.occurred_at
         if name not in latest or collected > latest[name][0]:
             latest[name] = (collected, event)
     results = []

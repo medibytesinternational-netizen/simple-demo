@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { post } from "../../api";
+import { hospitalDateTimeInput } from "../../dates";
 import { useCan } from "../../session";
 import { READING_CATEGORIES, needsUnit, readingOk } from "./types";
 import type { ReadingBody, ReadingCategory, ReadingResult } from "./types";
 import { Panel } from "../../components/ui";
 
 function nowLocal(): string {
-  const now = new Date();
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-  return now.toISOString().slice(0, 16);
+  return hospitalDateTimeInput();
 }
 
 /** Record one ICU or ward reading with its unit, device and time. Mounted by the lead on the ICU tab. */

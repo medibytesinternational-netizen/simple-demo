@@ -23,3 +23,6 @@ Thumbs.db
 
 .playwright-mcp/
 backend/.vite/
+
+# MediBytes pipeline job files
+runs/

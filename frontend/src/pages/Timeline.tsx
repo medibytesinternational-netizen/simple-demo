@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { get } from "../api";
+import { formatHospitalDateTime, hospitalDateKey } from "../dates";
 import { useEvidence } from "../components/Evidence";
 import { usePatientId } from "../session";
 import { buildTimelineQuery, hasFilters } from "../features/f16/filters";
 import { ProvenanceFacts } from "../features/f16/Provenance";
+import { EventBody } from "../features/f16/EventBody";
 import { NO_FILTERS, type TimelineFilters, type TimelineResponse } from "../features/f16/types";
 import { PageHeader } from "../components/PageHeader";
 import { EmptyState, Field, ListRow, Menu, MenuItem, Panel, Pill, Skeleton, Toolbar } from "../components/ui";
@@ -15,15 +17,14 @@ import { Icon } from "../components/icons";
 
 function eventTone(type: string) {
   if (type === "lab_result") return "lab";
-  if (["consult_note", "admission_note", "round_note", "progress_note", "nursing_summary", "nursing_chart", "investigation_review", "discharge_summary"].includes(type)) return "ai";
+  if (["consult_note", "admission_note", "round_note", "progress_note", "nurse_progress_note", "nursing_summary", "nursing_chart", "investigation_review", "discharge_summary"].includes(type)) return "ai";
   if (["alert", "billing", "referral_consult"].includes(type)) return "critical";
   if (["consent", "referral_update", "device_reading"].includes(type)) return "";
   return "";
 }
 
 function fmt(value: string) {
-  const date = new Date(value);
-  return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return formatHospitalDateTime(value, "en-GB", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 export function TimelinePage() {
@@ -192,7 +193,7 @@ export function TimelinePage() {
                               ) : null}
                             </span>
                           }
-                          body={event.body_text ? <span className="tl-preview">{event.body_text}</span> : undefined}
+                          body={<EventBody event={event} />}
                           chips={<ProvenanceFacts event={event} />}
                           side={
                             <span className="tl-when">
@@ -220,6 +221,9 @@ const EVENT_ICONS: Record<string, string> = {
   admission_note: "admission",
   round_note: "round",
   progress_note: "progress",
+  nurse_progress_note: "progress",
+  progress_report: "progress",
+  discharge_report: "discharge",
   nursing_summary: "round",
   nursing_chart: "round",
   nursing_note: "round",
@@ -237,6 +241,7 @@ const EVENT_ICONS: Record<string, string> = {
   allergy_record: "alert",
   document_request: "request",
   document_review: "scan",
+  registration: "user_check",
 };
 
 function eventIcon(type: string) {
@@ -252,18 +257,17 @@ function rowTone(tone: string): "ai" | "warning" | "critical" | undefined {
 }
 
 function timeOf(value: string) {
-  return new Date(value).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  return formatHospitalDateTime(value, "en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
 /** Presentational grouping of the already-filtered list; order is kept. */
 function groupByDay(events: TimelineEventF16[]) {
   const days: { key: string; label: string; events: TimelineEventF16[] }[] = [];
   for (const event of events) {
-    const date = new Date(event.occurred_at);
-    const key = date.toDateString();
+    const key = hospitalDateKey(event.occurred_at);
     const last = days[days.length - 1];
     if (last && last.key === key) last.events.push(event);
-    else days.push({ key, label: date.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" }), events: [event] });
+    else days.push({ key, label: formatHospitalDateTime(event.occurred_at, "en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }), events: [event] });
   }
   return days;
 }

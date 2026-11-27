@@ -588,210 +588,6 @@ def seed_rehearsal(db: Session) -> None:
             )
         )
 
-    # --- Small hospital cohort for the F14 aggregate view -------------------
-    cohort = [
-        {
-            "patient": Patient(
-                id="pat_anita",
-                mrn="MB-2042",
-                name="Anita Desai",
-                age=67,
-                sex="Female",
-                allergies=["Sulfonamides — rash"],
-                problems=["Heart failure", "Atrial fibrillation"],
-                weight_kg=68,
-                height_cm=158,
-                code_status="Full code",
-            ),
-            "encounter": Encounter(
-                id="enc_ward_2",
-                patient_id="pat_anita",
-                kind="IPD",
-                ward="Ward 4",
-                bed="4B",
-                attending="Dr. Meera Shah",
-                admitted_at=datetime(2026, 10, 19, 10, 30),
-                status="active",
-            ),
-            "task": {
-                "id": "tsk_cohort_anita",
-                "title": "Review ACE inhibitor dose and renal function",
-                "priority": "urgent",
-                "status": "accepted",
-                "due_at": DEMO_NOW - timedelta(hours=3),
-                "assigned_to": "Nurse Anita Rao",
-            },
-            "alert": {
-                "id": "alr_cohort_anita",
-                "severity": "warning",
-                "title": "Unreviewed potassium result",
-                "explanation": "Potassium 5.6 mmol/L remains unreviewed on Ward 4.",
-            },
-        },
-        {
-            "patient": Patient(
-                id="pat_joseph",
-                mrn="MB-2051",
-                name="Joseph Fernandes",
-                age=72,
-                sex="Male",
-                allergies=[],
-                problems=["COPD", "CKD stage 2"],
-                weight_kg=74,
-                height_cm=170,
-                code_status="Full code",
-            ),
-            "encounter": Encounter(
-                id="enc_ward_3",
-                patient_id="pat_joseph",
-                kind="IPD",
-                ward="Ward 5",
-                bed="5A",
-                attending="Dr. Arjun Rao",
-                admitted_at=datetime(2026, 10, 19, 14, 0),
-                status="active",
-            ),
-            "task": {
-                "id": "tsk_cohort_joseph",
-                "title": "Repeat ABG after oxygen change",
-                "priority": "critical",
-                "status": "accepted",
-                "due_at": DEMO_NOW - timedelta(hours=1),
-                "assigned_to": "Dr. Meera Shah",
-            },
-            "alert": {
-                "id": "alr_cohort_joseph",
-                "severity": "critical",
-                "title": "Escalating oxygen requirement",
-                "explanation": "Oxygen requirement increased from 2 L to 6 L/min in the last four hours.",
-            },
-        },
-        {
-            "patient": Patient(
-                id="pat_meera",
-                mrn="MB-2060",
-                name="Meera Iyer",
-                age=45,
-                sex="Female",
-                allergies=["Latex — contact dermatitis"],
-                problems=["Post-operative day 1"],
-                weight_kg=61,
-                height_cm=163,
-                code_status="Full code",
-            ),
-            "encounter": Encounter(
-                id="enc_day_1",
-                patient_id="pat_meera",
-                kind="Day care",
-                ward="Day Care",
-                bed="DC-2",
-                attending="Dr. Kavita Menon",
-                admitted_at=datetime(2026, 10, 20, 7, 30),
-                status="active",
-            ),
-            "task": {
-                "id": "tsk_cohort_meera",
-                "title": "Confirm discharge medication list",
-                "priority": "routine",
-                "status": "in_progress",
-                "due_at": DEMO_NOW + timedelta(hours=2),
-                "assigned_to": "Pharmacist Dev Patel",
-            },
-            "alert": None,
-        },
-        {
-            "patient": Patient(
-                id="pat_arun",
-                mrn="MB-1988",
-                name="Arun Pillai",
-                age=55,
-                sex="Male",
-                allergies=[],
-                problems=["Community-acquired pneumonia"],
-                weight_kg=78,
-                height_cm=175,
-                code_status="Full code",
-            ),
-            "encounter": Encounter(
-                id="enc_ward_4",
-                patient_id="pat_arun",
-                kind="IPD",
-                ward="Ward 4",
-                bed="4A",
-                attending="Dr. Arjun Rao",
-                admitted_at=datetime(2026, 10, 16, 9, 0),
-                discharged_at=datetime(2026, 10, 20, 8, 0),
-                status="discharged",
-            ),
-            "task": {
-                "id": "tsk_cohort_arun",
-                "title": "Send discharge summary to GP",
-                "priority": "routine",
-                "status": "completed",
-                "due_at": DEMO_NOW - timedelta(hours=4),
-                "assigned_to": "Dr. Meera Shah",
-            },
-            "alert": None,
-        },
-    ]
-    for row in cohort:
-        db.add_all([row["patient"], row["encounter"]])
-        task = row["task"]
-        db.add(
-            Task(
-                id=task["id"],
-                patient_id=row["patient"].id,
-                encounter_id=row["encounter"].id,
-                title=task["title"],
-                detail="Seeded hospital-cohort task for the F14 aggregate view.",
-                status=task["status"],
-                priority=task["priority"],
-                due_at=task["due_at"],
-                owner=task["assigned_to"],
-                assigned_to=task["assigned_to"],
-                assigned_at=datetime(2026, 10, 20, 8, 0),
-                assigned_by=acting_name(),
-                acknowledged_at=datetime(2026, 10, 20, 8, 5)
-                if task["status"] in {"accepted", "in_progress", "completed"}
-                else None,
-                acknowledged_by=task["assigned_to"]
-                if task["status"] in {"accepted", "in_progress", "completed"}
-                else None,
-                escalation_level=1
-                if task["status"] == "accepted" and task["due_at"] < DEMO_NOW
-                else 0,
-                escalated_at=DEMO_NOW - timedelta(minutes=30)
-                if task["status"] == "accepted" and task["due_at"] < DEMO_NOW
-                else None,
-                escalation_reason="Overdue in the hospital queue"
-                if task["status"] == "accepted" and task["due_at"] < DEMO_NOW
-                else None,
-                created_by=acting_name(),
-                completed_at=DEMO_NOW - timedelta(hours=2)
-                if task["status"] == "completed"
-                else None,
-                created_at=datetime(2026, 10, 19, 9, 0),
-            )
-        )
-        alert = row["alert"]
-        if alert:
-            db.add(
-                Alert(
-                    id=alert["id"],
-                    patient_id=row["patient"].id,
-                    encounter_id=row["encounter"].id,
-                    rule_id="COHORT",
-                    dedupe_key=alert["id"],
-                    severity=alert["severity"],
-                    title=alert["title"],
-                    explanation=alert["explanation"],
-                    recommended_action="Review and document the clinical response.",
-                    evidence_event_ids=[],
-                    status="open",
-                    created_at=datetime(2026, 10, 20, 8, 30),
-                )
-            )
-
     db.flush()
 
     # Every seeded event gets an audit trail entry so the audit drawer is never empty.
@@ -876,8 +672,128 @@ def reset_demo(db: Session, mode: str = "rehearsal") -> None:
     db.commit()
 
 
+# Patients the old rehearsal seed created for the dashboard. They are no longer seeded; a database
+# made before that change still holds them, so startup removes them and everything that is theirs.
+LEGACY_COHORT_IDS = ("pat_anita", "pat_joseph", "pat_meera", "pat_arun")
+
+
+def purge_legacy_cohort(db: Session) -> int:
+    """Delete the old cohort patients and every row that belongs to them. Returns patients removed."""
+    from .db import Base
+
+    present = [pid for pid in LEGACY_COHORT_IDS if db.get(Patient, pid)]
+    if not present:
+        return 0
+    for table in Base.metadata.sorted_tables:
+        if "patient_id" in table.c:
+            db.execute(delete(table).where(table.c.patient_id.in_(present)))
+    db.execute(delete(Patient).where(Patient.id.in_(present)))
+    db.commit()
+    return len(present)
+
+
+def latest_recorded_time(db: Session) -> datetime | None:
+    """The newest time anything was recorded, so the clock can carry on from it after a restart."""
+
+    candidates = [
+        db.scalar(select_max(TimelineEvent.created_at)),
+        db.scalar(select_max(TimelineEvent.occurred_at)),
+        db.scalar(select_max(Draft.created_at)),
+        db.scalar(select_max(AuditEntry.created_at)),
+        db.scalar(select_max(Document.uploaded_at)),
+        db.scalar(select_max(Task.created_at)),
+    ]
+    found = [c for c in candidates if c]
+    return max(found) if found else None
+
+
+def select_max(column):
+    from sqlalchemy import func, select
+
+    return select(func.max(column))
+
+
+def repair_event_order(db: Session) -> int:
+    """Re-time entries that a clock restart stamped earlier than entries saved before them.
+
+    Only entries the running app timed "now" (occurred_at within a second of created_at, with
+    sub-second precision) are moved, and only forward, to just after the app entry before them.
+    Seeded history is never touched. Dated entries (a lab's collection
+    date, a report's date) keep their date. Uses SQLite's insertion order. Returns entries moved.
+    """
+    from datetime import timedelta
+
+    from sqlalchemy import text
+
+    if db.get_bind().dialect.name != "sqlite":
+        return 0
+    rows = db.execute(text(
+        "SELECT id, patient_id, occurred_at, created_at FROM timeline_events ORDER BY patient_id, rowid"
+    )).all()
+    moved = 0
+    latest: dict[str, datetime] = {}
+    for event_id, patient_id, occurred, created in rows:
+        occurred = datetime.fromisoformat(str(occurred))
+        created = datetime.fromisoformat(str(created))
+        # Timed "now" by the running app: occurred and saved together, with sub-second precision.
+        # Seeded entries carry their clinical time on whole minutes and are never moved.
+        auto = abs((created - occurred).total_seconds()) <= 1 and created.microsecond != 0
+        floor = latest.get(patient_id)
+        if auto and floor and created <= floor:
+            new_time = floor + timedelta(milliseconds=1)
+            db.execute(text("UPDATE timeline_events SET occurred_at = :t, created_at = :t WHERE id = :id"),
+                       {"t": new_time, "id": event_id})
+            created = new_time
+            moved += 1
+        if auto:
+            latest[patient_id] = max(created, floor) if floor else created
+    if moved:
+        db.commit()
+    return moved
+
+
+def purge_patients_except(db: Session, keep: set[str]) -> list[str]:
+    """Delete every patient not in ``keep`` and every row and stored file that belongs to them.
+
+    Files: their documents' stored files (uploads, signed notes) and the intake files attached to
+    them or never attached. Returns the ids removed.
+    """
+    import shutil
+    from pathlib import Path
+
+    from .db import Base
+
+    gone = [pid for (pid,) in db.query(Patient.id).all() if pid not in keep]
+    if not gone:
+        return []
+    for document in db.query(Document).filter(Document.patient_id.in_(gone)).all():
+        path = Path(document.path or "")
+        if path.is_file() and path.resolve().is_relative_to(settings.uploads_dir.resolve()):
+            path.unlink(missing_ok=True)
+    intake_root = settings.uploads_dir / "intake"
+    if intake_root.is_dir():
+        import json
+
+        for folder in intake_root.iterdir():
+            meta = folder / "meta.json"
+            try:
+                attached = json.loads(meta.read_text(encoding="utf-8")).get("attached_to") if meta.is_file() else None
+            except ValueError:
+                attached = None
+            if attached is None or attached in gone:
+                shutil.rmtree(folder, ignore_errors=True)
+    for table in Base.metadata.sorted_tables:
+        if "patient_id" in table.c:
+            db.execute(delete(table).where(table.c.patient_id.in_(gone)))
+    db.execute(delete(Patient).where(Patient.id.in_(gone)))
+    db.commit()
+    return gone
+
+
 def ensure_seed(db: Session) -> None:
     patient = db.get(Patient, "pat_ravi")
     if patient:
+        purge_legacy_cohort(db)
+        repair_event_order(db)
         return
     reset_demo(db, "rehearsal")

@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 from .. import background
 from ..db import utcnow
 from ..models import Task
-from .identity import TASK_ROLES, acting_name, acting_user
+from .identity import TASK_ROLES, USERS, acting_name, acting_user
 from .timeline import add_audit, add_event
 
 MIN_REASON = 10
@@ -93,6 +93,9 @@ def role_for_assignee(name: str | None) -> str | None:
     """Infer the receiving role from an assignee name when the caller did not give one."""
     if not name:
         return None
+    staff = next((u for u in USERS if u.name == name), None)
+    if staff and staff.role in TASK_ROLES:
+        return staff.role
     lowered = name.lower()
     if lowered.startswith("nurse"):
         return "nurse"
@@ -116,10 +119,10 @@ def require_own_task(task: Task) -> None:
 
 
 def queue_key(task: Task) -> tuple:
-    """Queue order: bumped tasks first, then urgent before normal, then the earliest due."""
-    urgent = 0 if task.priority in {"urgent", "critical"} else 1
+    """Queue order: bumped tasks first, then critical, urgent, routine, then earliest due."""
+    priority = {"critical": 0, "urgent": 1}.get(task.priority, 2)
     due = task.due_at.isoformat() if task.due_at else "9999"
-    return (-(task.queue_rank or 0), urgent, due)
+    return (-(task.queue_rank or 0), priority, due)
 
 
 def bump_urgent(db: Session, task: Task) -> Task:

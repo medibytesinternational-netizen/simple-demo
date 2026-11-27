@@ -18,14 +18,14 @@ from pydantic import BaseModel
 from ..services.cached.f11_referral import apply_request, infer_specialty
 from ..services.context import build_context
 from ..services.drafts import (
+    approve_draft,
     create_draft,
     draft_to_dict,
+    update_draft,
 )
 from ..services.llm import generate_draft
-from ..services.timeline import (
-    add_audit,
-    add_event,
-)
+from ..services import referral_form
+from ..services.timeline import add_audit, add_event
 from .common import (
     ReferralCompleteRequest,
     TaskActionRequest,
@@ -147,3 +147,77 @@ def complete_referral(referral_id: str, body: ReferralCompleteRequest, db: Sessi
     )
     db.commit()
     return _referral_dict(referral)
+
+
+# --------------------------------------------------------------------------
+# Referral form, part one: dictated fields are populated only from the six-section API note.
+# --------------------------------------------------------------------------
+from ..models import Draft  # noqa: E402
+
+
+class ReferralFormBody(BaseModel):
+    content: dict
+
+
+def _latest_form(db: Session, patient_id: str) -> Draft | None:
+    drafts = db.scalars(
+        select(Draft).where(Draft.feature == "F11", Draft.patient_id == patient_id).order_by(Draft.created_at.desc())
+    ).all()
+    return next((d for d in drafts if (d.content or {}).get("format") == referral_form.REFERRAL_FORMAT), None)
+
+
+@router.get("/referrals/form", dependencies=[Depends(require("refer"))])
+def latest_referral_form(db: Session = Depends(get_db)):
+    patient, _, _ = _state(db)
+    draft = _latest_form(db, patient.id)
+    return {"draft": draft_to_dict(draft) if draft else None}
+
+
+def _open_form(db: Session, draft_id: str) -> Draft:
+    patient, _, _ = _state(db)
+    draft = db.get(Draft, draft_id)
+    if not draft or draft.patient_id != patient.id or (draft.content or {}).get("format") != referral_form.REFERRAL_FORMAT:
+        raise HTTPException(404, "Referral form not found")
+    return draft
+
+
+@router.patch("/referrals/form/{draft_id}", dependencies=[Depends(require("refer"))])
+def edit_referral_form(draft_id: str, body: ReferralFormBody, db: Session = Depends(get_db)):
+    draft = _open_form(db, draft_id)
+    content = {**(draft.content or {}), **body.content, "format": referral_form.REFERRAL_FORMAT,
+               "header": (draft.content or {}).get("header") or {}}
+    content["urgency"] = referral_form.URGENCY.get(content.get("referral_type") or "", "routine")
+    content["specialty"] = str((content.get("department") or {}).get("text") or "")
+    content["specialist"] = str((content.get("unit_chief") or {}).get("text") or "")
+    content["not_documented"] = referral_form.missing(content)
+    try:
+        update_draft(db, draft, content)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    db.commit()
+    return {"draft": draft_to_dict(draft)}
+
+
+@router.post("/referrals/form/{draft_id}/approve", dependencies=[Depends(require("refer"))])
+def approve_referral_form(draft_id: str, db: Session = Depends(get_db)):
+    draft = _open_form(db, draft_id)
+    try:
+        event = approve_draft(db, draft, None)
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(400, str(exc)) from exc
+    db.commit()
+    return {"draft": draft_to_dict(draft), "event_id": event.id, "document_id": event.document_id}
+
+
+@router.post("/referrals/form/{draft_id}/discard", dependencies=[Depends(require("refer"))])
+def discard_referral_form(draft_id: str, db: Session = Depends(get_db)):
+    from ..services.drafts import reject_draft
+
+    draft = _open_form(db, draft_id)
+    try:
+        reject_draft(db, draft, "Discarded by the referring doctor")
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    db.commit()
+    return {"draft": draft_to_dict(draft)}

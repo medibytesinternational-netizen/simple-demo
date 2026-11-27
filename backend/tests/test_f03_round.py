@@ -103,11 +103,12 @@ LONG = "Continue " + "intravenous flucloxacillin every six hours " * 4 + "and re
 @pytest.mark.parametrize(
     "sentence, priority, hours",
     [
-        ("Stop the aspirin.", "urgent", 8),
-        ("Hold the evening dose.", "urgent", 8),
-        ("Check the blood sugar.", "urgent", 8),
-        ("Give the potassium supplement.", "urgent", 8),
-        ("Repeat the renal profile on Friday.", "urgent", 8),
+        ("Stop the aspirin.", "routine", 24),
+        ("Hold the evening dose.", "routine", 24),
+        ("Check the blood sugar.", "routine", 24),
+        ("Give the potassium supplement.", "routine", 24),
+        ("Repeat the renal profile on Friday.", "routine", 24),
+        ("Stop the aspirin urgently.", "urgent", 4),
         ("Continue the antibiotics.", "routine", 24),
         ("Book a physiotherapy review.", "routine", 24),
         (LONG, "routine", 24),
@@ -165,6 +166,8 @@ def test_accepting_tasks_creates_exactly_the_chosen_ones_for_the_acting_user(cli
     proposed = draft["content"]["proposed_tasks"]
     assert len(proposed) == 3
     before = _task_count(client)
+    signed = client.post(f"/api/drafts/{draft['id']}/approve", json={})
+    assert signed.status_code == 200, signed.text
     response = client.post(
         f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [1, 2], "actor": "Somebody Else"}
     )
@@ -172,8 +175,8 @@ def test_accepting_tasks_creates_exactly_the_chosen_ones_for_the_acting_user(cli
     created = response.json()["tasks"]
     assert [t["title"] for t in created] == [proposed[1]["title"], proposed[2]["title"]]
     assert {t["status"] for t in created} == {"accepted"}
-    assert {t["owner"] for t in created} == {DOCTOR_NAME}
-    assert [t["priority"] for t in created] == ["urgent", "urgent"]
+    assert {t["owner"] for t in created} == {"Dr. Kiran Patel"}
+    assert [t["priority"] for t in created] == ["routine", "routine"]
     board = client.get("/api/tasks").json()["tasks"]
     assert len(board) == before + 2
     from_draft = [t for t in board if t["accepted_from_draft_id"] == draft["id"]]
@@ -185,12 +188,13 @@ def test_accepting_tasks_creates_exactly_the_chosen_ones_for_the_acting_user(cli
 
 def test_accepted_task_is_due_after_the_proposed_hours(client):
     draft = generate_note(client, "F3", "Doctor: Stop the aspirin.\nDoctor: Continue the antibiotics.")
+    assert client.post(f"/api/drafts/{draft['id']}/approve", json={}).status_code == 200
     created = client.post(f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [0, 1]}).json()["tasks"]
     now = utcnow()
     from datetime import datetime
 
     due = [datetime.fromisoformat(t["due_at"]) for t in created]
-    assert abs(due[0] - (now + timedelta(hours=8))) < timedelta(minutes=5)
+    assert abs(due[0] - (now + timedelta(hours=24))) < timedelta(minutes=5)
     assert abs(due[1] - (now + timedelta(hours=24))) < timedelta(minutes=5)
 
 

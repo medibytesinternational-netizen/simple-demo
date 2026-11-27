@@ -2,21 +2,45 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
-from sqlalchemy import select
+import re
+
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from pydantic import BaseModel, Field
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from ..db import get_db
+from ..db import get_db, utcnow
 from ..models import Encounter, Patient
-from ..services import credits
-from ..services.identity import BROWSABLE_PATIENT_IDS, DIRECTORY, PERMISSIONS, USERS, acting_user, require
+from ..config import settings
+from ..services import credits, intake
+from ..services.context import create_transcript_event
+from ..services.drafts import create_draft
+from ..services.ocr import new_document, run_ocr
+from ..services.identity import DIRECTORY, PERMISSIONS, USERS, acting_name, acting_user, require
+from ..services.timeline import add_audit, add_event, new_id
+from ..services.medibytes_note import format_note_sections, note_segments
+from ..services.report_templates import generate_report_template
+from ..services.transcription import get_intake_job, refresh_transcription_status, safe_audio_id, submit_transcription
 
 router = APIRouter()
 
 
 class PackRequest(BaseModel):
     size: int
+
+
+class PatientCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=120)
+    age: int = Field(ge=0, le=130)
+    sex: str = Field(min_length=1, max_length=20)
+    phone: str | None = None
+    allergies: list[str] = Field(default_factory=list)
+    no_known_allergies: bool = False
+    problems: list[str] = Field(default_factory=list)
+    # Recording / document read at intake: attached to the new patient once registered.
+    intake_ids: list[str] = Field(default_factory=list)
 
 
 def user_dict(user) -> dict:
@@ -35,7 +59,7 @@ def users():
 
 @router.get("/patients")
 def patients(db: Session = Depends(get_db)):
-    rows = db.scalars(select(Patient).where(Patient.id.in_(BROWSABLE_PATIENT_IDS)).order_by(Patient.name)).all()
+    rows = db.scalars(select(Patient).order_by(Patient.name)).all()
     encounters = db.scalars(select(Encounter).order_by(Encounter.admitted_at.desc())).all()
     latest: dict[str, Encounter] = {}
     for encounter in encounters:
@@ -55,6 +79,265 @@ def patients(db: Session = Depends(get_db)):
             for patient in rows
         ]
     }
+
+
+def _next_mrn(db: Session) -> str:
+    numbers = [int(m.group(1)) for mrn in db.scalars(select(Patient.mrn)) if (m := re.fullmatch(r"MB-(\d+)", mrn or ""))]
+    return f"MB-{max(numbers, default=1000) + 1}"
+
+
+@router.post("/patients", dependencies=[Depends(require("register_patient"))])
+def register_patient(body: PatientCreate, db: Session = Depends(get_db)):
+    """Register a patient and open an OPD visit, so recordings and documents have a home."""
+    name = " ".join(body.name.split())
+    allergies = [a.strip() for a in body.allergies if a.strip()]
+    for intake_id in dict.fromkeys(body.intake_ids):
+        try:
+            meta = intake.load(intake_id)
+        except KeyError:
+            raise HTTPException(404, f"Intake {intake_id} not found") from None
+        if meta.get("attached_to"):
+            raise HTTPException(409, "That recording or document is already attached to a patient")
+        if meta["status"] != "ready":
+            raise HTTPException(409, "Wait until the recording or document has been read")
+    if allergies and body.no_known_allergies:
+        raise HTTPException(422, "Choose either the listed allergies or no known drug allergies, not both")
+    if not allergies and not body.no_known_allergies:
+        raise HTTPException(422, "Record the allergies or confirm no known drug allergies")
+    duplicate = db.scalars(
+        select(Patient).where(func.lower(Patient.name) == name.lower(), Patient.age == body.age)
+    ).first()
+    if duplicate:
+        raise HTTPException(409, f"{duplicate.name} ({duplicate.mrn}) is already registered with this age")
+
+    patient = Patient(
+        id=new_id("pat"),
+        mrn=_next_mrn(db),
+        name=name,
+        age=body.age,
+        sex=body.sex,
+        allergies=allergies,
+        problems=[p.strip() for p in body.problems if p.strip()],
+    )
+    encounter = Encounter(
+        id=new_id("enc"),
+        patient_id=patient.id,
+        kind="OPD",
+        ward="OPD",
+        attending=acting_name(),
+        admitted_at=utcnow(),
+        status="active",
+    )
+    db.add_all([patient, encounter])
+    db.flush()
+    allergy_text = ", ".join(allergies) if allergies else "No known drug allergies"
+    event = add_event(
+        db,
+        patient_id=patient.id,
+        encounter_id=encounter.id,
+        type="registration",
+        title=f"Registered {patient.name} ({patient.mrn}), OPD visit opened",
+        body_text=f"{patient.age} y, {patient.sex}. Allergies: {allergy_text}.",
+        payload={
+            "mrn": patient.mrn,
+            "age": patient.age,
+            "sex": patient.sex,
+            "phone": body.phone or "",
+            "allergies": allergies,
+            "no_known_allergies": body.no_known_allergies,
+            "problems": patient.problems,
+            "visit": "OPD",
+        },
+        source="registration",
+        approved_by=acting_name(),
+    )
+    add_audit(db, "patient_registered", "patient", patient.id, patient.id, after={"mrn": patient.mrn, "encounter_id": encounter.id, "event_id": event.id})
+    attached = [_attach_intake(db, patient, encounter, intake_id) for intake_id in dict.fromkeys(body.intake_ids)]
+    db.commit()
+    return {
+        "patient": {"id": patient.id, "mrn": patient.mrn, "name": patient.name, "age": patient.age, "sex": patient.sex, "allergies": allergies},
+        "encounter": {"id": encounter.id, "kind": encounter.kind, "status": encounter.status},
+        "attached": attached,
+    }
+
+
+# --------------------------------------------------------------------------
+# Intake: read details from the recording or an old prescription before registering
+# --------------------------------------------------------------------------
+INTAKE_DOC_BYTES = 12 * 1024 * 1024
+INTAKE_AUDIO_BYTES = 64 * 1024 * 1024
+
+
+def _intake_out(meta: dict) -> dict:
+    return {
+        "intake_id": meta["id"],
+        "kind": meta["kind"],
+        "filename": meta["filename"],
+        "status": meta["status"],
+        "fields": meta.get("fields") or {},
+        "method": meta.get("method"),
+        "error": meta.get("error"),
+        "doc_type": meta.get("doc_type"),
+        "preview": meta.get("preview"),
+        "values": meta.get("values") or [],
+        "note_content": meta.get("note_content"),
+        "needs_review": meta.get("needs_review") or [],
+    }
+
+
+@router.post("/intake/document", dependencies=[Depends(require("register_patient"))])
+async def intake_document(file: UploadFile = File(...), doc_type: str = Form("auto"), db: Session = Depends(get_db)):
+    """An old prescription or discharge summary: read the patient's details from it."""
+    if doc_type != "auto" and doc_type not in intake.DOC_TYPES:
+        raise HTTPException(422, "Unknown document type")
+    contents = await file.read(INTAKE_DOC_BYTES + 1)
+    if len(contents) > INTAKE_DOC_BYTES:
+        raise HTTPException(413, "File too large (max 12 MB)")
+    if not contents:
+        raise HTTPException(400, "The file is empty")
+    mime = file.content_type or "application/octet-stream"
+    name = (file.filename or "document").lower()
+    is_image = mime.startswith("image/")
+    if not (is_image or mime == "application/pdf" or name.endswith(".pdf")):
+        raise HTTPException(415, "Upload a PDF or a photo of the document")
+    credits.charge(db, "report_reading", feature="F8", mode=settings.effective_llm_mode)
+    meta = intake.create("document", file.filename or "document", mime, contents, doc_type=doc_type)
+    text = intake.document_text(Path(meta["path"]), mime)
+    if doc_type == "auto":
+        # No type is asked for: a page of medicines is a prescription, anything else a discharge summary.
+        doc_type = meta["doc_type"] = intake.guess_doc_type(text, file.filename or "")
+    fields, method = intake.extract("document", text, (contents, mime) if is_image else None)
+    from ..services.ocr import parse_report
+
+    values = parse_report(doc_type, [text] if text else [], utcnow().date().isoformat()).get("fields", []) if text else []
+    meta.update(status="ready", fields=fields, method=method, text_found=bool(text),
+                values=[{"name": v.get("name"), "value": v.get("value"), "unit": v.get("unit", ""),
+                         "reference_range": v.get("reference_range", "")} for v in values])
+    if not fields:
+        meta["error"] = "No details could be read. Type them in the form; the document is still attached."
+    intake.save(meta)
+    add_audit(db, "intake_document_read", "intake", meta["id"], None, after={"fields": sorted(fields), "method": method, "doc_type": doc_type})
+    db.commit()
+    return _intake_out(meta)
+
+
+@router.post("/intake/audio", dependencies=[Depends(require("register_patient"))])
+async def intake_audio(file: UploadFile = File(...), consent: bool = Form(False), db: Session = Depends(get_db)):
+    """The consultation recording, taken with consent before registration. It pre-fills the form now
+    and becomes the OPD draft once the patient is registered."""
+    from .notes import _looks_like_audio
+
+    if not consent:
+        raise HTTPException(403, "Record the patient's consent before capturing audio")
+    if not _looks_like_audio(file.filename, file.content_type):
+        raise HTTPException(415, "That file is not audio. Upload mp3, wav, m4a, webm or ogg.")
+    contents = await file.read(INTAKE_AUDIO_BYTES + 1)
+    if len(contents) > INTAKE_AUDIO_BYTES:
+        raise HTTPException(413, "Audio too large (max 64 MB)")
+    if not contents:
+        raise HTTPException(400, "The audio file is empty")
+    meta = intake.create(
+        "audio", file.filename or "consultation.webm", file.content_type or "audio/webm", contents,
+        consent_by=acting_name(), consent_at=utcnow().isoformat(),
+    )
+    audio_id = safe_audio_id(meta["id"])
+    try:
+        job = await submit_transcription(
+            db,
+            audio_id=audio_id,
+            patient_id=f"intake:{meta['id']}",
+            encounter_id="",
+            feature="F1",
+            filename=meta["filename"],
+            content_type=meta["mime"],
+            audio=contents,
+            submitted_by=acting_name(),
+            intake_id=meta["id"],
+        )
+    except HTTPException as exc:
+        meta.update(status="failed", error=str(exc.detail), audio_id=audio_id)
+        intake.save(meta)
+        raise
+    meta["audio_id"] = audio_id
+    meta["status"] = "running"
+    intake.save(meta)
+    add_audit(db, "intake_audio_submitted", "intake", meta["id"], None, actor_type="model", actor_name="MediBytes Transcription API", after={"audio_id": audio_id, "consent_by": meta["consent_by"]})
+    db.commit()
+    return _intake_out(meta)
+
+
+@router.get("/intake/{intake_id}", dependencies=[Depends(require("register_patient"))])
+async def intake_status(intake_id: str, db: Session = Depends(get_db)):
+    try:
+        meta = intake.load(intake_id)
+    except KeyError:
+        raise HTTPException(404, "Intake not found") from None
+    if meta["kind"] == "audio" and meta["status"] == "running":
+        job = get_intake_job(db, intake_id)
+        await refresh_transcription_status(db, job)
+        if job.job_status == "failed":
+            meta.update(status="failed", error=job.job_error or "The recording could not be processed")
+        elif job.job_status == "succeeded" and job.note_content:
+            from ..services.transcription import job_to_dict
+            result = job_to_dict(db, job)
+            note = result.get("note_content") or {}
+            content, _ = generate_report_template(db, "F1", note, result.get("needs_review") or [], "")
+            meta.update(
+                status="ready",
+                note_content=note,
+                needs_review=result.get("needs_review") or [],
+                fields={},
+                method="MediBytes six-section note",
+                preview=content,
+            )
+        intake.save(meta)
+    return _intake_out(meta)
+
+
+def _attach_intake(db: Session, patient: Patient, encounter: Encounter, intake_id: str) -> dict:
+    """Give the new patient what was captured at intake."""
+    meta = intake.load(intake_id)
+    if meta["kind"] == "document":
+        document = new_document(
+            db, patient_id=patient.id, encounter_id=encounter.id, filename=meta["filename"],
+            path=meta["path"], mime=meta["mime"], doc_type=meta["doc_type"],
+        )
+        run_ocr(db, document)
+        out = {"intake_id": intake_id, "kind": "document", "document_id": document.id}
+    else:
+        consent_by = meta.get("consent_by") or acting_name()
+        add_event(
+            db, patient_id=patient.id, encounter_id=encounter.id, type="consent",
+            title="Consent for consultation capture",
+            body_text=f"Granted before the recording at registration; recorded by {consent_by}.",
+            payload={"consent_type": "consultation_capture", "granted": True, "note": "Given at registration, before recording"},
+            source="consent", approved_by=consent_by,
+        )
+        job = get_intake_job(db, intake_id)
+        note = meta.get("note_content") or {}
+        formatted = format_note_sections(note)
+        event = create_transcript_event(db, patient, encounter, "F1", formatted, "Consultation (MediBytes API)")
+        event.payload = {
+            **(event.payload or {}),
+            "audio_id": job.audio_id,
+            "note_content": note,
+            "needs_review": meta.get("needs_review") or [],
+            "segments": note_segments(note),
+            "raw_response": job.raw_response,
+        }
+        event.source = "medibytes"
+        event.author_type = "model"
+        event.author_name = "MediBytes Transcription API"
+        event.approved_by = None
+        job.transcript_event_id = event.id
+        content, llm_call = generate_report_template(db, "F1", note, meta.get("needs_review") or [], event.id)
+        draft = create_draft(db, feature="F1", patient=patient, encounter=encounter, content=content, llm_call=llm_call, created_from_event_ids=[event.id])
+        job.draft_id = draft.id
+        out = {"intake_id": intake_id, "kind": "audio", "draft_id": draft.id}
+    meta["attached_to"] = patient.id
+    intake.save(meta)
+    add_audit(db, "intake_attached", "intake", intake_id, patient.id, after=out)
+    return out
 
 
 @router.get("/credits")

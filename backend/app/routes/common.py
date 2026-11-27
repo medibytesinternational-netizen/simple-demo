@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any, Literal
 
+from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -28,9 +29,10 @@ from ..services.timeline import (
 # Request bodies
 # --------------------------------------------------------------------------
 class NoteGenerateRequest(BaseModel):
-    feature: Literal["F1", "F2", "F3", "F4"]
+    feature: Literal["F1", "F2", "F3", "F4", "F9", "F11"]
     transcript: str = Field(min_length=10)
     title: str | None = None
+    transcript_event_id: str | None = None
 
 
 class DraftPatchRequest(BaseModel):
@@ -67,7 +69,7 @@ class TaskCreateRequest(BaseModel):
     due_in_hours: int = 24
     owner: str | None = None
     category: Literal["general", "lab", "ct", "mri", "xray", "ultrasound", "ecg"] = "general"
-    assignee_role: Literal["senior_doctor", "nurse"] | None = None
+    assignee_role: Literal["senior_doctor", "junior_doctor", "nurse"] | None = None
 
 
 class TaskUpdateRequest(BaseModel):
@@ -128,6 +130,8 @@ class MatchRequest(BaseModel):
 def _patient_encounter(db: Session, encounter_id: str | None = None):
     patient = get_patient(db)
     encounter = get_encounter(db, encounter_id)
+    if encounter.patient_id != patient.id:
+        raise HTTPException(404, "Consultation not found for the selected patient")
     return patient, encounter
 
 
@@ -203,6 +207,7 @@ def _investigation_dict(request: InvestigationRequest) -> dict[str, Any]:
         "approved_by": request.approved_by,
         "created_at": request.created_at.isoformat() if request.created_at else None,
         "exported_at": request.exported_at.isoformat() if request.exported_at else None,
+        "source_event_id": getattr(request, "source_event_id", None),
     }
 
 

@@ -39,7 +39,8 @@ _ASSESSMENT = re.compile(
 )
 _PLAN = re.compile(
     r"\b(start|stop|continue|hold|withhold|admit|check|repeat|order|prescrib\w*|increase|decrease|reduce|refer|"
-    r"book|arrange|advise|recommend|schedule|discharge|monitor|give|take|switch|change|add|avoid)\b"
+    r"book|arrange|advise|recommend|schedule|discharge|monitor|give|take|switch|change|add|avoid|collect|obtain|"
+    r"chart|document|record|notify|inform)\b"
     r"|\breview\s+(in|tomorrow|again|the|your|on|with|renal|him|her|them|at)\b",
     re.I,
 )

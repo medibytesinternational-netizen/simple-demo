@@ -82,8 +82,8 @@ def export_investigation_request(request_id: str, db: Session = Depends(get_db))
         raise HTTPException(404, "Investigation request not found")
     if request.status == "exported":
         raise HTTPException(409, "This request has already been exported")
-    if request.status != "approved":
-        raise HTTPException(409, "Only approved requests can be exported")
+    if request.status not in ("approved", "requested"):
+        raise HTTPException(409, "Only approved or requested investigations can be sent")
     request.status = "exported"
     request.exported_at = utcnow()
     add_audit(

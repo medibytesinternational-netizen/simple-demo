@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { ALERT_TARGET } from "../components/nextStep";
 import { get, post } from "../api";
-import type { Draft, Reconciliation } from "../types";
+import type { Draft, Meta, Reconciliation } from "../types";
 import { DismissFields, dismissReady } from "../features/f05/DismissFields";
 import { CATEGORY_LABEL } from "../features/f05/types";
 import type { AlertRow, DismissCategory } from "../features/f05/types";
@@ -16,6 +17,7 @@ import type { Medication } from "../types";
 import { Icon } from "../components/icons";
 import { Banner, DataTable, EmptyState, MetaChip, Panel, Pill, Skeleton, SummaryPanel, Tabs, Toolbar } from "../components/ui";
 import type { Column } from "../components/ui";
+import { usePatientId } from "../session";
 
 /** The demo rule file shown in the rail. Detection lives in the backend rule engine. */
 const RULES: { id: string; check: string; severity: "critical" | "warning" }[] = [
@@ -39,6 +41,9 @@ export function SafetyPage() {
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") === "meds" ? "meds" : "alerts";
   const queryClient = useQueryClient();
+  const patientId = usePatientId();
+  const meta = useQuery<Meta>({ queryKey: ["meta"], queryFn: () => get<Meta>("/meta"), refetchInterval: 30000 });
+  const activeEncounterId = meta.data?.encounter.id ?? "";
   const [dismissing, setDismissing] = useState<AlertRow | null>(null);
   const [reason, setReason] = useState("");
   const [category, setCategory] = useState<DismissCategory | "">("");
@@ -49,14 +54,14 @@ export function SafetyPage() {
     queryFn: () => get("/alerts"),
   });
   const reconciliation = useQuery<Reconciliation>({
-    queryKey: ["reconciliation"],
-    queryFn: () => get("/medications/reconciliation"),
-    enabled: tab === "meds",
+    queryKey: ["reconciliation", patientId, activeEncounterId],
+    queryFn: () => get(`/medications/reconciliation?encounter_id=${encodeURIComponent(activeEncounterId)}`),
+    enabled: tab === "meds" && !!patientId && !!activeEncounterId,
   });
   const reconDrafts = useQuery<{ drafts: Draft[] }>({
-    queryKey: ["drafts", "F6"],
-    queryFn: () => get("/drafts?feature=F6&limit=1"),
-    enabled: tab === "meds",
+    queryKey: ["drafts", patientId, activeEncounterId, "F6"],
+    queryFn: () => get(`/drafts?feature=F6&limit=1&encounter_id=${encodeURIComponent(activeEncounterId)}`),
+    enabled: tab === "meds" && !!patientId && !!activeEncounterId,
   });
 
   const acknowledge = useMutation({
@@ -82,7 +87,7 @@ export function SafetyPage() {
     onError: (err: any) => setError(String(err?.message || err)),
   });
   const explain = useMutation({
-    mutationFn: () => post<any>("/medications/reconciliation/generate"),
+    mutationFn: () => post<any>(`/medications/reconciliation/generate?encounter_id=${encodeURIComponent(activeEncounterId)}`),
     onSuccess: () => queryClient.invalidateQueries(),
     onError: (err: any) => setError(String(err?.message || err)),
   });
@@ -173,6 +178,11 @@ export function SafetyPage() {
                         <button className="btn btn-danger btn-sm" onClick={() => { setDismissing(alert); setReason(""); setCategory(""); }}>
                           Dismiss with reason
                         </button>
+                        {ALERT_TARGET[alert.rule_id] ? (
+                          <Link className="btn btn-ghost btn-sm" to={ALERT_TARGET[alert.rule_id].to}>
+                            {ALERT_TARGET[alert.rule_id].label} →
+                          </Link>
+                        ) : null}
                       </div>
                     </article>
                   );
@@ -253,6 +263,7 @@ export function SafetyPage() {
         </div>
       ) : (
         <div className="meds-stack">
+          {reconciliation.isError ? <Banner tone="danger" role="alert">Medication reconciliation results could not be loaded. Retry after the patient record is available.</Banner> : null}
           <SummaryPanel
             id="safety-meds"
             title={(
@@ -267,7 +278,7 @@ export function SafetyPage() {
               { label: "Differences found", value: discrepancyCount, tone: discrepancyCount ? "warning" : "success", note: "Found by fixed rules" },
             ]}
             actions={(
-              <button className="btn btn-primary btn-sm" onClick={() => explain.mutate()} disabled={explain.isPending} aria-busy={explain.isPending || undefined}>
+              <button className="btn btn-primary btn-sm" onClick={() => explain.mutate()} disabled={explain.isPending || reconciliation.isLoading || reconciliation.isError || !activeEncounterId} aria-busy={explain.isPending || undefined}>
                 {explain.isPending ? <><span className="spinner" /> Drafting…</> : <><Icon name="spark" size={14} /> Generate explanation</>}
               </button>
             )}

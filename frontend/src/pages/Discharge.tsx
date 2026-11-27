@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, openApiWindow, post } from "../api";
+import { formatHospitalDate } from "../dates";
 import type { Draft, Meta } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { ReadinessPanel } from "../features/f09/ReadinessPanel";
 import { SignPanel } from "../features/f09/SignPanel";
 import type { Readiness } from "../features/f09/types";
 import { Banner, Skeleton } from "../components/ui";
+import { NextStepCta } from "../components/NextStepCta";
+import { DischargeReport } from "../features/f09/DischargeReport";
 
 type Mode = "print" | "view" | "clear";
 type TabKey = "summary" | "doctor" | "result" | "unit";
@@ -33,11 +36,17 @@ const CATEGORIES: { key: string; match: string[] }[] = [
   { key: "FOLLOWUP", match: ["follow"] },
 ];
 
-const fmtDate = (v?: string | null) => (v ? new Date(v).toLocaleDateString("en-GB") : "");
+const fmtDate = (v?: string | null) => (v ? formatHospitalDate(v, "en-GB") : "");
 type Section = { heading: string; paragraphs?: { text: string }[] };
 type Med = { drug: string; dose?: string; route?: string; frequency?: string };
 
+/** Discharge summary in the hospital format (generated from the record). */
 export function DischargePage() {
+  return <DischargeReport />;
+}
+
+/** The earlier AI-drafted discharge screen, no longer routed. */
+export function DischargeDraftPage() {
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<Mode>("view");
   const [tab, setTab] = useState<TabKey>("summary");
@@ -161,6 +170,7 @@ export function DischargePage() {
           <div className="dc-pad">
             {readiness.isLoading ? <Skeleton count={5} /> : <ReadinessPanel readiness={readiness.data} />}
             {draft ? <div className="mt-3"><SignPanel draft={draft} readiness={readiness.data} /></div> : null}
+            {signed ? <NextStepCta id="discharge" /> : null}
           </div>
         ) : null}
 

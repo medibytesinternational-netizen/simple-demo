@@ -1,6 +1,7 @@
 import { Fragment, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../api";
+import { formatHospitalDateTime, parseHospitalDateTime } from "../dates";
 import type { AuditEntry } from "../types";
 import { PageHeader } from "../components/PageHeader";
 import { Banner, DataTable, EmptyState, Panel, Pill, SearchInput, Toolbar } from "../components/ui";
@@ -34,10 +35,10 @@ export function AuditPage() {
   const changesOf = (e: AuditEntry) => (e.after && typeof e.after === "object" ? Object.entries(e.after) : []);
   const columns: Column<AuditEntry>[] = [
     {
-      key: "time", header: "Time", sort: (e) => Date.parse(e.created_at), className: "nowrap",
+      key: "time", header: "Time", sort: (e) => parseHospitalDateTime(e.created_at)?.getTime() ?? 0, className: "nowrap",
       cell: (e) => (
         <time className="mono" dateTime={e.created_at}>
-          {new Date(e.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+          {formatHospitalDateTime(e.created_at, "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
         </time>
       ),
     },

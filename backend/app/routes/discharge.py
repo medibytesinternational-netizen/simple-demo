@@ -90,3 +90,65 @@ def discharge_print(draft_id: str, db: Session = Depends(get_db)):
     <p class="meta">Demo output. Not a clinical document.</p>
     </body></html>"""
     return HTMLResponse(html)
+
+
+# --------------------------------------------------------------------------
+# Discharge summary report, hospital format: generated from the signed record by a doctor
+# (Admin, Senior or Junior), stored as a document on the timeline, viewable by everyone.
+# --------------------------------------------------------------------------
+from sqlalchemy import select  # noqa: E402
+
+from ..config import settings  # noqa: E402
+from ..db import utcnow  # noqa: E402
+from ..models import TimelineEvent  # noqa: E402
+from ..services import discharge_form  # noqa: E402
+from ..services.identity import acting_name  # noqa: E402
+from ..services.note_document import GENERATED_KIND  # noqa: E402
+from ..services.ocr import new_document  # noqa: E402
+from ..services.timeline import add_audit, add_event  # noqa: E402
+
+
+@router.get("/discharge/reports")
+def discharge_reports(db: Session = Depends(get_db)):
+    patient, _, _ = _state(db)
+    events = db.scalars(
+        select(TimelineEvent)
+        .where(TimelineEvent.patient_id == patient.id, TimelineEvent.type == discharge_form.REPORT_TYPE)
+        .order_by(TimelineEvent.occurred_at.desc())
+    ).all()
+    return {"reports": [
+        {"event_id": e.id, "document_id": e.document_id, "time": e.occurred_at.isoformat(), "by": e.author_name}
+        for e in events
+    ]}
+
+
+@router.post("/discharge/report", dependencies=[Depends(require("discharge_report"))])
+def discharge_report(db: Session = Depends(get_db)):
+    patient, encounter, state = _state(db)
+    form = discharge_form.build(db, patient, encounter, state)
+    made_at = utcnow()
+    html = discharge_form.render_html(form, made_at)
+    event = add_event(
+        db, patient_id=patient.id, encounter_id=encounter.id, type=discharge_form.REPORT_TYPE, subtype="F9",
+        title=discharge_form.TITLE, body_text=f"Generated from {len(form['rows'])} notes on record",
+        payload={"notes": len(form["rows"]), "doctor": form["doctor"]},
+        source="F9", author_type="human", author_name=acting_name(), status="approved",
+        occurred_at=made_at, approved_by=acting_name(),
+    )
+    folder = settings.uploads_dir / "notes"
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"{event.id}.html"
+    path.write_text(html, encoding="utf-8")
+    document = new_document(
+        db, patient_id=patient.id, encounter_id=encounter.id,
+        filename=f"{discharge_form.TITLE} {patient.mrn} {made_at:%Y-%m-%d %H%M}.html", path=str(path),
+        mime="text/html", image_kind=GENERATED_KIND, doc_type=discharge_form.REPORT_TYPE,
+    )
+    document.ocr_status = "confirmed"
+    document.confirmed_by = acting_name()
+    document.confirmed_at = made_at
+    event.document_id = document.id
+    add_audit(db, "note_document_stored", "document", document.id, patient.id,
+              after={"event_id": event.id, "doc_type": discharge_form.REPORT_TYPE})
+    db.commit()
+    return {"event_id": event.id, "document_id": document.id}

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ReferralForm } from "../features/f11/ReferralForm";
+import { ProgressNotes } from "../features/f04/ProgressNotes";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { get, post } from "../api";
@@ -12,7 +14,9 @@ import ReferralRequestForm from "../features/f11/ReferralRequestForm";
 import { canAcknowledge, referralStatusLabel } from "../features/f11/rules";
 import { ConsultNoteStatus, type ConsultGenerateResult } from "../features/f01/ConsultNoteStatus";
 import { PageHeader } from "../components/PageHeader";
+import { NextStepCta } from "../components/NextStepCta";
 import { Stepper } from "../components/ui";
+import { currentRole } from "../components/roles";
 import type { StepState } from "../components/ui";
 
 const CONSULT_TRANSCRIPT = `Doctor: Mr Menon, what brings you in today?
@@ -57,8 +61,8 @@ type Tab = {
 const TABS: Tab[] = [
   { key: "consult", label: "OPD consultation", feature: "F1", kind: "transcript", title: "OPD consultation", description: "Record or upload the consultation audio (with the patient's consent), or paste a transcript. The note drafts itself; you review, edit and sign it.", transcript: CONSULT_TRANSCRIPT },
   { key: "admission", label: "Admission assessment", feature: "F2", kind: "transcript", title: "Admission assessment", description: "MediBytes Analysis prepares the admission note from the interview. Verify the allergy record before approving; proposed orders stay as reports.", transcript: ADMISSION_TRANSCRIPT },
-  { key: "round", label: "Ward round", feature: "F3", kind: "transcript", title: "Ward round", description: "Dictate the round. The note, nursing-chart entries and proposed tasks are drafted; you choose which tasks to create.", transcript: ROUND_TRANSCRIPT },
-  { key: "progress", label: "Progress note", feature: "F4", kind: "transcript", title: "Progress notes", description: "MediBytes Analysis identifies what changed since the last note. Examination and plan must be written by the clinician before signing.", transcript: PROGRESS_TRANSCRIPT },
+  { key: "round", label: "Ward round", feature: "F3", kind: "transcript", title: "Ward round", description: "Dictate the round for the selected patient. Review and edit the report and role-based tasks, then approve the report and selected tasks before anything enters a staff queue.", transcript: ROUND_TRANSCRIPT },
+  { key: "progress", label: "Progress notes", feature: "F4", kind: "transcript", title: "Progress notes", description: "MediBytes Analysis identifies what changed since the last note. Examination and plan must be written by the clinician before signing.", transcript: PROGRESS_TRANSCRIPT },
   { key: "icu", label: "ICU flow sheet", feature: "F7", kind: "icu", title: "ICU flow sheet", description: "Assembles device readings and structured observations into a flow sheet. It cannot add, estimate or silently round a value.", transcript: "" },
   { key: "referral", label: "Referral", feature: "F11", kind: "referral", title: "Referrals", description: "Prepares the right specialty, a specific clinical question and the documented history. A human approves before the referral status changes to sent.", transcript: "" },
   { key: "labs", label: "Lab results", feature: "—", kind: "labs", title: "Lab results", description: "Support view: review abnormal results and close the unreviewed-result alert.", transcript: "" },
@@ -89,7 +93,7 @@ type Referral = {
 };
 
 export function NotesPage() {
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
   const tabKey = params.get("tab") || "consult";
   const tab = TABS.find((item) => item.key === tabKey) || TABS[0];
   const queryClient = useQueryClient();
@@ -137,11 +141,14 @@ export function NotesPage() {
   });
   const patientId = usePatientId();
   const consents = useQuery<{ consents: Array<{ id: string; granted: boolean; consent_type: string; occurred_at: string }> }>({
-    queryKey: ["consents", "notes", patientId],
-    queryFn: () => get(`/patients/${patientId}/consents`),
-    enabled: tab.feature === "F1" && !!patientId,
+    queryKey: ["consents", "notes", patientId, activeEncounterId],
+    queryFn: () => get(`/patients/${patientId}/consents?encounter_id=${encodeURIComponent(activeEncounterId)}`),
+    enabled: (tab.feature === "F1" || tab.feature === "F2" || tab.feature === "F3") && !!patientId && !!activeEncounterId,
   });
-  const consentGranted = Boolean(consents.data?.consents?.some((entry) => entry.granted));
+  const consentGranted = Boolean(consents.data?.consents?.some(
+    (entry) => entry.granted && ["consultation_capture", "audio_recording"].includes(entry.consent_type),
+  ));
+  const canRecordConsent = currentRole() === "admin";
 
   const recordConsent = useMutation({
     mutationFn: () =>
@@ -156,16 +163,11 @@ export function NotesPage() {
 
   // A transcript from VoiceInput (recording or upload) lands in the textarea first, so nothing is lost
   // if drafting fails, then drafts after a short window in which the clinician can cancel.
-  const onVoiceTranscript = (text: string) => {
-    // The feature was pinned when transcription began; a transcript for another tab is dropped.
-    if (voiceFeatureRef.current !== tab.feature) return;
-    setTranscript(text);
+  // The shared MediBytes API flow turns the returned note into a report draft; show it for review.
+  const onVoiceDraft = () => {
     setError("");
-    if (text.trim().length < 10) {
-      setError("Transcript is too short to draft. Edit it and press Generate draft.");
-      return;
-    }
-    setPendingDraft({ text, feature: tab.feature, left: AUTO_DRAFT_DELAY_S });
+    setConsultResult(null);
+    queryClient.invalidateQueries();
   };
 
   const generate = useMutation<any, Error, { text?: string } | undefined>({
@@ -253,13 +255,6 @@ export function NotesPage() {
   });
 
   const latest = draftQuery.data?.drafts?.[0];
-  const tabChanged = (key: string) => {
-    const next = TABS.find((item) => item.key === key) || TABS[0];
-    setParams({ tab: key });
-    setTranscript(next.transcript);
-    setError("");
-    setPendingDraft(null);
-  };
 
   const intro = useMemo(() => {
     if (tab.kind === "icu") return "Readings from bedside devices, with units and times. Anything not recorded is shown as “not documented”, never guessed.";
@@ -269,6 +264,9 @@ export function NotesPage() {
   }, [tab]);
 
   const hasWorkflow = tab.kind === "transcript";
+  // OPD reports and admission notes are written from a recording; this page reviews, signs and edits them.
+  const isOpd = tab.feature === "F1" || tab.feature === "F2";
+  const isAdmission = tab.feature === "F2";
 
   const flowStage = !hasDraft || !latest ? 0 : latest.status === "approved" ? 3 : latest.status === "generating" ? 1 : 2;
   const flowSteps = ["Capture", "Draft", "Sign"].map((label, i) => ({
@@ -282,29 +280,45 @@ export function NotesPage() {
     "Signed and on the timeline. Generate again for a new version.",
   ][flowStage];
 
+  if (tab.feature === "F11") {
+    return (
+      <>
+        <PageHeader title="Referrals" description="Dictate the referral. The form is filled from what you say and the patient's earlier record; you check it and approve, and it is stored on the timeline." />
+        <ReferralForm />
+      </>
+    );
+  }
+
+  if (tab.feature === "F4") {
+    return (
+      <>
+        <PageHeader title="Progress notes" description="Daily progress notes by doctors and nurses. Dictate an entry; it is signed in your name and added to the table and the timeline." />
+        <ProgressNotes />
+      </>
+    );
+  }
+
   return (
     <>
       <PageHeader
         title={tab.title}
-        description={intro}
-        meta={<span className="tag tag-ai">MediBytes Analysis \→ clinician review \→ sign</span>} />
-      {hasWorkflow && (
+        description={intro} />
+      {tab.feature === "F3" && meta.data ? (
+        <div className="banner mb-3" role="status">
+          Ward round for <strong>{meta.data.patient.name}</strong> · MRN {meta.data.patient.mrn} · {meta.data.encounter.ward || "Ward not set"}{meta.data.encounter.bed ? ` · Bed ${meta.data.encounter.bed}` : ""}
+        </div>
+      ) : null}
+      {/* The module is chosen in the sidebar; this page shows one module at a time. */}
+      {hasWorkflow && !isOpd && (
         <div className="notes-flow">
           <Stepper steps={flowSteps} label="Note progress" />
           <span className="small muted">{flowHint}</span>
         </div>
       )}
 
-      <div className="tabs">
-        {TABS.map((item) => (
-          <button key={item.key} className={`tab ${item.key === tab.key ? "active" : ""}`} onClick={() => tabChanged(item.key)}>
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="split-main">
-        <div className="card">
+      <div className={isOpd ? "opd-single" : "split-main"}>
+        {/* OPD notes are captured in New patient (voice and documents); this page reviews, signs and edits them. */}
+        {isOpd ? null : <div className="card">
           <div className="card-head">
             <div>
               <div className="card-title">{tab.kind === "transcript" ? "1 · Input" : tab.kind === "labs" ? "Results" : tab.kind === "icu" ? "Device readings" : "Referral"}</div>
@@ -325,37 +339,10 @@ export function NotesPage() {
                     setPendingDraft(null);
                   }}
                 />
-                {tab.feature === "F1" ? (
-                  <div className={`banner ${consentGranted ? "success" : "warning"} mt-2`}>
-                    <div className="flex items-center justify-between gap-2">
-                      <span>
-                        {consentGranted
-                          ? "Consent is recorded. Record audio or upload an audio file; transcription needs the OpenAI key (live mode)."
-                          : "Consent for consultation capture has not been recorded. Audio capture is blocked until it is."}
-                      </span>
-                      <div className="button-row">
-                        {!consentGranted ? (
-                          <button className="btn btn-sm" onClick={() => recordConsent.mutate()} disabled={recordConsent.isPending}>
-                            {recordConsent.isPending ? "Recording consent…" : "Record consent"}
-                          </button>
-                        ) : null}
-                        <VoiceInput
-                          consentGranted={consentGranted}
-                          disabled={generate.isPending || pendingDraft !== null}
-                          onTranscribingChange={(active) => {
-                            if (active) voiceFeatureRef.current = tab.feature;
-                            setTranscribing(active);
-                          }}
-                          onTranscript={onVoiceTranscript}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
                 {transcribing || pendingDraft || generate.isPending ? (
                   <div className="banner mt-2" role="status">
                     {transcribing ? (
-                      <><span className="spinner" /> Transcribing...</>
+                      <><span className="spinner" /> {tab.feature === "F3" ? "Transcribing ward-round dictation with MediBytes…" : "Transcribing with MediBytes…"}</>
                     ) : pendingDraft ? (
                       <div className="flex items-center justify-between gap-2">
                         <span>Drafting in {pendingDraft.left} s. The transcript is in the box above; you can edit it first.</span>
@@ -370,9 +357,33 @@ export function NotesPage() {
                   <button className="btn btn-primary" onClick={() => generate.mutate()} disabled={generate.isPending || transcript.trim().length < 10}>
                     {generate.isPending ? <><span className="spinner" /> Generating draft…</> : "Generate draft"}
                   </button>
-                  <button className="btn" onClick={() => setTranscript(tab.transcript)}>Load consultation transcript</button>
-                  {tab.feature === "F1" ? <span className="small muted">Paste text, record, or upload an audio file.</span> : <span className="small muted">Paste or type the text; this tab has no voice input.</span>}
+                  <button className="btn" onClick={() => setTranscript(tab.transcript)}>{tab.feature === "F1" ? "Load consultation transcript" : `Load ${tab.title.toLowerCase()} example`}</button>
+                  {tab.feature === "F1" ? <span className="small muted">Paste text, record, or upload an audio file.</span> : tab.feature === "F3" ? <span className="small muted">Type a dictation or record it below.</span> : <span className="small muted">Paste or type the text; this tab has no voice input.</span>}
                 </div>
+                {tab.feature === "F3" ? (
+                  <div className="mt-3">
+                    {consentGranted ? (
+                      <div className="banner success mb-2">Patient consent is recorded for ward-round audio.</div>
+                    ) : (
+                      <div className="banner warning mb-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span>{canRecordConsent ? "Record patient consent before capturing ward-round audio." : "A doctor must record patient consent before capturing ward-round audio."}</span>
+                          {canRecordConsent ? <button className="btn btn-sm btn-primary" onClick={() => recordConsent.mutate()} disabled={recordConsent.isPending}>
+                            {recordConsent.isPending ? "Saving…" : "Record consent"}
+                          </button> : null}
+                        </div>
+                      </div>
+                    )}
+                    <div className="small muted mb-2">Audio is sent to MediBytes for transcription. The ward-round report is drafted in this screen for review.</div>
+                    <VoiceInput
+                      consentGranted={consentGranted}
+                      disabled={generate.isPending}
+                      feature="F3"
+                      onBusyChange={setTranscribing}
+                      onDraft={onVoiceDraft}
+                    />
+                  </div>
+                ) : null}
                 {tab.feature === "F1" ? <ConsultNoteStatus result={consultResult} /> : null}
                 {tab.feature === "F1" || tab.feature === "F2" ? (
                   <div className="banner mt-3">
@@ -537,20 +548,47 @@ export function NotesPage() {
               </>
             ) : null}
           </div>
-        </div>
+        </div>}
 
         <div>
           {latest && hasDraft ? (
             <DraftReview draft={latest} />
+          ) : isOpd ? (
+            // No OPD report yet: capture the consultation. Once a report exists this box is gone.
+            <section className="his-box">
+              <h2 className="his-box-title">{isAdmission ? "Record the admission" : "Record the consultation"}</h2>
+              <div className="npf-body">
+                {error ? <div className="error-box mb-3" role="alert">{error}</div> : null}
+                {consentGranted ? (
+                  <div className="banner success mb-3">
+                    {isAdmission
+                      ? "Consent recorded. Dictate the admission or upload the voice file. The six-section note fills only what it supports; leave other fields for clinician review."
+                      : "Consent recorded. Record the consultation or upload the voice file; the OPD report is written from it."}
+                  </div>
+                ) : (
+                  <div className="banner warning mb-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span>{canRecordConsent ? "Ask the patient for consent to record this consultation. Recording is blocked until it is recorded." : "A doctor must record patient consent before audio capture is available."}</span>
+                      {canRecordConsent ? <button className="btn btn-sm btn-primary" onClick={() => recordConsent.mutate()} disabled={recordConsent.isPending}>
+                        {recordConsent.isPending ? "Saving..." : "Patient consents"}
+                      </button> : null}
+                    </div>
+                  </div>
+                )}
+                <VoiceInput consentGranted={consentGranted} feature={tab.feature} onTranscribingChange={setTranscribing} onDraft={onVoiceDraft} />
+                {transcribing ? <div className="banner mt-2" role="status"><span className="spinner" /> Transcribing and writing the {isAdmission ? "admission note" : "OPD report"}. This usually takes under a minute.</div> : null}
+              </div>
+            </section>
           ) : (
             <div className="card empty">
               <div className="empty-title">{hasDraft ? "No draft for this module yet." : "Support view"}</div>
-              <div>{hasDraft ? "Generate one from the input panel. The draft will appear here with evidence attached." : "Review results in the table and mark abnormal ones as reviewed."}</div>
+              <div>{isOpd ? <>OPD reports are written from the consultation voice in <Link to="/patients/new">New patient</Link>.</> : hasDraft ? "Generate one from the input panel. The draft will appear here with evidence attached." : "Review results in the table and mark abnormal ones as reviewed."}</div>
             </div>
           )}
           {latest?.status === "approved" && hasDraft ? (
             <div className="banner success mt-3">
-              This version is approved and on the timeline. Generate again to create a new draft; the previous version will be marked superseded.
+              {isAdmission ? "The admission note is signed and on the timeline, and the patient is admitted." : isOpd ? "This version is signed and on the timeline. Use Edit to correct it; signing the correction replaces it on the timeline." : "This version is approved and on the timeline. Generate again to create a new draft; the previous version will be marked superseded."}
+              <NextStepCta id={tab.key} />
             </div>
           ) : null}
         </div>

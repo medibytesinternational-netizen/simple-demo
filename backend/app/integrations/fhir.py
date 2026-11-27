@@ -7,8 +7,10 @@ left empty (a lab flag with no interpretation is ``unknown``, not guessed from t
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
+
+from ..dates import parse_hospital_datetime
 
 FLAGS = {"H": "high", "L": "low", "N": "normal", "HH": "critical", "LL": "critical"}
 STOPPED = {"stopped", "completed", "cancelled"}
@@ -36,16 +38,8 @@ def concept_text(concept: Any) -> str:
 
 
 def parse_time(value: Any) -> datetime | None:
-    """ISO 8601 to naive UTC (the app stores naive times). None when it cannot be read."""
-    if not value:
-        return None
-    try:
-        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    if parsed.tzinfo is not None:
-        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-    return parsed
+    """ISO 8601 to the hospital's local wall clock, normalized for naive DB storage."""
+    return parse_hospital_datetime(value)
 
 
 def number_text(value: Any) -> str:

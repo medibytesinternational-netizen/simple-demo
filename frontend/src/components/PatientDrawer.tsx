@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../api";
+import { formatHospitalDateTime } from "../dates";
 import type { DocumentSummary } from "../types";
 
 type DocumentRecord = DocumentSummary & { image_url?: string | null };
@@ -11,7 +12,8 @@ import { Modal } from "./Modal";
 import { Drawer } from "./ui/Drawer";
 import { Tabs } from "./ui/Tabs";
 import type { DirectoryRow } from "./patientDirectory";
-import { CHART_PATIENT_ID } from "./patientDirectory";
+import { useOpenChart } from "./openChart";
+import { usePatientId } from "../session";
 
 const MAX_UPLOAD = 12 * 1024 * 1024;
 const DOC_TYPES = ["Lab report", "Imaging report", "Referral letter", "Discharge summary (external)", "Consent form", "Other"];
@@ -23,7 +25,7 @@ function fmtSize(bytes: number) {
 }
 
 function fmtDate(value?: string | null) {
-  return value ? new Date(value).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Not recorded";
+  return value ? formatHospitalDateTime(value, "en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Not recorded";
 }
 
 export function PatientDrawer({ row, onClose, onEdit }: { row: DirectoryRow; onClose: () => void; onEdit?: () => void }) {
@@ -55,6 +57,7 @@ export function PatientDrawer({ row, onClose, onEdit }: { row: DirectoryRow; onC
 
 function Summary({ row, onEdit }: { row: DirectoryRow; onEdit?: () => void }) {
   const p = row.previewPatient;
+  const openChart = useOpenChart();
   return (
     <div className="flex-col gap-3">
       <div className={`allergy-panel ${row.allergies.length || !row.allergiesKnown ? "" : "none"}`}>
@@ -72,7 +75,7 @@ function Summary({ row, onEdit }: { row: DirectoryRow; onEdit?: () => void }) {
         {row.source === "seed" ? <><dt>Open alerts</dt><dd>{row.openAlerts} ({row.criticalAlerts} critical)</dd><dt>Overdue tasks</dt><dd>{row.overdueTasks}</dd></> : null}
       </dl>
       {row.chartAvailable ? (
-        <Link className="btn btn-primary" to="/patient">Open patient dashboard</Link>
+        <button type="button" className="btn btn-primary" onClick={() => openChart(row.id)}>Open patient dashboard</button>
       ) : (
         <div className="banner">
           {row.source === "preview"
@@ -100,14 +103,16 @@ function Documents({ row }: { row: DirectoryRow }) {
   const [reason, setReason] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const input = useRef<HTMLInputElement | null>(null);
+  // Documents are served for the open patient only; another row shows its own once it is opened.
+  const isOpen = row.id === usePatientId();
   const seedDocs = useQuery<{ documents: DocumentRecord[] }>({
     queryKey: ["documents"],
     queryFn: () => get("/documents"),
-    enabled: row.id === CHART_PATIENT_ID,
+    enabled: isOpen,
   });
 
   const rows: DocRow[] = [
-    ...(row.id === CHART_PATIENT_ID ? (seedDocs.data?.documents || []).map((d) => ({
+    ...(isOpen ? (seedDocs.data?.documents || []).map((d) => ({
       id: d.id, filename: d.filename, type: d.doc_type.replaceAll("_", " "), when: d.uploaded_at, status: d.ocr_status.replaceAll("_", " "), url: d.image_url,
     })) : []),
     ...(DEMO_MODE ? preview.documents.filter((d) => d.patientId === row.id).map((d) => ({
@@ -142,7 +147,7 @@ function Documents({ row }: { row: DirectoryRow }) {
       {seedDocs.isLoading ? <div className="loading">Loading documents…</div> : null}
       {seedDocs.isError ? <div className="error-box">Could not load documents: {(seedDocs.error as Error).message}</div> : null}
       {!visible.length && !seedDocs.isLoading ? (
-        <div className="empty"><div className="empty-title">No documents</div>{row.id === CHART_PATIENT_ID || DEMO_MODE ? "Nothing on file for this patient yet." : "Documents for this patient need patient-scoped APIs."}</div>
+        <div className="empty"><div className="empty-title">No documents</div>{isOpen || DEMO_MODE ? "Nothing on file for this patient yet." : "Open this patient to see their documents."}</div>
       ) : null}
       {visible.length ? (
         <table className="table">

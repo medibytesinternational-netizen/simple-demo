@@ -8,10 +8,10 @@ Synthetic data only. Not for clinical use. No claim is submitted and nothing is 
 
 - **Backend** — Python 3.13, FastAPI, SQLAlchemy, SQLite
 - **Frontend** — React 18, Vite, TypeScript, React Query
-- **Model** — OpenAI `gpt-4o`, with a deterministic cached mode when no API key is present
-- **Transcription** — OpenAI `whisper-1`, live mode only
+- **Model** — OpenAI `gpt-4o` or Hugging Face Inference Providers, with a deterministic cached mode when no model key is present
+- **Transcription** — MediBytes Transcription API, consent-gated and asynchronous
 
-The demo works fully without an API key. Cached drafts are generated from the same context objects as live drafts, and every screen, approval and audit path still works.
+Most screens work without external credentials using deterministic cached drafts. Voice capture requires the server-side MediBytes API key; its six-section note is formatted for each screen using this app's existing LLM layer or cached rules.
 
 ## Quick start
 
@@ -21,7 +21,7 @@ The demo works fully without an API key. Cached drafts are generated from the sa
 cd backend
 python -m venv .venv
 .\.venv\Scripts\python -m pip install -r requirements.txt
-Copy-Item .env.example .env    # optional; add OPENAI_API_KEY for live GPT-4o and Whisper
+Copy-Item .env.example .env    # add OPENAI_API_KEY and MediBytes server-side credentials as needed
 .\.venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
 ```
 
@@ -58,11 +58,18 @@ UPLOADS_DIR=/data/uploads
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o
 LLM_MODE=auto
+MEDIBYTES_BASE_URL=https://product-production-b091.up.railway.app
+MEDIBYTES_API_KEY=...
+MEDIBYTES_CALLBACK_TOKEN=...
+MEDIBYTES_COMPANY_ID=1
+MEDIBYTES_TIMEOUT_SECONDS=120
 ```
 
 Keep it at one replica (SQLite). Leave `VITE_DEMO_MODE` unset; it is only for the Netlify preview.
+Set `MEDIBYTES_CALLBACK_TOKEN` to a separate secret and configure MediBytes to POST to
+`https://<your-public-host>/api/transcriptions/callback` with `Authorization: Bearer <token>`.
 
-## Live GPT-4o and Whisper
+## Live GPT-4o and MediBytes transcription
 
 Copy `backend/.env.example` to `backend/.env` and set:
 
@@ -70,24 +77,54 @@ Copy `backend/.env.example` to `backend/.env` and set:
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o
 LLM_MODE=auto
+MEDIBYTES_API_KEY=...
+MEDIBYTES_BASE_URL=https://product-production-b091.up.railway.app
+MEDIBYTES_COMPANY_ID=1
+MEDIBYTES_TIMEOUT_SECONDS=120
+MEDIBYTES_CALLBACK_TOKEN=...
 ```
 
-`LLM_MODE=auto` uses live GPT-4o when a key is present, otherwise cached drafts. Set `LLM_MODE=cached` to force deterministic drafts even with a key. Audio transcription is only available in live mode.
+`LLM_MODE=auto` uses live GPT-4o when a key is present, otherwise cached drafts. Set `LLM_MODE=cached` to force deterministic drafts even with a key. Audio transcription requires `MEDIBYTES_API_KEY`; its key stays on the backend. MediBytes must be configured out of band with the callback URL above and the separate callback token. The UI polls job status, loads each six-section note into its selected encounter, and offers redelivery after MediBytes reports a delivery failure. MediBytes audio is limited to 64 MB and the documented WAV, MP3, M4A, MP4, AAC, FLAC, OGG and WebM formats.
+
+The HIMS callback validates `response` as a JSON array containing one object with the six string sections: `present_illness`, `examination_findings`, `previous_diagnosis`, `plan_of_management`, `diet_instructions`, and `general_instructions`. Empty strings are preserved as empty sections. It saves the raw response and structured sections on the consultation. The callback replies with `{"status":"Success"}` after a save, or `{"status":"Failed","Message":"..."}` for a rejected note so MediBytes records a failed delivery that can be redelivered.
+
+The app applies the screen's report template to those six sections and `needs_review`, using its existing live or cached LLM path. It does not use an unavailable transcript or extracted entities. Fields the note cannot support, such as an admission ward or a referral unit chief, stay empty for clinician completion. OPD, admission, ward-round, progress-note, referral and intake audio share the same backend API client; the frontend never receives the API key.
+
+A raw transcript string or any other response outside that documented shape is rejected. HIMS does not infer or fill the six sections; the MediBytes service must emit the contract response before notes can be saved.
+
+### Separate MediBytes service deployment
+
+These variables belong on the MediBytes service, not in the HIMS `.env`:
+
+- `OPENAI_API_KEY` and `HF_TOKEN` — credentials used by the MediBytes transcription pipeline.
+- `MEDIBYTES_API_KEYS` — allowlist containing the key configured as HIMS `MEDIBYTES_API_KEY`.
+- `MEDIBYTES_HIMS_URL` — public HIMS callback URL, `https://<your-public-host>/api/transcriptions/callback`.
+- `MEDIBYTES_HIMS_TOKEN` — Bearer token matching HIMS `MEDIBYTES_CALLBACK_TOKEN`.
+
+HIMS cannot receive callbacks from a local-only URL. The MediBytes service deployment must be configured separately with the public callback URL and matching token; this repository does not provision that service.
+
+Clinical timestamps use the hospital timezone (`Asia/Kolkata`). API timestamps without an offset are treated as hospital wall-clock times; timestamps with an offset are normalized to that timezone before storage and display. Date-only values stay dates and are not shifted through UTC.
+
+F6 medication explanations are deterministic and are built from the recorded reconciliation discrepancies. The generated explanation does not call the language model or add medication details.
 
 The header shows **Live GPT-4o** or **Cached demo**. Model, prompt version, latency and token counts are recorded in `llm_calls`; the UI shows them on every draft and in the audit log.
 
-Do not commit `backend/.env` or the API key.
+Do not commit `backend/.env` or credentials. The HIMS `OPENAI_API_KEY`, if configured, is independent of the credentials used by the MediBytes transcription service.
+
+### Hugging Face language model (optional)
+
+Add a Hugging Face token with Inference Providers permission to `backend/.env` as `HF_TOKEN`. With `LLM_PROVIDER=auto`, the app uses Hugging Face when no OpenAI key is set. `HF_MODEL` selects the chat model. Audio transcription always uses the MediBytes API.
 
 ## The 16 modules
 
 | Module | Workspace | What the demo implements |
 |---|---|---|
-| F1 Ambient OPD documentation | Notes → Consultation | Consent-gated transcript capture, live Whisper path, evidence-linked note draft |
-| F2 AI-assisted admission | Notes → Admission | Admission draft from held records/interview, proposed orders, allergy verification gate |
-| F3 Interdisciplinary handover | Notes → Round | Round note, proposed nursing-chart entries, proposed tasks accepted separately |
-| F4 Daily progress notes | Notes → Progress | Drafts changes only; missing exam/plan stay empty and block signing until clinician-authored documentation is added |
+| F1 Ambient OPD documentation | Notes → Consultation | Consent-gated MediBytes transcription, callback/status tracking, encounter-scoped note event and evidence-linked draft |
+| F2 AI-assisted admission | Notes → Admission | Six-section voice note mapped to the admission form; unsupported fields stay blank for clinician completion, with an allergy verification gate |
+| F3 Interdisciplinary handover | Notes → Round | Patient-specific dictation, round report, editable role-based task proposals with urgency, nursing-chart entries, doctor-approved assignment to staff queues |
+| F4 Daily progress notes | Notes → Progress | Voice note is mapped to a progress draft, reviewed, and signed by a clinician |
 | F5 Clinical Guardrail | Safety → Alerts | Rules R1–R6 over drugs, labs, contradicting notes and unresolved actions, with evidence |
-| F6 Medication reconciliation | Safety → Medication reconciliation | Home vs current dose/route/frequency/indication, field-level differences |
+| F6 Medication reconciliation | Safety → Medication reconciliation | Home vs current dose/route/frequency/indication, field-level differences and record-derived explanation |
 | F7 ICU flow sheets | Notes → ICU chart | Device readings with units, timestamps and source; missing sections stay missing |
 | F8 Medical OCR | Documents → Inbound | Original report beside extraction, confidence per field, human confirmation before commit |
 | F9 Discharge summary | Discharge | Stay assembled from documented events, deterministic medication list, safety flags, lock |
@@ -108,9 +145,9 @@ Two support views are deliberately not counted as PRD modules: **Notes → Labs 
 3. **Every claim carries evidence.** Drafts cite `evt_` event ids and `seg_` transcript segment ids. The gateway checks unknown ids and re-prompts once in live mode; the UI shows a “No source” chip for unsourced claims.
 4. **Human approval is the only write path.** `/api/drafts/{id}/approve` is the single commit endpoint for notes, requests, referrals, discharge and revenue reviews. Rejection requires a reason.
 5. **Every write is audited.** Draft creation, edits, approvals, rejections, alert dismissal, lab review, OCR confirmation, task changes, referral transitions, transcription and claim preparation create `audit_entries`.
-6. **F1 consent is explicit.** Audio cannot be transcribed until a human records `consultation_capture` consent. The model cannot record consent.
+6. **F1 and F3 audio consent is explicit.** Audio cannot be transcribed until a human records `consultation_capture` consent for the active encounter. The model cannot record consent.
 7. **F2 allergies are verified by a human.** Approval is blocked until the documented allergy is confirmed or corrected.
-8. **F3 uses proposed tasks and proposed nursing entries.** Approving the note does not create tasks; accepting selected tasks does. Nursing entries become a separate nursing-chart event on note approval.
+8. **F3 uses proposed tasks and proposed nursing entries.** The doctor reviews each task's wording, role and priority. Approving the report does not create tasks; approving selected tasks assigns them to a Junior Doctor, Senior Doctor or Nurse queue. Explicit urgent, critical and stat dictation is carried into task priority. Nursing entries become a separate nursing-chart event on note approval.
 9. **F4 refuses to invent gaps.** Missing examination/plan sections stay visibly empty and signing stays blocked until a clinician documents them in the dedicated editor. That text is attributed to the clinician, not to the transcript.
 10. **F5 dismissal needs a reason.** “Dismiss” is not a one-click mute.
 11. **F8 keeps the source beside the value.** Low-confidence fields need human confirmation before commit. PDF text-layer extraction is supported; scanned PDFs without a text layer fall back honestly.
@@ -197,7 +234,11 @@ frontend/
 - `GET /api/patients/pat_ravi/state` — current-state projection
 - `GET /api/patients/pat_ravi/timeline` — append-only events
 - `GET/POST /api/patients/{id}/consents` — F1 consent
-- `POST /api/notes/transcribe` — live Whisper transcription, consent-gated
+- `POST /api/notes/transcribe` — consent-gated MediBytes multipart upload
+- `GET /api/notes/transcriptions?encounter_id=...` — local job list for the selected consultation
+- `GET /api/notes/transcriptions/{audio_id}?encounter_id=...` — MediBytes status and saved transcript
+- `POST /api/notes/transcriptions/{audio_id}/redeliver?encounter_id=...` — retry failed transcript delivery
+- `POST /api/transcriptions/callback` — authenticated MediBytes transcript receiver
 - `POST /api/notes/generate` — F1–F4 drafts
 - `POST /api/drafts/{id}/approve|reject|accept-tasks|verify-allergy` — human writes
 - `GET/POST /api/alerts...` — F5 queue, evaluate, dismiss with reason
@@ -232,7 +273,7 @@ The check is offline and prints `CONTRACT CHECK PASSED: 16 modules, N mounted pa
 - Timeline and current-state projection
 - Rule engine (R1–R6)
 - Draft generation, evidence guard, edit, reject, approve
-- Consent capture and live Whisper transcription
+- Consent capture and asynchronous MediBytes transcription, status, callback, and delivery retry
 - F2 allergy verification
 - F3 proposed tasks, nursing-chart entries and acceptance
 - F4 clinician-authored exam/plan editor with human attribution
@@ -262,4 +303,4 @@ The check is offline and prints `CONTRACT CHECK PASSED: 16 modules, N mounted pa
 - Live OCR accepts images and text-layer PDFs. Scanned PDFs without a text layer fall back honestly rather than inventing values.
 - The seeded scan is an SVG rendered by the backend, not a real image file.
 - Dashboard value KPIs are illustrative and labelled as such.
-- “Send”, “export”, “submit” and “charge” are never executed against an external system.
+- External transcription is sent to MediBytes only after the app records consultation-capture consent. Other “send”, “export” and “submit” actions are not executed against external systems.
