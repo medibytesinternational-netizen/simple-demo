@@ -12,6 +12,8 @@ import { EvidenceChip } from "./Evidence";
 import { Modal } from "./Modal";
 import { Icon } from "./icons";
 import { Banner, Field, MetaChip, Pill } from "./ui";
+import type { Tone } from "./ui";
+import { formatHospitalDateTime } from "../dates";
 
 const FEATURE_LABELS: Record<string, string> = {
   F1: "Consultation note",
@@ -208,6 +210,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
   const isRejected = draft.status === "rejected";
   const f4Incomplete =
     draft.feature === "F4" &&
+    draft.content?.format !== "progress_v2" &&
     (!draft.content?.exam?.general?.text || !draft.content?.plan?.text);
   // F2 admission notes and F10 investigation requests both carry allergies that a clinician must verify;
   // the backend refuses approval of either until every one is verified.
@@ -235,7 +238,7 @@ export function DraftReview({ draft }: { draft: Draft }) {
   const allergyItems: any[] = verifiesAllergies ? draft.content?.allergies_to_verify || [] : [];
   const showConsentGate = draft.feature === "F1";
   const showAllergyGate = verifiesAllergies && allergyItems.length > 0;
-  const showF4Gate = draft.feature === "F4" && !editMode && !isApproved && !isRejected;
+  const showF4Gate = draft.feature === "F4" && draft.content?.format !== "progress_v2" && !editMode && !isApproved && !isRejected;
   const gateStates: boolean[] = [
     ...(showConsentGate ? [!f1NoConsent] : []),
     ...(showAllergyGate ? allergyItems.map((item: any) => Boolean(item.verified)) : []),
@@ -677,7 +680,7 @@ function DraftContent({
             ))}
             {content.needs_review?.length ? (
               <Banner tone="warning">
-                <strong>Check these first</strong>: the pipeline could not fully confirm them against the recording:
+                <strong>Check these first</strong>: MediBytes could not fully verify these items from the recording:
                 <ul>{content.needs_review.map((item: any, i: number) => <li key={i}><b>{item.section}:</b> {item.text}</li>)}</ul>
               </Banner>
             ) : null}
@@ -717,7 +720,7 @@ function DraftContent({
           <NotDocumented items={content.not_documented} />
           {content.needs_review?.length ? (
             <Banner tone="warning">
-              <strong>Check these first</strong> — the pipeline could not fully confirm them against the recording:
+              <strong>Check these first</strong> — MediBytes could not fully verify these items from the recording:
               <ul>
                 {content.needs_review.map((item: { section: string; text: string }, i: number) => (
                   <li key={i}>{item.section}: {item.text}</li>
@@ -809,9 +812,31 @@ function DraftContent({
             )}
           </Section>
           <NotDocumented items={content.not_documented} />
+          {content.needs_review?.length ? (
+            <Banner tone="warning">
+              <strong>Check these against the recording</strong>
+              <ul>{content.needs_review.map((item: any, i: number) => <li key={i}><b>{item.section}:</b> {item.text}</li>)}</ul>
+            </Banner>
+          ) : null}
         </>
       );
     case "F4":
+      if (content.format === "progress_v2") {
+        return (
+          <>
+            <Section title="Progress note">
+              <ClaimList claims={content.notes} emptyLabel="Not documented" />
+            </Section>
+            <NotDocumented items={content.not_documented} />
+            {content.needs_review?.length ? (
+              <Banner tone="warning">
+                <strong>Check these against the recording</strong>
+                <ul>{content.needs_review.map((item: any, i: number) => <li key={i}><b>{item.section}:</b> {item.text}</li>)}</ul>
+              </Banner>
+            ) : null}
+          </>
+        );
+      }
       return (
         <>
           <Section title="Subjective"><ClaimLine claim={content.subjective} /></Section>
@@ -872,7 +897,7 @@ function DraftContent({
                         <td><Pill tone="neutral">{entry.category}</Pill></td>
                         <td>{entry.label}<div className="small muted">{entry.device}</div></td>
                         <td className="mono">{entry.value} {entry.unit}</td>
-                        <td className="small muted">{entry.recorded_at?.replace("T", " ").slice(0, 16)}</td>
+                        <td className="small muted">{formatHospitalDateTime(entry.recorded_at, "en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
                         <td><EvidenceChip eventIds={entry.source_event_id ? [entry.source_event_id] : []} /></td>
                       </tr>
                     ))}
@@ -939,6 +964,12 @@ function DraftContent({
           <Section title="Follow-up"><ClaimList claims={content.follow_up} /></Section>
           <Section title="Red flags"><ClaimList claims={content.red_flags} /></Section>
           <NotDocumented items={content.not_documented} />
+          {content.needs_review?.length ? (
+            <Banner tone="warning">
+              <strong>Check these against the recording</strong>
+              <ul>{content.needs_review.map((item: any, i: number) => <li key={i}><b>{item.section}:</b> {item.text}</li>)}</ul>
+            </Banner>
+          ) : null}
         </>
       );
     case "F10":

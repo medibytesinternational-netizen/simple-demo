@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from ..models import Encounter, Patient, TimelineEvent
+from ..dates import parse_hospital_datetime
 from .timeline import add_event, event_to_dict, list_events
 
 
@@ -84,10 +85,7 @@ _CHANGE_TYPES = {
 
 
 def _parse_time(value: Any) -> datetime | None:
-    try:
-        return datetime.fromisoformat(str(value).replace("Z", ""))
-    except ValueError:
-        return None
+    return parse_hospital_datetime(value)
 
 
 def _progress_context(events: list[TimelineEvent], state: dict[str, Any]) -> dict[str, Any]:

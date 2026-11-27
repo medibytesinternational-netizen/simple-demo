@@ -8,12 +8,12 @@ A clickable prototype: a thin app around a general-purpose LLM, on seeded data f
 | --- | --- | --- |
 | Clinical reasoning | LLM call, versioned task prompt, JSON schema | Plus a licensed rules and drug database |
 | Patient data | Seeded SQLite record for Ravi and a small cohort | FHIR integration with HMS and EMR |
-| Speech | Consent-gated Whisper-1, with pasted transcript fallback | Clinical ASR with speaker separation |
+| Speech | Consent-gated MediBytes Transcription API upload, status polling, authenticated callback, and delivery retry | Clinical ASR with speaker separation |
 | OCR | Vision model on an upload, plus PDF text-layer extraction | Medical OCR with layout and tables |
 | Safety rules | Six hand-written rules for the demo cases | Licensed interaction and renal-dosing data |
 | Tasks, audit, timeline | Real and working | Same, on a durable database |
 
-Working for real: navigation, timeline, tasks, consent capture, Whisper transcription, review-and-approve, audit, PDF text extraction, claim contradiction and underbilling checks, every model call. Faked: device feeds, insurer submission, billing data, every dashboard number. Say so on stage, unprompted.
+Working for real: navigation, timeline, tasks, consent capture, the MediBytes transcription job flow, review-and-approve, audit, PDF text extraction, claim contradiction and underbilling checks, every model call. Faked: device feeds, insurer submission, billing data, every dashboard number. Say so on stage, unprompted.
 
 ## Reference architecture
 
@@ -33,7 +33,7 @@ One module. The doctor records the consultation; the note writes itself and wait
 
 &#91;embedded content: F1 · consultation note pipeline\]
 
-Build notes: consent-gated Whisper-1 transcription with a pasted-transcript fallback, a two-pane review screen, and sentence-to-transcript source highlighting. About a week.
+Build notes: consent-gated MediBytes Transcription API upload/status/callback with a pasted-transcript fallback and a two-pane review screen. The saved callback must match the documented six-section JSON contract; HIMS rejects other response shapes rather than filling clinical details. The service is server-to-server and never exposes its API key in the browser.
 
 ## IPD Intelligence
 

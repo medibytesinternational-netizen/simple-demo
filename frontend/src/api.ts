@@ -159,8 +159,46 @@ export type Intake = {
   doc_type?: string | null;
   /** Recording: the OPD report in the hospital format, shown before saving. */
   preview?: Record<string, any> | null;
+  note_content?: MediBytesNote | null;
+  needs_review?: NeedsReview[];
   /** Document: values read from it (medicines, results). */
   values?: { name: string; value: string; unit: string; reference_range: string }[];
+};
+
+export type MediBytesNote = {
+  present_illness: string;
+  examination_findings: string;
+  previous_diagnosis: string;
+  plan_of_management: string;
+  diet_instructions: string;
+  general_instructions: string;
+};
+export type NeedsReview = { section: string; text: string };
+export type TranscriptionJob = {
+  audio_id: string;
+  intake_id?: string | null;
+  encounter_id: string;
+  feature: string;
+  role?: string | null;
+  filename: string;
+  job_status: "queued" | "running" | "succeeded" | "failed";
+  job_error?: string | null;
+  delivery: {
+    state: "pending" | "delivered" | "failed" | "job_failed";
+    attempts: number;
+    last_error?: string | null;
+    next_attempt_at?: string | null;
+  };
+  transcript?: string | null;
+  note_content?: MediBytesNote | null;
+  needs_review?: NeedsReview[];
+  response?: string | null;
+  transcript_event_id?: string | null;
+  draft_id?: string | null;
+  draft?: Draft | null;
+  can_redeliver?: boolean;
+  can_retry_upload?: boolean;
+  status_check_error?: string | null;
 };
 
 export async function intakeDocument(file: File, docType: string) {
@@ -170,57 +208,75 @@ export async function intakeDocument(file: File, docType: string) {
   return api<Intake>("/intake/document", { method: "POST", body: form });
 }
 
-/** Sends the consented consultation recording and waits until its details have been read. */
+const TRANSCRIPTION_POLL_MS = 15_000;
+const TRANSCRIPTION_MAX_POLLS = 180;
+
+/** Sends the consented intake recording through the same backend MediBytes client. */
 export async function intakeAudio(blob: Blob, filename = "consultation.webm") {
   const form = new FormData();
   form.append("file", blob, filename);
   form.append("consent", "true");
   const receipt = await api<Intake>("/intake/audio", { method: "POST", body: form });
-  const deadline = Date.now() + 5 * 60 * 1000;
-  while (Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+  for (let attempt = 0; attempt < TRANSCRIPTION_MAX_POLLS; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, TRANSCRIPTION_POLL_MS));
     const status = await api<Intake>(`/intake/${encodeURIComponent(receipt.intake_id)}`);
     if (status.status === "ready") return status;
     if (status.status === "failed") throw new Error(status.error || "The recording could not be processed");
   }
-  throw new Error("The pipeline is taking too long. Try again in a minute.");
+  throw new Error("MediBytes is still processing the intake recording. Check the intake again shortly.");
 }
 
-/** A dictated daily progress note: written by the MediBytes pipeline and signed by who recorded it. */
-export async function recordProgressNote(blob: Blob, filename = "progress.webm", role = "") {
-  const form = new FormData();
-  form.append("file", blob, filename);
-  form.append("role", role);
-  const receipt = await api<{ audio_id: string }>("/progress-notes/record", { method: "POST", body: form });
-  const deadline = Date.now() + 5 * 60 * 1000;
-  while (Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    const status = await api<{ status: string; error?: string }>(`/progress-notes/record/${encodeURIComponent(receipt.audio_id)}`);
-    if (status.status === "succeeded") return status;
-    if (status.status === "failed") throw new Error(status.error || "The recording could not be processed");
-  }
-  throw new Error("The pipeline is taking too long. Try again in a minute.");
-}
-
-export async function transcribeAudio(blob: Blob, filename = "consultation.webm", feature = "F1") {
+/** Submit any encounter recording to the single /notes/transcribe route. */
+export async function transcribeAudio(
+  blob: Blob,
+  filename: string,
+  encounterId: string,
+  audioId: string,
+  feature = "F1",
+  role = "",
+) {
   const form = new FormData();
   form.append("file", blob, filename);
   form.append("feature", feature);
-  const receipt = await api<{ audio_id: string; status: string }>("/notes/transcribe", { method: "POST", body: form });
-  // The MediBytes pipeline answers with a receipt; poll until the note is ready (usually under a minute).
-  const deadline = Date.now() + 5 * 60 * 1000;
-  while (Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    const status = await api<{ status: string; error?: string; draft?: Draft }>(`/notes/transcribe/${encodeURIComponent(receipt.audio_id)}`);
-    if (status.status === "succeeded" && status.draft) return { draft: status.draft };
-    if (status.status === "failed") throw new Error(status.error || "The recording could not be processed");
-  }
-  throw new Error("The pipeline is taking too long. Try again in a minute.");
+  if (role) form.append("role", role);
+  return api<TranscriptionJob>(
+    `/notes/transcribe?encounter_id=${encodeURIComponent(encounterId)}&audio_id=${encodeURIComponent(audioId)}`,
+    { method: "POST", body: form },
+  );
 }
 
-/** Transcribes ward-round audio into editable text without creating a report or task. */
-export async function transcribeRoundDictation(blob: Blob, filename = "ward-round.webm") {
-  const form = new FormData();
-  form.append("file", blob, filename);
-  return api<{ text: string; model: string }>("/notes/dictation/transcribe", { method: "POST", body: form });
+export async function activeEncounterId() {
+  const meta = await get<{ encounter: { id: string } }>("/meta");
+  return meta.encounter.id;
+}
+
+export function getTranscription(audioId: string, encounterId: string) {
+  return get<TranscriptionJob>(
+    `/notes/transcriptions/${encodeURIComponent(audioId)}?encounter_id=${encodeURIComponent(encounterId)}`,
+  );
+}
+
+export async function waitForTranscription(audioId: string, encounterId: string) {
+  for (let attempt = 0; attempt < TRANSCRIPTION_MAX_POLLS; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, TRANSCRIPTION_POLL_MS));
+    const status = await getTranscription(audioId, encounterId);
+    if (status.job_status === "failed") throw new Error(status.job_error || "The recording could not be processed");
+    if (status.job_status === "succeeded" && status.draft) return status;
+  }
+  throw new Error("MediBytes is still processing this recording. It remains attached to the consultation; check again shortly.");
+}
+
+/** Submit and wait for the feature-specific reviewable draft. */
+export async function generateVoiceDraft(
+  blob: Blob,
+  filename: string,
+  feature: string,
+  role = "",
+): Promise<Draft> {
+  const encounterId = await activeEncounterId();
+  const audioId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const submitted = await transcribeAudio(blob, filename, encounterId, audioId, feature, role);
+  const completed = await waitForTranscription(submitted.audio_id, encounterId);
+  if (!completed.draft) throw new Error("MediBytes completed the recording without a reviewable draft.");
+  return completed.draft;
 }

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -13,6 +13,7 @@ from .platform import allowed_actions, user_dict
 from .. import clock
 from ..config import settings
 from ..db import get_db
+from ..dates import parse_hospital_datetime
 from ..modules import module_registry
 from ..models import (
     TimelineEvent,
@@ -261,12 +262,9 @@ def supersedes_chain(db: Session, event: TimelineEvent) -> list[dict]:
 def _parse_when(value: str | None, name: str) -> datetime | None:
     if not value:
         return None
-    try:
-        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
-    except ValueError:
+    parsed = parse_hospital_datetime(value)
+    if parsed is None:
         raise ValueError(f"{name} must be a date or an ISO date and time, for example 2026-05-01 or 2026-05-01T08:30") from None
-    if parsed.tzinfo is not None:
-        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
     return parsed
 
 

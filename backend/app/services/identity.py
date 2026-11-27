@@ -58,6 +58,7 @@ PERMISSIONS: dict[str, set[str]] = {
     "verify_allergy": {"doctor"},
     "accept_tasks": {"doctor"},
     "clinical_draft": {"doctor"},
+    "transcribe_voice": {"doctor", "senior_doctor", "junior_doctor", "nurse"},
     "discharge_draft": {"doctor"},
     "review_lab": {"doctor"},
     "run_rules": {"doctor"},

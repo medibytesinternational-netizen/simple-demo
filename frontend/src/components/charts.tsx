@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { formatHospitalDateTime, parseHospitalDateTime } from "../dates";
 
 export type BarItem = {
   key: string;
@@ -100,11 +101,11 @@ export function TrendChart({ points, unit, title, reference, height = 128 }: {
   const span = max - min;
   min = Math.max(0, min - span * 0.15);
   max = max + span * 0.15;
-  const times = valid.map((p) => Date.parse(p.at)).filter(Number.isFinite);
+  const times = valid.map((p) => parseHospitalDateTime(p.at)?.getTime() ?? Number.NaN).filter(Number.isFinite);
   const tMin = Math.min(...times);
   const tMax = Math.max(...times);
   const x = (p: ChartPoint, i: number) => {
-    const t = Date.parse(p.at);
+    const t = parseHospitalDateTime(p.at)?.getTime() ?? Number.NaN;
     if (!Number.isFinite(t) || tMin === tMax) return pad.left + ((width - pad.left - pad.right) * (valid.length === 1 ? 0.5 : i / (valid.length - 1)));
     return pad.left + ((t - tMin) / (tMax - tMin)) * (width - pad.left - pad.right);
   };
@@ -113,8 +114,7 @@ export function TrendChart({ points, unit, title, reference, height = 128 }: {
   const first = valid[0];
   const last = valid[valid.length - 1];
   const clock = (at: string) => {
-    const date = new Date(at);
-    return Number.isNaN(date.getTime()) ? at : date.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    return formatHospitalDateTime(at, "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) || at;
   };
   const summary = `${title}: ${valid.map((p) => `${p.value} ${unit} at ${clock(p.at)}`).join("; ")}. ${reference?.text ? `Reference ${reference.text}.` : ""} ${valid.length < 2 ? "Not enough history for a trend." : ""}`.trim();
 
@@ -183,7 +183,7 @@ export function ReferenceValue({ name, value, unit, reference, flag, collectedAt
     if (parsed.high !== undefined) highPct = Math.max(0, Math.min(100, (parsed.high / domainMax) * 100));
   }
   const markerPct = Number.isFinite(numeric) ? Math.max(0, Math.min(100, (numeric / domainMax) * 100)) : null;
-  const when = collectedAt ? new Date(collectedAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : null;
+  const when = collectedAt ? formatHospitalDateTime(collectedAt, "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : null;
 
   return (
     <div className={`ref-value ${abnormal ? "is-abnormal" : ""}`}>

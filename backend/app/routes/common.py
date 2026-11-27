@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any, Literal
 
+from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -28,9 +29,10 @@ from ..services.timeline import (
 # Request bodies
 # --------------------------------------------------------------------------
 class NoteGenerateRequest(BaseModel):
-    feature: Literal["F1", "F2", "F3", "F4"]
+    feature: Literal["F1", "F2", "F3", "F4", "F9", "F11"]
     transcript: str = Field(min_length=10)
     title: str | None = None
+    transcript_event_id: str | None = None
 
 
 class DraftPatchRequest(BaseModel):
@@ -128,6 +130,8 @@ class MatchRequest(BaseModel):
 def _patient_encounter(db: Session, encounter_id: str | None = None):
     patient = get_patient(db)
     encounter = get_encounter(db, encounter_id)
+    if encounter.patient_id != patient.id:
+        raise HTTPException(404, "Consultation not found for the selected patient")
     return patient, encounter
 
 

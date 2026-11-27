@@ -272,6 +272,10 @@ def generate_draft(
     model_cls = FEATURE_MODELS[feature]
     prompt = load_prompt(feature)
     mode = settings.effective_llm_mode
+    # F6 prose is derived from the deterministic comparison. Keeping it out of the
+    # generative path prevents invented medicines, values, or clinical advice.
+    if feature == "F6":
+        mode = "cached"
     content: dict[str, Any]
     if feature == "F9":
         # A medicine that is no longer active (stopped by order or by a reconciliation decision)

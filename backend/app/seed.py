@@ -768,7 +768,7 @@ def purge_patients_except(db: Session, keep: set[str]) -> list[str]:
         return []
     for document in db.query(Document).filter(Document.patient_id.in_(gone)).all():
         path = Path(document.path or "")
-        if path.is_file() and settings.uploads_dir in path.resolve().parents:
+        if path.is_file() and path.resolve().is_relative_to(settings.uploads_dir.resolve()):
             path.unlink(missing_ok=True)
     intake_root = settings.uploads_dir / "intake"
     if intake_root.is_dir():

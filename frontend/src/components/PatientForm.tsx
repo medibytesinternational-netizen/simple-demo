@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import { PREVIEW_SESSION_NOTE } from "../demo/config";
 import type { PreviewPatient } from "../demo/previewStore";
+import { hospitalAge, hospitalDateKey } from "../dates";
 
 export type PatientInput = Omit<PreviewPatient, "id" | "mrn" | "createdAt"> & {
   /** Age in years, when the date of birth is not known (new patient flow). */
@@ -28,10 +29,13 @@ export function validatePatient(form: Record<string, any>, today: Date, allowAge
     else if (!/^\d{1,3}$/.test(age) || Number(age) > 130) errors.dob = "Enter the age in whole years (0-130).";
   } else if (!form.dob) errors.dob = "Enter the date of birth.";
   else {
-    const dob = new Date(form.dob);
-    if (Number.isNaN(dob.getTime())) errors.dob = "Enter a valid date.";
-    else if (dob > today) errors.dob = "Date of birth cannot be in the future.";
-    else if (today.getFullYear() - dob.getFullYear() > 120) errors.dob = "Check the year of birth.";
+    const dob = String(form.dob);
+    const todayKey = hospitalDateKey(today);
+    const dobKey = hospitalDateKey(dob);
+    const age = hospitalAge(dob, todayKey);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dob) || dobKey !== dob) errors.dob = "Enter a valid date.";
+    else if (dob > todayKey) errors.dob = "Date of birth cannot be in the future.";
+    else if (age !== null && age > 120) errors.dob = "Check the year of birth.";
   }
   if (!form.phone || !PHONE.test(form.phone.trim())) errors.phone = "Enter a phone number (7–18 digits).";
   if (form.emergencyPhone && !PHONE.test(form.emergencyPhone.trim())) errors.emergencyPhone = "Enter a valid phone number.";

@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { get, openStoredFile, post, recordProgressNote } from "../../api";
+import { generateVoiceDraft, get, openStoredFile, post } from "../../api";
 import { Link } from "react-router-dom";
 import { VoiceInput } from "../../components/VoiceInput";
+import { DraftReview } from "../../components/DraftReview";
+import { currentRole } from "../../components/roles";
+import type { Draft } from "../../types";
 
 type Order = { study: string; request_type: string; request_id: string; priority: string };
 type Row = { event_id: string; time: string; notes: string; signed_by: string; signed_role: string; orders?: Order[] };
@@ -17,16 +20,34 @@ const when = (iso: string) => {
 export function ProgressNotes() {
   const queryClient = useQueryClient();
   const table = useQuery({ queryKey: ["progress-notes"], queryFn: () => get<Table>("/progress-notes") });
+  const meta = useQuery<{ patient: { id: string }; encounter: { id: string } }>({ queryKey: ["meta"], queryFn: () => get("/meta") });
+  const consents = useQuery<{ consents: Array<{ granted: boolean; consent_type: string }> }>({
+    queryKey: ["consents", "progress", meta.data?.patient.id, meta.data?.encounter.id],
+    queryFn: () => get(`/patients/${meta.data!.patient.id}/consents?encounter_id=${encodeURIComponent(meta.data!.encounter.id)}`),
+    enabled: Boolean(meta.data?.patient.id && meta.data?.encounter.id),
+  });
+  const consentGranted = Boolean(consents.data?.consents?.some((item) => item.granted && ["consultation_capture", "audio_recording"].includes(item.consent_type)));
+  const canRecordConsent = currentRole() === "admin";
   const rows = table.data?.entries || [];
   const canWrite = !table.isSuccess || table.data.can_write.length > 0;
   const [saved, setSaved] = useState("");
   const [error, setError] = useState("");
+  const [draft, setDraft] = useState<Draft | null>(null);
+
+  const recordConsent = useMutation({
+    mutationFn: () => post(`/patients/${meta.data!.patient.id}/consents?encounter_id=${encodeURIComponent(meta.data!.encounter.id)}`, {
+      consent_type: "consultation_capture", granted: true, note: "Patient agrees to progress-note audio capture.",
+    }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["consents", "progress"] }),
+    onError: (err: any) => setError(String(err?.message || err)),
+  });
 
   const capture = async (audio: Blob, filename: string | undefined) => {
     setSaved("");
-    await recordProgressNote(audio, filename || "progress.webm");
+    const made = await generateVoiceDraft(audio, filename || "progress.webm", "F4");
     await queryClient.invalidateQueries();
-    setSaved("Added to the progress notes and the timeline.");
+    setDraft(made);
+    setSaved("Progress note draft is ready for review.");
   };
 
   const report = useMutation({
@@ -50,8 +71,16 @@ export function ProgressNotes() {
         <div className="card-body">
           {canWrite ? (
             <>
-              <span className="small muted">Record or upload the dictation. It is written up, signed in your name and added below.</span>
-              <VoiceInput consentGranted feature="F4" capture={capture} />
+              <span className="small muted">Record or upload the dictation. Review the progress note draft before it is signed and added below.</span>
+              {!consentGranted ? (
+                <div className="banner warning mt-2">
+                  <span>{canRecordConsent ? "Record patient consent before capturing progress-note audio." : "A doctor must record patient consent before progress-note audio is available."}</span>
+                  {canRecordConsent ? <button className="btn btn-sm btn-primary ml-2" onClick={() => recordConsent.mutate()} disabled={!meta.data || recordConsent.isPending}>
+                    {recordConsent.isPending ? "Saving…" : "Record consent"}
+                  </button> : null}
+                </div>
+              ) : null}
+              <VoiceInput consentGranted={consentGranted} disabled={!consentGranted} feature="F4" capture={capture} />
               {saved ? <span className="small" role="status">{saved}</span> : null}
             </>
           ) : (
@@ -59,6 +88,7 @@ export function ProgressNotes() {
           )}
         </div>
       </div>
+      {draft ? <DraftReview draft={draft} /> : null}
       <div className="card">
         <div className="card-header">
           <h2>Progress notes</h2>

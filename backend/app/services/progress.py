@@ -1,8 +1,8 @@
 """Daily progress notes: one table for doctors, one for nurses.
 
-Each entry is dictated, written by the MediBytes pipeline and signed straight away by the person who
-recorded it; it is a timeline event and a row in its table. Nothing supersedes: every day's entry
-stays. "Generate report" prints a table in the hospital format:
+Each entry is dictated, shaped by the MediBytes API note and this app's report template, then
+reviewed and signed by the clinician. It is a timeline event and a row in its table. Nothing
+supersedes: every day's entry stays. "Generate report" prints a table in the hospital format:
 
   Header:  Name, Sex, Age, Ward, Bed, UHID number
   Columns: Date and time, Notes, Name and sign
@@ -88,6 +88,7 @@ def rows(db: Session, patient_id: str, role: str | None = None) -> list[dict[str
         signed = payload.get("signed_by") or {}
         out.append({
             "event_id": event.id,
+            "role": payload.get("role"),
             "time": event.occurred_at.isoformat() if event.occurred_at else "",
             "notes": notes_text(payload),
             "signed_by": signed.get("name") or event.approved_by or "",

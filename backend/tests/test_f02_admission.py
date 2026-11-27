@@ -142,28 +142,32 @@ def test_nothing_is_written_when_nothing_was_said():
     assert all(not v for k, v in content.items() if k != "format")
 
 
-def test_an_admission_recording_becomes_an_admission_draft(client, monkeypatch):
-    from .helpers import FakePipeline
+def test_admission_voice_uses_only_the_six_api_sections(client, monkeypatch):
+    from .helpers import FakeMediBytesHTTP
 
-    fake = FakePipeline().install(monkeypatch)
-    fake.transcript = "We are admitting him as an emergency. Please admit him to Ward 5. Get a chest x-ray."
-    item = lambda text, sentence: {"text": text, "source_sentence": sentence, "seg_id": 0, "confidence": 0.8}
-    fake.note = {"sections": {
-        "admission_type": {"items": [item("Emergency", "We are admitting him as an emergency.")]},
-        "ward": {"items": [item("Ward 5", "Please admit him to Ward 5.")]},
-        "imaging_studies": {"items": [item("Chest x-ray", "Get a chest x-ray.")]},
-    }}
+    fake = FakeMediBytesHTTP().install(monkeypatch)
     pid = _new_patient_with_opd(client, name="Ramesh Gupta")
     h = {"X-Patient-Id": pid}
-    sent = client.post("/api/notes/transcribe", files={"file": ("admit.webm", b"abc", "audio/webm")}, data={"feature": "F2"}, headers=h)
+    consent = client.post("/api/patients/" + pid + "/consents", json={"consent_type": "consultation_capture", "granted": True}, headers=h)
+    assert consent.status_code == 200, consent.text
+    meta = client.get("/api/meta", headers=h).json()
+    note = {
+        "present_illness": "",
+        "examination_findings": "",
+        "previous_diagnosis": "",
+        "plan_of_management": "Get a chest x-ray.",
+        "diet_instructions": "",
+        "general_instructions": "",
+    }
+    sent = client.post(f"/api/notes/transcribe?encounter_id={meta['encounter']['id']}", files={"file": ("admit.webm", b"abc", "audio/webm")}, data={"feature": "F2"}, headers=h)
     assert sent.status_code == 200, sent.text
-    assert fake.feature == "F2"
-    done = client.get(f"/api/notes/transcribe/{sent.json()['audio_id']}", headers=h).json()
-    assert done["status"] == "succeeded", done
+    fake.set_success(sent.json()["audio_id"], note)
+    done = client.get(f"/api/notes/transcriptions/{sent.json()['audio_id']}?encounter_id={meta['encounter']['id']}", headers=h).json()
     c = done["draft"]["content"]
     assert done["draft"]["feature"] == "F2" and c["format"] == "admit_v2"
-    assert c["ward"]["text"] == "Ward 5" and c["imaging_studies"][0]["text"] == "Chest x-ray"
-    assert "Provisional diagnosis" in c["not_documented"]
+    assert c["ward"] is None and c["admission_type"] is None
+    assert c["imaging_studies"][0]["text"] == "Get a chest x-ray."
+    assert {"Elective or emergency", "Admit to ward", "Provisional diagnosis"} <= set(c["not_documented"])
 
 
 def test_the_signed_admission_note_is_stored_and_opens_from_the_timeline(client):

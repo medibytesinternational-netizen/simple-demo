@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, get, openStoredFile, patch, post } from "../../api";
+import { generateVoiceDraft, get, openStoredFile, patch, post } from "../../api";
 import { VoiceInput } from "../../components/VoiceInput";
 import { currentRole } from "../../components/roles";
 import type { Draft } from "../../types";
@@ -23,23 +23,27 @@ const when = (iso?: string) => {
 
 /** Dictate a referral, check the filled form (part one), approve it to sign and store it on the timeline. */
 async function dictate(audio: Blob, filename?: string): Promise<Draft> {
-  const form = new FormData();
-  form.append("file", audio, filename || "referral.webm");
-  const receipt = await api<{ audio_id: string }>("/referrals/record", { method: "POST", body: form });
-  const deadline = Date.now() + 5 * 60 * 1000;
-  while (Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    const status = await api<{ status: string; error?: string; draft?: Draft }>(`/referrals/record/${encodeURIComponent(receipt.audio_id)}`);
-    if (status.status === "succeeded" && status.draft) return status.draft;
-    if (status.status === "failed") throw new Error(status.error || "The recording could not be processed");
-  }
-  throw new Error("The pipeline is taking too long. Try again in a minute.");
+  return generateVoiceDraft(audio, filename || "referral.webm", "F11");
 }
 
 export function ReferralForm() {
   const queryClient = useQueryClient();
   // Known from the signed-in role straight away, so the voice box never flashes away while loading.
   const canRefer = ["admin", "senior"].includes(currentRole());
+  const canRecordConsent = currentRole() === "admin";
+  const meta = useQuery<{ patient: { id: string }; encounter: { id: string } }>({ queryKey: ["meta"], queryFn: () => get("/meta") });
+  const consents = useQuery<{ consents: Array<{ granted: boolean; consent_type: string }> }>({
+    queryKey: ["consents", "referral", meta.data?.patient.id, meta.data?.encounter.id],
+    queryFn: () => get(`/patients/${meta.data!.patient.id}/consents?encounter_id=${encodeURIComponent(meta.data!.encounter.id)}`),
+    enabled: Boolean(meta.data?.patient.id && meta.data?.encounter.id),
+  });
+  const consentGranted = Boolean(consents.data?.consents?.some((item) => item.granted && ["consultation_capture", "audio_recording"].includes(item.consent_type)));
+  const recordConsent = useMutation({
+    mutationFn: () => post(`/patients/${meta.data!.patient.id}/consents?encounter_id=${encodeURIComponent(meta.data!.encounter.id)}`, {
+      consent_type: "consultation_capture", granted: true, note: "Patient agrees to referral dictation audio capture.",
+    }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["consents", "referral"] }),
+  });
   const latest = useQuery({ queryKey: ["referral-form"], queryFn: () => get<{ draft: Draft | null }>("/referrals/form"), enabled: canRefer });
   const referrals = useQuery({ queryKey: ["referrals"], queryFn: () => get<{ referrals: any[] }>("/referrals") });
   const draft = latest.data?.draft || null;
@@ -55,9 +59,18 @@ export function ReferralForm() {
             <div className="card-header"><h2>New referral</h2></div>
             <div className="card-body">
               <span className="small muted">
-                Record or upload your referral. The form is filled from what you say and from the patient's earlier record; you check it and approve.
+                Record or upload your referral. The form uses only the six-section MediBytes note; fields it cannot supply stay blank for you to complete.
               </span>
-              <VoiceInput consentGranted feature="F11" capture={async (audio, filename) => {
+              {!consentGranted ? (
+                <div className="banner warning mt-2">
+                  <span>{canRecordConsent ? "Record patient consent before capturing referral audio." : "A doctor must record patient consent before referral audio is available."}</span>
+                  {canRecordConsent ? <button className="btn btn-sm btn-primary ml-2" onClick={() => recordConsent.mutate()} disabled={!meta.data || recordConsent.isPending}>
+                    {recordConsent.isPending ? "Saving…" : "Record consent"}
+                  </button> : null}
+                </div>
+              ) : null}
+              {recordConsent.isError ? <div className="error-box mt-2" role="alert">{String(recordConsent.error?.message || recordConsent.error)}</div> : null}
+              <VoiceInput consentGranted={consentGranted} disabled={!consentGranted} feature="F11" capture={async (audio, filename) => {
                 await dictate(audio, filename);
                 await queryClient.invalidateQueries({ queryKey: ["referral-form"] });
               }} />
@@ -143,6 +156,12 @@ function FormReview({ draft }: { draft: Draft }) {
     <div className="card">
       <div className="card-header"><h2>Referral form: part one</h2><span className="small muted">Check, edit if needed, then approve</span></div>
       {error ? <div className="error-box" role="alert">{error}</div> : null}
+      {c.needs_review?.length ? (
+        <div className="banner warning" role="status">
+          Check these against the recording:
+          <ul>{c.needs_review.map((item: any, index: number) => <li key={index}><b>{item.section}:</b> {item.text}</li>)}</ul>
+        </div>
+      ) : null}
       <div className="referral-head">
         {HEADER.map(([k, label]) => <div key={k}><span>{label}</span><b>{head[k] || "-"}</b></div>)}
       </div>

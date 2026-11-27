@@ -45,8 +45,10 @@ def test_the_doctor_holds_every_action_except_ingest(client):
     assert me["user"]["role"] == "doctor"
     roles = set().union(*identity.PERMISSIONS.values())
     assert roles == {"doctor", "senior_doctor", "junior_doctor", "nurse", identity.SYSTEM_ROLE}
-    # Staff roles hold task work; a senior doctor may also refer; doctors generate the discharge summary.
-    for role, extra in (("senior_doctor", {"refer", "discharge_report"}), ("junior_doctor", {"discharge_report"}), ("nurse", set())):
+    # Staff roles can transcribe; task work is available to staff, while referral/discharge remain role-scoped.
+    for role, extra in (("senior_doctor", {"refer", "discharge_report", "transcribe_voice"}),
+                        ("junior_doctor", {"discharge_report", "transcribe_voice"}),
+                        ("nurse", {"transcribe_voice"})):
         assert {a for a, allowed in identity.PERMISSIONS.items() if role in allowed} == {"work_task"} | extra
     assert identity.PERMISSIONS["ingest"] == {identity.SYSTEM_ROLE}
     assert not identity.can("ingest")

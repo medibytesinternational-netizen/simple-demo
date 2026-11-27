@@ -16,6 +16,7 @@ import { ConsultNoteStatus, type ConsultGenerateResult } from "../features/f01/C
 import { PageHeader } from "../components/PageHeader";
 import { NextStepCta } from "../components/NextStepCta";
 import { Stepper } from "../components/ui";
+import { currentRole } from "../components/roles";
 import type { StepState } from "../components/ui";
 
 const CONSULT_TRANSCRIPT = `Doctor: Mr Menon, what brings you in today?
@@ -147,6 +148,7 @@ export function NotesPage() {
   const consentGranted = Boolean(consents.data?.consents?.some(
     (entry) => entry.granted && ["consultation_capture", "audio_recording"].includes(entry.consent_type),
   ));
+  const canRecordConsent = currentRole() === "admin";
 
   const recordConsent = useMutation({
     mutationFn: () =>
@@ -161,7 +163,7 @@ export function NotesPage() {
 
   // A transcript from VoiceInput (recording or upload) lands in the textarea first, so nothing is lost
   // if drafting fails, then drafts after a short window in which the clinician can cancel.
-  // The MediBytes pipeline turns the recording straight into a consult draft; show it for review.
+  // The shared MediBytes API flow turns the returned note into a report draft; show it for review.
   const onVoiceDraft = () => {
     setError("");
     setConsultResult(null);
@@ -340,7 +342,7 @@ export function NotesPage() {
                 {transcribing || pendingDraft || generate.isPending ? (
                   <div className="banner mt-2" role="status">
                     {transcribing ? (
-                      <><span className="spinner" /> {tab.feature === "F3" ? "Transcribing ward-round dictation with Hugging Face Whisper…" : "Transcribing... the MediBytes pipeline usually takes under a minute."}</>
+                      <><span className="spinner" /> {tab.feature === "F3" ? "Transcribing ward-round dictation with MediBytes…" : "Transcribing with MediBytes…"}</>
                     ) : pendingDraft ? (
                       <div className="flex items-center justify-between gap-2">
                         <span>Drafting in {pendingDraft.left} s. The transcript is in the box above; you can edit it first.</span>
@@ -365,20 +367,20 @@ export function NotesPage() {
                     ) : (
                       <div className="banner warning mb-2">
                         <div className="flex items-center justify-between gap-2">
-                          <span>Record patient consent before capturing ward-round audio.</span>
-                          <button className="btn btn-sm btn-primary" onClick={() => recordConsent.mutate()} disabled={recordConsent.isPending}>
+                          <span>{canRecordConsent ? "Record patient consent before capturing ward-round audio." : "A doctor must record patient consent before capturing ward-round audio."}</span>
+                          {canRecordConsent ? <button className="btn btn-sm btn-primary" onClick={() => recordConsent.mutate()} disabled={recordConsent.isPending}>
                             {recordConsent.isPending ? "Saving…" : "Record consent"}
-                          </button>
+                          </button> : null}
                         </div>
                       </div>
                     )}
-                    <div className="small muted mb-2">Audio is sent to Hugging Face Whisper for transcription. The raw audio is not retained by this app; review the transcript before generating the report.</div>
+                    <div className="small muted mb-2">Audio is sent to MediBytes for transcription. The ward-round report is drafted in this screen for review.</div>
                     <VoiceInput
                       consentGranted={consentGranted}
                       disabled={generate.isPending}
                       feature="F3"
                       onBusyChange={setTranscribing}
-                      onTranscript={(value) => setTranscript(value)}
+                      onDraft={onVoiceDraft}
                     />
                   </div>
                 ) : null}
@@ -560,16 +562,16 @@ export function NotesPage() {
                 {consentGranted ? (
                   <div className="banner success mb-3">
                     {isAdmission
-                      ? "Consent recorded. Dictate the admission (type, ward, diagnosis, treatment, tests...) or upload the voice file. What the OPD report already holds fills anything you do not say."
+                      ? "Consent recorded. Dictate the admission or upload the voice file. The six-section note fills only what it supports; leave other fields for clinician review."
                       : "Consent recorded. Record the consultation or upload the voice file; the OPD report is written from it."}
                   </div>
                 ) : (
                   <div className="banner warning mb-3">
                     <div className="flex items-center justify-between gap-2">
-                      <span>Ask the patient for consent to record this consultation. Recording is blocked until it is recorded.</span>
-                      <button className="btn btn-sm btn-primary" onClick={() => recordConsent.mutate()} disabled={recordConsent.isPending}>
+                      <span>{canRecordConsent ? "Ask the patient for consent to record this consultation. Recording is blocked until it is recorded." : "A doctor must record patient consent before audio capture is available."}</span>
+                      {canRecordConsent ? <button className="btn btn-sm btn-primary" onClick={() => recordConsent.mutate()} disabled={recordConsent.isPending}>
                         {recordConsent.isPending ? "Saving..." : "Patient consents"}
-                      </button>
+                      </button> : null}
                     </div>
                   </div>
                 )}

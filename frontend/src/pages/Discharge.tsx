@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { get, openApiWindow, post } from "../api";
+import { formatHospitalDate } from "../dates";
 import type { Draft, Meta } from "../types";
 import { DraftReview } from "../components/DraftReview";
 import { ReadinessPanel } from "../features/f09/ReadinessPanel";
@@ -35,7 +36,7 @@ const CATEGORIES: { key: string; match: string[] }[] = [
   { key: "FOLLOWUP", match: ["follow"] },
 ];
 
-const fmtDate = (v?: string | null) => (v ? new Date(v).toLocaleDateString("en-GB") : "");
+const fmtDate = (v?: string | null) => (v ? formatHospitalDate(v, "en-GB") : "");
 type Section = { heading: string; paragraphs?: { text: string }[] };
 type Med = { drug: string; dose?: string; route?: string; frequency?: string };
 

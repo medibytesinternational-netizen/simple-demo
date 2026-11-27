@@ -61,7 +61,7 @@
     "name": "Ambient OPD documentation",
     "workspace": "Notes → Consultation",
     "capability": "Consent-gated consultation capture and evidence-linked note draft",
-    "llm": "gpt-4o + whisper-1",
+    "llm": "gpt-4o + MediBytes MedASR",
     "human_gate": "Patient consent; clinician approval",
     "endpoints": [
      "/api/patients/{patient_id}/consents",

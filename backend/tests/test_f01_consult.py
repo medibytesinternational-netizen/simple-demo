@@ -7,13 +7,10 @@ from types import SimpleNamespace
 import pytest
 
 from app.db import SessionLocal
-from app.services import credits
 from app.services.context import segments_from_transcript
 from app.services.extract import analyse
 
-from fastapi import HTTPException
-
-from .helpers import ASTHMA, SHORT_VISIT, FakePipeline
+from .helpers import ASTHMA, SHORT_VISIT
 
 CHEST = (
     "Doctor: What brings you in?\n"
@@ -100,7 +97,7 @@ def _live(monkeypatch, live_reply, repair_reply=None, repair_calls=None):
     """Make the model call return a canned reply, or raise, without any network."""
     monkeypatch.setattr(
         "app.services.llm.settings",
-        SimpleNamespace(effective_llm_mode="live", openai_model="gpt-test", openai_api_key="sk-test"),
+        SimpleNamespace(effective_llm_mode="live", active_model="gpt-test", openai_model="gpt-test", openai_api_key="sk-test"),
     )
 
     def live_call(feature, prompt, context, model_cls):
@@ -297,63 +294,3 @@ def test_approval_still_needs_consent(client):  # guard
     draft = _generate(client, ASTHMA)["draft"]
     response = client.post(f"/api/drafts/{draft['id']}/approve", json={})
     assert response.status_code == 400 and "consent" in response.json()["detail"].lower()
-
-
-# ---------- audio needs consent, a key, and costs 2 credits only when it really runs ----------
-
-def _audio():
-    return {"file": ("visit.webm", b"not really audio", "audio/webm")}
-
-
-def test_audio_without_consent_is_refused_and_costs_nothing(fresh):  # guard
-    before = _balance(fresh)
-    response = fresh.post("/api/notes/transcribe", files=_audio())
-    assert response.status_code == 403
-    assert _balance(fresh) == before
-
-
-def test_audio_with_consent_but_no_key_is_refused_and_costs_nothing(fresh):
-    _consent(fresh)
-    before = _balance(fresh)
-    response = fresh.post("/api/notes/transcribe", files=_audio())
-    assert response.status_code == 400 and "OPENAI_API_KEY" in response.json()["detail"]
-    assert _balance(fresh) == before
-
-
-@pytest.fixture()
-def keyed(monkeypatch):
-    return FakePipeline().install(monkeypatch)
-
-
-def test_a_transcription_that_runs_costs_a_voice_note_of_two_credits(fresh, keyed):
-    _consent(fresh)
-    before = _balance(fresh)
-    response = fresh.post("/api/notes/transcribe", files=_audio())
-    assert response.status_code == 200, response.text
-    assert response.json()["status"] == "running" and response.json()["audio_id"]
-    assert before - _balance(fresh) == 2
-    ledger = fresh.get("/api/credits").json()["ledger"]
-    assert ledger[0]["operation"] == "voice_note" and ledger[0]["units"] == 2 and ledger[0]["feature"] == "F1"
-
-
-def test_a_failed_upload_costs_nothing(fresh, keyed):
-    _consent(fresh)
-    keyed.error = HTTPException(502, "Could not reach the MediBytes pipeline")
-    before = _balance(fresh)
-    response = fresh.post("/api/notes/transcribe", files=_audio())
-    assert response.status_code == 502
-    assert _balance(fresh) == before
-
-
-def test_transcription_stops_with_402_when_credits_are_used_up(fresh, keyed):
-    _consent(fresh)
-    db = SessionLocal()
-    try:
-        credits._account(db).balance = 1
-        db.commit()
-    finally:
-        db.close()
-    response = fresh.post("/api/notes/transcribe", files=_audio())
-    assert response.status_code == 402
-    assert keyed.calls == 0, "the pipeline must not be called when the pack cannot pay for it"
-    assert _balance(fresh) == 1

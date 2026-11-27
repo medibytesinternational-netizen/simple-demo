@@ -3,6 +3,8 @@
 // (named beside each step), so the preview never shows a fact the synthetic record lacks.
 // Fields the frontend does not read, or that cannot be derived honestly, are left out.
 
+import { parseHospitalDateTime } from "../dates";
+
 type Json = Record<string, any>;
 
 const TIMELINE_KEY = "/patients/pat_ravi/timeline?limit=250";
@@ -68,8 +70,7 @@ function enrichEvent(event: Json, events: Json[]): Json {
   };
 }
 
-// The backend reads a bare date as midnight; compare everything as local wall-clock time.
-const when = (value: string) => new Date(value.length === 10 ? `${value}T00:00:00` : value).getTime();
+const when = (value: string) => parseHospitalDateTime(value)?.getTime() ?? Number.NaN;
 
 /** GET /patients/{id}/timeline with the F16 filters. Only the chart patient has a timeline in the fixtures. */
 export function timeline(data: Json, patientId: string, query: string): Json | undefined {

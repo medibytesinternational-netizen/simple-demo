@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from app.services.investigation_mentions import find_orders
 
-from .helpers import FakePipeline
+from .helpers import FakeMediBytesHTTP
 from .test_progress_notes import _record
 
 
@@ -22,7 +22,7 @@ def test_orders_are_found_and_results_are_not():
 
 
 def test_a_doctor_note_raises_marked_requests(client, monkeypatch):
-    fake = FakePipeline().install(monkeypatch)
+    fake = FakeMediBytesHTTP().install(monkeypatch)
     entry = _record(client, fake, texts=("Leg swelling better", "Get CT abdomen and repeat CBC tomorrow"))
     raised = _auto(client)
     assert {(r["study"], r["request_type"]) for r in raised} == {("CT abdomen", "imaging"), ("Complete blood count", "laboratory")}
@@ -34,20 +34,20 @@ def test_a_doctor_note_raises_marked_requests(client, monkeypatch):
 
 
 def test_the_same_study_is_not_raised_twice(client, monkeypatch):
-    fake = FakePipeline().install(monkeypatch)
+    fake = FakeMediBytesHTTP().install(monkeypatch)
     _record(client, fake, texts=("Get CT abdomen",))
     _record(client, fake, texts=("Get CT abdomen today",))
     assert [r["study"] for r in _auto(client)] == ["CT abdomen"]
 
 
 def test_a_nurse_note_raises_nothing(client, monkeypatch):
-    fake = FakePipeline().install(monkeypatch)
+    fake = FakeMediBytesHTTP().install(monkeypatch)
     _record(client, fake, headers={"X-User-Id": "u_anita"}, texts=("Doctor asked to get CT abdomen",))
     assert _auto(client) == []
 
 
 def test_a_requested_investigation_can_be_sent(client, monkeypatch):
-    fake = FakePipeline().install(monkeypatch)
+    fake = FakeMediBytesHTTP().install(monkeypatch)
     _record(client, fake, texts=("Advise chest x-ray",))
     request = _auto(client)[0]
     sent = client.post(f"/api/investigation-requests/{request['id']}/export")
@@ -71,7 +71,7 @@ def test_rescan_raises_for_old_notes_once(client, monkeypatch):
     from app.db import SessionLocal
     from app.scripts.rescan_progress_orders import rescan
 
-    fake = FakePipeline().install(monkeypatch)
+    fake = FakeMediBytesHTTP().install(monkeypatch)
     _record(client, fake, texts=("MRI lumbosacral spine to rule out a lumbar disc prolapse",))
     with SessionLocal() as db:
         rescan(db)

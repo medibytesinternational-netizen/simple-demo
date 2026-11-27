@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../api";
+import { formatHospitalDateTime } from "../dates";
 import type { EventDetail } from "../features/f16/types";
 import { ProvenanceFacts } from "../features/f16/Provenance";
 import { Drawer } from "./ui/Drawer";
@@ -131,7 +132,7 @@ export function EvidenceDrawer() {
                           <button className="btn btn-ghost btn-sm mono" onClick={() => showEvent(version.id)}>
                             {version.id}
                           </button>
-                          <span className="small muted"> {new Date(version.occurred_at).toLocaleString()} · {version.recorded_by}</span>
+                          <span className="small muted"> {formatHospitalDateTime(version.occurred_at)} · {version.recorded_by}</span>
                         </div>
                       ))}
                     </dd>

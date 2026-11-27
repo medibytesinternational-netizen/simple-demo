@@ -88,8 +88,8 @@ def test_filter_by_date_before_after(client):
     assert _ids(_timeline(client, before="2032-01-02T08:00", after="2032-01-01")) == [early]  # before is exclusive
     assert _ids(_timeline(client, before="2032-01-01"))[0] not in {early, mid, late}
     assert _ids(_timeline(client, after="2032-01-04")) == []
-    # A time zone offset is converted to UTC: 13:30+05:30 is 08:00 UTC.
-    assert _ids(_timeline(client, after="2032-01-02T13:30:00+05:30", before="2032-01-02T13:30:01+05:30")) == [mid]
+    # Offset timestamps are normalized to the hospital's local wall clock (08:00 IST = 02:30Z).
+    assert _ids(_timeline(client, after="2032-01-02T02:30:00Z", before="2032-01-02T02:30:01Z")) == [mid]
 
 
 def test_a_bad_date_is_a_clear_400(client):

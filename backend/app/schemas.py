@@ -77,6 +77,7 @@ class ConsultNote(BaseModel):
     medication_mentions: list[MedicationMention] = Field(default_factory=list)
     follow_up: Claim | None = None
     not_documented: list[str] = Field(default_factory=list)
+    needs_review: list[dict[str, str]] = Field(default_factory=list)
 
 
 class AllergyVerification(BaseModel):
@@ -139,6 +140,7 @@ class AdmissionNote(BaseModel):
     proposed_orders: list[dict[str, Any]] = Field(default_factory=list)
     allergies_to_verify: list[AllergyVerification] = Field(default_factory=list)
     not_documented: list[str] = Field(default_factory=list)
+    needs_review: list[dict[str, str]] = Field(default_factory=list)
 
 
 class ProposedTask(BaseModel):
@@ -163,15 +165,21 @@ class RoundDraft(BaseModel):
     nursing_entries: list[Claim] = Field(default_factory=list)
     proposed_tasks: list[ProposedTask] = Field(default_factory=list)
     not_documented: list[str] = Field(default_factory=list)
+    needs_review: list[dict[str, str]] = Field(default_factory=list)
 
 
 class ProgressNote(BaseModel):
+    format: str = "progress_v1"
+    notes: list[Claim] = Field(default_factory=list)
+    role: Literal["doctor", "nurse"] | None = None
+    header: dict[str, str] = Field(default_factory=dict)
     subjective: Claim | None = None
     objective: Claim | None = None
     exam: ExamFindings = Field(default_factory=ExamFindings)
     assessment: list[Claim] = Field(default_factory=list)
     plan: Claim | None = None
     not_documented: list[str] = Field(default_factory=list)
+    needs_review: list[dict[str, str]] = Field(default_factory=list)
 
 
 class ShiftSummary(BaseModel):
@@ -299,6 +307,7 @@ class DischargeSummary(BaseModel):
     follow_up: list[Claim] = Field(default_factory=list)
     red_flags: list[Claim] = Field(default_factory=list)
     not_documented: list[str] = Field(default_factory=list)
+    needs_review: list[dict[str, str]] = Field(default_factory=list)
 
 
 class AlertCopy(BaseModel):

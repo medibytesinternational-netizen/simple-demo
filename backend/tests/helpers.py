@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 import json
+from email import policy
+from email.parser import BytesParser
 
 from contextlib import contextmanager
 from datetime import datetime
+from types import SimpleNamespace
 from typing import Any
+
+import httpx
 
 ASTHMA = (
     "Doctor: Good morning, what brings you in today?\n"
@@ -125,76 +130,91 @@ def as_patient(patient_id: str):
         identity.reset_context(tokens)
 
 
-# ---------- a stand-in for the MediBytes pipeline API (no network) ----------
+class FakeMediBytesHTTP:
+    """Fake the upstream HTTP service while exercising the real client adapter and routes."""
 
-PIPELINE_TRANSCRIPT = (
-    "Swelling and redness of the right leg since Tuesday. Denies fever. "
-    "Pulse 104 beats per minute, the right calf is warm and tender. "
-    "This looks like right leg cellulitis. Start IV cefazolin 2 g every eight hours. "
-    "Get a complete blood count. Keep the leg elevated. Review in two days."
-)
+    BASE = "https://product-production-b091.up.railway.app"
 
+    def __init__(self, *, api_key: str = "mb-test-key", company_id: int = 7, callback_token: str = "callback-test-token"):
+        self.calls: list[tuple[str, int, str, str, bytes]] = []
+        self.statuses: dict[str, dict[str, Any]] = {}
+        self.failure_status: int | None = None
+        self.network_error = False
+        self.settings = SimpleNamespace(
+            medibytes_api_key=api_key,
+            medibytes_callback_token=callback_token,
+            medibytes_company_id=company_id,
+            medibytes_base_url=self.BASE,
+            medibytes_timeout_seconds=90,
+        )
+        self.callback_settings = SimpleNamespace(medibytes_callback_token=callback_token)
 
-def _item(text, sentence, status=None):
-    item = {"text": text, "source_sentence": sentence, "seg_id": 0, "confidence": 0.8}
-    if status:
-        item["verified_status"] = status
-    return item
+    def set_success(self, audio_id: str, note: dict[str, str], needs_review: list[dict[str, str]] | None = None) -> None:
+        self.statuses[audio_id].update(
+            job_status="succeeded",
+            response=json.dumps([note], ensure_ascii=False, separators=(",", ":")),
+            needs_review=needs_review or [],
+        )
 
+    def _multipart(self, request: httpx.Request) -> dict[str, tuple[str | None, str, bytes]]:
+        headers = f"Content-Type: {request.headers['content-type']}\r\nMIME-Version: 1.0\r\n\r\n".encode()
+        message = BytesParser(policy=policy.default).parsebytes(headers + request.content)
+        fields = {}
+        for part in message.iter_parts():
+            name = part.get_param("name", header="content-disposition")
+            if name:
+                fields[name] = (part.get_filename(), part.get_content_type(), part.get_payload(decode=True) or b"")
+        return fields
 
-PIPELINE_NOTE = {
-    "sections": {
-        "mode_of_admission": {"items": []},
-        "referring_physician": {"items": []},
-        "previous_admission": {"items": []},
-        "previous_diagnosis": {"items": []},
-        "allergies": {"items": []},
-        "pain": {"items": [_item("Right calf warm and tender",
-                                  "Pulse 104 beats per minute, the right calf is warm and tender.")]},
-        "occupation": {"items": []},
-        "source_of_history": {"items": []},
-        "chief_complaints": {"items": [_item("Swelling and redness of the right leg since Tuesday",
-                                             "Swelling and redness of the right leg since Tuesday.")]},
-        "history_of_present_illness": {"items": [_item("DENIED: fever", "Denies fever.", "verified"),
-                                                 _item("Started on Tuesday", "Swelling and redness of the right leg since Tuesday.",
-                                                       "needs_review")]},
-    },
-    "provenance": {"template": "opd", "schema": "valid"},
-}
-
-
-class FakePipeline:
-    """Installed over app.services.pipeline's network calls by the `keyed` fixtures."""
-
-    def __init__(self):
-        self.calls = 0
-        self.last_file = None
-        self.error = None  # an HTTPException to raise from submit
-        self.job_status = "succeeded"
-        self.job_error = None
-        self.note = json.loads(json.dumps(PIPELINE_NOTE))
-        self.transcript = PIPELINE_TRANSCRIPT
-        self.feature = None
-
-    def submit(self, contents, filename, content_type, audio_id, feature="F1", extra=None):
-        self.feature = feature
-        self.role = (extra or {}).get("role")
-        self.calls += 1
-        self.last_file = (filename, contents, content_type)
-        if self.error:
-            raise self.error
-        return {"audio_id": audio_id, "job_id": "job-test", "status": "running"}
-
-    def fetch(self, audio_id):
-        out = {"audio_id": audio_id, "feature": self.feature or "F1",
-               "job_status": self.job_status, "job_error": self.job_error,
-               "role": getattr(self, "role", None)}
-        if self.job_status == "succeeded":
-            out.update(transcript=self.transcript, note=self.note)
-        return out
+    def _handle(self, request: httpx.Request) -> httpx.Response:
+        if self.network_error:
+            raise httpx.ConnectError("simulated connection failure", request=request)
+        if self.failure_status:
+            return httpx.Response(self.failure_status, request=request)
+        path = request.url.path
+        if path == "/api/v1/transcriptions" and request.method == "POST":
+            fields = self._multipart(request)
+            audio_id = fields["audio_id"][2].decode()
+            company_id = int(fields["company_id"][2].decode())
+            filename, content_type, audio = fields["file"]
+            self.calls.append((audio_id, company_id, filename or "", content_type, audio))
+            self.statuses.setdefault(audio_id, {
+                "audio_id": audio_id,
+                "company_id": company_id,
+                "job_id": f"job-{audio_id}",
+                "job_status": "queued",
+                "job_error": None,
+                "delivery": {"state": "pending", "attempts": 0, "last_http_status": None, "last_error": None,
+                             "hims_reply": None, "delivered_at": None, "next_attempt_at": None},
+                "response": None,
+                "needs_review": [],
+            })
+            return httpx.Response(202, json={"audio_id": audio_id, "company_id": company_id,
+                                             "job_id": f"job-{audio_id}", "status": "queued"}, request=request)
+        if path.startswith("/api/v1/transcriptions/"):
+            tail = path.removeprefix("/api/v1/transcriptions/")
+            redeliver = tail.endswith("/redeliver")
+            audio_id = tail.removesuffix("/redeliver") if redeliver else tail
+            payload = self.statuses.get(audio_id)
+            if payload is None:
+                return httpx.Response(404, json={"detail": "not found"}, request=request)
+            if redeliver and request.method == "POST":
+                if payload["delivery"]["state"] != "failed":
+                    return httpx.Response(409, json={"detail": "not failed"}, request=request)
+                payload["delivery"]["state"] = "pending"
+                return httpx.Response(202, json={"audio_id": audio_id, "status": "accepted"}, request=request)
+            if request.method == "GET" and not redeliver:
+                return httpx.Response(200, json=payload, request=request)
+        return httpx.Response(404, json={"detail": "not found"}, request=request)
 
     def install(self, monkeypatch):
-        monkeypatch.setattr("app.services.pipeline.configured", lambda: True)
-        monkeypatch.setattr("app.services.pipeline.submit", self.submit)
-        monkeypatch.setattr("app.services.pipeline.fetch", self.fetch)
+        monkeypatch.setattr("app.services.transcription.settings", self.settings)
+        monkeypatch.setattr("app.integrations.medibytes_transcription.settings", self.settings)
+        monkeypatch.setattr("app.routes.notes.settings", self.callback_settings)
+        real_client = httpx.AsyncClient
+        transport = httpx.MockTransport(self._handle)
+        monkeypatch.setattr(
+            "app.integrations.medibytes_transcription.httpx.AsyncClient",
+            lambda **kwargs: real_client(transport=transport, **kwargs),
+        )
         return self

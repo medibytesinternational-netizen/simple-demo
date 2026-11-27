@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from .helpers import ASTHMA, FakePipeline, text_pdf
+from .helpers import ASTHMA, FakeMediBytesHTTP, text_pdf
 
 NURSE = {"X-User-Id": "u_anita"}
 LAB = ["CITY LAB REPORT", "Collected: 03 Sep 2026 07:40", "Creatinine 1.0 mg/dL (0.7-1.3)", "Potassium 4.1 mmol/L (3.5-5.1)"]
@@ -238,18 +238,8 @@ def test_the_document_type_is_worked_out_when_not_given(client):
     assert client.post("/api/patients", json={**NEW, "intake_ids": ["itk_000000000000"]}).status_code == 404
 
 
-@pytest.fixture()
-def fake_pipeline(monkeypatch):
-    fake = FakePipeline().install(monkeypatch)
-    fake.transcript = (
-        "Doctor: Good morning, what is your name? Patient: My name is Arjun Menon. "
-        "I am 45 years old. I have diabetes. I am allergic to penicillin. "
-        + fake.transcript
-    )
-    return fake
-
-
-def test_the_recording_prefills_and_becomes_the_opd_draft_after_registration(client, fake_pipeline):
+def test_intake_recording_uses_api_sections_and_becomes_an_opd_draft_after_registration(client, monkeypatch):
+    fake = FakeMediBytesHTTP().install(monkeypatch)
     refused = client.post("/api/intake/audio", files={"file": ("visit.webm", b"abc", "audio/webm")})
     assert refused.status_code == 403  # consent first
     sent = client.post("/api/intake/audio", files={"file": ("visit.webm", b"abc", "audio/webm")}, data={"consent": "true"})
@@ -258,19 +248,33 @@ def test_the_recording_prefills_and_becomes_the_opd_draft_after_registration(cli
     # Registering before the recording is read is refused.
     assert client.post("/api/patients", json={**NEW, "intake_ids": [intake_id]}).status_code == 409
 
+    from app.services.transcription import safe_audio_id
+
+    fake.set_success(safe_audio_id(intake_id), {
+        "present_illness": "Cough for two weeks.",
+        "examination_findings": "Chest clear.",
+        "previous_diagnosis": "",
+        "plan_of_management": "Review in four weeks.",
+        "diet_instructions": "",
+        "general_instructions": "",
+    }, needs_review=[{"section": "examination_findings", "text": "Check the finding."}])
     status = client.get(f"/api/intake/{intake_id}").json()
     assert status["status"] == "ready"
-    f = {k: v["value"] for k, v in status["fields"].items()}
-    assert f["name"] == "Arjun Menon" and f["age"] == 45
-    assert f["allergies"] == ["penicillin"] and f["problems"] == ["Diabetes"]
+    assert status["fields"] == {}  # the API returns no demographic entities
+    assert status["preview"]["format"] == "opd_v2"
+    assert status["preview"]["chief_complaints"][0]["text"] == "Cough for two weeks."
+    assert status["needs_review"] == [{"section": "examination_findings", "text": "Check the finding."}]
 
     reg = client.post("/api/patients", json={
         "name": "Arjun Menon", "age": 45, "sex": "Male", "allergies": ["penicillin"], "intake_ids": [intake_id],
-    }).json()
+    })
+    assert reg.status_code == 200, reg.text
+    reg = reg.json()
     pid = reg["patient"]["id"]
     drafts = client.get("/api/drafts?feature=F1", headers=_as(pid)).json()["drafts"]
     assert [d["id"] for d in drafts] == [reg["attached"][0]["draft_id"]]
     assert drafts[0]["status"] == "draft_ready"  # still needs the doctor's review and signature
+    assert drafts[0]["content"]["needs_review"] == status["needs_review"]
     types = {e["type"] for e in _timeline(client, pid)}
     assert {"registration", "consent"} <= types and "consult_note" not in types
     signed = client.post(f"/api/drafts/{drafts[0]['id']}/approve", json={}, headers=_as(pid))

@@ -12,7 +12,6 @@ _tmp = tempfile.mkdtemp(prefix="medibytes-test-")
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp}/test.db"
 # Uploads, signed notes and intake files go to the temporary folder too, never the real uploads/.
 os.environ["UPLOADS_DIR"] = f"{_tmp}/uploads"
-os.environ["MEDIBYTES_RUNS_DIR"] = f"{_tmp}/runs"
 os.environ["LLM_MODE"] = "cached"
 os.environ["OPENAI_API_KEY"] = ""
 os.environ["MEDIBYTES_BACKGROUND"] = "0"

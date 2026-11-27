@@ -33,13 +33,15 @@ def _open_task_ids(client) -> set[str]:
 
 def test_accepted_round_tasks_can_be_worked_to_completion_by_the_doctor_for_the_assignee(client):
     draft = generate_note(client, "F3", ROUND)
+    signed = client.post(f"/api/drafts/{draft['id']}/approve", json={})
+    assert signed.status_code == 200, signed.text
     response = client.post(f"/api/drafts/{draft['id']}/accept-tasks", json={"indices": [0, 1]})
     assert response.status_code == 200, response.text
     created = response.json()["tasks"]
     assert len(created) == 2
     for task in created:
-        assert task["owner"] == DOCTOR_NAME
-        assert task["assigned_to"] == DOCTOR_NAME
+        assert task["owner"] == "Dr. Kiran Patel"
+        assert task["assigned_to"] == "Dr. Kiran Patel"
     ids = {t["id"] for t in created}
     assert ids <= _open_task_ids(client)
 

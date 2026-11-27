@@ -6,8 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
-from ..services.identity import require
-from ..services.identity import acting_name, current_patient_id
+from ..services.identity import acting_name, acting_user, can, current_patient_id, require
 from ..db import get_db, utcnow
 from ..models import (
     Draft,
@@ -38,6 +37,15 @@ from .common import (
 router = APIRouter()
 
 
+def _can_write_progress_draft(draft: Draft) -> bool:
+    if draft.feature != "F4" or (draft.content or {}).get("format") != "progress_v2":
+        return False
+    from ..services import progress
+
+    role = (draft.content or {}).get("role") or progress.default_role()
+    return progress.may_write(role)
+
+
 # --------------------------------------------------------------------------
 # Drafts and approvals
 # --------------------------------------------------------------------------
@@ -66,11 +74,13 @@ def draft_detail(draft_id: str, db: Session = Depends(get_db)):
     return draft_to_dict(draft)
 
 
-@router.patch("/drafts/{draft_id}", dependencies=[Depends(require("edit_draft"))])
+@router.patch("/drafts/{draft_id}")
 def draft_patch(draft_id: str, body: DraftPatchRequest, db: Session = Depends(get_db)):
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
+    if not can("edit_draft") and not _can_write_progress_draft(draft):
+        raise HTTPException(403, f"{acting_user().name} may not edit this draft")
     update_draft(db, draft, body.content, body.editor)
     db.commit()
     return draft_to_dict(draft)
@@ -121,11 +131,13 @@ def draft_verify_allergy(draft_id: str, body: VerifyAllergyRequest, db: Session 
     return draft_to_dict(draft)
 
 
-@router.post("/drafts/{draft_id}/approve", dependencies=[Depends(require("approve_draft"))])
+@router.post("/drafts/{draft_id}/approve")
 def draft_approve(draft_id: str, body: ApproveRequest, db: Session = Depends(get_db)):
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft not found")
+    if not can("approve_draft") and not _can_write_progress_draft(draft):
+        raise HTTPException(403, f"{acting_user().name} may not approve this draft")
     event = approve_draft(db, draft, body.content, body.approved_by, override=body.override)
     patient, encounter, state = _state(db, draft.encounter_id)
     created_alerts = evaluate_rules(db, patient, encounter, state)

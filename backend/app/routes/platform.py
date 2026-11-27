@@ -14,12 +14,15 @@ from sqlalchemy.orm import Session
 from ..db import get_db, utcnow
 from ..models import Encounter, Patient
 from ..config import settings
-from ..services import credits, intake, pipeline
+from ..services import credits, intake
 from ..services.context import create_transcript_event
 from ..services.drafts import create_draft
 from ..services.ocr import new_document, run_ocr
 from ..services.identity import DIRECTORY, PERMISSIONS, USERS, acting_name, acting_user, require
 from ..services.timeline import add_audit, add_event, new_id
+from ..services.medibytes_note import format_note_sections, note_segments
+from ..services.report_templates import generate_report_template
+from ..services.transcription import get_intake_job, refresh_transcription_status, safe_audio_id, submit_transcription
 
 router = APIRouter()
 
@@ -177,6 +180,8 @@ def _intake_out(meta: dict) -> dict:
         "doc_type": meta.get("doc_type"),
         "preview": meta.get("preview"),
         "values": meta.get("values") or [],
+        "note_content": meta.get("note_content"),
+        "needs_review": meta.get("needs_review") or [],
     }
 
 
@@ -231,42 +236,60 @@ async def intake_audio(file: UploadFile = File(...), consent: bool = Form(False)
         raise HTTPException(413, "Audio too large (max 64 MB)")
     if not contents:
         raise HTTPException(400, "The audio file is empty")
-    if not pipeline.configured():
-        raise HTTPException(400, "Voice notes need the MediBytes pipeline; set OPENAI_API_KEY")
-    credits.charge(db, "voice_note", feature="F1", mode="live")
     meta = intake.create(
         "audio", file.filename or "consultation.webm", file.content_type or "audio/webm", contents,
         consent_by=acting_name(), consent_at=utcnow().isoformat(),
     )
-    pipeline.submit(contents, meta["filename"], meta["mime"], meta["id"])
+    audio_id = safe_audio_id(meta["id"])
+    try:
+        job = await submit_transcription(
+            db,
+            audio_id=audio_id,
+            patient_id=f"intake:{meta['id']}",
+            encounter_id="",
+            feature="F1",
+            filename=meta["filename"],
+            content_type=meta["mime"],
+            audio=contents,
+            submitted_by=acting_name(),
+            intake_id=meta["id"],
+        )
+    except HTTPException as exc:
+        meta.update(status="failed", error=str(exc.detail), audio_id=audio_id)
+        intake.save(meta)
+        raise
+    meta["audio_id"] = audio_id
     meta["status"] = "running"
     intake.save(meta)
-    add_audit(db, "intake_audio_submitted", "intake", meta["id"], None, actor_type="model", actor_name="MediBytes pipeline", after={"consent_by": meta["consent_by"]})
+    add_audit(db, "intake_audio_submitted", "intake", meta["id"], None, actor_type="model", actor_name="MediBytes Transcription API", after={"audio_id": audio_id, "consent_by": meta["consent_by"]})
     db.commit()
     return _intake_out(meta)
 
 
 @router.get("/intake/{intake_id}", dependencies=[Depends(require("register_patient"))])
-def intake_status(intake_id: str):
+async def intake_status(intake_id: str, db: Session = Depends(get_db)):
     try:
         meta = intake.load(intake_id)
     except KeyError:
         raise HTTPException(404, "Intake not found") from None
     if meta["kind"] == "audio" and meta["status"] == "running":
-        result = pipeline.fetch(intake_id) or {}
-        job = result.get("job_status")
-        if job == "failed":
-            meta.update(status="failed", error=result.get("job_error") or "The recording could not be processed")
-        elif job == "succeeded":
-            text = str(result.get("transcript") or "").strip()
-            note = result.get("note") or {}
-            if not text or not pipeline.has_items(note):
-                meta.update(status="failed", error="No speech was detected in the recording")
-            else:
-                fields, method = intake.extract("audio", text)
-                # The OPD report, shown right away; it is saved (with citations) only at registration.
-                preview = pipeline.draft_content("F1", note, "", [])
-                meta.update(status="ready", transcript=text, note=note, fields=fields, method=method, preview=preview)
+        job = get_intake_job(db, intake_id)
+        await refresh_transcription_status(db, job)
+        if job.job_status == "failed":
+            meta.update(status="failed", error=job.job_error or "The recording could not be processed")
+        elif job.job_status == "succeeded" and job.note_content:
+            from ..services.transcription import job_to_dict
+            result = job_to_dict(db, job)
+            note = result.get("note_content") or {}
+            content, _ = generate_report_template(db, "F1", note, result.get("needs_review") or [], "")
+            meta.update(
+                status="ready",
+                note_content=note,
+                needs_review=result.get("needs_review") or [],
+                fields={},
+                method="MediBytes six-section note",
+                preview=content,
+            )
         intake.save(meta)
     return _intake_out(meta)
 
@@ -290,10 +313,26 @@ def _attach_intake(db: Session, patient: Patient, encounter: Encounter, intake_i
             payload={"consent_type": "consultation_capture", "granted": True, "note": "Given at registration, before recording"},
             source="consent", approved_by=consent_by,
         )
-        event = create_transcript_event(db, patient, encounter, "F1", meta["transcript"], "Consultation (MediBytes pipeline)")
-        event.payload = {**(event.payload or {}), "audio_id": intake_id, "pipeline_note": meta["note"]}
-        content = pipeline.draft_content("F1", meta["note"], event.id, event.payload.get("segments") or [])
-        draft = create_draft(db, feature="F1", patient=patient, encounter=encounter, content=content, llm_call=None, created_from_event_ids=[event.id])
+        job = get_intake_job(db, intake_id)
+        note = meta.get("note_content") or {}
+        formatted = format_note_sections(note)
+        event = create_transcript_event(db, patient, encounter, "F1", formatted, "Consultation (MediBytes API)")
+        event.payload = {
+            **(event.payload or {}),
+            "audio_id": job.audio_id,
+            "note_content": note,
+            "needs_review": meta.get("needs_review") or [],
+            "segments": note_segments(note),
+            "raw_response": job.raw_response,
+        }
+        event.source = "medibytes"
+        event.author_type = "model"
+        event.author_name = "MediBytes Transcription API"
+        event.approved_by = None
+        job.transcript_event_id = event.id
+        content, llm_call = generate_report_template(db, "F1", note, meta.get("needs_review") or [], event.id)
+        draft = create_draft(db, feature="F1", patient=patient, encounter=encounter, content=content, llm_call=llm_call, created_from_event_ids=[event.id])
+        job.draft_id = draft.id
         out = {"intake_id": intake_id, "kind": "audio", "draft_id": draft.id}
     meta["attached_to"] = patient.id
     intake.save(meta)

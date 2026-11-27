@@ -151,12 +151,15 @@ def _next_created_at(db: Session, patient_id: str, feature: str) -> datetime:
     return latest + timedelta(microseconds=1) if latest and latest >= now else now
 
 
-def _admission_content(db: Session, patient: Patient, encounter: Encounter, content: dict[str, Any]) -> dict[str, Any]:
+def _admission_content(
+    db: Session, patient: Patient, encounter: Encounter, content: dict[str, Any], *, include_opd_fill: bool = True
+) -> dict[str, Any]:
     """Admission format: record headings, the recording first, the signed OPD report for the gaps,
     and every known allergy listed for the doctor to verify before signing."""
     from .admission import ADMIT_FORMAT, admission_header, latest_opd_report, merge_with_opd
 
-    merged = merge_with_opd({**content, "format": ADMIT_FORMAT}, latest_opd_report(db, patient.id))
+    opd = latest_opd_report(db, patient.id) if include_opd_fill else None
+    merged = merge_with_opd({**content, "format": ADMIT_FORMAT}, opd)
     merged["header"] = admission_header(patient, encounter, acting_name())
     if not merged.get("allergies_to_verify"):
         record = db.scalars(
@@ -188,6 +191,7 @@ def create_draft(
     content: dict[str, Any],
     llm_call: LLMCall | None = None,
     created_from_event_ids: list[str] | None = None,
+    voice_template: bool = False,
 ) -> Draft:
     content = _clear_generated_authorship(content)
     if feature in LOCKED_FEATURES:
@@ -198,12 +202,24 @@ def create_draft(
 
         content = {**content, "format": OPD_FORMAT, "header": opd_header(patient, encounter, acting_name())}
     if feature == "F2":
-        content = _admission_content(db, patient, encounter, content)
+        content = _admission_content(db, patient, encounter, content, include_opd_fill=not voice_template)
     if feature == "F4" and content.get("format") == "progress_v2":
         from .progress import default_role, header
 
         role = content.get("role") if content.get("role") in ("doctor", "nurse") else default_role()
         content = {**content, "role": role, "header": header(patient, encounter)}
+    if feature == "F11" and content.get("format") == "referral_v2":
+        from .referral_form import URGENCY, header
+
+        text = lambda value: str((value or {}).get("text") or "").strip() if isinstance(value, dict) else ""
+        referral_type = content.get("referral_type") or ""
+        content = {
+            **content,
+            "header": header(patient, encounter),
+            "urgency": URGENCY.get(referral_type, "routine"),
+            "specialty": text(content.get("department")),
+            "specialist": text(content.get("unit_chief")),
+        }
     draft = Draft(
         id=new_id("drf"),
         feature=feature,
